@@ -1,6 +1,6 @@
 /** @file
  * AcquireGOP.c
- * Installs GOP by reloading a copy of the GPU's OptionROM from RAM
+ * Installs GOP by reloading a copy of the GPU's Option ROM from RAM
  *
  * Copyright (c) 2020 Dayo Akanji (sf.net/u/dakanji/profile)
  * Portions Copyright (c) 2020 Joe van Tunen (joevt@shaw.ca)
@@ -185,8 +185,9 @@ ReloadPCIROM (
                     else {
                         Status = refit_call3_wrapper(gBS->StartImage, ImageHandle, NULL, NULL);
                     }
+                    MsgLog("Loaded Option ROM '%s'...%r\n", RomFileName, Status);
 
-                     MyFreePool (RomFileName);
+                    MyFreePool (RomFileName);
                 }
 
                 MyFreePool (DecompressedImageBuffer);
@@ -226,6 +227,11 @@ AcquireGOP (
     EFI_STATUS           Status;
     EFI_PCI_IO_PROTOCOL  *PciIo;
 
+    UINTN  SegmentPCI;
+    UINTN  BusPCI;
+    UINTN  DevicePCI;
+    UINTN  FunctionPCI;
+
     Status = refit_call5_wrapper(
         gBS->LocateHandleBuffer,
         ByProtocol,
@@ -261,11 +267,23 @@ AcquireGOP (
                         HandleIndex = ConvertHandleToHandleIndex (HandleArray[Index]);
                         RomFileName = PoolPrint (L"Handle%X", HandleIndex);
 
+                        PciIo->GetLocation (PciIo, &SegmentPCI, &BusPCI, &DevicePCI, &FunctionPCI);
+                        
+                        MsgLog("Loading option ROM at PCI(%02llX|%02llX:%02llX.%llX)\n",
+                            SegmentPCI,
+                            BusPCI,
+                            DevicePCI,
+                            FunctionPCI,
+                            Status
+                        );
+
                         Status = ReloadPCIROM (
                             PciIo->RomImage,
                             PciIo->RomSize,
                             RomFileName
                         );
+
+                        MsgLog("Loading option ROM result:%r\n", Status);
 
                         if (EFI_ERROR (ReturnStatus)) {
                             ReturnStatus = Status;
