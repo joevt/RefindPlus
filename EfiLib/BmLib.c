@@ -18,6 +18,8 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include "gnuefi-helper.h"
 #endif
 #include "../include/refit_call_wrapper.h"
+#include "../MainLoader/lib.h"
+#include "../MainLoader/leaks.h"
 
 /**
 
@@ -105,23 +107,13 @@ EfiLibOpenRoot (
 CHAR16 *
 EfiStrDuplicate (
   IN CHAR16   *Src
-				 )
+)
 {
-  CHAR16  *Dest;
-  UINTN   Size;
-
   // Do not deference Null pointers
   if (Src == NULL) {
       return NULL;
   }
-
-  Size  = StrSize (Src); //at least 2bytes
-  Dest  = AllocateZeroPool (Size);
-  if (Dest != NULL) {
-    CopyMem (Dest, Src, Size);
-  }
-
-  return Dest;
+  return AllocateCopyPool (StrSize (Src), Src);
 }
 
 /**
@@ -145,8 +137,15 @@ EfiLibFileInfo (
 
   Status = FHand->GetInfo (FHand, &gEfiFileInfoGuid, &Size, FileInfo);
   if (Status == EFI_BUFFER_TOO_SMALL) {
-    FileInfo = AllocateZeroPool (Size);
-    Status = FHand->GetInfo (FHand, &gEfiFileInfoGuid, &Size, FileInfo);
+    UINTN NewSize = Size + sizeof (CHAR16); // see explanation at OpenCorePkg/Library/OcFileLib/GetFileInfo.c
+    UINTN FinalSize = NewSize;
+    FileInfo = AllocateZeroPool (NewSize);
+    Status = FHand->GetInfo (FHand, &gEfiFileInfoGuid, &FinalSize, FileInfo);
+    #if REFIT_DEBUG > 0
+    if (LOGPOOL(FileInfo) < 0) {
+        LOGWHERE("size:%d requested:%d final:%d need:%d\n", Size, NewSize, FinalSize, SIZE_OF_EFI_FILE_INFO + StrSize(FileInfo->FileName));
+    }
+    #endif
   }
 
   return EFI_ERROR (Status) ? NULL : FileInfo;
@@ -166,6 +165,7 @@ EfiLibFileSystemInfo (
     FileSystemInfo = AllocateZeroPool (Size);
     Status = FHand->GetInfo (FHand, &gEfiFileSystemInfoGuid, &Size, FileSystemInfo);
   }
+  LOGPOOL(FileSystemInfo);
 
   return EFI_ERROR (Status) ? NULL : FileSystemInfo;
 }
@@ -200,8 +200,7 @@ EfiReallocatePool (
     if (NewPool != NULL) {
       CopyMem (NewPool, OldPool, OldSize < NewSize ? OldSize : NewSize);
     }
-
-    FreePool (OldPool);
+    MyFreePool (OldPool);
   }
 
   return NewPool;

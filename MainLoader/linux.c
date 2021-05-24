@@ -50,6 +50,7 @@
 #include "global.h"
 #include "config.h"
 #include "lib.h"
+#include "leaks.h"
 #include "menu.h"
 #include "mystrings.h"
 #include "linux.h"
@@ -76,20 +77,16 @@ CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
     REFIT_DIR_ITER      DirIter;
     EFI_FILE_INFO       *DirEntry;
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_NORMAL,
         L"Searching for an initrd to match '%s' on '%s'",
-        LoaderPath, Volume->VolName
+        LoaderPath, GetPoolStr (&Volume->VolName)
     );
-    #endif
 
     FileName      = Basename(LoaderPath);
     KernelVersion = FindNumbers(FileName);
     Path          = FindPath(LoaderPath);
 
-    #if REFIT_DEBUG > 0
     LOG(4, LOG_LINE_NORMAL, L"Kernel version string is '%s'", KernelVersion);
-    #endif
 
     // Add trailing backslash for root directory; necessary on some systems, but must
     // NOT be added to all directories, since on other systems, a trailing backslash on
@@ -151,9 +148,7 @@ CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
     MyFreePool (FileName);
     MyFreePool (Path);
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_NORMAL, L"Located initrd is '%s'", InitrdName);
-    #endif
 
     return (InitrdName);
 } // static CHAR16 * FindInitrd()
@@ -214,6 +209,7 @@ static VOID ParseReleaseFile(CHAR16 **OSIconName, REFIT_VOLUME *Volume, CHAR16 *
     REFIT_FILE  File;
     CHAR16      **TokenList;
     UINTN       TokenCount = 0;
+    BOOLEAN     GotLine;
 
     if ((Volume == NULL) || (FileName == NULL) || (OSIconName == NULL) || (*OSIconName == NULL))
         return;
@@ -222,13 +218,14 @@ static VOID ParseReleaseFile(CHAR16 **OSIconName, REFIT_VOLUME *Volume, CHAR16 *
         (RefitReadFile(Volume->RootDir, FileName, &File, &FileSize) == EFI_SUCCESS)) {
         do {
             TokenCount = ReadTokenLine(&File, &TokenList);
+            GotLine = (TokenCount > 0);
             if ((TokenCount > 1) && (MyStriCmp(TokenList[0], L"ID") ||
                                      MyStriCmp(TokenList[0], L"NAME") ||
                                      MyStriCmp(TokenList[0], L"DISTRIB_ID"))) {
                 MergeWords(OSIconName, TokenList[1], L',');
             } // if
             FreeTokenLine(&TokenList, &TokenCount);
-        } while (TokenCount > 0);
+        } while (GotLine);
         MyFreePool (File.Buffer);
     } // if
 } // VOID ParseReleaseFile()
@@ -256,11 +253,9 @@ VOID AddKernelToSubmenu(LOADER_ENTRY * TargetLoader, CHAR16 *FileName, REFIT_VOL
     LOADER_ENTRY        *SubEntry;
     UINTN               TokenCount;
 
-    #if REFIT_DEBUG > 0
     LOG(4, LOG_THREE_STAR_SEP, L"Adding Linux Kernel as SubMenu Entry");
-    #endif
 
-    File = ReadLinuxOptionsFile(TargetLoader->LoaderPath, Volume);
+    File = ReadLinuxOptionsFile(GetPoolStr (&TargetLoader->LoaderPath), Volume);
     if (File != NULL) {
         SubScreen     = TargetLoader->me.SubScreen;
         InitrdName    = FindInitrd(FileName, Volume);
@@ -272,6 +267,9 @@ VOID AddKernelToSubmenu(LOADER_ENTRY * TargetLoader, CHAR16 *FileName, REFIT_VOL
 
             // DA_TAG: InitializeLoaderEntry can return NULL
             if (SubEntry != NULL) {
+                LOGPOOL(VolName);
+                LOGPOOL(Path);
+                LOGPOOL(SubmenuName);
                 SplitPathName(FileName, &VolName, &Path, &SubmenuName);
                 MergeStrings(&SubmenuName, L": ", '\0');
                 MergeStrings(
@@ -280,28 +278,24 @@ VOID AddKernelToSubmenu(LOADER_ENTRY * TargetLoader, CHAR16 *FileName, REFIT_VOL
                     '\0'
                 );
 
-                MyFreePool (SubEntry->LoadOptions);
-                MyFreePool (SubEntry->LoaderPath);
-
                 Title = StrDuplicate(SubmenuName);
                 LimitStringLength(Title, MAX_LINE_LENGTH);
-                SubEntry->me.Title    = Title;
-                SubEntry->LoadOptions = AddInitrdToOptions(TokenList[1], InitrdName);
-                SubEntry->LoaderPath  = StrDuplicate (FileName);
-                CleanUpPathNameSlashes(SubEntry->LoaderPath);
-                SubEntry->Volume = Volume;
-                FreeTokenLine(&TokenList, &TokenCount);
+                AssignPoolStr (&SubEntry->me.Title, Title);
+                AssignPoolStr (&SubEntry->LoadOptions, AddInitrdToOptions(TokenList[1], InitrdName));
+                CopyPoolStr (&SubEntry->LoaderPath, FileName);
+                CleanUpPathNameSlashes(GetPoolStr (&SubEntry->LoaderPath));
+                AssignVolume (&SubEntry->Volume, Volume);
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_LINUX;
                 AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
             }
             else {
-                #if REFIT_DEBUG > 0
                 LOG(4, LOG_LINE_NORMAL, L"InitializeLoaderEntry on '%s' is NULL!!", TargetLoader);
-                #endif
 
                 break;
             }
+            FreeTokenLine(&TokenList, &TokenCount);
         } // while
+        FreeTokenLine(&TokenList, &TokenCount);
 
         MyFreePool (VolName);
         MyFreePool (Path);
@@ -311,14 +305,10 @@ VOID AddKernelToSubmenu(LOADER_ENTRY * TargetLoader, CHAR16 *FileName, REFIT_VOL
         MyFreePool (KernelVersion);
     }
     else {
-        #if REFIT_DEBUG > 0
         LOG(4, LOG_THREE_STAR_END, L"ReadLinuxOptionsFile FAILED!!");
-        #endif
     }
 
-    #if REFIT_DEBUG > 0
     LOG(4, LOG_THREE_STAR_MID, L"Added Linux Kernel as SubMenu Entry");
-    #endif
 } // static VOID AddKernelToSubmenu()
 
 // Returns TRUE if a file with the same name as the original but with
@@ -336,9 +326,7 @@ BOOLEAN HasSignedCounterpart(IN REFIT_VOLUME *Volume, IN CHAR16 *FullName) {
     MergeStrings(&NewFile, L".efi.signed", 0);
     if (NewFile != NULL) {
         if (FileExists(Volume->RootDir, NewFile)) {
-            #if REFIT_DEBUG > 0
             LOG(2, LOG_LINE_NORMAL, L"Found signed counterpart to '%s'", FullName);
-            #endif
 
             retval = TRUE;
         }

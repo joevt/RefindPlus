@@ -63,34 +63,42 @@
 #include "globalExtra.h"
 
 // Tag classifications; used in various ways.
-#define TAG_ABOUT            (1)
-#define TAG_REBOOT           (2)
-#define TAG_SHUTDOWN         (3)
-#define TAG_TOOL             (4)
-#define TAG_LOADER           (5)
-#define TAG_LEGACY           (6)
-#define TAG_FIRMWARE_LOADER  (7)
-#define TAG_EXIT             (8)
-#define TAG_SHELL            (9)
-#define TAG_GPTSYNC          (10)
-#define TAG_LEGACY_UEFI      (11)
-#define TAG_APPLE_RECOVERY   (12)
-#define TAG_WINDOWS_RECOVERY (13)
-#define TAG_MOK_TOOL         (14)
-#define TAG_FIRMWARE         (15)
-#define TAG_MEMTEST          (16)
-#define TAG_GDISK            (17)
-#define TAG_NETBOOT          (18)
-#define TAG_CSR_ROTATE       (19)
-#define TAG_FWUPDATE_TOOL    (20)
-#define TAG_HIDDEN           (21)
-#define TAG_INSTALL          (22)
-#define TAG_BOOTORDER        (23)
-#define TAG_PRE_BOOTKICKER   (24)
-#define TAG_SHOW_BOOTKICKER  (25)
-#define TAG_PRE_NVRAMCLEAN   (26)
-#define TAG_NVRAMCLEAN       (27)
-#define NUM_TOOLS            (28)
+enum {
+	TAG_ZERO             ,
+	TAG_ABOUT            ,
+	TAG_REBOOT           ,
+	TAG_SHUTDOWN         ,
+	TAG_TOOL             ,
+	TAG_LOADER           ,
+	TAG_LEGACY           ,
+	TAG_FIRMWARE_LOADER  ,
+	TAG_EXIT             ,
+	TAG_SHELL            ,
+	TAG_GPTSYNC          ,
+	TAG_LEGACY_UEFI      ,
+	TAG_APPLE_RECOVERY   ,
+	TAG_WINDOWS_RECOVERY ,
+	TAG_MOK_TOOL         ,
+	TAG_FIRMWARE         ,
+	TAG_MEMTEST          ,
+	TAG_GDISK            ,
+	TAG_NETBOOT          ,
+	TAG_CSR_ROTATE       ,
+	TAG_FWUPDATE_TOOL    ,
+	TAG_HIDDEN           ,
+	TAG_INSTALL          ,
+	TAG_BOOTORDER        ,
+
+	TAG_PRE_BOOTKICKER   ,
+	TAG_LOAD_BOOTKICKER  ,
+	TAG_SHOW_BOOTKICKER  ,
+
+	TAG_PRE_NVRAMCLEAN   ,
+	TAG_LOAD_NVRAMCLEAN  ,
+	TAG_NVRAMCLEAN       ,
+
+	NUM_TOOLS            ,
+};
 
 #define NUM_SCAN_OPTIONS 11
 
@@ -203,7 +211,15 @@
 // searched in addition to these locations....
 #define MOK_LOCATIONS           L"\\,EFI\\tools,EFI\\fedora,EFI\\redhat,EFI\\ubuntu,EFI\\suse,EFI\\opensuse,EFI\\altlinux"
 // Directories to search for memtest86....
-#define MEMTEST_LOCATIONS       L"EFI\\BOOT\\x64_tools,EFI\\tools_x64,EFI\\tools,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest"
+#if defined (EFIX64)
+#define MEMTEST_LOCATIONS          L"EFI\\BOOT\\x64_tools,EFI\\tools_x64,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#elif defined (EFI32)
+#define MEMTEST_LOCATIONS        L"EFI\\BOOT\\tools_ia32,EFI\\tools_ia32,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#elif defined (EFIAARCH64)
+#define MEMTEST_LOCATIONS        L"EFI\\BOOT\\tools_aa64,EFI\\tools_aa64,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+else
+#define MEMTEST_LOCATIONS                                              L"EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#endif
 // Directories to search for BootKicker....
 #define BOOTKICKER_LOCATIONS       L"\\EFI\\BOOT\\x64_tools,\\EFI\\tools_x64,\\EFI\\tools,\\EFI"
 // Directories to search for CleanNvram....
@@ -290,7 +306,7 @@ EFI_STATUS OcUseBuiltinTextOutput (IN EFI_CONSOLE_CONTROL_SCREEN_MODE  Mode);
 #endif
 
 // DA-TAG: Add Macro
-#define offsetof(st, m) ((UINTN)((char *)&((st *)0)->m - (char *)0))
+#define offsetof(st, m) ((UINTN)&((st *)0)->m)
 
 
 //
@@ -298,6 +314,17 @@ EFI_STATUS OcUseBuiltinTextOutput (IN EFI_CONSOLE_CONTROL_SCREEN_MODE  Mode);
 //
 
 // global types
+
+typedef struct {
+	CHAR16 *Str;
+	BOOLEAN Cached;
+} PoolStr;
+
+typedef struct {
+	EG_IMAGE *Image;
+	BOOLEAN Cached;
+} PoolImage;
+
 typedef struct _uint32_list {
     UINT32               Value;
     struct _uint32_list  *Next;
@@ -320,19 +347,19 @@ typedef struct {
    EFI_DEVICE_PATH     *DevicePath;
    EFI_HANDLE          DeviceHandle;
    EFI_FILE            *RootDir;
-   CHAR16              *PartName;
-   CHAR16              *FsName;   // Filesystem name
-   CHAR16              *VolName;  // One of the two above OR fs description (e.g., "2 GiB FAT volume")
+   PoolStr             PartName_PS_;
+   PoolStr             FsName_PS_;   // Filesystem name
+   PoolStr             VolName_PS_;  // One of the two above OR fs description (e.g., "2 GiB FAT volume")
    EFI_GUID            VolUuid;
    EFI_GUID            PartGuid;
    EFI_GUID            PartTypeGuid;
    BOOLEAN             IsMarkedReadOnly;
-   EG_IMAGE            *VolIconImage;
-   EG_IMAGE            *VolBadgeImage;
+   PoolImage           VolIconImage_PI_;
+   PoolImage           VolBadgeImage_PI_;
    UINTN               DiskKind;
    BOOLEAN             HasBootCode;
-   CHAR16              *OSIconName;
-   CHAR16              *OSName;
+   PoolStr             OSIconName_PS_;
+   PoolStr             OSName_PS_;
    BOOLEAN             IsMbrPartition;
    UINTN               MbrPartitionIndex;
    EFI_BLOCK_IO        *BlockIO;
@@ -342,41 +369,42 @@ typedef struct {
    MBR_PARTITION_INFO  *MbrPartitionTable;
    BOOLEAN             IsReadable;
    UINT32              FSType;
+   INT32               ReferenceCount;
 } REFIT_VOLUME;
 
 typedef struct _refit_menu_entry {
-   CHAR16      *Title;
+   PoolStr     Title_PS_;
    UINTN       Tag;
    UINTN       Row;
    CHAR16      ShortcutDigit;
    CHAR16      ShortcutLetter;
-   EG_IMAGE    *Image;
-   EG_IMAGE    *BadgeImage;
+   PoolImage   Image_PI_;
+   PoolImage   BadgeImage_PI_;
    struct _refit_menu_screen *SubScreen;
 } REFIT_MENU_ENTRY;
 
 typedef struct _refit_menu_screen {
-   CHAR16      *Title; // For EFI firmware entry, this includes "Reboot to" prefix
-   EG_IMAGE    *TitleImage;
+   PoolStr     Title_PS_; // For EFI firmware entry, this includes "Reboot to" prefix
+   PoolImage   TitleImage_PI_;
    UINTN       InfoLineCount;
-   CHAR16      **InfoLines;
+   PoolStr     *InfoLines;
    UINTN       EntryCount;     // total number of entries registered
    REFIT_MENU_ENTRY **Entries;
    UINTN       TimeoutSeconds;
-   CHAR16      *TimeoutText;
-   CHAR16      *Hint1;
-   CHAR16      *Hint2;
+   PoolStr     TimeoutText_PS_;
+   PoolStr     Hint1_PS_;
+   PoolStr     Hint2_PS_;
 } REFIT_MENU_SCREEN;
 
 typedef struct {
    REFIT_MENU_ENTRY me;
-   CHAR16           *Title; // For EFI firmware entry, this is "raw" title
-   CHAR16           *LoaderPath;
+   PoolStr          Title_PS_; // For EFI firmware entry, this is "raw" title
+   PoolStr          LoaderPath_PS_;
    REFIT_VOLUME     *Volume;
    BOOLEAN          UseGraphicsMode;
    BOOLEAN          Enabled;
-   CHAR16           *LoadOptions;
-   CHAR16           *InitrdPath; // Linux stub loader only
+   PoolStr          LoadOptions_PS_;
+   PoolStr          InitrdPath_PS_; // Linux stub loader only
    CHAR8            OSType;
    UINTN            DiscoveryType;
    EFI_DEVICE_PATH  *EfiLoaderPath; // path to NVRAM-defined loader
@@ -387,7 +415,7 @@ typedef struct {
    REFIT_MENU_ENTRY  me;
    REFIT_VOLUME      *Volume;
    BDS_COMMON_OPTION *BdsOption;
-   CHAR16            *LoadOptions;
+   PoolStr           LoadOptions_PS_;
    BOOLEAN           Enabled;
 } LEGACY_ENTRY;
 
@@ -492,16 +520,67 @@ extern REFIT_VOLUME       **PreBootVolumes;
 
 extern REFIT_CONFIG         GlobalConfig;
 
-extern REFIT_MENU_SCREEN    MainMenu;
+extern REFIT_MENU_SCREEN    *MainMenu;
 
 extern REFIT_MENU_ENTRY     MenuEntryReturn;
 
 
 VOID AboutRefindPlus(VOID);
-EG_IMAGE * GetDiskBadge(IN UINTN DiskType);
+PoolImage * GetDiskBadge(IN UINTN DiskType);
 LOADER_ENTRY * MakeGenericLoaderEntry(VOID);
 VOID StoreLoaderName(IN CHAR16 *Name);
 VOID RescanAll(BOOLEAN DisplayMessage, BOOLEAN Reconnect);
+#if 0
+VOID ZeroPoolStr (PoolStr *object);
+VOID AssignPoolStr (PoolStr *object, CHAR16 *Str);
+VOID AssignCachedPoolStr (PoolStr *object, CHAR16 *Str);
+VOID CopyPoolStr (PoolStr *Dst, CHAR16 *Src);
+VOID CopyFromPoolStr (PoolStr *Dst, PoolStr *Src);
+CHAR16 * GetPoolStr (PoolStr *object);
+VOID FreePoolStr (PoolStr *object);
+
+VOID ZeroPoolImage (PoolImage *object);
+VOID AssignPoolImage (PoolImage *object, EG_IMAGE *image);
+VOID AssignCachedPoolImage (PoolImage *object, EG_IMAGE *image);
+VOID CopyPoolImage (PoolImage *Dst, EG_IMAGE *Src);
+VOID CopyFromPoolImage (PoolImage *Dst, PoolImage *Src);
+EG_IMAGE * GetPoolImage (PoolImage *object);
+VOID FreePoolImage (PoolImage *object);
+#else
+VOID ZeroPoolStr_PS_ (PoolStr *object);
+VOID AssignPoolStr_PS_ (PoolStr *object, CHAR16 *Str);
+VOID AssignCachedPoolStr_PS_ (PoolStr *object, CHAR16 *Str);
+VOID CopyPoolStr_PS_ (PoolStr *Dst, CHAR16 *Src);
+VOID CopyFromPoolStr_PS_ (PoolStr *Dst, PoolStr *Src);
+CHAR16 * GetPoolStr_PS_ (PoolStr *object);
+VOID FreePoolStr_PS_ (PoolStr *object);
+
+VOID ZeroPoolImage_PI_ (PoolImage *object);
+VOID AssignPoolImage_PI_ (PoolImage *object, EG_IMAGE *image);
+VOID AssignCachedPoolImage_PI_ (PoolImage *object, EG_IMAGE *image);
+VOID CopyPoolImage_PI_ (PoolImage *Dst, EG_IMAGE *Src);
+VOID CopyFromPoolImage_PI_ (PoolImage *Dst, PoolImage *Src);
+EG_IMAGE * GetPoolImage_PI_ (PoolImage *object);
+VOID FreePoolImage_PI_ (PoolImage *object);
+
+#define ZeroPoolStr(object)               ZeroPoolStr_PS_ (object##_PS_)
+#define AssignPoolStr(object, Str)        AssignPoolStr_PS_ (object##_PS_, Str)
+#define AssignCachedPoolStr(object, Str)  AssignCachedPoolStr_PS_ (object##_PS_, Str)
+#define CopyPoolStr(Dst, Src)             CopyPoolStr_PS_ (Dst##_PS_, Src)
+#define CopyFromPoolStr(Dst, Src)         CopyFromPoolStr_PS_ (Dst##_PS_, Src##_PS_)
+#define GetPoolStr(object)                GetPoolStr_PS_ (object##_PS_)
+#define FreePoolStr(object)               FreePoolStr_PS_ (object##_PS_)
+
+#define ZeroPoolImage(object)                ZeroPoolImage_PI_ (object##_PI_)
+#define AssignPoolImage(object, Image)       AssignPoolImage_PI_ (object##_PI_, Image)
+#define AssignCachedPoolImage(object, Image) AssignCachedPoolImage_PI_ (object##_PI_, Image)
+#define CopyPoolImage(Dst, Src)              CopyPoolImage_PI_ (Dst##_PI_, Src)
+#define CopyFromPoolImage(Dst, Src)          CopyFromPoolImage_PI_ (Dst##_PI_, Src##_PI_)
+#define GetPoolImage(object)                 GetPoolImage_PI_ (object##_PI_)
+#define FreePoolImage(object)                FreePoolImage_PI_ (object##_PI_)
+
+#endif
+
 
 #endif
 

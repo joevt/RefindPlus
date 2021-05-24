@@ -109,8 +109,12 @@ struct _refit_menu_screen;
 
 typedef VOID (*MENU_STYLE_FUNC)(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN Function, IN CHAR16 *ParamText);
 
-VOID AddMenuInfoLine(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine);
+VOID AddMenuInfoLine(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine, IN BOOLEAN Cached);
+VOID AddMenuInfoLinePool(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine);
+VOID AddMenuInfoLineCached(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine);
 VOID AddMenuEntry(IN REFIT_MENU_SCREEN *Screen, IN REFIT_MENU_ENTRY *Entry);
+VOID AddMenuEntryCopy(IN REFIT_MENU_SCREEN *Screen, IN REFIT_MENU_ENTRY *Entry);
+
 UINTN ComputeRow0PosY(VOID);
 VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN Function, IN CHAR16 *ParamText);
 UINTN RunMenu(IN REFIT_MENU_SCREEN *Screen, OUT REFIT_MENU_ENTRY **ChosenEntry);
@@ -133,6 +137,21 @@ UINTN RunMainMenu(IN REFIT_MENU_SCREEN *Screen, IN CHAR16** DefaultSelection, OU
 UINTN FindMainMenuItem(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN PosX, IN UINTN PosY);
 VOID GenerateWaitList();
 UINTN WaitForInput(IN UINTN Timeout);
+
+REFIT_MENU_SCREEN * CopyMenuScreen (REFIT_MENU_SCREEN *Entry);
+REFIT_MENU_ENTRY * CopyMenuEntry (REFIT_MENU_ENTRY *Entry);
+VOID FreeMenuEntry (REFIT_MENU_ENTRY *Entry);
+VOID FreeMenuScreen (REFIT_MENU_SCREEN **Menu);
+
+#if REFIT_DEBUG > 0
+VOID LEAKABLEMENUENTRY (REFIT_MENU_ENTRY *Entry);
+VOID LEAKABLEMENU (REFIT_MENU_SCREEN *Menu);
+VOID LEAKABLEROOTMENU (UINT16 LeakableObjectID, REFIT_MENU_SCREEN *Menu);
+#else
+#define LEAKABLEMENUENTRY(...)
+#define LEAKABLEMENU(...)
+#define LEAKABLEROOTMENU(...)
+#endif
 
 #endif
 

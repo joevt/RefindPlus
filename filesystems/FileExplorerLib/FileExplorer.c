@@ -565,6 +565,10 @@ LibFileInfo (
     Buffer = AllocatePool (BufferSize);
     ASSERT (Buffer != NULL);
   }
+  else {
+  	LOGWHERE("BufferSize is 0\n");
+    LOGPOOL(Buffer);
+  }
 
   Status = FHand->GetInfo (
                     FHand,
@@ -573,6 +577,7 @@ LibFileInfo (
                     Buffer
                     );
 
+  LOGPOOL(Buffer);
   return Buffer;
 }
 

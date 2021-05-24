@@ -958,7 +958,7 @@ MyCatPrint (
   IN OUT POOL_PRINT   *Str,
   IN CHAR16           *Fmt,
   ...
-  );
+  ) /* __attribute__ ((format (printf, 2, 3))) */;
 
 /**
   Use SystemTable ConOut to stop video based Simple Text Out consoles from going

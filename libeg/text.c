@@ -36,6 +36,7 @@
 
 #include "libegint.h"
 #include "../MainLoader/global.h"
+#include "../MainLoader/leaks.h"
 
 #include "egemb_font.h"
 #include "egemb_font_large.h"
@@ -66,10 +67,13 @@ static VOID egPrepareFont() {
         else {
             BaseFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
         }
+        if (BaseFontImage == NULL) {
+            return;
+        }
+
+        LEAKABLEONEIMAGE(BaseFontImage, "BaseFontImage");
     }
-    if (BaseFontImage != NULL) {
-        FontCellWidth = BaseFontImage->Width / FONT_NUM_CHARS;
-    }
+    FontCellWidth = BaseFontImage->Width / FONT_NUM_CHARS;
 } // VOID egPrepareFont();
 
 UINTN egGetFontHeight(VOID) {
@@ -134,6 +138,8 @@ VOID egRenderText (
               return;
           }
 
+          LEAKABLEONEIMAGE (LightFontImage, "LightFontImage");
+
           for (i = 0; i < (LightFontImage->Width * LightFontImage->Height); i++) {
              LightFontImage->PixelData[i].r = 255 - LightFontImage->PixelData[i].r;
              LightFontImage->PixelData[i].g = 255 - LightFontImage->PixelData[i].g;
@@ -146,9 +152,11 @@ VOID egRenderText (
     else {
        if (DarkFontImage == NULL) {
            DarkFontImage = egCopyImage(BaseFontImage);
-       }
-       if (DarkFontImage == NULL) {
-           return;
+           if (DarkFontImage == NULL) {
+               return;
+           }
+
+           LEAKABLEONEIMAGE (DarkFontImage, "DarkFontImage");
        }
        FontImage = DarkFontImage;
     } // if/else

@@ -30,6 +30,7 @@
  #include "screenmgt.h"
  #include "crc32.h"
  #include "../include/refit_call_wrapper.h"
+ #include "leaks.h"
 
  #ifdef __MAKEWITH_TIANO
  #define BlockIoProtocol gEfiBlockIoProtocolGuid
@@ -245,6 +246,32 @@
          gPartitions = Next;
      } // while
  } // VOID ForgetPartitionTables()
+
+
+#if REFIT_DEBUG > 0
+VOID
+LEAKABLEPARTITIONS (
+) {
+    if (Volumes) {
+        MsgLog ("[ LEAKABLEPARTITIONS\n");
+        LEAKABLEPATHINIT (kLeakablePartitions);
+            LEAKABLEPATHINC (); // space for Partition Index
+                GPT_DATA *Partition;
+                for (Partition = gPartitions; Partition; Partition = Partition->NextEntry) {
+                    LEAKABLEPATHINC (); // space for Partition info
+                        LEAKABLEWITHPATH (Partition->ProtectiveMBR, "Partition MBR");
+                        LEAKABLEWITHPATH (Partition->Header, "Partition Header");
+                        LEAKABLEWITHPATH (Partition->Entries, "Partition Entries");
+                    LEAKABLEPATHDEC ();
+                    LEAKABLEWITHPATH (Partition, "Partition");
+                }
+            LEAKABLEPATHDEC ();
+        LEAKABLEPATHDONE ();
+        MsgLog ("] LEAKABLEPARTITIONS\n");
+    }
+}
+#endif
+
 
  // If Volume points to a whole disk with a GPT, add it to the gPartitions
  // linked list of GPTs.

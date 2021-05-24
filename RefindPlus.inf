@@ -49,6 +49,7 @@
   MainLoader/install.c
   MainLoader/launch_efi.c
   MainLoader/launch_legacy.c
+  MainLoader/leaks.c
   MainLoader/lib.c
   MainLoader/line_edit.c
   MainLoader/linux.c
@@ -120,6 +121,9 @@
   gEfiAcpi10TableGuid
   gEfiAcpi20TableGuid
   gEfiDxeServicesTableGuid
+  gEfiSalSystemTableGuid
+  gEfiSmbios3TableGuid
+  gEfiMpsTableGuid
   gEfiEventReadyToBootGuid
   gEfiEventVirtualAddressChangeGuid
   gEfiEventExitBootServicesGuid
@@ -131,6 +135,15 @@
   gEfiPartTypeSystemPartGuid
   gEfiSmbiosTableGuid
   gEfiSasDevicePathGuid
+  gLzmaCustomDecompressGuid
+  gEfiHobListGuid
+  gEfiMemoryTypeInformationGuid
+  gEfiMemoryAttributesTableGuid
+  #gEfiHiiDatabaseProtocolGuid
+  #gEfiHiiConfigRoutingProtocolGuid
+  gEfiImageSecurityDatabaseGuid
+  gEfiDebugImageInfoTableGuid
+
 
 [Ppis]
 
@@ -182,6 +195,8 @@
   gEfiLoadFile2ProtocolGuid
   gEfiLoadFileProtocolGuid
   gEfiHiiPackageListProtocolGuid
+  gAppleDiagVaultProtocolGuid
+
 
 [FeaturePcd]
   gEfiMdePkgTokenSpaceGuid.PcdUgaConsumeSupport
@@ -190,13 +205,13 @@
 
 
 [BuildOptions.IA32]
-  XCODE:*_*_*_CC_FLAGS = -Os  -DEFI32 -D__MAKEWITH_TIANO
-  GCC:*_*_*_CC_FLAGS = -Os -DEFI32 -D__MAKEWITH_TIANO
+  XCODE:*_*_*_CC_FLAGS = -Os -DEFI32 -D__MAKEWITH_TIANO
+  GCC:*_*_*_CC_FLAGS   = -Os -DEFI32 -D__MAKEWITH_TIANO
 
 [BuildOptions.X64]
-  XCODE:*_*_*_CC_FLAGS = -Os  -DEFIX64 -D__MAKEWITH_TIANO
-  GCC:*_*_*_CC_FLAGS = -Os -DEFIX64 -D__MAKEWITH_TIANO
+  XCODE:*_*_*_CC_FLAGS = -save-temps -Os -DEFIX64 -D__MAKEWITH_TIANO
+  GCC:*_*_*_CC_FLAGS   = -save-temps -Os -DEFIX64 -D__MAKEWITH_TIANO
 
 [BuildOptions.AARCH64]
-  XCODE:*_*_*_CC_FLAGS = -Os  -DEFIAARCH64 -D__MAKEWITH_TIANO
-  GCC:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO
+  XCODE:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO
+  GCC:*_*_*_CC_FLAGS   = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO

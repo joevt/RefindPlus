@@ -6,3 +6,7 @@
 
 [Includes]
   ../StdLib/Include
+
+[Protocols]
+  ## Include/Apple/Protocol/AppleDiag.h
+  gAppleDiagVaultProtocolGuid                = { 0xF76761DC, 0xFF89, 0x44E4, { 0x9C, 0x0C, 0xCD, 0x0A, 0xDA, 0x4E, 0xF9, 0x83 }}

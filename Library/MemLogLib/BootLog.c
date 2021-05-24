@@ -15,6 +15,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include "../MainLoader/global.h"
 #include "../MainLoader/lib.h"
+#include "../MainLoader/leaks.h"
 #include "../MainLoader/mystrings.h"
 
 extern  EFI_GUID  gEfiMiscSubClassGuid;
@@ -25,8 +26,6 @@ extern  INT16  NowDay;
 extern  INT16  NowHour;
 extern  INT16  NowMinute;
 extern  INT16  NowSecond;
-
-CHAR16  *gLogTemp       = NULL;
 
 BOOLEAN  TimeStamp             = TRUE;
 BOOLEAN  UseMsgLog             = FALSE;
@@ -184,6 +183,7 @@ CHAR16
         NowMinute,
         NowSecond
     );
+    LEAKABLE (DateStr, "DateStr");
 
     return DateStr;
 }
@@ -212,7 +212,6 @@ EFI_FILE_PROTOCOL* GetDebugLogFile()
   }
 
   CHAR16 *DateStr = GetDateString();
-
   ourDebugLog = PoolPrint(
       L"EFI\\%s.log",
       DateStr
@@ -305,6 +304,7 @@ VOID SaveMessageToDebugLogFile(IN CHAR8 *LastMessage)
       }
       // Write out this message
       LogFile->Write(LogFile, &TextLen, Text);
+      MyFreePool (Info);
     }
     LogFile->Close(LogFile);
   }
@@ -327,6 +327,9 @@ MemLogCallback (
     }
 }
 
+
+#if REFIT_DEBUG > 0
+
 VOID
 EFIAPI
 DeepLoggger (
@@ -335,20 +338,11 @@ DeepLoggger (
     IN INTN     type,
     IN CHAR16 **Message
 ) {
-#if REFIT_DEBUG < 1
-    // FreePool and return in RELEASE builds
-    if (*Message) {
-        FreePool (*Message);
-        *Message = NULL;
-    }
-#else
     CHAR8   FormatString[255];
     CHAR16 *FinalMessage = NULL;
 
     // Make sure we are able to write
-    if (DebugMode < 1 ||
-        GlobalConfig.LogLevel < 1 ||
-        GlobalConfig.LogLevel < level ||
+    if ( DONTLOG(DebugMode, level) ||
         !(*Message)
     ) {
         if (*Message) {
@@ -364,7 +358,7 @@ DeepLoggger (
 
     switch (type) {
         case LOG_STAR_HEAD_SEP:
-            FinalMessage = PoolPrint (L"\n              ***[ %s\n", *Message);
+            FinalMessage = PoolPrint (L"\n              ***[ %s ]\n", *Message);
             break;
         case LOG_STAR_SEPARATOR:
             FinalMessage = PoolPrint (L"\n\n** ** *** *** ***[ %s ]*** *** *** ** **\n\n", *Message);
@@ -382,7 +376,7 @@ DeepLoggger (
             FinalMessage = PoolPrint (L"\n. . . . . . . ***[ %s ]*** . . . . . . .\n", *Message);
             break;
         case LOG_THREE_STAR_MID:
-            FinalMessage = PoolPrint (L"              ***[ %s\n", *Message);
+            FinalMessage = PoolPrint (L"              ***[ %s ]\n", *Message);
             break;
         case LOG_THREE_STAR_END:
             FinalMessage = PoolPrint (L"              ***[ %s ]***\n\n", *Message);
@@ -407,8 +401,8 @@ DeepLoggger (
     }
 
     MyFreePool (*Message);
+   
     MyFreePool (FinalMessage);
-#endif
 }
 
 
@@ -418,34 +412,29 @@ DebugLog(
     IN INTN DebugMode,
     IN CONST CHAR8 *FormatString, ...
 ) {
-#if REFIT_DEBUG < 1
-    // Just return in RELEASE builds
-    return;
-#else
     VA_LIST Marker;
 
     // Make sure the buffer is intact for writing
-    if (FormatString == NULL || DebugMode < 0) {
+    if (FormatString == NULL) {
       return;
     }
 
     // Abort on higher log levels if not forcing
-    if (!UseMsgLog) {
-        UseMsgLog = ForceNativeLoggging;
-
-        if (!UseMsgLog && GlobalConfig.LogLevel > 0) {
-          return;
-        }
+    if DONTMSG(DebugMode) {
+      return;
     }
 
     // Print message to log buffer
     VA_START(Marker, FormatString);
+   
     MemLogVA(TimeStamp, DebugMode, FormatString, Marker);
+   
     VA_END(Marker);
 
     TimeStamp = TRUE;
-#endif
 }
+
+#endif
 
 VOID InitBooterLog(
     VOID

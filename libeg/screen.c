@@ -52,6 +52,7 @@
 #include "../MainLoader/screenmgt.h"
 #include "../MainLoader/global.h"
 #include "../MainLoader/lib.h"
+#include "../MainLoader/leaks.h"
 #include "../MainLoader/mystrings.h"
 #include "../include/refit_call_wrapper.h"
 #include "libeg.h"
@@ -139,9 +140,7 @@ daCheckAltGop (
     }
     else {
         if (OrigGop->Mode->MaxMode > 0) {
-            #if REFIT_DEBUG > 0
             MsgLog ("INFO: Usable GOP Exists on ConsoleOut Handle\n\n");
-            #endif
 
             GOPDraw = OrigGop;
 
@@ -157,14 +156,10 @@ daCheckAltGop (
             &HandleBuffer
         );
 
-        #if REFIT_DEBUG > 0
         MsgLog ("Seek Replacement GOP Candidates:");
-        #endif
 
         if (EFI_ERROR (Status)) {
-            #if REFIT_DEBUG > 0
             MsgLog ("\n");
-            #endif
 
             return EFI_NOT_FOUND;
         }
@@ -190,14 +185,9 @@ daCheckAltGop (
                 );
 
                 if (!EFI_ERROR (Status)) {
-                    #if REFIT_DEBUG > 0
                     MsgLog ("\n");
                     MsgLog ("  - Found Replacement Candidate on GPU Handle[%02d]\n", i);
-                    #endif
-
-                    #if REFIT_DEBUG > 0
                     MsgLog ("    * Evaluate Candidate\n");
-                    #endif
 
                     MaxMode  = Gop->Mode->MaxMode;
                     Width    = 0;
@@ -218,23 +208,17 @@ daCheckAltGop (
                     } // for
 
                     if (Width == 0 || Height == 0) {
-                        #if REFIT_DEBUG > 0
                         MsgLog (
                             "    ** Invalid Candidate : Width = %d, Height = %d",
                             Width, Height
                         );
-                        #endif
                     }
                     else {
-                        #if REFIT_DEBUG > 0
                         MsgLog (
                             "    ** Valid Candidate : Width = %d, Height = %d",
                             Width, Height
                         );
-                        #endif
-
                         OurValidGOP = TRUE;
-
                         break;
                     } // if Width == 0 || Height == 0
                 } // if !EFI_ERROR (Status)
@@ -243,14 +227,10 @@ daCheckAltGop (
 
         FreePool (HandleBuffer);
 
-        #if REFIT_DEBUG > 0
         MsgLog ("\n\n");
-        #endif
 
         if (!OurValidGOP || EFI_ERROR (Status)) {
-            #if REFIT_DEBUG > 0
             MsgLog ("INFO: Could Not Find Usable Replacement GOP\n\n");
-            #endif
 
             return EFI_UNSUPPORTED;
         }
@@ -273,44 +253,23 @@ egDumpGOPVideoModes (
     BOOLEAN    OurValidGOP = FALSE;
 
     #if REFIT_DEBUG > 0
-    CHAR16 *MsgStr   = NULL;
-    CHAR16 *ModeTxt  = NULL;
     CHAR16 *PixelFormatDesc;
     #endif
 
     if (GOPDraw == NULL) {
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Could not Find GOP Instance");
-        LOG(4, LOG_STAR_SEPARATOR, L"%s!!", MsgStr);
-        MsgLog ("** WARN: %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
-
+        LOG2(4, LOG_STAR_SEPARATOR, L"** WARN: ", L"\n\n", L"Could not Find GOP Instance!!");
         return EFI_UNSUPPORTED;
     }
 
     // get dump
     MaxMode = GOPDraw->Mode->MaxMode;
     if (MaxMode > 0) {
-        #if REFIT_DEBUG > 0
-        if (MaxMode == 1) {
-            ModeTxt = StrDuplicate (L"Mode");
-        }
-        else {
-            ModeTxt = StrDuplicate (L"Modes");
-        }
-
-        MsgStr = PoolPrint (
-            L"Analyse GOP Modes (%d %s ... 0x%lx-0x%lx FrameBuffer)",
-            MaxMode, ModeTxt,
+        LOG2(4, LOG_THREE_STAR_MID, L"", L":\n",
+            L"Analyse GOP Modes (%d Mode%s ... 0x%lx-0x%lx FrameBuffer)",
+            MaxMode, MaxMode == 1 ? L"" : L"s",
             GOPDraw->Mode->FrameBufferBase,
             GOPDraw->Mode->FrameBufferBase + GOPDraw->Mode->FrameBufferSize
         );
-        LOG(4, LOG_THREE_STAR_MID, L"%s", MsgStr);
-        MsgLog ("%s:\n", MsgStr);
-        MyFreePool (MsgStr);
-        MyFreePool (ModeTxt);
-        #endif
 
         LoopCount = -1;
         for (Mode = 0; Mode <= MaxMode; Mode++) {
@@ -327,9 +286,7 @@ egDumpGOPVideoModes (
                 &Info
             );
 
-            #if REFIT_DEBUG > 0
             MsgLog ("  - Mode[%02d] ...%r", Mode, Status);
-            #endif
 
             if (!EFI_ERROR (Status)) {
                 OurValidGOP = TRUE;
@@ -378,50 +335,14 @@ egDumpGOPVideoModes (
                 #endif
             }
             else {
-                #if REFIT_DEBUG > 0
-                UINT32 ModeLog;
-                // Limit logged value to 99
-                if (Mode > 99) {
-                    ModeLog = 99;
-                }
-                else {
-                    ModeLog = Mode;
-                }
-
-                MsgStr = PoolPrint (L"Mode[%d]: %r", ModeLog, Status);
-                LOG(4, LOG_THREE_STAR_MID, L"%s", MsgStr);
-                MsgLog ("  - %s", MsgStr);
-                MyFreePool (MsgStr);
-
-                if (LoopCount < MaxMode) {
-                    if (Mode > 99) {
-                        MsgLog ( ". NB: Real Mode = %d\n", Mode);
-                    }
-                    else {
-                        MsgLog ( "\n", Mode);
-                    }
-                }
-                else {
-                    if (Mode > 99) {
-                        MsgLog ( ". NB: Real Mode = %d\n\n", Mode);
-                    }
-                    else {
-                        MsgLog ( "\n\n", Mode);
-                    }
-                }
-                #endif
+                LOG2(4, LOG_THREE_STAR_MID, L"  - ", L"", L"Mode[%d]: %r", Mode, Status);
             } // if Status == EFI_SUCCESS
         } // for (Mode = 0; Mode <= MaxMode; Mode++)
+        MsgLog ( "\n");
     } // if MaxMode > 0
 
     if (!OurValidGOP) {
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Could Not Find Usable GOP");
-        LOG(4, LOG_STAR_SEPARATOR, L"%s!!", MsgStr);
-        MsgLog ("INFO: %s:\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
-
+        LOG2(4, LOG_STAR_SEPARATOR, L"INFO: ", L"\n\n", L"Could Not Find Usable GOP!!");
         return EFI_UNSUPPORTED;
     }
 
@@ -438,26 +359,18 @@ GopSetModeAndReconnectTextOut (
 ) {
     EFI_STATUS Status;
 
-    #if REFIT_DEBUG > 0
-    CHAR16 *MsgStr = NULL;
-    #endif
-
     if (GOPDraw == NULL) {
         return EFI_UNSUPPORTED;
     }
 
+    _ENDIGNORE_
     Status = refit_call2_wrapper(
         GOPDraw->SetMode,
         GOPDraw,
         ModeNumber
     );
-
-    #if REFIT_DEBUG > 0
-    MsgStr = PoolPrint (L"Switch to GOP Mode[%d] ...%r", ModeNumber, Status);
-    LOG(2, LOG_LINE_NORMAL, L"%s", MsgStr);
-    MsgLog ("  - %s\n\n", MsgStr);
-    MyFreePool (MsgStr);
-    #endif
+    _END_
+    LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Switch to GOP Mode[%d] ...%r", ModeNumber, Status);
 
     return Status;
 }
@@ -474,21 +387,10 @@ egSetGOPMode (
     INT32        Mode;
     UINT32       i = 0;
 
-    #if REFIT_DEBUG > 0
-    CHAR16 *MsgStr = NULL;
-
     MsgLog ("Set GOP Mode:");
-    #endif
 
     if (GOPDraw == NULL) {
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Could not Set GOP Mode");
-        LOG(2, LOG_LINE_NORMAL, L"%s!!", MsgStr);
-        MsgLog ("\n\n");
-        MsgLog ("** WARN: %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
-
+        LOG2(2, LOG_LINE_NORMAL, L"\n\n** WARN: ", L"\n\n", L"Could not Set GOP Mode!!");
         return EFI_UNSUPPORTED;
     }
 
@@ -498,14 +400,7 @@ egSetGOPMode (
 
     if (MaxMode < 1) {
         Status = EFI_UNSUPPORTED;
-
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Incompatible GPU");
-        LOG(2, LOG_LINE_NORMAL, L"%s!!", MsgStr);
-        MsgLog ("\n\n");
-        MsgLog ("** WARN: %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
+        LOG2(2, LOG_LINE_NORMAL, L"\n\n** WARN: ", L"\n\n", L"Incompatible GPU!!");
     }
     else {
         while (EFI_ERROR (Status) && i <= MaxMode) {
@@ -521,10 +416,8 @@ egSetGOPMode (
                 &Info
             );
 
-            #if REFIT_DEBUG > 0
             MsgLog ("\n");
             MsgLog ("  - Mode[%02d] ...%r\n", Mode, Status);
-            #endif
 
             if (!EFI_ERROR (Status)) {
                 Status = GopSetModeAndReconnectTextOut ((UINT32)Mode);
@@ -558,10 +451,6 @@ egSetMaxResolution (
     UINT32       Mode;
     UINTN        SizeOfInfo;
 
-    #if REFIT_DEBUG > 0
-    CHAR16 *MsgStr = NULL;
-    #endif
-
     if (GOPDraw == NULL) {
         // Cannot do this in text mode or with UGA.
         // So get and set basic data and ignore.
@@ -579,9 +468,7 @@ egSetMaxResolution (
         return EFI_UNSUPPORTED;
     }
 
-    #if REFIT_DEBUG > 0
     MsgLog ("Set Screen Resolution:\n");
-    #endif
 
     MaxMode = GOPDraw->Mode->MaxMode;
     for (Mode = 0; Mode < MaxMode; Mode++) {
@@ -607,33 +494,19 @@ egSetMaxResolution (
         }
     }
 
-    #if REFIT_DEBUG > 0
-    MsgStr = PoolPrint (L"BestMode: GOP Mode[%d] @ %d x %d",
-        BestMode, Width, Height
-    );
-    LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-    MsgLog ("  - %s\n\n", MsgStr);
-    MyFreePool (MsgStr);
-    #endif
+    LOG2(4, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"BestMode: GOP Mode[%d] @ %d x %d", BestMode, Width, Height);
 
     // check if requested mode is equal to current mode
     if (BestMode == GOPDraw->Mode->Mode) {
         Status = EFI_SUCCESS;
 
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Screen Resolution Already Set");
-        LOG(2, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("INFO: %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
+        LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Screen Resolution Already Set");
 
         egScreenWidth  = GOPDraw->Mode->Info->HorizontalResolution;
         egScreenHeight = GOPDraw->Mode->Info->VerticalResolution;
     }
     else {
-        #if REFIT_DEBUG > 0
         MsgLog ("\n");
-        #endif
 
         Status = GopSetModeAndReconnectTextOut (BestMode);
         if (!EFI_ERROR (Status)) {
@@ -644,12 +517,7 @@ egSetMaxResolution (
             // we cannot set BestMode - search for first one that we can use
             Status = egSetGOPMode (1);
 
-            #if REFIT_DEBUG > 0
-            MsgStr = StrDuplicate (L"Could Not Set BestMode ... Try First Useable Mode");
-            LOG(2, LOG_LINE_NORMAL, L"%s", MsgStr);
-            MsgLog ("** WARN: %s\n\n", MsgStr);
-            MyFreePool (MsgStr);
-            #endif
+            LOG2(2, LOG_LINE_NORMAL, L"** WARN: ", L"\n\n", L"Could Not Set BestMode ... Try First Useable Mode");
         }
     }
 
@@ -729,18 +597,12 @@ egInitScreen (
     UINTN                         i;
     BOOLEAN                       thisValidGOP = FALSE;
 
-    #if REFIT_DEBUG > 0
-    CHAR16 *MsgStr = NULL;
-
     MsgLog ("Check for Graphics:\n");
-    #endif
 
     // Get ConsoleControl Protocol
     ConsoleControl = NULL;
 
-    #if REFIT_DEBUG > 0
     MsgLog ("  - Seek Console Control\n");
-    #endif
 
     // Check ConsoleOut Handle
     Status = refit_call3_wrapper(
@@ -750,9 +612,7 @@ egInitScreen (
         (VOID **) &ConsoleControl
     );
 
-    #if REFIT_DEBUG > 0
     MsgLog ("    * Seek on ConsoleOut Handle ...%r\n", Status);
-    #endif
 
     if (EFI_ERROR (Status) || ConsoleControl == NULL) {
         // Try Locating by Handle
@@ -765,9 +625,7 @@ egInitScreen (
             &HandleBuffer
         );
 
-        #if REFIT_DEBUG > 0
         MsgLog ("    * Seek on Handle Buffer ...%r\n", Status);
-        #endif
 
         if (!EFI_ERROR (Status)) {
             for (i = 0; i < HandleCount; i++) {
@@ -778,9 +636,7 @@ egInitScreen (
                     (VOID*) &ConsoleControl
                 );
 
-                #if REFIT_DEBUG > 0
                 MsgLog ("    ** Evaluate on Handle[%02d] ...%r\n", i, Status);
-                #endif
 
                 if (!EFI_ERROR (Status)) {
                     break;
@@ -793,28 +649,16 @@ egInitScreen (
     if (EFI_ERROR (Status)) {
         DetectedDevices  = FALSE;
 
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Assess Console Control ...NOT OK!!");
-        LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("  - %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
+        LOG2(4, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Console Control ...NOT OK!!");
     }
     else {
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Assess Console Control ...ok");
-        LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("  - %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
+        LOG2(4, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Console Control ...ok");
     }
 
     // Get UGADraw Protocol
     UGADraw = NULL;
 
-    #if REFIT_DEBUG > 0
     MsgLog ("  - Seek Universal Graphics Adapter\n");
-    #endif
 
     // Check ConsoleOut Handle
     Status = refit_call3_wrapper(
@@ -824,9 +668,7 @@ egInitScreen (
         (VOID **) &UGADraw
     );
 
-    #if REFIT_DEBUG > 0
     MsgLog ("    * Seek on ConsoleOut Handle ...%r\n", Status);
-    #endif
 
     if (EFI_ERROR (Status)) {
         // Try Locating by Handle
@@ -839,9 +681,7 @@ egInitScreen (
             &HandleBuffer
         );
 
-        #if REFIT_DEBUG > 0
         MsgLog ("    * Seek on Handle Buffer ...%r\n", Status);
-        #endif
 
         if (!EFI_ERROR (Status)) {
             EFI_UGA_DRAW_PROTOCOL *TmpUGA   = NULL;
@@ -860,9 +700,7 @@ egInitScreen (
                     (VOID*) &TmpUGA
                 );
 
-                #if REFIT_DEBUG > 0
                 MsgLog ("    ** Examine Handle[%02d] ...%r\n", i, Status);
-                #endif
 
                 if (!EFI_ERROR (Status)) {
                     Status = refit_call5_wrapper(
@@ -878,20 +716,16 @@ egInitScreen (
                             UGAWidth  = Width;
                             UGAHeight = Height;
 
-                            #if REFIT_DEBUG > 0
                             MsgLog (
                                 "    *** Select Handle[%02d] @ %5d x %-5d\n",
                                 i, UGAWidth, UGAHeight
                             );
-                            #endif
                         }
                         else {
-                            #if REFIT_DEBUG > 0
                             MsgLog (
                                 "    *** Ignore Handle[%02d] @ %5d x %-5d\n",
                                 i, Width, Height
                             );
-                            #endif
                         }
                     }
                 }
@@ -901,28 +735,16 @@ egInitScreen (
     }
 
     if (EFI_ERROR (Status)) {
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Assess Universal Graphics Adapter ...NOT OK!!");
-        LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("  - %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
+        LOG2(4, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Universal Graphics Adapter ...NOT OK!!");
     }
     else {
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Assess Universal Graphics Adapter ...ok");
-        LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("  - %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
+        LOG2(4, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Universal Graphics Adapter ...ok");
     }
 
     // Get GOPDraw Protocol
     GOPDraw = NULL;
 
-    #if REFIT_DEBUG > 0
     MsgLog ("  - Seek Graphics Output Protocol\n");
-    #endif
 
     // Check ConsoleOut Handle
     Status = refit_call3_wrapper(
@@ -932,9 +754,7 @@ egInitScreen (
         (VOID **) &OldGOP
     );
 
-    #if REFIT_DEBUG > 0
     MsgLog ("    * Seek on ConsoleOut Handle ...%r\n", Status);
-    #endif
 
     if (EFI_ERROR (Status)) {
         // Try Locating by Handle
@@ -947,9 +767,7 @@ egInitScreen (
             &HandleBuffer
         );
 
-        #if REFIT_DEBUG > 0
         MsgLog ("    * Seek on Handle Buffer ...%r\n", Status);
-        #endif
 
         if (!EFI_ERROR (Status)) {
             EFI_GRAPHICS_OUTPUT_MODE_INFORMATION  *Info;
@@ -968,9 +786,7 @@ egInitScreen (
                     (VOID*) &OldGOP
                 );
 
-                #if REFIT_DEBUG > 0
                 MsgLog ("    ** Evaluate on Handle[%02d] ...%r\n", i, Status);
-                #endif
 
                 if (!EFI_ERROR (Status)) {
                     TmpGOP = OldGOP;
@@ -985,7 +801,6 @@ egInitScreen (
                                 GOPWidth  = Info->HorizontalResolution;
                                 GOPHeight = Info->VerticalResolution;
 
-                                #if REFIT_DEBUG > 0
                                 MsgLog (
                                     "    *** Select Handle[%02d][%02d] @ %5d x %-5d\n",
                                     i,
@@ -993,10 +808,8 @@ egInitScreen (
                                     GOPWidth,
                                     GOPHeight
                                 );
-                                #endif
                             }
                             else {
-                                #if REFIT_DEBUG > 0
                                 MsgLog (
                                     "        Ignore Handle[%02d][%02d] @ %5d x %-5d\n",
                                     i,
@@ -1004,7 +817,6 @@ egInitScreen (
                                     Info->HorizontalResolution,
                                     Info->VerticalResolution
                                 );
-                                #endif
                             }
                         }
                     }
@@ -1026,24 +838,14 @@ egInitScreen (
         XFlag = EFI_NOT_FOUND;
 
         // Not Found
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Assess Graphics Output Protocol ...NOT FOUND!!");
-        LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("  - %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
+        LOG2(4, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ...NOT FOUND!!");
     }
 
     if (EFI_ERROR (Status) && XFlag == EFI_UNSUPPORTED) {
         XFlag = EFI_NOT_FOUND;
 
         // Not Found
-        #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"Assess Graphics Output Protocol ...ERROR!!");
-        LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("  - %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
+        LOG2(4, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ...ERROR!!");
     }
     else if (!EFI_ERROR (Status) && XFlag != EFI_ALREADY_STARTED) {
         if (OldGOP->Mode->MaxMode > 0) {
@@ -1053,22 +855,12 @@ egInitScreen (
             // Set GOP to OldGOP
             GOPDraw = OldGOP;
 
-            #if REFIT_DEBUG > 0
-            MsgStr = StrDuplicate (L"Assess Graphics Output Protocol ...ok");
-            LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-            MsgLog ("  - %s\n\n", MsgStr);
-            MyFreePool (MsgStr);
-            #endif
+            LOG2(4, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ...ok");
         }
         else {
             XFlag = EFI_UNSUPPORTED;
 
-            #if REFIT_DEBUG > 0
-            MsgStr = StrDuplicate (L"Assess Graphics Output Protocol ...NOT OK!!");
-            LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-            MsgLog ("  - %s\n\n", MsgStr);
-            MyFreePool (MsgStr);
-            #endif
+            LOG2(4, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ...NOT OK!!");
 
             #ifdef __MAKEWITH_TIANO
             // DA-TAG: Limit to TianoCore
@@ -1094,12 +886,7 @@ egInitScreen (
 
     if (XFlag != EFI_NOT_FOUND && XFlag != EFI_UNSUPPORTED && GlobalConfig.UseDirectGop) {
         if (GOPDraw == NULL) {
-            #if REFIT_DEBUG > 0
-            MsgStr = StrDuplicate (L"Cannot Implement Direct GOP Renderer");
-            LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-            MsgLog ("INFO: %s\n\n", MsgStr);
-            MyFreePool (MsgStr);
-            #endif
+            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Cannot Implement Direct GOP Renderer");
         }
         else {
             if (GOPDraw->Mode->Info->PixelFormat == PixelBltOnly) {
@@ -1132,30 +919,15 @@ egInitScreen (
                 }
             }
 
-            #if REFIT_DEBUG > 0
-            MsgStr = PoolPrint (L"Implement Direct GOP Renderer ...%r", Status);
-            LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-            MsgLog ("INFO: %s\n\n", MsgStr);
-            MyFreePool (MsgStr);
-            #endif
+            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Implement Direct GOP Renderer ...%r", Status);
         }
     }
 
     if (XFlag == EFI_NOT_FOUND || XFlag == EFI_LOAD_ERROR) {
-        #if REFIT_DEBUG > 0
-        MsgStr = PoolPrint (L"Graphics Output Protocol ...%r", XFlag);
-        LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("INFO: %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
+        LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Graphics Output Protocol ...%r", XFlag);
     }
     else if (XFlag == EFI_UNSUPPORTED) {
-        #if REFIT_DEBUG > 0
-        MsgStr = PoolPrint (L"Provide GOP on ConsoleOut Handle ...%r", Status);
-        LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("INFO: %s\n\n", MsgStr);
-        MyFreePool (MsgStr);
-        #endif
+        LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Provide GOP on ConsoleOut Handle ...%r", Status);
 
         if (!EFI_ERROR (Status)) {
             thisValidGOP = TRUE;
@@ -1168,12 +940,7 @@ egInitScreen (
         Status = egDumpGOPVideoModes();
 
         if (EFI_ERROR (Status)) {
-            #if REFIT_DEBUG > 0
-            MsgStr = StrDuplicate (L"Invalid GOP Instance");
-            LOG(4, LOG_LINE_NORMAL, L"WARNING: %s!!", MsgStr);
-            MsgLog ("** WARN: %s\n\n", MsgStr);
-            MyFreePool (MsgStr);
-            #endif
+            LOG2(4, LOG_LINE_NORMAL, L"** WARN: ", L"\n\n", L"WARNING: Invalid GOP Instance!!");
 
             GOPDraw = NULL;
         }
@@ -1194,10 +961,7 @@ egInitScreen (
             #if REFIT_DEBUG > 0
             // Only log this if GOPFix or Direct Renderer attempted
             if (XFlag == EFI_UNSUPPORTED || XFlag == EFI_ALREADY_STARTED) {
-                MsgStr = PoolPrint (L"Implement Graphics Output Protocol ...%r", Status);
-                LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-                MsgLog ("INFO: %s\n\n", MsgStr);
-                MyFreePool (MsgStr);
+                LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Implement Graphics Output Protocol ...%r", Status);
             }
             #endif
         }
@@ -1210,12 +974,7 @@ egInitScreen (
             // Run OcProvideUgaPassThrough from OpenCorePkg
             Status = OcProvideUgaPassThrough();
 
-            #if REFIT_DEBUG > 0
-            MsgStr = PoolPrint (L"Implement UGA Pass Through ...%r", Status);
-            LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-            MsgLog ("INFO: %s\n\n", MsgStr);
-            MyFreePool (MsgStr);
-            #endif
+            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Implement UGA Pass Through ...%r", Status);
         }
         #endif
 
@@ -1228,13 +987,7 @@ egInitScreen (
             );
 
             if (!EFI_ERROR (Status)) {
-                #if REFIT_DEBUG > 0
-                MsgStr = StrDuplicate (L"GOP not Available");
-                LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-                MsgLog ("INFO: %s\n", MsgStr);
-                MyFreePool (MsgStr);
-                MsgLog ("      Fall Back on UGA\n\n");
-                #endif
+                LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"GOP not available; Fall back on UGA");
 
                 egHasGraphics  = TRUE;
                 egScreenWidth  = GlobalConfig.RequestedScreenWidth  = Width;
@@ -1245,13 +998,7 @@ egInitScreen (
                 UGADraw               = NULL;
                 GlobalConfig.TextOnly = TRUE;
 
-                #if REFIT_DEBUG > 0
-                MsgStr = StrDuplicate (L"Graphics not Available");
-                LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-                MsgLog ("INFO: %s\n", MsgStr);
-                MyFreePool (MsgStr);
-                MsgLog ("      Fall Back on Text Mode\n\n");
-                #endif
+                LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n", L"Graphics not available; Fall back on Text Mode");
             }
         }
     }
@@ -1267,18 +1014,16 @@ egInitScreen (
         }
         else {
             ScreenMode = EfiConsoleControlScreenText;
+            #ifdef __MAKEWITH_TIANO
+            HaveOverriden = TRUE;
+            #endif
         }
 
         #ifdef __MAKEWITH_TIANO
             // DA-TAG: Limit to TianoCore
             Status = OcUseBuiltinTextOutput (ScreenMode);
 
-            #if REFIT_DEBUG > 0
-            MsgStr = PoolPrint (L"Implement Text Renderer ...%r", Status);
-            LOG(4, LOG_LINE_NORMAL, L"%s", MsgStr);
-            MsgLog ("INFO: %s\n\n", MsgStr);
-            MyFreePool (MsgStr);
-            #endif
+            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Implement Text Renderer ...%r", Status);
         #endif
     }
 
@@ -1367,14 +1112,10 @@ egSetScreenSize (
     UINT32       UGARefreshRate;
     CHAR16       *ShowScreenStr = NULL;
 
-    #if REFIT_DEBUG > 0
     MsgLog ("Set Screen Size Manually. H = %d and W = %d\n", ScreenHeight, ScreenWidth);
-    #endif
 
     if ((ScreenWidth == NULL) || (ScreenHeight == NULL)) {
-        #if REFIT_DEBUG > 0
         LOG(1, LOG_LINE_NORMAL, L"Error: ScreenWidth or ScreenHeight is NULL in egSetScreenSize!!");
-        #endif
 
         SwitchToText (FALSE);
 
@@ -1385,9 +1126,7 @@ egSetScreenSize (
         refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
 
-        #if REFIT_DEBUG > 0
         MsgLog ("%s\n", ShowScreenStr);
-        #endif
 
         PauseForKey();
         MyFreePool (ShowScreenStr);
@@ -1399,18 +1138,13 @@ egSetScreenSize (
         // GOP mode (UEFI)
         CurrentModeNum = GOPDraw->Mode->Mode;
 
-        #if REFIT_DEBUG > 0
         MsgLog ("  - GOPDraw Object Found ...Current Mode = %d\n", CurrentModeNum);
-        #endif
 
         if (*ScreenHeight == 0) {
             // User specified a mode number (stored in *ScreenWidth); use it directly
             ModeNum = (UINT32) *ScreenWidth;
             if (ModeNum != CurrentModeNum) {
-                #if REFIT_DEBUG > 0
-                MsgLog ("  - Mode Set from ScreenWidth\n\n");
-                #endif
-
+                LOG2(2, LOG_LINE_NORMAL, L"  - ", L" from ScreenWidth\n\n", L"Setting GOP mode to %d", ModeNum);
                 ModeSet = TRUE;
             }
             else if (egGetResFromMode (ScreenWidth, ScreenHeight) &&
@@ -1420,17 +1154,11 @@ egSetScreenSize (
                     ModeNum
                 ) == EFI_SUCCESS)
             ) {
-                #if REFIT_DEBUG > 0
-                LOG(2, LOG_LINE_NORMAL, L"Setting GOP mode to %d", ModeNum);
-                MsgLog ("  - Mode Set from egGetResFromMode\n\n");
-                #endif
-
+                LOG2(2, LOG_LINE_NORMAL, L"  - ", L" from egGetResFromMode\n\n", L"Setting GOP mode to %d", ModeNum);
                 ModeSet = TRUE;
             }
             else {
-                #if REFIT_DEBUG > 0
                 MsgLog ("  - Could Not Set GOPDraw Mode\n\n");
-                #endif
             }
             // User specified width & height; must find mode...
         }
@@ -1458,17 +1186,11 @@ egSetScreenSize (
                         ModeNum
                     ) == EFI_SUCCESS))
                 ) {
-                    #if REFIT_DEBUG > 0
-                    LOG(2, LOG_LINE_NORMAL, L"Setting GOP mode to %d", ModeNum);
-                    MsgLog ("  - Mode Set from GOPDraw Query\n\n");
-                    #endif
-
+                    LOG2(2, LOG_LINE_NORMAL, L"  - ", L" from GOPDraw Query\n\n", L"Setting GOP mode to %d", ModeNum);
                     ModeSet = TRUE;
                 }
                 else {
-                    #if REFIT_DEBUG > 0
                     MsgLog ("  - Could Not Set GOPDraw Mode\n\n");
-                    #endif
                 }
             } while ((++ModeNum < GOPDraw->Mode->MaxMode) && !ModeSet);
         } // if/else
@@ -1484,19 +1206,14 @@ egSetScreenSize (
             ShowScreenStr = L"Invalid Resolution Setting Provided ...Trying Default Modes:";
             PrintUglyText (ShowScreenStr, NEXTLINE);
 
-            #if REFIT_DEBUG > 0
-            LOG(1, LOG_LINE_NORMAL, ShowScreenStr);
-            MsgLog ("%s", ShowScreenStr);
-            #endif
+            LOG2(1, LOG_LINE_NORMAL, L"", L"", L"%s", ShowScreenStr);
 
             MyFreePool (ShowScreenStr);
 
             ModeNum = 0;
             do {
 
-                #if REFIT_DEBUG > 0
                 MsgLog ("\n");
-                #endif
 
                 Status = refit_call4_wrapper(
                     GOPDraw->QueryMode,
@@ -1514,11 +1231,7 @@ egSetScreenSize (
                         Info->VerticalResolution
                     );
                     PrintUglyText (ShowScreenStr, NEXTLINE);
-
-                    #if REFIT_DEBUG > 0
-                    LOG(1, LOG_LINE_NORMAL, ShowScreenStr);
-                    MsgLog ("  - %s", ShowScreenStr);
-                    #endif
+                    LOG2(1, LOG_LINE_NORMAL, L"  - ", L"", L"%s", ShowScreenStr);
 
                     if (ModeNum == CurrentModeNum) {
                         egScreenWidth  = Info->HorizontalResolution;
@@ -1530,17 +1243,13 @@ egSetScreenSize (
                     ShowScreenStr = L"Error : Could Not Query GOPDraw Mode";
                     PrintUglyText (ShowScreenStr, NEXTLINE);
 
-                    #if REFIT_DEBUG > 0
                     MsgLog ("  - %s", ShowScreenStr);
-                    #endif
                 } // if
 
                 MyFreePool (ShowScreenStr);
             } while (++ModeNum < GOPDraw->Mode->MaxMode);
 
-            #if REFIT_DEBUG > 0
             MsgLog ("\n\n");
-            #endif
 
             PauseForKey();
             SwitchToGraphicsAndClear (TRUE);
@@ -1556,9 +1265,7 @@ egSetScreenSize (
             &UGADepth, &UGARefreshRate
         );
 
-        #if REFIT_DEBUG > 0
         LOG(1, LOG_LINE_NORMAL, L"Setting UGA Draw mode to %d x %d", *ScreenWidth, *ScreenHeight);
-        #endif
 
         Status = refit_call5_wrapper(
             UGADraw->SetMode, UGADraw,
@@ -1585,10 +1292,7 @@ egSetScreenSize (
             );
             PrintUglyText (ShowScreenStr, NEXTLINE);
 
-            #if REFIT_DEBUG > 0
-            LOG(1, LOG_LINE_NORMAL, ShowScreenStr);
-            MsgLog ("%s\n", ShowScreenStr);
-            #endif
+            LOG2(1, LOG_LINE_NORMAL, L"", L"\n", L"%s", ShowScreenStr);
 
             MyFreePool (ShowScreenStr);
         } // if/else
@@ -1615,9 +1319,7 @@ egSetTextMode (
     if ((RequestedMode != DONT_CHANGE_TEXT_MODE) &&
         (RequestedMode != gST->ConOut->Mode->Mode)
     ) {
-        #if REFIT_DEBUG > 0
         LOG(1, LOG_LINE_NORMAL, L"Setting text mode to %d", RequestedMode);
-        #endif
 
         Status = refit_call2_wrapper(
             gST->ConOut->SetMode,
@@ -1630,26 +1332,9 @@ egSetTextMode (
         else {
             SwitchToText (FALSE);
 
-            ShowScreenStr = StrDuplicate (L"Error Setting Text Mode ...Unsupported Mode");
+            ShowScreenStr = PoolPrint (L"Error setting text mode %d; available modes are:", RequestedMode);
             PrintUglyText (ShowScreenStr, NEXTLINE);
-
-            #if REFIT_DEBUG > 0
-            MsgLog ("%s\n", ShowScreenStr);
-            #endif
-
-            MyFreePool (ShowScreenStr);
-
-            ShowScreenStr = StrDuplicate (L"Seek Available Modes:");
-            PrintUglyText (ShowScreenStr, NEXTLINE);
-
-            #if REFIT_DEBUG > 0
-            LOG(1, LOG_LINE_NORMAL,
-                L"Error setting text mode %d; available modes are:",
-                RequestedMode
-            );
-            MsgLog ("%s\n", ShowScreenStr);
-            #endif
-
+            LOG2(1, LOG_LINE_NORMAL, L"", L"\n", L"%s", ShowScreenStr);
             MyFreePool (ShowScreenStr);
 
             do {
@@ -1664,12 +1349,7 @@ egSetTextMode (
                 if (!EFI_ERROR (Status)) {
                     ShowScreenStr = PoolPrint (L"  - Mode[%d] (%d x %d)", i, Width, Height);
                     PrintUglyText (ShowScreenStr, NEXTLINE);
-
-                    #if REFIT_DEBUG > 0
-                    LOG(1, LOG_LINE_NORMAL, ShowScreenStr);
-                    MsgLog ("%s\n", ShowScreenStr);
-                    #endif
-
+                    LOG2(1, LOG_LINE_NORMAL, L"", L"\n", L"%s", ShowScreenStr);
                     MyFreePool (ShowScreenStr);
                 }
             } while (++i < gST->ConOut->Mode->MaxMode);
@@ -1677,10 +1357,7 @@ egSetTextMode (
             ShowScreenStr = PoolPrint (L"Use Default Mode[%d]:", DONT_CHANGE_TEXT_MODE);
             PrintUglyText (ShowScreenStr, NEXTLINE);
 
-            #if REFIT_DEBUG > 0
-            LOG(1, LOG_LINE_NORMAL, ShowScreenStr);
-            MsgLog ("%s\n", ShowScreenStr);
-            #endif
+            LOG2(1, LOG_LINE_NORMAL, L"", L"\n", L"%s", ShowScreenStr);
 
             PauseForKey();
             SwitchToGraphicsAndClear (TRUE);
@@ -1880,9 +1557,7 @@ egDrawImage (
        );
 
        if (CompImage == NULL) {
-           #if REFIT_DEBUG > 0
           MsgLog ("Error! Cannot crop image in egDrawImage()!\n");
-          #endif
 
           return;
        }
@@ -2038,9 +1713,7 @@ egDisplayMessage (
       } // switch()
 
       egDrawImage (Box, (egScreenWidth - BoxWidth) / 2, Position);
-      if ((PositionCode == CENTER) || (Position >= egScreenHeight - (BoxHeight * 5))) {
-          Position = 1;
-      }
+      egFreeImage (Box);
    } // if non-NULL inputs
 } // VOID egDisplayMessage()
 
@@ -2112,10 +1785,8 @@ egScreenShot (
     CHAR16       *FileName       = NULL;
     CHAR16       *ShowScreenStr  = NULL;
 
-    #if REFIT_DEBUG > 0
     MsgLog ("User Input Received:\n");
     MsgLog ("  - Take Screenshot\n");
-    #endif
 
     Image = egCopyScreen();
     if (Image == NULL) {
@@ -2127,10 +1798,7 @@ egScreenShot (
         PrintUglyText (ShowScreenStr, NEXTLINE);
         refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-        #if REFIT_DEBUG > 0
-        LOG(1, LOG_LINE_NORMAL, ShowScreenStr);
-        MsgLog ("    * %s\n\n", ShowScreenStr);
-        #endif
+        LOG2(1, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"%s", ShowScreenStr);
 
         PauseForKey();
         SwitchToGraphics();
@@ -2167,10 +1835,7 @@ egScreenShot (
         PrintUglyText (ShowScreenStr, NEXTLINE);
         refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-        #if REFIT_DEBUG > 0
-        LOG(1, LOG_LINE_NORMAL, ShowScreenStr);
-        MsgLog ("    * %s\n\n", ShowScreenStr);
-        #endif
+        LOG2(1, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"%s", ShowScreenStr);
 
         HaltForKey();
         SwitchToGraphics();
@@ -2180,8 +1845,8 @@ egScreenShot (
     }
 
     // Save to first available ESP if not running from ESP
-    if (!MyStriCmp (SelfVolume->VolName, L"EFI") &&
-        !MyStriCmp (SelfVolume->VolName, L"ESP")
+    if (!MyStriCmp (GetPoolStr (&SelfVolume->VolName), L"EFI") &&
+        !MyStriCmp (GetPoolStr (&SelfVolume->VolName), L"ESP")
     ) {
         Status = egFindESP (&BaseDir);
         if (EFI_ERROR (Status)) {
@@ -2193,9 +1858,7 @@ egScreenShot (
             PrintUglyText (ShowScreenStr, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-            #if REFIT_DEBUG > 0
             MsgLog ("%s\n\n", ShowScreenStr);
-            #endif
 
             HaltForKey();
             SwitchToGraphics();
@@ -2221,9 +1884,7 @@ egScreenShot (
                 PrintUglyText (ShowScreenStr, NEXTLINE);
                 refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-                #if REFIT_DEBUG > 0
                 MsgLog ("%s\n\n", ShowScreenStr);
-                #endif
 
                 HaltForKey();
                 SwitchToGraphics();
@@ -2248,9 +1909,7 @@ egScreenShot (
         goto bailout_wait;
     }
 
-    #if REFIT_DEBUG > 0
     MsgLog ("    * Screenshot Taken:- '%s'\n\n", FileName);
-    #endif
 
     return;
 

@@ -141,9 +141,7 @@ VOID RecordgCsrStatus (
     } // switch
 
     if (DisplayMessage) {
-        #if REFIT_DEBUG > 0
         MsgLog ("    * %s\n\n", gCsrStatus);
-        #endif
 
         egDisplayMessage (gCsrStatus, &BGColor, CENTER);
         PauseSeconds (3);
@@ -159,9 +157,7 @@ VOID RotateCsrValue (VOID) {
     EFI_GUID     CsrGuid = APPLE_GUID;
     EFI_STATUS   Status;
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_SEPARATOR, L"Rotating CSR Value");
-    #endif
 
     Status = GetCsrStatus (&CurrentValue);
     if ((Status == EFI_SUCCESS) && GlobalConfig.CsrValues) {
@@ -178,12 +174,10 @@ VOID RotateCsrValue (VOID) {
             TargetCsr = ListItem->Next->Value;
         }
 
-        #if REFIT_DEBUG > 0
         LOG(1, LOG_LINE_NORMAL,
             L"CSR value was 0x%04x; setting to 0x%04x",
             CurrentValue, TargetCsr
         );
-        #endif
 
         Status = EfivarSetRaw (
             &CsrGuid,
@@ -196,16 +190,12 @@ VOID RotateCsrValue (VOID) {
         if (Status == EFI_SUCCESS) {
             RecordgCsrStatus (TargetCsr, TRUE);
 
-            #if REFIT_DEBUG > 0
             LOG(2, LOG_LINE_NORMAL, L"Successful setting of CSR value of 0x%04x", TargetCsr);
-            #endif
         }
         else {
             gCsrStatus = StrDuplicate (L"Error While Setting SIP/SSV Status");
 
-            #if REFIT_DEBUG > 0
             LOG(1, LOG_LINE_NORMAL, gCsrStatus);
-            #endif
 
             EG_PIXEL BGColor = COLOR_LIGHTBLUE;
             egDisplayMessage (
@@ -219,9 +209,7 @@ VOID RotateCsrValue (VOID) {
     else {
         gCsrStatus = StrDuplicate (L"Could Not Retrieve SIP/SSV Status");
 
-        #if REFIT_DEBUG > 0
         LOG(1, LOG_LINE_NORMAL, gCsrStatus);
-        #endif
 
         EG_PIXEL BGColor = COLOR_LIGHTBLUE;
         egDisplayMessage (
@@ -262,9 +250,7 @@ SetAppleOSInfo (
     CHAR8                   *AppleOSVersion8   = NULL;
     EfiAppleSetOsInterface  *SetOs             = NULL;
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_NORMAL, L"Setting Apple OS information, if applicable");
-    #endif
 
     Status = refit_call3_wrapper(
         gBS->LocateProtocol,
@@ -275,9 +261,7 @@ SetAppleOSInfo (
 
     // If not a Mac, ignore the call....
     if ((Status != EFI_SUCCESS) || (!SetOs)) {
-        #if REFIT_DEBUG > 0
         LOG(2, LOG_LINE_NORMAL, L"Not a Mac; not setting Apple OS information");
-        #endif
 
         Status = EFI_SUCCESS;
     }
@@ -287,9 +271,7 @@ SetAppleOSInfo (
             MergeStrings (&AppleOSVersion, GlobalConfig.SpoofOSXVersion, ' ');
 
             if (AppleOSVersion) {
-                #if REFIT_DEBUG > 0
                 LOG(2, LOG_LINE_NORMAL, L"Setting Apple OS information to '%s'", AppleOSVersion);
-                #endif
 
                 AppleOSVersion8 = AllocateZeroPool ((StrLen (AppleOSVersion) + 1) * sizeof (CHAR8));
                 if (AppleOSVersion8) {

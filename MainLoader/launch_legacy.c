@@ -51,6 +51,7 @@
 #include "icns.h"
 #include "launch_legacy.h"
 #include "lib.h"
+#include "leaks.h"
 #include "menu.h"
 #include "../include/refit_call_wrapper.h"
 #include "screenmgt.h"
@@ -61,7 +62,7 @@
 #include "../include/Handle.h"
 
 extern REFIT_MENU_ENTRY MenuEntryReturn;
-extern REFIT_MENU_SCREEN MainMenu;
+extern REFIT_MENU_SCREEN *MainMenu;
 
 #ifndef __MAKEWITH_GNUEFI
 #define LibLocateHandle gBS->LocateHandleBuffer
@@ -449,9 +450,7 @@ StartLegacyImageList (
     // TODO: (optionally) re-enable the EFI watchdog timer!
 
     // close open file handles
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_NORMAL, L"Launching Mac-style BIOS/CSM/Legacy Loader");
-    #endif
 
     UninitRefitLib();
 
@@ -464,9 +463,7 @@ StartLegacyImageList (
 
     // control returns here when the child image calls Exit()
     if (CheckError (Status, L"returned from legacy loader")) {
-        #if REFIT_DEBUG > 0
         LOG(1, LOG_LINE_NORMAL, L"returned from legacy loader");
-        #endif
 
         if (ErrorInStep != NULL) {
             *ErrorInStep = 3;
@@ -498,18 +495,17 @@ VOID StartLegacy (
     CHAR16 *ShowScreenStrA = NULL;
     CHAR16 *ShowScreenStrB = NULL;
 
+    MsgLog ("IsBoot = TRUE\n");
     IsBoot = TRUE;
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_NORMAL,
         L"Starting Mac-style BIOS/CSM/Legacy Loader: '%s'",
         SelectionName
     );
-    #endif
 
     BeginExternalScreen (TRUE, L"Booting Legacy OS (Mac mode)");
 
-    BootLogoImage = LoadOSIcon (Entry->Volume->OSIconName, L"legacy", TRUE);
+    BootLogoImage = LoadOSIcon (GetPoolStr (&Entry->Volume->OSIconName), L"legacy", TRUE);
     if (BootLogoImage != NULL) {
         BltImageAlpha (
             BootLogoImage,
@@ -530,7 +526,7 @@ VOID StartLegacy (
     ExtractLegacyLoaderPaths (DiscoveredPathList, MAX_DISCOVERED_PATHS, LegacyLoaderList);
 
     StoreLoaderName (SelectionName);
-    Status = StartLegacyImageList (DiscoveredPathList, Entry->LoadOptions, &ErrorInStep);
+    Status = StartLegacyImageList (DiscoveredPathList, GetPoolStr (&Entry->LoadOptions), &ErrorInStep);
     if (Status == EFI_NOT_FOUND) {
         if (ErrorInStep == 1) {
             SwitchToText (FALSE);
@@ -540,9 +536,7 @@ VOID StartLegacy (
             PrintUglyText (ShowScreenStrA, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-            #if REFIT_DEBUG > 0
             MsgLog ("** WARN: %s\n\n", ShowScreenStrA);
-            #endif
 
             PauseForKey();
             SwitchToGraphics();
@@ -556,18 +550,14 @@ VOID StartLegacy (
             PrintUglyText (ShowScreenStrA, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-            #if REFIT_DEBUG > 0
             MsgLog ("** WARN: %s\n", ShowScreenStrA);
-            #endif
 
             ShowScreenStrB = L"NB: External drives are not well-supported by Apple firmware for legacy booting.";
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
             PrintUglyText (ShowScreenStrB, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-            #if REFIT_DEBUG > 0
             MsgLog ("         %s\n\n", ShowScreenStrB);
-            #endif
 
             PauseForKey();
             SwitchToGraphics();
@@ -584,13 +574,12 @@ StartLegacyUEFI (
     LEGACY_ENTRY *Entry,
     CHAR16 *SelectionName
 ) {
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_NORMAL,
         L"Launching UEFI-style BIOS/CSM/Legacy OS '%s'",
         SelectionName
     );
-    #endif
 
+    MsgLog ("IsBoot = TRUE\n");
     IsBoot = TRUE;
 
     BeginExternalScreen (TRUE, L"Booting Legacy OS (UEFI mode)");
@@ -603,9 +592,7 @@ StartLegacyUEFI (
     // If we get here, it means that there was a failure....
     ReinitRefitLib();
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_NORMAL, L"Failure booting legacy (BIOS) OS.");
-    #endif
 
     Print(L"Failure booting legacy (BIOS) OS.");
     PauseForKey();
@@ -625,8 +612,8 @@ static LEGACY_ENTRY
     CHAR16            ShortcutLetter = 0;
 
     if (LoaderTitle == NULL) {
-        if (Volume->OSName != NULL) {
-            LoaderTitle = Volume->OSName;
+        if (GetPoolStr (&Volume->OSName) != NULL) {
+            LoaderTitle = GetPoolStr (&Volume->OSName);
             if (LoaderTitle[0] == 'W' || LoaderTitle[0] == 'L') {
                 ShortcutLetter = LoaderTitle[0];
             }
@@ -635,8 +622,8 @@ static LEGACY_ENTRY
             LoaderTitle = L"Legacy OS";
         }
     }
-    if (Volume->VolName != NULL) {
-        VolDesc = StrDuplicate (Volume->VolName);
+    if (GetPoolStr (&Volume->VolName) != NULL) {
+        VolDesc = StrDuplicate (GetPoolStr (&Volume->VolName));
     }
     else {
         VolDesc = (Volume->DiskKind == DISK_KIND_OPTICAL) ? L"CD" : L"HD";
@@ -654,59 +641,57 @@ static LEGACY_ENTRY
        return NULL;
     } // if
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_STAR_HEAD_SEP,
         L"Adding BIOS/CSM/Legacy Entry for '%s'",
         LegacyTitle
     );
-    #endif
 
     // prepare the menu entry
-    Entry                    = AllocateZeroPool (sizeof (LEGACY_ENTRY));
-    Entry->Enabled           = TRUE;
-    Entry->me.Title          = LegacyTitle;
-    Entry->me.Tag            = TAG_LEGACY;
-    Entry->me.Row            = 0;
+    Entry = AllocateZeroPool (sizeof (LEGACY_ENTRY));
+    Entry->Enabled = TRUE;
+    AssignPoolStr (&Entry->me.Title, LegacyTitle);
+    Entry->me.Tag = TAG_LEGACY;
+    Entry->me.Row = 0;
     Entry->me.ShortcutLetter = ShortcutLetter;
-    Entry->me.Image          = LoadOSIcon (Volume->OSIconName, L"legacy", FALSE);
-    Entry->me.BadgeImage     = Volume->VolBadgeImage;
-    Entry->Volume            = Volume;
-    Entry->LoadOptions       = (Volume->DiskKind == DISK_KIND_OPTICAL)
-                               ? L"CD"
-                               : ((Volume->DiskKind == DISK_KIND_EXTERNAL) ? L"USB" : L"HD");
+    AssignPoolImage (&Entry->me.Image, LoadOSIcon (GetPoolStr (&Volume->OSIconName), L"legacy", FALSE));
+    CopyFromPoolImage (&Entry->me.BadgeImage, &Volume->VolBadgeImage);
+    AssignVolume (&Entry->Volume, Volume);
+    AssignPoolStr (&Entry->LoadOptions, (Volume->DiskKind == DISK_KIND_OPTICAL)
+       ? L"CD"
+       : ((Volume->DiskKind == DISK_KIND_EXTERNAL) ? L"USB" : L"HD")
+    );
 
-    #if REFIT_DEBUG > 0
     MsgLog ("\n");
     MsgLog ("  - Found '%s' on '%s'", LoaderTitle, VolDesc);
-    #endif
 
     // create the submenu
-    SubScreen        = AllocateZeroPool (sizeof (REFIT_MENU_SCREEN));
-    SubScreen->Title = PoolPrint (L"Boot Options for %s on %s", LoaderTitle, VolDesc);
+    SubScreen = AllocateZeroPool (sizeof (REFIT_MENU_SCREEN));
+    AssignPoolStr (&SubScreen->Title, PoolPrint (L"Boot Options for %s on %s", LoaderTitle, VolDesc));
 
-    SubScreen->TitleImage = Entry->me.Image;
-    SubScreen->Hint1      = StrDuplicate (SUBSCREEN_HINT1);
+    CopyFromPoolImage (&SubScreen->TitleImage, &Entry->me.Image);
+    AssignCachedPoolStr (&SubScreen->Hint1, SUBSCREEN_HINT1);
 
     if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
-       SubScreen->Hint2 = StrDuplicate (SUBSCREEN_HINT2_NO_EDITOR);
+       AssignCachedPoolStr (&SubScreen->Hint2, SUBSCREEN_HINT2_NO_EDITOR);
     }
     else {
-       SubScreen->Hint2 = StrDuplicate (SUBSCREEN_HINT2);
+       AssignCachedPoolStr (&SubScreen->Hint2, SUBSCREEN_HINT2);
     } // if/else
+    LOG(2, LOG_LINE_NORMAL, L"Hint2: '%s'", GetPoolStr (&SubScreen->Hint2));
 
     // default entry
-    SubEntry           = AllocateZeroPool (sizeof (LEGACY_ENTRY));
-    SubEntry->me.Title = PoolPrint (L"Boot %s", LoaderTitle);
+    SubEntry = AllocateZeroPool (sizeof (LEGACY_ENTRY));
+    AssignPoolStr (&SubEntry->me.Title, PoolPrint (L"Boot %s", LoaderTitle));
 
-    SubEntry->me.Tag      = TAG_LEGACY;
-    SubEntry->Volume      = Entry->Volume;
-    SubEntry->LoadOptions = Entry->LoadOptions;
+    SubEntry->me.Tag = TAG_LEGACY;
+    AssignVolume (&SubEntry->Volume, Entry->Volume);
+    CopyFromPoolStr (&SubEntry->LoadOptions, &Entry->LoadOptions);
 
     AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
-    AddMenuEntry (SubScreen, &MenuEntryReturn);
+    AddMenuEntryCopy (SubScreen, &MenuEntryReturn);
 
     Entry->me.SubScreen = SubScreen;
-    AddMenuEntry (&MainMenu, (REFIT_MENU_ENTRY *) Entry);
+    AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *) Entry);
 
     return Entry;
 } /* static LEGACY_ENTRY * AddLegacyEntry() */
@@ -736,54 +721,54 @@ static LEGACY_ENTRY
     LimitStringLength (LegacyDescription, 100);
 
     // prepare the menu entry
-    Entry           = AllocateZeroPool (sizeof (LEGACY_ENTRY));
-    Entry->me.Title = PoolPrint (L"Boot legacy OS from %s", LegacyDescription);
+    Entry = AllocateZeroPool (sizeof (LEGACY_ENTRY));
+    AssignPoolStr (&Entry->me.Title, PoolPrint (L"Boot legacy OS from %s", LegacyDescription));
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_NORMAL,
         L"Adding UEFI-style BIOS/CSM/Legacy Entry for '%s'",
-        Entry->me.Title
+        GetPoolStr (&Entry->me.Title)
     );
-    #endif
 
-    Entry->me.Tag            = TAG_LEGACY_UEFI;
-    Entry->me.Row            = 0;
+    Entry->me.Tag = TAG_LEGACY_UEFI;
+    Entry->me.Row = 0;
     Entry->me.ShortcutLetter = ShortcutLetter;
-    Entry->me.Image          = LoadOSIcon (L"legacy", L"legacy", TRUE);
-    Entry->LoadOptions       = (DiskType == BBS_CDROM)
-                                ? L"CD"
-                                : ((DiskType == BBS_USB)
-                                    ? L"USB" : L"HD");
-    Entry->me.BadgeImage     = GetDiskBadge (DiskType);
-    Entry->BdsOption         = BdsOption;
-    Entry->Enabled           = TRUE;
+    AssignPoolImage (&Entry->me.Image, LoadOSIcon (L"legacy", L"legacy", TRUE));
+    AssignPoolStr (&Entry->LoadOptions, (DiskType == BBS_CDROM)
+        ? L"CD"
+        : ((DiskType == BBS_USB)
+            ? L"USB" : L"HD")
+    );
+    CopyFromPoolImage_PI_ (&Entry->me.BadgeImage_PI_, GetDiskBadge (DiskType));
+    Entry->BdsOption = BdsOption;
+    Entry->Enabled = TRUE;
 
     // create the submenu
-    SubScreen        = AllocateZeroPool (sizeof (REFIT_MENU_SCREEN));
-    SubScreen->Title = StrDuplicate (L"No boot options for legacy target");
+    SubScreen = AllocateZeroPool (sizeof (REFIT_MENU_SCREEN));
+    AssignCachedPoolStr (&SubScreen->Title, L"No boot options for legacy target");
 
-    SubScreen->TitleImage = Entry->me.Image;
-    SubScreen->Hint1      = StrDuplicate (SUBSCREEN_HINT1);
+    CopyFromPoolImage (&SubScreen->TitleImage, &Entry->me.Image);
+    AssignCachedPoolStr (&SubScreen->Hint1, SUBSCREEN_HINT1);
 
     if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
-       SubScreen->Hint2 = StrDuplicate (SUBSCREEN_HINT2_NO_EDITOR);
+       AssignCachedPoolStr (&SubScreen->Hint2, SUBSCREEN_HINT2_NO_EDITOR);
     }
     else {
-       SubScreen->Hint2 = StrDuplicate (SUBSCREEN_HINT2);
+       AssignCachedPoolStr (&SubScreen->Hint2, SUBSCREEN_HINT2);
     } // if/else
+    LOG(2, LOG_LINE_NORMAL, L"Hint2: '%s'", GetPoolStr (&SubScreen->Hint2));
 
     // default entry
-    SubEntry           = AllocateZeroPool (sizeof (LEGACY_ENTRY));
-    SubEntry->me.Title = PoolPrint (L"Boot %s", LegacyDescription);
+    SubEntry = AllocateZeroPool (sizeof (LEGACY_ENTRY));
+    AssignPoolStr (&SubEntry->me.Title, PoolPrint (L"Boot %s", LegacyDescription));
 
     SubEntry->me.Tag = TAG_LEGACY_UEFI;
     Entry->BdsOption = BdsOption;
 
     AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
 
-    AddMenuEntry (SubScreen, &MenuEntryReturn);
+    AddMenuEntryCopy (SubScreen, &MenuEntryReturn);
     Entry->me.SubScreen = SubScreen;
-    AddMenuEntry (&MainMenu, (REFIT_MENU_ENTRY *)Entry);
+    AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *)Entry);
 
     return Entry;
 } /* static LEGACY_ENTRY * AddLegacyEntryUEFI() */
@@ -810,9 +795,7 @@ ScanLegacyUEFI (
     BBS_BBS_DEVICE_PATH       *BbsDevicePath = NULL;
     BOOLEAN                   SearchingForUsb = FALSE;
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_NORMAL, L"Scanning for a UEFI-style BIOS/CSM/Legacy OS");
-    #endif
 
     InitializeListHead (&TempList);
     ZeroMem (Buffer, sizeof (Buffer));
@@ -896,7 +879,7 @@ ScanLegacyVolume (
         ShowVolume = TRUE;
         if (Volume->BlockIO == Volume->WholeDiskBlockIO &&
             Volume->BlockIOOffset == 0 &&
-            Volume->OSName == NULL
+            GetPoolStr (&Volume->OSName) == NULL
         ) {
             // this is a whole disk (MBR) entry; hide if we have entries for partitions
             HideIfOthersFound = TRUE;
@@ -914,7 +897,7 @@ ScanLegacyVolume (
     }
 
     if (ShowVolume) {
-        Volume->VolName = GetVolumeName (Volume);
+        AssignPoolStr (&Volume->VolName, GetVolumeName (Volume));
         AddLegacyEntry (NULL, Volume);
     }
 } // static VOID ScanLegacyVolume()
@@ -926,20 +909,20 @@ VOID
 ScanLegacyDisc (
     VOID
 ) {
-    UINTN                   VolumeIndex;
-    REFIT_VOLUME            *Volume;
+    UINTN VolumeIndex;
+    REFIT_VOLUME *Volume = NULL;
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_THIN_SEP, L"Scanning for BIOS/CSM/Legacy Mode Optical Disks");
-    #endif
 
     if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC) {
         for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
-            Volume = Volumes[VolumeIndex];
+            AssignVolume (&Volume, Volumes[VolumeIndex]);
             if (Volume->DiskKind == DISK_KIND_OPTICAL) {
                 ScanLegacyVolume (Volume, VolumeIndex);
             }
         } // for
+        // since Volume started as NULL, free it if it is not NULL
+        FreeVolume (&Volume);
     }
     else if (GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) {
         ScanLegacyUEFI (BBS_CDROM);
@@ -952,20 +935,20 @@ VOID
 ScanLegacyInternal (
     VOID
 ) {
-    UINTN        VolumeIndex;
-    REFIT_VOLUME *Volume;
+    UINTN VolumeIndex;
+    REFIT_VOLUME *Volume = NULL;
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_THIN_SEP, L"Scanning for BIOS/CSM/Legacy Mode Internal Disks");
-    #endif
 
     if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC) {
        for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
-           Volume = Volumes[VolumeIndex];
+           AssignVolume (&Volume, Volumes[VolumeIndex]);
            if (Volume->DiskKind == DISK_KIND_INTERNAL) {
                ScanLegacyVolume (Volume, VolumeIndex);
            }
        } // for
+       // since Volume started as NULL, free it if it is not NULL
+       FreeVolume (&Volume);
     }
     else if (GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) {
        // TODO: This actually picks up USB flash drives, too; try to find
@@ -980,20 +963,20 @@ VOID
 ScanLegacyExternal (
     VOID
 ) {
-   UINTN                   VolumeIndex;
-   REFIT_VOLUME            *Volume;
+   UINTN VolumeIndex;
+   REFIT_VOLUME *Volume = NULL;
 
-   #if REFIT_DEBUG > 0
    LOG(1, LOG_LINE_THIN_SEP, L"Scanning for BIOS/CSM/Legacy Mode External Disks");
-   #endif
 
    if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC) {
       for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
-         Volume = Volumes[VolumeIndex];
+         AssignVolume (&Volume, Volumes[VolumeIndex]);
          if (Volume->DiskKind == DISK_KIND_EXTERNAL) {
              ScanLegacyVolume (Volume, VolumeIndex);
          }
       } // for
+      // since Volume started as NULL, free it if it is not NULL
+      FreeVolume (&Volume);
    }
    else if (GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) {
       // TODO: This actually doesn't do anything useful; leaving in hopes of
@@ -1053,11 +1036,9 @@ WarnIfLegacyProblems (
         } while ((i < NUM_SCAN_OPTIONS) && (!found));
 
         if (found) {
-            #if REFIT_DEBUG > 0
             LOG(1, LOG_LINE_NORMAL,
                 L"BIOS/CSM/Legacy support enabled in RefindPlus but unavailable in EFI!!"
             );
-            #endif
 
             SwitchToText (FALSE);
 
@@ -1084,9 +1065,7 @@ WarnIfLegacyProblems (
             PrintUglyText (ShowScreenStr, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-            #if REFIT_DEBUG > 0
             MsgLog ("%s\n\n", ShowScreenStr);
-            #endif
 
             MyFreePool (ShowScreenStr);
 

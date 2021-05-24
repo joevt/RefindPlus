@@ -172,14 +172,11 @@ FakeRaiseTpl (
 
     OldTpl = gEfiCurrentTpl;
     if (OldTpl > NewTpl) {
-        #if REFIT_DEBUG > 0
         MsgLog (
             "FATAL ERROR: RaiseTpl with OldTpl (0x%x) > NewTpl (0x%x)\n\n",
             OldTpl,
             NewTpl
         );
-        #endif
-
         ASSERT (FALSE);
     }
     ASSERT (VALID_TPL (NewTpl));
@@ -210,14 +207,11 @@ FakeRestoreTpl (
 
     OldTpl = gEfiCurrentTpl;
     if (NewTpl > OldTpl) {
-        #if REFIT_DEBUG > 0
         MsgLog (
             "FATAL ERROR: RestoreTpl with NewTpl (0x%x) > OldTpl (0x%x)\n",
             NewTpl,
             OldTpl
         );
-        #endif
-
         ASSERT (FALSE);
     }
     ASSERT (VALID_TPL (NewTpl));
@@ -297,7 +291,9 @@ FakeCreateEventEx (
     const void        *NotifyContext,
     const EFI_GUID    *EventGroup,
     EFI_EVENT         *Event
-) {
+)
+#if 1
+{
     EFI_STATUS      Status = EFI_SUCCESS;
     IEVENT          *IEvent;
     INTN            Index;
@@ -420,6 +416,53 @@ FakeCreateEventEx (
     // Done
     return EFI_SUCCESS;
 }
+#else
+{
+    EFI_STATUS Success = EFI_SUCCESS;
+    if (Type == EVT_NOTIFY_SIGNAL && CompareGuid(EventGroup, &gEfiEventExitBootServicesGuid)) {
+        MsgLog("FakeCreateEventEx: CreateEventEx gEfiEventExitBootServicesGuid NotifyTpl:%02X\n", NotifyTpl);
+        Success = gBS->CreateEvent (
+            EVT_SIGNAL_EXIT_BOOT_SERVICES,
+            NotifyTpl,
+            NotifyFunction,
+            (void*)NotifyContext,
+            Event
+        );
+    }
+    else if (Type == EVT_NOTIFY_SIGNAL && CompareGuid(EventGroup, &gEfiEventVirtualAddressChangeGuid)) {
+        MsgLog("FakeCreateEventEx: CreateEventEx gEfiEventVirtualAddressChangeGuid NotifyTpl:%02X\n", NotifyTpl);
+        Success = gBS->CreateEvent (
+            EVT_SIGNAL_VIRTUAL_ADDRESS_CHANGE,
+            NotifyTpl,
+            NotifyFunction,
+            (void*)NotifyContext,
+            Event
+        );
+    }
+    else if (Type == EVT_NOTIFY_SIGNAL && CompareGuid(EventGroup, &gEfiEventReadyToBootGuid)) {
+        MsgLog("FakeCreateEventEx: CreateEventEx gEfiEventReadyToBootGuid NotifyTpl:%02X\n", NotifyTpl);
+        Success = gBS->CreateEvent (
+            EFI_EVENT_SIGNAL_READY_TO_BOOT | ((NotifyFunction == NULL) ? EFI_EVENT_NOTIFY_SIGNAL_ALL : 0),
+            NotifyTpl,
+            NotifyFunction,
+            (void*)NotifyContext,
+            Event
+        );
+    }
+    else {
+        MsgLog("FakeCreateEventEx: CreateEventEx type:%08X guid:%g NotifyTpl:%02X\n", Type, EventGroup, NotifyTpl);
+        Success = gBS->CreateEvent (
+            Type,
+            NotifyTpl,
+            NotifyFunction,
+            (void*)NotifyContext,
+            Event
+        );
+    }
+    MsgLog("FakeCreateEventEx: CreateEventEx result:%X\n", Success);
+    return Success;
+}
+#endif
 
 EFI_STATUS
 AmendSysTable (
@@ -429,33 +472,32 @@ AmendSysTable (
     EFI_BOOT_SERVICES *uBS;
 
     if (gST->Hdr.Revision <= 0x1FFFF ||
-        gBS->Hdr.HeaderSize <= EFI_FIELD_OFFSET(EFI_BOOT_SERVICES, CreateEventEx)
+        gBS->Hdr.HeaderSize < EFI_FIELD_OFFSET(EFI_BOOT_SERVICES, CreateEventEx) + sizeof(gBS->CreateEventEx)
     ) {
         uBS = (EFI_BOOT_SERVICES *) AllocateCopyPool (sizeof (*gBS) * 2, gBS);
         if (uBS) {
             uBS->CreateEventEx  = FakeCreateEventEx;
             uBS->Hdr.HeaderSize = sizeof (*gBS);
 
-            gBS                 = uBS;
-            gBS->Hdr.CRC32      = 0;
+            gBS = uBS;
+            gBS->Hdr.CRC32 = 0;
             gBS->CalculateCrc32 (
                 gBS,
                 gBS->Hdr.HeaderSize,
                 &gBS->Hdr.CRC32
             );
 
-            gST->BootServices   = gBS;
-            gST->Hdr.Revision   = 0x0002001E;
-            gST->Hdr.CRC32      = 0;
+            gST->BootServices = gBS;
+            gST->Hdr.Revision = 0x0002001E;
+            gST->Hdr.CRC32 = 0;
             gBS->CalculateCrc32 (
                 (VOID *) gST,
                 sizeof (EFI_SYSTEM_TABLE),
                 &gST->Hdr.CRC32
             );
 
-
-            SetSysTab           = TRUE;
-            Status              = EFI_SUCCESS;
+            SetSysTab = TRUE;
+            Status = EFI_SUCCESS;
         }
         else {
             Status = EFI_LOAD_ERROR;

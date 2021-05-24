@@ -256,13 +256,16 @@ EG_IMAGE * egDecodeICNS (
     }
 
     // Handle Alpha
-    if (WantAlpha && MaskPtr == NULL && MaskLen >= PixelCount) {
-        // Add Alpha Mask if Available, Valid and Required
+    if (WantAlpha && MaskPtr != NULL && MaskLen >= PixelCount) {
+    	// We want an image with Alpha and the icon has valid Alpha.
+        // Copy Alpha from icon to image.
         egInsertPlane (MaskPtr, PLPTR(NewImage, a), PixelCount);
     }
     else {
-        // Default to 'Opaque' if Alpha is Unavailable, Invalid or Not Required
-        egSetPlane (PLPTRX(NewImage, a), 255, PixelCount);
+    	// There is no Alpha in the icon.
+        // If we want an image with Alpha, then set Alpha to Opaque (255)
+        // Otherwise set the unused bytes to zero.
+        egSetPlane (PLPTRX(NewImage, a), WantAlpha ? 255 : 0, PixelCount);
     }
 
     // FUTURE: scale to originally requested size if we had to load another size

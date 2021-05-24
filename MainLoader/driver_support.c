@@ -75,6 +75,22 @@
 #include "screenmgt.h"
 #include "launch_efi.h"
 #include "../include/refit_call_wrapper.h"
+#include "leaks.h"
+
+#if 0
+#include "../../ShellPkg/Library/UefiHandleParsingLib/UefiHandleParsingLib.h"
+#else
+typedef struct {
+  LIST_ENTRY  Link;
+  EFI_HANDLE  TheHandle;
+  UINTN       TheIndex;
+}HANDLE_LIST;
+
+typedef struct {
+  HANDLE_LIST   List;
+  UINTN         NextIndex;
+} HANDLE_INDEX_LIST;
+#endif
 
 #if defined (EFIX64)
 #define DRIVER_DIRS             L"x64_drivers,drivers,drivers_x64"
@@ -414,6 +430,33 @@ Error:
     return Status;
 } /* EFI_STATUS LibScanHandleDatabase() */
 
+
+#if REFIT_DEBUG > 0
+extern HANDLE_INDEX_LIST mHandleList;
+
+VOID
+LEAKABLEHANDLES (
+) {
+    MsgLog ("[ LEAKABLEHANDLES\n");
+    if (mHandleList.NextIndex != 0) {
+        LEAKABLEPATHINIT (kLeakableHandles);
+            LEAKABLEPATHINC (); // space for Handle Index
+                HANDLE_LIST *ListWalker;
+                for (ListWalker = (HANDLE_LIST*)GetFirstNode(&mHandleList.List.Link)
+                    ;  !IsNull(&mHandleList.List.Link,&ListWalker->Link)
+                    ;  ListWalker = (HANDLE_LIST*)GetNextNode(&mHandleList.List.Link,&ListWalker->Link)
+                ){
+                    LEAKABLEPATHSETID (ListWalker->TheIndex);
+                    LEAKABLEWITHPATH (ListWalker, "HandleList Item");
+                }
+            LEAKABLEPATHDEC ();
+        LEAKABLEPATHDONE ();
+    }
+    MsgLog ("] LEAKABLEHANDLES\n");
+}
+#endif
+
+
 #ifdef __MAKEWITH_GNUEFI
 /* Modified from EDK2 function of a similar name; original copyright Intel &
  * BSD-licensed; modifications by Roderick Smith are GPLv3. */
@@ -500,6 +543,9 @@ Done:
 #else
 EFI_STATUS ConnectAllDriversToAllControllers(IN BOOLEAN ResetGOP) {
     BdsLibConnectAllDriversToAllControllers(ResetGOP);
+    #if REFIT_DEBUG > 0
+    LEAKABLEHANDLES();
+    #endif
     return 0;
 }
 #endif
@@ -644,10 +690,8 @@ ScanDriverDir (
 
     CleanUpPathNameSlashes(Path);
 
-    #if REFIT_DEBUG > 0
     MsgLog ("\n");
     MsgLog ("Scan '%s' Folder:\n", Path);
-    #endif
 
     // look through contents of the directory
     DirIterOpen (SelfRootDir, Path, &DirIter);
@@ -744,15 +788,11 @@ LoadDrivers(
     UINTN   NumFound = 0;
     UINTN   CurFound = 0;
 
-    #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_SEPARATOR, L"Loading Drivers");
-    #endif
 
     // load drivers from the subdirectories of RefindPlus' home directory
     // specified in the DRIVER_DIRS constant.
-    #if REFIT_DEBUG > 0
     MsgLog ("Load EFI Drivers from Default Folder...");
-    #endif
     while ((Directory = FindCommaDelimited(DRIVER_DIRS, i++)) != NULL) {
         SelfDirectory = SelfDirPath ? StrDuplicate(SelfDirPath) : NULL;
         CleanUpPathNameSlashes(SelfDirectory);
@@ -765,18 +805,14 @@ LoadDrivers(
             break;
         }
         else {
-            #if REFIT_DEBUG > 0
             MsgLog ("  - Not Found or Empty");
-            #endif
         }
     }
 
     // Scan additional user-specified driver directories....
     if (GlobalConfig.DriverDirs != NULL) {
-        #if REFIT_DEBUG > 0
         MsgLog ("\n\n");
         MsgLog ("Load EFI Drivers from User Defined Folders...");
-        #endif
 
         i = 0;
         while ((Directory = FindCommaDelimited(GlobalConfig.DriverDirs, i++)) != NULL) {
@@ -796,18 +832,14 @@ LoadDrivers(
                     NumFound = NumFound + CurFound;
                 }
                 else {
-                    #if REFIT_DEBUG > 0
                     MsgLog ("  - Not Found or Empty");
-                    #endif
                 }
             } // if
             MyFreePool (Directory);
         } // while
     }
 
-    #if REFIT_DEBUG > 0
     MsgLog ("\n\n");
-    #endif
 
     // connect all devices
     // DA-TAG: Always run this

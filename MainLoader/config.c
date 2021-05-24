@@ -50,6 +50,7 @@
 
 #include "global.h"
 #include "lib.h"
+#include "leaks.h"
 #include "icns.h"
 #include "menu.h"
 #include "config.h"
@@ -363,6 +364,7 @@ ReadTokenLine (
             }
             *p++ = 0;
 
+            LOGPOOL(*TokenList);
             AddListElement ((VOID ***)TokenList, &TokenCount, (VOID *)StrDuplicate (Token));
         }
 
@@ -376,7 +378,6 @@ FreeTokenLine (
     IN OUT CHAR16 ***TokenList,
     IN OUT UINTN *TokenCount
 ) {
-    // TODO: also free the items
     FreeList ((VOID ***)TokenList, TokenCount);
 }
 
@@ -562,9 +563,7 @@ SetDefaultByTime (
       Now = CurrentTime.Hour * 60 + CurrentTime.Minute;
 
       if (Now > LAST_MINUTE) { // Shouldn't happen; just being paranoid
-        #if REFIT_DEBUG > 0
         MsgLog ("  - WARN: Impossible system time: %d:%d\n", CurrentTime.Hour, CurrentTime.Minute);
-        #endif
 
          Print (L"Warning: Impossible system time: %d:%d\n", CurrentTime.Hour, CurrentTime.Minute);
          return;
@@ -592,8 +591,9 @@ static
 LOADER_ENTRY * AddPreparedLoaderEntry (
     LOADER_ENTRY *Entry
 ) {
-    AddMenuEntry (&MainMenu, (REFIT_MENU_ENTRY *)Entry);
-
+    MsgLog ("[ AddPreparedLoaderEntry %s\n", Entry && GetPoolStr (&Entry->me.Title) ? GetPoolStr (&Entry->me.Title) : L"NULL" );
+    AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *)Entry);
+    MsgLog ("] AddPreparedLoaderEntry\n");
     return (Entry);
 } // LOADER_ENTRY * AddPreparedLoaderEntry()
 
@@ -610,9 +610,7 @@ ReadConfig (
     UINTN             TokenCount, i;
     CHAR16           *ShowScreenStr = NULL;
 
-    #if REFIT_DEBUG > 0
-    MsgLog ("Read Config...\n");
-    #endif
+    MsgLog ("[ ReadConfig %s\n", FileName);
 
     // Set a few defaults only if we are loading the default file.
     if (MyStriCmp (FileName, GlobalConfig.ConfigFilename)) {
@@ -628,17 +626,25 @@ ReadConfig (
        MyFreePool (GlobalConfig.DontScanFiles);
        GlobalConfig.DontScanFiles = StrDuplicate (DONT_SCAN_FILES);
        MyFreePool (GlobalConfig.DontScanTools);
-       GlobalConfig.DontScanTools = NULL;
        MyFreePool(GlobalConfig.DontScanFirmware);
-       GlobalConfig.DontScanFirmware = NULL;
        MergeStrings (&(GlobalConfig.DontScanFiles), MOK_NAMES, L',');
        MergeStrings (&(GlobalConfig.DontScanFiles), FWUPDATE_NAMES, L',');
        MyFreePool (GlobalConfig.DontScanVolumes);
        GlobalConfig.DontScanVolumes = StrDuplicate (DONT_SCAN_VOLUMES);
+       MyFreePool(GlobalConfig.WindowsRecoveryFiles);
        GlobalConfig.WindowsRecoveryFiles = StrDuplicate (WINDOWS_RECOVERY_FILES);
+       MyFreePool(GlobalConfig.MacOSRecoveryFiles);
        GlobalConfig.MacOSRecoveryFiles = StrDuplicate (MACOS_RECOVERY_FILES);
        MyFreePool (GlobalConfig.DefaultSelection);
        GlobalConfig.DefaultSelection = StrDuplicate (L"+");
+
+       LEAKABLE (GlobalConfig.AlsoScan, "AlsoScan");
+       LEAKABLE (GlobalConfig.DontScanDirs, "DontScanDirs");
+       LEAKABLE (GlobalConfig.DontScanFiles, "DontScanFiles");
+       LEAKABLE (GlobalConfig.DontScanVolumes, "DontScanVolumes");
+       LEAKABLE (GlobalConfig.WindowsRecoveryFiles, "WindowsRecoveryFiles");
+       LEAKABLE (GlobalConfig.MacOSRecoveryFiles, "MacOSRecoveryFiles");
+       LEAKABLE (GlobalConfig.DefaultSelection, "DefaultSelection");
     } // if
 
     if (!FileExists (SelfDir, FileName)) {
@@ -647,18 +653,14 @@ ReadConfig (
         ShowScreenStr = L"  - WARN: Cannot Find Configuration File. Loading Defaults";
         PrintUglyText (ShowScreenStr, NEXTLINE);
 
-        #if REFIT_DEBUG > 0
         MsgLog ("%s\n", ShowScreenStr);
-        #endif
 
        if (!FileExists (SelfDir, L"icons")) {
            MyFreePool (ShowScreenStr);
            ShowScreenStr = L"  - WARN: Cannot Find Icons Directory. Switching to Text Mode";
            PrintUglyText (ShowScreenStr, NEXTLINE);
 
-           #if REFIT_DEBUG > 0
            MsgLog ("%s\n", ShowScreenStr);
-           #endif
 
           GlobalConfig.TextOnly = TRUE;
        }
@@ -667,11 +669,13 @@ ReadConfig (
        SwitchToGraphics();
        MyFreePool (ShowScreenStr);
 
+       MsgLog ("] ReadConfig (file not found)\n");
        return;
     }
 
     Status = RefitReadFile (SelfDir, FileName, &File, &i);
     if (EFI_ERROR (Status)) {
+        MsgLog ("] ReadConfig (read error)\n");
         return;
     }
 
@@ -729,9 +733,7 @@ ReadConfig (
                     );
                     PrintUglyText (ShowScreenStr, NEXTLINE);
 
-                    #if REFIT_DEBUG > 0
                     MsgLog ("%s\n", ShowScreenStr);
-                    #endif
 
                     PauseForKey();
                     MyFreePool (ShowScreenStr);
@@ -768,6 +770,7 @@ ReadConfig (
         }
         else if (MyStriCmp (TokenList[0], L"also_scan_dirs")) {
             HandleStrings (TokenList, TokenCount, &(GlobalConfig.AlsoScan));
+            LEAKABLE(GlobalConfig.AlsoScan, "AlsoScan");
         }
         else if (MyStriCmp (TokenList[0], L"don't_scan_volumes") || MyStriCmp (TokenList[0], L"dont_scan_volumes")) {
            // Note: Don't use HandleStrings() because it modifies slashes, which might be present in volume name
@@ -776,24 +779,31 @@ ReadConfig (
            for (i = 1; i < TokenCount; i++) {
               MergeStrings (&GlobalConfig.DontScanVolumes, TokenList[i], L',');
            }
+           LEAKABLE (GlobalConfig.DontScanVolumes, "DontScanVolumes");
         }
         else if (MyStriCmp (TokenList[0], L"don't_scan_dirs") || MyStriCmp (TokenList[0], L"dont_scan_dirs")) {
             HandleStrings (TokenList, TokenCount, &(GlobalConfig.DontScanDirs));
+            LEAKABLE(GlobalConfig.DontScanDirs, "DontScanDirs");
         }
         else if (MyStriCmp (TokenList[0], L"don't_scan_files") || MyStriCmp (TokenList[0], L"dont_scan_files")) {
            HandleStrings (TokenList, TokenCount, &(GlobalConfig.DontScanFiles));
+           LEAKABLE (GlobalConfig.DontScanFiles, "DontScanFiles");
         }
         else if (MyStriCmp (TokenList[0], L"don't_scan_firmware") || MyStriCmp (TokenList[0], L"dont_scan_firmware")) {
            HandleStrings (TokenList, TokenCount, &(GlobalConfig.DontScanFirmware));
+           LEAKABLE (GlobalConfig.DontScanFirmware, "DontScanFirmware");
         }
         else if (MyStriCmp (TokenList[0], L"don't_scan_tools") || MyStriCmp (TokenList[0], L"dont_scan_tools")) {
            HandleStrings (TokenList, TokenCount, &(GlobalConfig.DontScanTools));
+           LEAKABLE (GlobalConfig.DontScanTools, "DontScanTools");
         }
         else if (MyStriCmp (TokenList[0], L"windows_recovery_files")) {
            HandleStrings (TokenList, TokenCount, &(GlobalConfig.WindowsRecoveryFiles));
+           LEAKABLE(GlobalConfig.WindowsRecoveryFiles, "WindowsRecoveryFiles");
         }
         else if (MyStriCmp (TokenList[0], L"scan_driver_dirs")) {
             HandleStrings (TokenList, TokenCount, &(GlobalConfig.DriverDirs));
+            LEAKABLE(GlobalConfig.DriverDirs, "DriverDirs");
         }
         else if (MyStriCmp (TokenList[0], L"showtools")) {
             SetMem (GlobalConfig.ShowTools, NUM_TOOLS * sizeof (UINTN), 0);
@@ -885,9 +895,7 @@ ReadConfig (
                );
                PrintUglyText (ShowScreenStr, NEXTLINE);
 
-               #if REFIT_DEBUG > 0
                MsgLog ("%s\n", ShowScreenStr);
-               #endif
 
                PauseForKey();
                MyFreePool (ShowScreenStr);
@@ -921,9 +929,11 @@ ReadConfig (
         else if (MyStriCmp (TokenList[0], L"default_selection")) {
            if (TokenCount == 4) {
               SetDefaultByTime (TokenList, &(GlobalConfig.DefaultSelection));
+              LEAKABLE(GlobalConfig.DefaultSelection, "DefaultSelection");
            }
            else {
               HandleString (TokenList, TokenCount, &(GlobalConfig.DefaultSelection));
+              LEAKABLE(GlobalConfig.DefaultSelection, "DefaultSelection");
            }
         }
         else if (MyStriCmp (TokenList[0], L"textonly")) {
@@ -1007,9 +1017,7 @@ ReadConfig (
         }
         else if (MyStriCmp (TokenList[0], L"include") && (TokenCount == 2) && MyStriCmp (FileName, GlobalConfig.ConfigFilename)) {
            if (!MyStriCmp (TokenList[1], FileName)) {
-               #if REFIT_DEBUG > 0
                MsgLog ("Detected Overrides - ");
-               #endif
 
               ReadConfig (TokenList[1]);
            }
@@ -1092,22 +1100,23 @@ ReadConfig (
         }
 
         FreeTokenLine (&TokenList, &TokenCount);
-    }
+    } // for
+    FreeTokenLine (&TokenList, &TokenCount);
     if ((GlobalConfig.DontScanFiles) && (GlobalConfig.WindowsRecoveryFiles)) {
         MergeStrings (&(GlobalConfig.DontScanFiles), GlobalConfig.WindowsRecoveryFiles, L',');
+        LEAKABLE (GlobalConfig.DontScanFiles, "DontScanFiles");
     }
     MyFreePool (File.Buffer);
 
     if (!FileExists (SelfDir, L"icons") && !FileExists (SelfDir, GlobalConfig.IconsDir)) {
-        #if REFIT_DEBUG > 0
         MsgLog ("  - WARN: Cannot Find Icons Directory. Switching to Text Mode\n");
-        #endif
 
        Print (L"Icons directory doesn't exist; setting textonly = TRUE!\n");
        GlobalConfig.TextOnly = TRUE;
     }
 
     SuppressVerboseAPFS = GlobalConfig.SuppressVerboseAPFS;
+    MsgLog ("] ReadConfig\n");
 } // VOID ReadConfig()
 
 static
@@ -1131,48 +1140,47 @@ AddSubmenu (
     if ((SubEntry == NULL) || (SubScreen == NULL)) {
         return;
     }
-    SubEntry->me.Title = StrDuplicate (Title);
+    CopyPoolStr (&SubEntry->me.Title, Title);
 
+    // input Volume parameter should not be freed if FindVolume below replaces it, so add a Retain
+    RetainVolume (Volume);
+    
     while (((TokenCount = ReadTokenLine (File, &TokenList)) > 0) &&
         (StrCmp (TokenList[0], L"}") != 0)
     ) {
         if (MyStriCmp (TokenList[0], L"loader") && (TokenCount > 1)) {
             // set the boot loader filename
-            MyFreePool (SubEntry->LoaderPath);
-            SubEntry->LoaderPath = StrDuplicate (TokenList[1]);
-            SubEntry->Volume = Volume;
+            CopyPoolStr (&SubEntry->LoaderPath, TokenList[1]);
+            AssignVolume (&SubEntry->Volume, Volume);
         }
         else if (MyStriCmp (TokenList[0], L"volume") && (TokenCount > 1)) {
             if (FindVolume (&Volume, TokenList[1])) {
                 if ((Volume != NULL) && (Volume->IsReadable) && (Volume->RootDir)) {
                     TitleMenu = Title;
-                    MyFreePool (SubEntry->me.Title);
-                    SubEntry->me.Title = PoolPrint (
+                    AssignPoolStr (&SubEntry->me.Title, PoolPrint (
                         L"Boot %s from %s",
-                        (TitleMenu != NULL) ? TitleMenu : L"Unknown",
-                        Volume->VolName
-                    );
-                    SubEntry->me.BadgeImage = Volume->VolBadgeImage;
-                    SubEntry->Volume        = Volume;
+                        TitleMenu ? TitleMenu : L"Unknown",
+                        GetPoolStr (&Volume->VolName)
+                    ));
+                    CopyFromPoolImage (&SubEntry->me.BadgeImage, &Volume->VolBadgeImage);
+                    AssignVolume (&SubEntry->Volume, Volume);
                 } // if volume is readable
             } // if match found
         }
         else if (MyStriCmp (TokenList[0], L"initrd")) {
-            MyFreePool (SubEntry->InitrdPath);
-            SubEntry->InitrdPath = NULL;
+            FreePoolStr (&SubEntry->InitrdPath);
             if (TokenCount > 1) {
-                SubEntry->InitrdPath = StrDuplicate (TokenList[1]);
+                CopyPoolStr (&SubEntry->InitrdPath, TokenList[1]);
             }
         }
         else if (MyStriCmp (TokenList[0], L"options")) {
-            MyFreePool (SubEntry->LoadOptions);
-            SubEntry->LoadOptions = NULL;
+            FreePoolStr (&SubEntry->LoadOptions);
             if (TokenCount > 1) {
-                SubEntry->LoadOptions = StrDuplicate (TokenList[1]);
+                CopyPoolStr (&SubEntry->LoadOptions, TokenList[1]);
             } // if/else
         }
         else if (MyStriCmp (TokenList[0], L"add_options") && (TokenCount > 1)) {
-            MergeStrings (&SubEntry->LoadOptions, TokenList[1], L' ');
+            AssignPoolStr (&SubEntry->LoadOptions, MergeStringsNew (GetPoolStr (&SubEntry->LoadOptions), TokenList[1], L' '));
         }
         else if (MyStriCmp (TokenList[0], L"graphics") && (TokenCount > 1)) {
             SubEntry->UseGraphicsMode = MyStriCmp (TokenList[1], L"on");
@@ -1181,18 +1189,21 @@ AddSubmenu (
             SubEntry->Enabled = FALSE;
         } // if/elseif
 
-
         FreeTokenLine (&TokenList, &TokenCount);
-    } // while()
+    } // while
+    FreeTokenLine (&TokenList, &TokenCount);
 
-    if (SubEntry->InitrdPath != NULL) {
-        MergeStrings (&SubEntry->LoadOptions, L"initrd=", L' ');
-        MergeStrings (&SubEntry->LoadOptions, SubEntry->InitrdPath, 0);
-        MyFreePool (SubEntry->InitrdPath);
-        SubEntry->InitrdPath = NULL;
+    FreeVolume (&Volume); // works whether FindVolume replaced Volume or not
+
+    if (GetPoolStr (&SubEntry->InitrdPath) != NULL) {
+        AssignPoolStr (&SubEntry->LoadOptions, MergeStringsNew (GetPoolStr (&SubEntry->LoadOptions), L"initrd=", L' '));
+        AssignPoolStr (&SubEntry->LoadOptions, MergeStringsNew (GetPoolStr (&SubEntry->LoadOptions), GetPoolStr (&SubEntry->InitrdPath), 0));
+        FreePoolStr (&SubEntry->InitrdPath);
     } // if
     if (SubEntry->Enabled) {
         AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+    } else {
+        FreeMenuEntry ((REFIT_MENU_ENTRY *)SubEntry);
     }
     Entry->me.SubScreen = SubScreen;
 } // VOID AddSubmenu()
@@ -1206,30 +1217,33 @@ LOADER_ENTRY * AddStanzaEntries (
     REFIT_VOLUME *Volume,
     CHAR16 *Title
 ) {
+    MsgLog ("[ AddStanzaEntries %s\n", Title ? Title : L"NULL");
     CHAR16        **TokenList;
     UINTN         TokenCount;
-    BOOLEAN       DefaultsSet    = FALSE;
-    BOOLEAN       AddedSubmenu   = FALSE;
+    BOOLEAN       DefaultsSet = FALSE;
+    BOOLEAN       AddedSubmenu = FALSE;
     LOADER_ENTRY  *Entry;
-    REFIT_VOLUME  *CurrentVolume = Volume;
-    REFIT_VOLUME  *PreviousVolume;
+    REFIT_VOLUME  *CurrentVolume = NULL;
+    REFIT_VOLUME  *PreviousVolume = NULL;
 
    // prepare the menu entry
    Entry = InitializeLoaderEntry (NULL);
    if (Entry == NULL) {
+       MsgLog ("] AddStanzaEntries NULL\n");
        return NULL;
    }
+   AssignVolume(&CurrentVolume, Volume);
 
-   Entry->Title           = StrDuplicate (Title);
-   Entry->me.Title        = PoolPrint (
+   CopyPoolStr (&Entry->Title, Title);
+   AssignPoolStr (&Entry->me.Title, PoolPrint (
        L"Boot %s from %s",
-       (Title != NULL) ? Title : L"Unknown",
-       CurrentVolume->VolName
-   );
-   Entry->me.Row          = 0;
-   Entry->me.BadgeImage   = CurrentVolume->VolBadgeImage;
-   Entry->Volume          = CurrentVolume;
-   Entry->DiscoveryType   = DISCOVERY_TYPE_MANUAL;
+       Title ? Title : L"Unknown",
+       GetPoolStr (&CurrentVolume->VolName)
+   ));
+   Entry->me.Row = 0;
+   CopyFromPoolImage (&Entry->me.BadgeImage, &CurrentVolume->VolBadgeImage);
+   AssignVolume (&Entry->Volume, CurrentVolume);
+   Entry->DiscoveryType = DISCOVERY_TYPE_MANUAL;
 
    // Parse the config file to add options for a single stanza, terminating when the token
    // is "}" or when the end of file is reached.
@@ -1243,133 +1257,102 @@ LOADER_ENTRY * AddStanzaEntries (
 
    while (((TokenCount = ReadTokenLine (File, &TokenList)) > 0) && (StrCmp (TokenList[0], L"}") != 0)) {
       if (MyStriCmp (TokenList[0], L"loader") && (TokenCount > 1)) { // set the boot loader filename
-         Entry->LoaderPath = StrDuplicate (TokenList[1]);
+         CopyPoolStr (&Entry->LoaderPath, TokenList[1]);
 
-         #if REFIT_DEBUG > 0
-         LOG(1, LOG_LINE_NORMAL, L"Adding manual loader for '%s'", Entry->LoaderPath);
-         #endif
+         LOG(1, LOG_LINE_NORMAL, L"Adding manual loader for '%s'", GetPoolStr (&Entry->LoaderPath));
 
          SetLoaderDefaults (Entry, TokenList[1], CurrentVolume);
-         MyFreePool (Entry->LoadOptions);
-         Entry->LoadOptions = NULL; // Discard default options, if any
+         FreePoolStr (&Entry->LoadOptions); // Discard default options, if any
          DefaultsSet = TRUE;
       }
       else if (MyStriCmp (TokenList[0], L"volume") && (TokenCount > 1)) {
-         PreviousVolume = CurrentVolume;
-         if (FindVolume (&CurrentVolume, TokenList[1])) {
-             #if REFIT_DEBUG > 0
-             LOG(4, LOG_LINE_NORMAL, L"Adding volume for '%s'", Entry->LoaderPath);
-             #endif
+         AssignVolume (&PreviousVolume, CurrentVolume);
+         if (FindVolume (&CurrentVolume, TokenList[1])) { // reference counted
+             LOG(4, LOG_LINE_NORMAL, L"Adding volume for '%s'", GetPoolStr (&Entry->LoaderPath));
 
             if ((CurrentVolume != NULL) &&
                 (CurrentVolume->IsReadable) &&
                 (CurrentVolume->RootDir)
             ) {
-               MyFreePool (Entry->me.Title);
-               Entry->me.Title = PoolPrint (
-                   L"Boot %s from %s", (Title != NULL) ? Title : L"Unknown",
-                   CurrentVolume->VolName
-               );
-               Entry->me.BadgeImage = CurrentVolume->VolBadgeImage;
-               Entry->Volume        = CurrentVolume;
+               AssignPoolStr (&Entry->me.Title, PoolPrint (
+                   L"Boot %s from %s", Title ? Title : L"Unknown",
+                   GetPoolStr (&CurrentVolume->VolName)
+               ));
+               CopyFromPoolImage (&Entry->me.BadgeImage, &CurrentVolume->VolBadgeImage);
+               AssignVolume (&Entry->Volume, CurrentVolume);
             }
             else {
                 // It won't work out; reset to previous working volume
-                CurrentVolume = PreviousVolume;
+                AssignVolume (&CurrentVolume, PreviousVolume);
             } // if/else volume is readable
         } // if match found
       }
       else if (MyStriCmp (TokenList[0], L"icon") && (TokenCount > 1)) {
           #if REFIT_DEBUG > 0
-          if (Entry->LoaderPath) {
-              LOG(4, LOG_LINE_NORMAL, L"Adding icon for '%s'", Entry->LoaderPath);
+          if (GetPoolStr (&Entry->LoaderPath)) {
+              LOG(4, LOG_LINE_NORMAL, L"Adding icon for '%s'", GetPoolStr (&Entry->LoaderPath));
           }
           #endif
 
-         MyFreePool (Entry->me.Image);
-         Entry->me.Image = egLoadIcon (
+         AssignPoolImage (&Entry->me.Image, egLoadIcon (
              CurrentVolume->RootDir,
              TokenList[1],
              GlobalConfig.IconSizes[ICON_SIZE_BIG]
-         );
+         ));
 
-         if (Entry->me.Image == NULL) {
-            Entry->me.Image = DummyImage (GlobalConfig.IconSizes[ICON_SIZE_BIG]);
+         if (!GetPoolImage (&Entry->me.Image)) {
+            AssignPoolImage (&Entry->me.Image, DummyImage (GlobalConfig.IconSizes[ICON_SIZE_BIG]));
          }
       }
       else if (MyStriCmp (TokenList[0], L"initrd") && (TokenCount > 1)) {
-          #if REFIT_DEBUG > 0
-          LOG(4, LOG_LINE_NORMAL, L"Adding initrd for '%s'", Entry->LoaderPath);
-          #endif
-
-         MyFreePool (Entry->InitrdPath);
-         Entry->InitrdPath = StrDuplicate (TokenList[1]);
+         LOG(4, LOG_LINE_NORMAL, L"Adding initrd for '%s'", GetPoolStr (&Entry->LoaderPath));
+         CopyPoolStr (&Entry->InitrdPath, TokenList[1]);
       }
       else if (MyStriCmp (TokenList[0], L"options") && (TokenCount > 1)) {
-          #if REFIT_DEBUG > 0
-          LOG(4, LOG_LINE_NORMAL, L"Adding options for '%s'", Entry->LoaderPath);
-          #endif
-
-         MyFreePool (Entry->LoadOptions);
-         Entry->LoadOptions = StrDuplicate (TokenList[1]);
+         LOG(4, LOG_LINE_NORMAL, L"Adding options for '%s'", GetPoolStr (&Entry->LoaderPath));
+         CopyPoolStr (&Entry->LoadOptions, TokenList[1]);
       }
       else if (MyStriCmp (TokenList[0], L"ostype") && (TokenCount > 1)) {
          if (TokenCount > 1) {
-             #if REFIT_DEBUG > 0
-             LOG(4, LOG_LINE_NORMAL, L"Adding OS type for '%s'", Entry->LoaderPath);
-             #endif
-
-            Entry->OSType = TokenList[1][0];
+             LOG(4, LOG_LINE_NORMAL, L"Adding OS type for '%s'", GetPoolStr (&Entry->LoaderPath));
+             Entry->OSType = TokenList[1][0];
          }
       }
       else if (MyStriCmp (TokenList[0], L"graphics") && (TokenCount > 1)) {
-          #if REFIT_DEBUG > 0
-          LOG(4, LOG_LINE_NORMAL, L"Adding graphics mode for '%s'", Entry->LoaderPath);
-          #endif
-
+         LOG(4, LOG_LINE_NORMAL, L"Adding graphics mode for '%s'", GetPoolStr (&Entry->LoaderPath));
          Entry->UseGraphicsMode = MyStriCmp (TokenList[1], L"on");
       }
       else if (MyStriCmp (TokenList[0], L"disabled")) {
-          #if REFIT_DEBUG > 0
           LOG(1, LOG_LINE_NORMAL, L"Entry is disabled");
-          #endif
-
           Entry->Enabled = FALSE;
       }
       else if (MyStriCmp(TokenList[0], L"firmware_bootnum") && (TokenCount > 1)) {
-          #if REFIT_DEBUG > 0
-          LOG(4, LOG_LINE_NORMAL, L"Adding firmware bootnum for '%s'", Entry->LoaderPath);
-          #endif
-
-          MyFreePool (Entry->me.Title);
-          Entry->EfiBootNum    = StrToHex (TokenList[1], 0, 16);
+          LOG(4, LOG_LINE_NORMAL, L"Adding firmware bootnum for '%s'", TokenList[1]);
+          Entry->EfiBootNum = StrToHex (TokenList[1], 0, 16);
           Entry->EfiLoaderPath = NULL;
-          Entry->LoaderPath    = NULL;
-          Entry->me.Title      = StrDuplicate (Title);
-          Entry->me.BadgeImage = BuiltinIcon (BUILTIN_ICON_VOL_EFI);
-          Entry->me.Tag        = TAG_FIRMWARE_LOADER;
+          FreePoolStr (&Entry->LoaderPath);
+          CopyPoolStr (&Entry->me.Title, Title);
+          CopyFromPoolImage_PI_ (&Entry->me.BadgeImage_PI_, BuiltinIcon (BUILTIN_ICON_VOL_EFI));
+          Entry->me.Tag = TAG_FIRMWARE_LOADER;
       }
       else if (MyStriCmp (TokenList[0], L"submenuentry") && (TokenCount > 1)) {
-          #if REFIT_DEBUG > 0
-          LOG(4, LOG_LINE_NORMAL, L"Adding submenu entry for '%s'", Entry->LoaderPath);
-          #endif
+          LOG(4, LOG_LINE_NORMAL, L"Adding submenu entry for '%s'", GetPoolStr (&Entry->LoaderPath));
 
           AddSubmenu (Entry, File, CurrentVolume, TokenList[1]);
           AddedSubmenu = TRUE;
       } // set options to pass to the loader program
 
       FreeTokenLine (&TokenList, &TokenCount);
-   } // while()
-
+   } // while
+   FreeTokenLine (&TokenList, &TokenCount);
    if (AddedSubmenu) {
-       AddMenuEntry (Entry->me.SubScreen, &MenuEntryReturn);
+       AddMenuEntryCopy (Entry->me.SubScreen, &MenuEntryReturn);
    }
 
-   if (Entry->InitrdPath) {
-      MergeStrings (&Entry->LoadOptions, L"initrd=", L' ');
-      MergeStrings (&Entry->LoadOptions, Entry->InitrdPath, 0);
-      MyFreePool (Entry->InitrdPath);
-      Entry->InitrdPath = NULL;
+   if (GetPoolStr (&Entry->InitrdPath)) {
+      AssignPoolStr (&Entry->LoadOptions, MergeStringsNew (GetPoolStr (&Entry->LoadOptions), L"initrd=", L' '));
+      AssignPoolStr (&Entry->LoadOptions, MergeStringsNew (GetPoolStr (&Entry->LoadOptions), GetPoolStr (&Entry->InitrdPath), 0));
+      FreePoolStr (&Entry->InitrdPath);
    } // if
 
    if (!DefaultsSet) {
@@ -1377,6 +1360,11 @@ LOADER_ENTRY * AddStanzaEntries (
        SetLoaderDefaults (Entry, L"\\EFI\\BOOT\\nemo.efi", CurrentVolume);
    }
 
+   // since these started as NULL, free them if they are not NULL    
+   FreeVolume (&CurrentVolume);
+   FreeVolume (&PreviousVolume);
+
+    MsgLog("] AddStanzaEntries\n");
    return (Entry);
 } // static VOID AddStanzaEntries()
 
@@ -1386,16 +1374,13 @@ VOID
 ScanUserConfigured (
     CHAR16 *FileName
 ) {
+    MsgLog ("[ ScanUserConfigured FileName:%s\n", FileName ? FileName : L"NULL");
     EFI_STATUS        Status;
     REFIT_FILE        File;
-    REFIT_VOLUME      *Volume;
+    REFIT_VOLUME      *Volume = NULL;
     CHAR16            **TokenList;
     UINTN             TokenCount, size;
     LOADER_ENTRY      *Entry;
-
-    #if REFIT_DEBUG > 0
-    CHAR16 *VolDesc = NULL;
-    #endif
 
     if (FileExists (SelfDir, FileName)) {
         Status = RefitReadFile (SelfDir, FileName, &File, &size);
@@ -1403,80 +1388,23 @@ ScanUserConfigured (
             return;
         }
 
-        Volume = SelfVolume;
+        AssignVolume (&Volume, SelfVolume);
+        
+        MsgLog ("[ ScanUserConfigured loop\n");
 
         while ((TokenCount = ReadTokenLine (&File, &TokenList)) > 0) {
+            MsgLog ("[ ScanUserConfigured token '%s'\n", TokenList[0]);
             if (MyStriCmp (TokenList[0], L"menuentry") && (TokenCount > 1)) {
                 Entry = AddStanzaEntries (&File, Volume, TokenList[1]);
                 if ((Entry) && (Entry->Enabled)) {
-                    #if REFIT_DEBUG > 0
-                    if (Volume->VolName) {
-                        VolDesc = StrDuplicate (Volume->VolName);
-
-                        if (MyStrStr (VolDesc, L"whole disk Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"Whole Disk Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"Unknown Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"Unknown Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"HFS+ Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"HFS+ Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"NTFS Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"NTFS Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"FAT Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"FAT Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"ext2 Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"Ext2 Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"ext3 Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"Ext3 Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"ext4 Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"Ext4 Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"ReiserFS Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"ReiserFS Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"Btrfs Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"BTRFS Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"XFS Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"XFS Volume");
-                        }
-                        else if (MyStrStr (VolDesc, L"ISO-9660 Volume") != NULL) {
-                            MyFreePool (VolDesc);
-                            VolDesc = StrDuplicate (L"ISO-9660 Volume");
-                        }
-                        MsgLog ("\n");
-                        MsgLog ("  - Found '%s' on '%s'", Entry->Title, VolDesc);
-                    }
-                    else {
-                        MsgLog ("\n");
-                        MsgLog ("  - Found '%s' :: '%s'", Entry->Title, Entry->LoaderPath);
-                    }
-                    #endif
-
+                    DebugOneVolume(Volume, GetPoolStr (&Entry->Title), GetPoolStr (&Entry->LoaderPath));
                     if (Entry->me.SubScreen == NULL) {
                         GenerateSubScreen (Entry, Volume, TRUE);
                     }
                     AddPreparedLoaderEntry (Entry);
                 }
                 else {
-                    MyFreePool (Entry);
+                    FreeMenuEntry ((REFIT_MENU_ENTRY *)Entry);
                 } // if/else
             }
             else if (MyStriCmp (TokenList[0], L"include") && (TokenCount == 2) &&
@@ -1485,11 +1413,18 @@ ScanUserConfigured (
                 if (!MyStriCmp (TokenList[1], FileName)) {
                     ScanUserConfigured (TokenList[1]);
                 }
-            } // if/else if...
-
+            } // if/else if
             FreeTokenLine (&TokenList, &TokenCount);
-        } // while()
+            MsgLog ("] ScanUserConfigured token\n");
+        } // while
+        FreeTokenLine (&TokenList, &TokenCount);
+        MsgLog ("] ScanUserConfigured loop\n");
+        
+        // since Volume started as NULL, free it if it is not NULL
+        FreeVolume (&Volume);
+        MyFreePool (File.Buffer);
     } // if()
+    MsgLog ("] ScanUserConfigured\n");
 } // VOID ScanUserConfigured()
 
 // Create an options file based on /etc/fstab. The resulting file has two options
@@ -1529,9 +1464,7 @@ REFIT_FILE * GenerateOptionsFromEtcFstab (
             // File read; locate root fs and create entries
             Options->Encoding = ENCODING_UTF16_LE;
             while ((TokenCount = ReadTokenLine (Fstab, &TokenList)) > 0) {
-                #if REFIT_DEBUG > 0
                 LOG(4, LOG_LINE_NORMAL, L"Read line from /etc/fstab holding %d tokens", TokenCount);
-                #endif
 
                 if (TokenCount > 2) {
                     if (StrCmp (TokenList[1], L"\\") == 0) {
@@ -1563,7 +1496,7 @@ REFIT_FILE * GenerateOptionsFromEtcFstab (
                 } // if
                 FreeTokenLine (&TokenList, &TokenCount);
             } // while
-
+            FreeTokenLine (&TokenList, &TokenCount);
             if (Options->Buffer) {
                 Options->Current8Ptr  = (CHAR8 *)Options->Buffer;
                 Options->End8Ptr      = Options->Current8Ptr + Options->BufferSize;
@@ -1598,6 +1531,7 @@ REFIT_FILE * GenerateOptionsFromPartTypes (
     REFIT_FILE   *Options = NULL;
     CHAR16       *Line, *GuidString, *WriteStatus;
 
+    LOGPOOL (GlobalConfig.DiscoveredRoot);
     if (GlobalConfig.DiscoveredRoot) {
         Options = AllocateZeroPool (sizeof (REFIT_FILE));
         if (Options) {

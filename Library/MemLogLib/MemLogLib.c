@@ -36,11 +36,14 @@
 #include <Library/IoLib.h>
 #include <Library/PciLib.h>
 #include "GenericIch.h"
+#include "../../MainLoader/leaks.h"
+
 
 // Struct for holding mem buffer.
 typedef struct {
   CHAR8             *Buffer;
   CHAR8             *Cursor;
+  CHAR8             *cbPos;
   UINTN             BufferSize;
   MEM_LOG_CALLBACK  Callback;
 
@@ -62,7 +65,7 @@ MEM_LOG   *mMemLog = NULL;
 // Buffer for debug time.
 CHAR8     mTimingTxt[32];
 
-
+INTN      mMemLogPause = 0;
 
 /**
   Inits mem log.
@@ -119,7 +122,6 @@ GetTiming(VOID)
         else {
             dTLastSecLog = dTLastSec;
         }
-
 		AsciiSPrint(
             mTimingTxt,
             sizeof (mTimingTxt),
@@ -173,6 +175,7 @@ MemLogInit (
   mMemLog->BufferSize = MEM_LOG_INITIAL_SIZE;
   mMemLog->Buffer     = AllocateZeroPool (MEM_LOG_INITIAL_SIZE);
   mMemLog->Cursor     = mMemLog->Buffer;
+  mMemLog->cbPos      = mMemLog->Buffer;
   mMemLog->Callback   = NULL;
 
   // Calibrate TSC for timings
@@ -308,7 +311,7 @@ MemLogVA (
 {
   EFI_STATUS      Status;
   UINTN           DataWritten;
-  CHAR8           *LastMessage;
+  STATIC INTN     mLogIndent = 0;
 
   if (Format == NULL) {
     return;
@@ -323,13 +326,15 @@ MemLogVA (
   // Increase buffer if not.
   if ((UINTN)(mMemLog->Cursor - mMemLog->Buffer) + MEM_LOG_MAX_LINE_SIZE > mMemLog->BufferSize) {
       UINTN Offset;
+      UINTN cbOffset;
       // not enough place for max line - make buffer bigger
-      // but not too big (if something gets out of controll)
+      // but not too big (if something gets out of control)
       if (mMemLog->BufferSize + MEM_LOG_INITIAL_SIZE > MEM_LOG_MAX_SIZE) {
       // Out of resources!
         return;
       }
       Offset = mMemLog->Cursor - mMemLog->Buffer;
+      cbOffset = mMemLog->cbPos - mMemLog->Buffer;
       mMemLog->Buffer = ReallocatePool(
           mMemLog->BufferSize, mMemLog->BufferSize + MEM_LOG_INITIAL_SIZE,
           mMemLog->Buffer
@@ -337,15 +342,18 @@ MemLogVA (
       if (mMemLog->Buffer == NULL) {
           return;
       }
+      LEAKABLE (mMemLog->Buffer, "mMemLog->Buffer");
       mMemLog->BufferSize += MEM_LOG_INITIAL_SIZE;
       mMemLog->Cursor = mMemLog->Buffer + Offset;
+      mMemLog->cbPos = mMemLog->Buffer + cbOffset;
     }
 
+  BOOLEAN OutputIndent = FALSE;
   // Add log to buffer
-  LastMessage = mMemLog->Cursor;
   if (Timing) {
     // Write timing only when starting a new line
     if ((mMemLog->Buffer[0] == '\0') || (mMemLog->Cursor[-1] == '\n')) {
+      OutputIndent = TRUE;
       DataWritten = AsciiSPrint(
           mMemLog->Cursor,
           mMemLog->BufferSize - (mMemLog->Cursor - mMemLog->Buffer),
@@ -354,7 +362,45 @@ MemLogVA (
       );
       mMemLog->Cursor += DataWritten;
     }
+  }
 
+  if (OutputIndent) {
+    INTN indent = 0;
+    CONST CHAR8 *c;
+    for (c = Format; *c; c++) {
+      switch (*c) {
+        case '[': indent += 2; break;
+        case ']': indent -= 2; break;
+      }
+    }
+
+    if (indent < 0) {
+      if (mLogIndent + indent >= 0) {
+        mLogIndent += indent;
+      }
+      else {
+        mLogIndent = 0;
+      }
+    }
+    
+    if (mLogIndent > 0) {
+      DataWritten = AsciiSPrint(
+        mMemLog->Cursor,
+        mMemLog->BufferSize - (mMemLog->Cursor - mMemLog->Buffer),
+        "%*a",
+        mLogIndent, ""
+      );
+      mMemLog->Cursor += DataWritten;
+    }
+
+    if (indent > 0) {
+      if (mLogIndent + indent < 50) {
+        mLogIndent += indent;
+      }
+      else {
+        mLogIndent = 50;
+      }
+    }
   }
 
   DataWritten = AsciiVSPrint(
@@ -365,14 +411,18 @@ MemLogVA (
   );
   mMemLog->Cursor += DataWritten;
 
-  // Pass this last message to callback if defined
-  if (mMemLog->Callback != NULL) {
-    mMemLog->Callback(DebugMode, LastMessage);
-  }
+  if (!mMemLogPause) {
+    // Pass this last message to callback if defined
+    if (mMemLog->Callback != NULL) {
+      mMemLog->Callback(DebugMode, mMemLog->cbPos);
+    }
 
-  // Write to standard debug device also
-  DebugPrint(DEBUG_INFO, LastMessage);
-}
+    // Write to standard debug device also
+    DebugPrint(DEBUG_INFO, mMemLog->cbPos);
+    
+    mMemLog->cbPos = mMemLog->Cursor;
+  }
+} // MemLogVA
 
 /**
   Prints a log to message memory buffer.

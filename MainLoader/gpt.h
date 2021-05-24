@@ -87,4 +87,10 @@ GPT_ENTRY * FindPartWithGuid(EFI_GUID *Guid);
 VOID ForgetPartitionTables(VOID);
 VOID AddPartitionTable(REFIT_VOLUME *Volume);
 
+#if REFIT_DEBUG > 0
+VOID LEAKABLEPARTITIONS();
+#else
+#define LEAKABLEPARTITIONS(...)
+#endif
+
 #endif

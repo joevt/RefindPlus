@@ -14,6 +14,8 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
 #include "Platform.h"
+#include "lib.h"
+#include "leaks.h"
 
 /**
   Concatenates a formatted unicode string to allocated pool.
@@ -57,6 +59,7 @@ MyCatPrint (
         StringSize = StrSize (AppendStr);
         StringSize += (StrSize (Str->Str) - sizeof (UINT16));
 
+	LOGPOOL(Str->Str);
     Str->Str = EfiReallocatePool (
 					Str->Str,		   
                                    StrSize (Str->Str),
@@ -1568,6 +1571,7 @@ DevicePathToStr (
 
 Done:
   NewSize = (Str.Len + 1) * sizeof (CHAR16);
+  LOGPOOL(Str.Str);
   Str.Str = EfiReallocatePool (Str.Str, NewSize, NewSize);
   ASSERT (Str.Str != NULL);
   Str.Str[Str.Len] = 0;

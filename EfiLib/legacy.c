@@ -32,6 +32,8 @@
 #include "../include/tiano_includes.h"
 #endif
 #include "legacy.h"
+#include "lib.h"
+#include "leaks.h"
 #include "GenericBdsLib.h"
 #include "../MainLoader/global.h"
 #include "../include/refit_call_wrapper.h"
@@ -807,6 +809,7 @@ BdsAddNonExistingLegacyBootOptions (
     //
     // Save the BbsIndex
     //
+    LOGPOOL(mBootOptionBbsMapping);
     mBootOptionBbsMapping = EfiReallocatePool (
                               mBootOptionBbsMapping,
                               mBootOptionBbsMappingCount * sizeof (BOOT_OPTION_BBS_MAPPING),

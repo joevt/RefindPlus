@@ -64,6 +64,7 @@ CHAR16 *FindCommaDelimited(IN CHAR16 *InString, IN UINTN Index);
 CHAR8 *MyAsciiStrStr (IN CONST CHAR8 *String, IN CONST CHAR8 *SearchString);
 
 VOID ToLower(CHAR16 * MyString);
+CHAR16 * MergeStringsNew(IN CHAR16 *First, IN CHAR16 *Second, CHAR16 AddChar);
 VOID MergeStrings(IN OUT CHAR16 **First, IN CHAR16 *Second, CHAR16 AddChar);
 VOID MergeWords(CHAR16 **MergeTo, CHAR16 *InString, CHAR16 AddChar);
 VOID MyUnicodeStrToAsciiStr (

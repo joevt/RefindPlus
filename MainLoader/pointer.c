@@ -44,7 +44,7 @@ UINTN NumSPointerDevices = 0;
 BOOLEAN PointerAvailable = FALSE;
 
 UINTN LastXPos = 0, LastYPos = 0;
-EG_IMAGE* MouseImage = NULL;
+PoolImage MouseImage_PI_ = {NULL, FALSE};
 EG_IMAGE* Background = NULL;
 
 POINTER_STATE State;
@@ -53,16 +53,12 @@ POINTER_STATE State;
 // Initialize all pointer devices
 ////////////////////////////////////////////////////////////////////////////////
 VOID pdInitialize() {
-        #if REFIT_DEBUG > 0
-        MsgLog ("Initialise Pointer Devices...\n");
-        #endif
+    MsgLog ("Initialise Pointer Devices...\n");
 
     pdCleanup(); // just in case
 
     if (! (GlobalConfig.EnableMouse || GlobalConfig.EnableTouch)) {
-        #if REFIT_DEBUG > 0
         MsgLog ("  - Detected Touch Mode or 'No Mouse' Mode\n");
-        #endif
     }
     else {
         // Get all handles that support absolute pointer protocol (usually touchscreens, but sometimes mice)
@@ -91,18 +87,14 @@ VOID pdInitialize() {
                     EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL
                 );
                 if (status == EFI_SUCCESS) {
-                    #if REFIT_DEBUG > 0
                     MsgLog ("  - Enable Touch\n");
-                    #endif
 
                     NumAPointerDevices++;
                 }
             }
         }
         else {
-            #if REFIT_DEBUG > 0
             MsgLog ("  - Disable Touch\n");
-            #endif
 
             GlobalConfig.EnableTouch = FALSE;
         }
@@ -133,9 +125,7 @@ VOID pdInitialize() {
                     EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL
                 );
                 if (status == EFI_SUCCESS) {
-                    #if REFIT_DEBUG > 0
                     MsgLog ("  - Enable Mouse\n");
-                    #endif
 
                     NumSPointerDevices++;
                 }
@@ -143,9 +133,7 @@ VOID pdInitialize() {
         }
         else {
 
-            #if REFIT_DEBUG > 0
             MsgLog ("  - Disable Mouse\n");
-            #endif
 
             GlobalConfig.EnableMouse = FALSE;
         }
@@ -154,22 +142,18 @@ VOID pdInitialize() {
 
         // load mouse icon
         if (PointerAvailable && GlobalConfig.EnableMouse) {
-            MouseImage = BuiltinIcon (BUILTIN_ICON_MOUSE);
+            CopyFromPoolImage_PI_ (&MouseImage_PI_, BuiltinIcon (BUILTIN_ICON_MOUSE));
         }
     }
 
-    #if REFIT_DEBUG > 0
     MsgLog ("Pointer Devices Initialised\n\n");
-    #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Frees allocated memory and closes pointer protocols
 ////////////////////////////////////////////////////////////////////////////////
 VOID pdCleanup() {
-        #if REFIT_DEBUG > 0
         MsgLog ("Close Existing Pointer Protocols:\n");
-        #endif
 
     PointerAvailable = FALSE;
     pdClear();
@@ -210,10 +194,10 @@ VOID pdCleanup() {
         FreePool (SPointerProtocol);
         SPointerProtocol = NULL;
     }
-    if (MouseImage) {
-        egFreeImage (MouseImage);
-        Background = NULL;
-    }
+    FreePoolImage (&MouseImage);
+    egFreeImage (Background);
+    Background = NULL;
+
     NumAPointerDevices = 0;
     NumSPointerDevices = 0;
 
@@ -306,7 +290,7 @@ EFI_STATUS pdUpdateState() {
             INT32 TargetY = 0;
 
 #ifdef EFI32
-	    TargetX = State.X + (INTN)DivS64x64Remainder (
+        TargetX = State.X + (INTN)DivS64x64Remainder (
             SPointerState.RelativeMovementX * GlobalConfig.MouseSpeed,
             SPointerProtocol[Index]->Mode->ResolutionX,
             NULL
@@ -368,9 +352,9 @@ VOID pdDraw() {
         egFreeImage (Background);
         Background = NULL;
     }
-    if (MouseImage) {
-        UINTN Width = MouseImage->Width;
-        UINTN Height = MouseImage->Height;
+    if (GetPoolImage (&MouseImage)) {
+        UINTN Width = GetPoolImage (&MouseImage)->Width;
+        UINTN Height = GetPoolImage (&MouseImage)->Height;
 
         if (State.X + Width > ScreenW) {
             Width = ScreenW - State.X;
@@ -381,7 +365,7 @@ VOID pdDraw() {
 
         Background = egCopyScreenArea (State.X, State.Y, Width, Height);
         if (Background) {
-            BltImageCompositeBadge (Background, MouseImage, NULL, State.X, State.Y);
+            BltImageCompositeBadge (Background, GetPoolImage (&MouseImage), NULL, State.X, State.Y);
         }
     }
     LastXPos = State.X;

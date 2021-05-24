@@ -47,6 +47,7 @@
 
 #include "global.h"
 #include "lib.h"
+#include "leaks.h"
 #include "icns.h"
 #include "config.h"
 #include "mystrings.h"
@@ -60,65 +61,49 @@
 //
 
 typedef struct {
-    EG_IMAGE    *Image;
+    PoolImage   Image_PI_;
     CHAR16      *FileName;
     UINTN       IconSize;
 } BUILTIN_ICON;
 
-BUILTIN_ICON BuiltinIconTable[BUILTIN_ICON_COUNT] = {
-   { NULL, L"func_about", ICON_SIZE_SMALL },
-   { NULL, L"func_reset", ICON_SIZE_SMALL },
-   { NULL, L"func_shutdown", ICON_SIZE_SMALL },
-   { NULL, L"func_exit", ICON_SIZE_SMALL },
-   { NULL, L"func_firmware", ICON_SIZE_SMALL },
-   { NULL, L"func_csr_rotate", ICON_SIZE_SMALL },
-   { NULL, L"func_hidden", ICON_SIZE_SMALL },
-   { NULL, L"func_install", ICON_SIZE_SMALL },
-   { NULL, L"func_bootorder", ICON_SIZE_SMALL },
-   { NULL, L"tool_shell", ICON_SIZE_SMALL },
-   { NULL, L"tool_part", ICON_SIZE_SMALL },
-   { NULL, L"tool_rescue", ICON_SIZE_SMALL },
-   { NULL, L"tool_apple_rescue", ICON_SIZE_SMALL },
-   { NULL, L"tool_windows_rescue", ICON_SIZE_SMALL },
-   { NULL, L"tool_mok_tool", ICON_SIZE_SMALL },
-   { NULL, L"tool_fwupdate", ICON_SIZE_SMALL },
-   { NULL, L"tool_memtest", ICON_SIZE_SMALL },
-   { NULL, L"tool_netboot", ICON_SIZE_SMALL },
-   { NULL, L"vol_internal", ICON_SIZE_BADGE },
-   { NULL, L"vol_external", ICON_SIZE_BADGE },
-   { NULL, L"vol_optical", ICON_SIZE_BADGE },
-   { NULL, L"vol_net", ICON_SIZE_BADGE },
-   { NULL, L"vol_efi", ICON_SIZE_BADGE },
-   { NULL, L"mouse", ICON_SIZE_MOUSE },
-   { NULL, L"tool_bootscreen", ICON_SIZE_SMALL },
-   { NULL, L"tool_clean_nvram", ICON_SIZE_SMALL }
+#define ONEICON(id, file, type) { {NULL, FALSE}, file, type },
+BUILTIN_ICON BuiltinIconTable[] = {
+    #include "icns.include"
 };
 
-EG_IMAGE * BuiltinIcon(IN UINTN Id)
+PoolImage * BuiltinIcon(IN UINTN Id)
 {
     if (Id >= BUILTIN_ICON_COUNT) {
         return NULL;
     }
 
-    if (BuiltinIconTable[Id].Image == NULL) {
-       BuiltinIconTable[Id].Image = egFindIcon(
-           BuiltinIconTable[Id].FileName,
-           GlobalConfig.IconSizes[BuiltinIconTable[Id].IconSize]
-       );
-       if (BuiltinIconTable[Id].Image == NULL) {
-           if (Id == BUILTIN_ICON_TOOL_BOOTKICKER) {
-               BuiltinIconTable[Id].Image = egPrepareEmbeddedImage(&egemb_tool_bootscreen, FALSE);
-           }
-           else if (Id == BUILTIN_ICON_TOOL_NVRAMCLEAN) {
-               BuiltinIconTable[Id].Image = egPrepareEmbeddedImage(&egemb_tool_clean_nvram, FALSE);
-           }
-           if (BuiltinIconTable[Id].Image == NULL) {
-               BuiltinIconTable[Id].Image = DummyImage(GlobalConfig.IconSizes[BuiltinIconTable[Id].IconSize]);
-           }
-       }
+    if (!GetPoolImage (&BuiltinIconTable[Id].Image)) {
+        AssignCachedPoolImage (&BuiltinIconTable[Id].Image, egFindIcon(
+            BuiltinIconTable[Id].FileName,
+            GlobalConfig.IconSizes[BuiltinIconTable[Id].IconSize]
+        ));
+        if (!GetPoolImage (&BuiltinIconTable[Id].Image)) {
+            if (Id == BUILTIN_ICON_TOOL_BOOTKICKER) {
+                AssignCachedPoolImage (&BuiltinIconTable[Id].Image, egPrepareEmbeddedImage(&egemb_tool_bootscreen, FALSE));
+            }
+            else if (Id == BUILTIN_ICON_TOOL_NVRAMCLEAN) {
+                AssignCachedPoolImage (&BuiltinIconTable[Id].Image, egPrepareEmbeddedImage(&egemb_tool_clean_nvram, FALSE));
+            }
+            if (!GetPoolImage (&BuiltinIconTable[Id].Image)) {
+                AssignCachedPoolImage (&BuiltinIconTable[Id].Image, DummyImage(GlobalConfig.IconSizes[BuiltinIconTable[Id].IconSize]));
+            }
+        }
+        
+        #if REFIT_DEBUG > 0
+            MsgLog ("[ LEAKABLEBUILTINICON %d\n", Id);
+            LEAKABLEPATHINIT (kLeakableBuiltinIcons+Id);
+            LEAKABLEIMAGE (GetPoolImage (&BuiltinIconTable[Id].Image));
+            LEAKABLEPATHDONE ();
+            MsgLog ("] LEAKABLEBUILTINICON\n");
+        #endif
     } // if
 
-    return BuiltinIconTable[Id].Image;
+    return &BuiltinIconTable[Id].Image_PI_;
 }
 
 //
@@ -141,20 +126,18 @@ EG_IMAGE * LoadOSIcon(IN CHAR16 *OSIconName OPTIONAL, IN CHAR16 *FallbackIconNam
     }
 
     // First, try to find an icon from the OSIconName list....
-    while (((CutoutName = FindCommaDelimited(OSIconName, Index++)) != NULL) && (Image == NULL)) {
-       BaseName = PoolPrint (L"%s_%s", BootLogo ? L"boot" : L"os", CutoutName);
-       Image    = egFindIcon(BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
-       MyFreePool (CutoutName);
-       MyFreePool (BaseName);
+    while ((Image == NULL) && ((CutoutName = FindCommaDelimited(OSIconName, Index++)) != NULL)) {
+        BaseName = PoolPrint (L"%s_%s", BootLogo ? L"boot" : L"os", CutoutName);
+        Image = egFindIcon(BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
+        MyFreePool (CutoutName);
+        MyFreePool (BaseName);
     }
 
     // If that fails, try again using the FallbackIconName....
     if (Image == NULL) {
        BaseName = PoolPrint (L"%s_%s", BootLogo ? L"boot" : L"os", FallbackIconName);
 
-       #if REFIT_DEBUG > 0
        LOG(4, LOG_LINE_NORMAL, L"Trying to find an icon from '%s'", BaseName);
-       #endif
 
        Image = egFindIcon(BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
        MyFreePool (BaseName);
@@ -164,9 +147,7 @@ EG_IMAGE * LoadOSIcon(IN CHAR16 *OSIconName OPTIONAL, IN CHAR16 *FallbackIconNam
     if (BootLogo && (Image == NULL)) {
        BaseName = PoolPrint (L"os_%s", FallbackIconName);
 
-       #if REFIT_DEBUG > 0
        LOG(4, LOG_LINE_NORMAL, L"Trying to find an icon from '%s'", BaseName);
-       #endif
 
        Image = egFindIcon(BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
        MyFreePool (BaseName);
@@ -174,9 +155,7 @@ EG_IMAGE * LoadOSIcon(IN CHAR16 *OSIconName OPTIONAL, IN CHAR16 *FallbackIconNam
 
     // If all of these fail, return the dummy image....
     if (Image == NULL) {
-        #if REFIT_DEBUG > 0
         LOG(4, LOG_LINE_NORMAL, L"Setting dummy image");
-        #endif
 
         Image = DummyImage(GlobalConfig.IconSizes[ICON_SIZE_BIG]);
     }

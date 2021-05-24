@@ -15,10 +15,10 @@
  *
  */
 
-#include "LegacyBios.h"
-
 #ifndef __LEGACY_H_
 #define __LEGACY_H_
+
+#include "LegacyBios.h"
 
 #define BBS_MEDIA_PRESENT        0x0800
 #define BBS_MEDIA_MAYBE_PRESENT  0x0400

@@ -17,6 +17,7 @@
 
 #include "mystrings.h"
 #include "lib.h"
+#include "leaks.h"
 #include "screenmgt.h"
 #include "../include/refit_call_wrapper.h"
 
@@ -27,11 +28,11 @@ BOOLEAN StriSubCmp(IN CHAR16 *SmallStr, IN CHAR16 *BigStr) {
 
     if (SmallStr && BigStr) {
         while (!Terminate) {
-            if (BigStr[BigIndex] == '\0') {
-                Terminate = 1;
-            }
             if (SmallStr[SmallIndex] == '\0') {
                 Found = 1;
+                Terminate = 1;
+            }
+            if (BigStr[BigIndex] == '\0') {
                 Terminate = 1;
             }
             if ((SmallStr[SmallIndex] & ~0x20) == (BigStr[BigIndex] & ~0x20)) {
@@ -195,41 +196,34 @@ VOID ToLower(CHAR16 * MyString) {
 // new merged string, so it can take a NULL *First and it cleans
 // up the old memory. It should *NOT* be used with a constant
 // *First, though....
-VOID MergeStrings(IN OUT CHAR16 **First, IN CHAR16 *Second, CHAR16 AddChar) {
-    UINTN Length1 = 0, Length2 = 0;
-    CHAR16* NewString;
-
-    if (*First != NULL)
-        Length1 = StrLen(*First);
-    if (Second != NULL)
-        Length2 = StrLen(Second);
-    NewString = AllocatePool(sizeof (CHAR16) * (Length1 + Length2 + 2));
-    if (NewString != NULL) {
-        if ((*First != NULL) && (Length1 == 0)) {
-            MyFreePool (*First);
-            *First = NULL;
-        }
-
+CHAR16 * MergeStringsNew(IN OUT CHAR16 *First, IN CHAR16 *Second, CHAR16 AddChar) {
+    UINTN Length1 = First ? StrLen(First) : 0;
+    UINTN Length2 = Second ? StrLen(Second) : 0;
+    CHAR16* NewString = AllocatePool(sizeof (CHAR16) * (Length1 + Length2 + 2));
+    if (NewString) {
         NewString[0] = L'\0';
-
-        if (*First != NULL) {
-            StrCat(NewString, *First);
+        if (Length1) {
+            StrCat(NewString, First);
             if (AddChar) {
                 NewString[Length1] = AddChar;
                 NewString[Length1 + 1] = '\0';
-            } // if (AddChar)
-        } // if (*First != NULL)
-
-        if (Second != NULL) {
+            }
+        }
+        if (Length2) {
             StrCat(NewString, Second);
         }
+    }
+    return NewString;
+} // MergeStringsNew
+
+
+VOID MergeStrings(IN OUT CHAR16 **First, IN CHAR16 *Second, CHAR16 AddChar) {
+    if (First) {
+        CHAR16* NewString = MergeStringsNew(*First, Second, AddChar);
         MyFreePool (*First);
         *First = NewString;
     }
-    else {
-        Print(L"Error! Unable to allocate memory in MergeStrings()!\n");
-    } // if/else
-} // VOID MergeStrings()
+} // MergeStrings
 
 // Similar to MergeStrings, but breaks the input string into word chunks and
 // merges each word separately. Words are defined as string fragments separated
@@ -374,6 +368,7 @@ UINTN NumCharsInCommon(IN CHAR16* String1, IN CHAR16* String2) {
 // Returns the found element, or NULL if Index is out of range or InString
 // is NULL. Note that the calling function is responsible for freeing the
 // memory associated with the returned string pointer.
+// Empty string for input is valid. Empty string for output is possible.
 CHAR16 *FindCommaDelimited(IN CHAR16 *InString, IN UINTN Index) {
     UINTN    StartPos = 0, CurPos = 0, InLength;
     BOOLEAN  Found = FALSE;

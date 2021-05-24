@@ -35,6 +35,7 @@ Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for
  */
 
 #include "lodepng.h"
+#include "leaks.h"
 
 #ifdef LODEPNG_COMPILE_DISK
 #include <limits.h> /* LONG_MAX */
@@ -51,6 +52,7 @@ Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for
 #endif /*_MSC_VER */
 
 const char* LODEPNG_VERSION_STRING = "20200219";
+#include "../MainLoader/global.h"
 
 /*
 This source file is built up in the following large parts. The code sections
@@ -78,6 +80,7 @@ from here.*/
 
 #ifdef LODEPNG_COMPILE_ALLOCATORS
 static void* lodepng_malloc(size_t size) {
+	MsgLog("What we doing here? %a:%d\n", __FILE__, __LINE__);
 #ifdef LODEPNG_MAX_ALLOC
   if(size > LODEPNG_MAX_ALLOC) return 0;
 #endif
@@ -86,6 +89,7 @@ static void* lodepng_malloc(size_t size) {
 
 /* NOTE: when realloc returns NULL, it leaves the original memory untouched */
 static void* lodepng_realloc(void* ptr, size_t new_size) {
+	MsgLog("What we doing here? %a:%d\n", __FILE__, __LINE__);
 #ifdef LODEPNG_MAX_ALLOC
   if(new_size > LODEPNG_MAX_ALLOC) return 0;
 #endif
@@ -93,6 +97,7 @@ static void* lodepng_realloc(void* ptr, size_t new_size) {
 }
 
 static void lodepng_free(void* ptr) {
+	MsgLog("What we doing here? %a:%d\n", __FILE__, __LINE__);
   free(ptr);
 }
 #else /*LODEPNG_COMPILE_ALLOCATORS*/
@@ -2199,11 +2204,13 @@ unsigned lodepng_deflate(unsigned char** out, size_t* outsize,
 static unsigned deflate(unsigned char** out, size_t* outsize,
                         const unsigned char* in, size_t insize,
                         const LodePNGCompressSettings* settings) {
+  unsigned result;
   if(settings->custom_deflate) {
-    return settings->custom_deflate(out, outsize, in, insize, settings);
+    result = settings->custom_deflate(out, outsize, in, insize, settings);
   } else {
-    return lodepng_deflate(out, outsize, in, insize, settings);
+    result = lodepng_deflate(out, outsize, in, insize, settings);
   }
+  return result;
 }
 
 #endif /*LODEPNG_COMPILE_DECODER*/
@@ -2544,6 +2551,7 @@ unsigned lodepng_chunk_check_crc(const unsigned char* chunk) {
   /* Sanitise length */
   // DA-TAG: Initial arbitrary large value. Needs review
   if (length > 100000) {
+      LOGWHERE("length %d\n", length);
       return 0;
   }
 
@@ -2560,6 +2568,7 @@ void lodepng_chunk_generate_crc(unsigned char* chunk) {
   /* Sanitise length */
   // DA-TAG: Initial arbitrary large value. Needs review
   if (length > 100000) {
+    LOGWHERE("length %d\n", length);
     return;
   }
 
@@ -2629,6 +2638,7 @@ unsigned lodepng_chunk_append(unsigned char** out, size_t* outlength, const unsi
   /* Sanitise new_length */
   // DA-TAG: Initial arbitrary large value. Needs review
   if (new_length > 100000) {
+      LOGWHERE("new_length %d\n", new_length);
       return 0;
   }
 
@@ -4105,6 +4115,7 @@ unsigned lodepng_inspect(unsigned* w, unsigned* h, LodePNGState* state,
   /* Sanitise  width */
   // DA-TAG: Initial arbitrary large value. Needs review
   if (width > 5000) {
+      LOGWHERE("width %d\n", width);
       CERROR_RETURN_ERROR(state->error, 28);
   }
 
@@ -4112,6 +4123,7 @@ unsigned lodepng_inspect(unsigned* w, unsigned* h, LodePNGState* state,
   /* Sanitise height */
   // DA-TAG: Initial arbitrary large value. Needs review
   if (height > 5000) {
+      LOGWHERE("height %d\n", height);
       CERROR_RETURN_ERROR(state->error, 28);
   }
 
@@ -4994,13 +5006,18 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
     here speeds the multiple reallocs up. TODO: make zlib_decompress support
     receiving already allocated buffer with expected size instead. */
     scanlines = (unsigned char*)lodepng_malloc(expected_size);
-    if(!scanlines) state->error = 83; /*alloc fail*/
+    if(!scanlines) {
+        state->error = 83; /*alloc fail*/
+    }
     scanlines_size = 0;
   }
   if(!state->error) {
     state->error = zlib_decompress(&scanlines, &scanlines_size, idat.data,
                                    idat.size, &state->decoder.zlibsettings);
-    if(!state->error && scanlines_size != expected_size) state->error = 91; /*decompressed size doesn't match prediction*/
+    if(!state->error && scanlines_size != expected_size) {
+      state->error = 91; /*decompressed size doesn't match prediction*/
+      LOGWHERE("state->error = 91\n", 0);
+    }
   }
   ucvector_cleanup(&idat);
 
@@ -5025,6 +5042,7 @@ unsigned lodepng_decode(unsigned char** out, unsigned* w, unsigned* h,
   /* Sanitise *w */
   // DA-TAG: Initial arbitrary large value. Needs review
   if (*w > 100000) {
+      LOGWHERE("*w %d\n", *w);
       return 0;
   }
 
@@ -5196,6 +5214,7 @@ static unsigned addChunk_PLTE(ucvector* out, const LodePNGColorMode* info) {
   ucvector_init(&PLTE);
 
   if (PLTE.data == NULL) {
+      LOGWHERE("PLTE.data\n", 0);
       return 0;
   }
 
@@ -5789,6 +5808,7 @@ static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const 
     if(!(*out)) {
         /*alloc fail*/
         error = 83;
+        LOGWHERE("*outsize %x\n", *outsize);
     }
 
     if(error == 0) {
@@ -5818,12 +5838,14 @@ static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const 
     if(!(*out)) {
         /*alloc fail*/
         error = 83;
+        LOGWHERE("*outsize %x\n", *outsize);
     }
 
     adam7 = (unsigned char*)lodepng_malloc(passstart[7]);
     if(!adam7) {
         /*alloc fail*/
         error = 83;
+        LOGWHERE("passstart[7] %x\n", passstart[7]);
     }
 
     if(error == 0) {
@@ -6013,6 +6035,7 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize,
     if(!converted) {
         /*alloc fail*/
         state->error = 83;
+        LOGWHERE("size %x\n", size);
     }
     if(state->error == 0) {
       state->error = lodepng_convert(converted, image, &info.color, &state->info_raw, w, h);

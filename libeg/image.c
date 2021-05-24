@@ -58,6 +58,7 @@
 #include "libegint.h"
 #include "../MainLoader/global.h"
 #include "../MainLoader/lib.h"
+#include "../MainLoader/leaks.h"
 #include "../MainLoader/screenmgt.h"
 #include "../MainLoader/mystrings.h"
 #include "../include/refit_call_wrapper.h"
@@ -90,9 +91,7 @@ EG_IMAGE * egCreateImage (
     IN UINTN    Height,
     IN BOOLEAN  HasAlpha
 ) {
-    EG_IMAGE        *NewImage;
-
-    NewImage = (EG_IMAGE *) AllocatePool (sizeof (EG_IMAGE));
+    EG_IMAGE *NewImage = (EG_IMAGE *) AllocatePool (sizeof (EG_IMAGE));
     if (NewImage == NULL) {
         return NULL;
     }
@@ -164,13 +163,11 @@ EG_IMAGE * egCropImage (
     if (NewImage == NULL) {
         return NULL;
     }
-
     for (y = 0; y < Height; y++) {
         for (x = 0; x < Width; x++) {
             NewImage->PixelData[y * NewImage->Width + x] = Image->PixelData[(y + StartY) * Image->Width + x + StartX];
         }
     }
-
     return NewImage;
 } // EG_IMAGE * egCropImage()
 
@@ -196,14 +193,10 @@ EG_IMAGE * egScaleImage (
     UINTN     Offset = 0;
     UINTN     x_ratio, y_ratio, x_diff, y_diff;
 
-    #if REFIT_DEBUG > 0
     LOG(3, LOG_LINE_NORMAL, L"Scaling image to %d x %d", NewWidth, NewHeight);
-    #endif
 
     if ((Image == NULL) || (Image->Height == 0) || (Image->Width == 0) || (NewWidth == 0) || (NewHeight == 0)) {
-        #if REFIT_DEBUG > 0
         LOG(1, LOG_LINE_NORMAL, L"In egScaleImage, image is NULL or a size is 0");
-        #endif
 
         return NULL;
     }
@@ -214,9 +207,7 @@ EG_IMAGE * egScaleImage (
 
     NewImage = egCreateImage (NewWidth, NewHeight, Image->HasAlpha);
     if (NewImage == NULL) {
-        #if REFIT_DEBUG > 0
         LOG(1, LOG_LINE_NORMAL, L"In egScaleImage, could not create new image");
-        #endif
 
         return NULL;
     }
@@ -262,9 +253,7 @@ EG_IMAGE * egScaleImage (
         } // for (j...)
     } // for (i...)
 
-    #if REFIT_DEBUG > 0
     LOG(3, LOG_LINE_NORMAL, L"Scaling image completed");
-    #endif
 
     return NewImage;
 } // EG_IMAGE * egScaleImage()
@@ -313,6 +302,11 @@ egLoadFile (
         refit_call1_wrapper(FileHandle->Close, FileHandle);
         return EFI_NOT_FOUND;
     }
+    #if REFIT_DEBUG > 0
+    if (LOGPOOL(FileInfo) < 0) {
+        LOGWHERE("egLoadFile %s\n", FileName);
+    }
+    #endif
 
     ReadSize = FileInfo->FileSize;
 
@@ -339,9 +333,7 @@ egLoadFile (
     *FileData       = Buffer;
     *FileDataLength = BufferSize;
 
-    #if REFIT_DEBUG > 0
     LOG(4, LOG_LINE_NORMAL, L"In egLoadFile, loaded '%s'", FileName);
-    #endif
 
     return EFI_SUCCESS;
 }
@@ -422,20 +414,20 @@ static EG_IMAGE * egDecodeAny (
     IN UINTN    IconSize,
     IN BOOLEAN  WantAlpha
 ) {
-   EG_IMAGE *NewImage = NULL;
+    EG_IMAGE *NewImage = NULL;
 
-   NewImage = egDecodePNG (FileData, FileDataLength, IconSize, WantAlpha);
-   if (NewImage == NULL) {
-       NewImage = egDecodeJPEG (FileData, FileDataLength, IconSize, WantAlpha);
-   }
-   if (NewImage == NULL) {
-       NewImage = egDecodeBMP (FileData, FileDataLength, IconSize, WantAlpha);
-   }
-   if (NewImage == NULL) {
-       NewImage = egDecodeICNS (FileData, FileDataLength, IconSize, WantAlpha);
-   }
+    NewImage = egDecodePNG (FileData, FileDataLength, IconSize, WantAlpha);
+    if (NewImage == NULL) {
+        NewImage = egDecodeJPEG (FileData, FileDataLength, IconSize, WantAlpha);
+    }
+    if (NewImage == NULL) {
+        NewImage = egDecodeBMP (FileData, FileDataLength, IconSize, WantAlpha);
+    }
+    if (NewImage == NULL) {
+        NewImage = egDecodeICNS (FileData, FileDataLength, IconSize, WantAlpha);
+    }
 
-   return NewImage;
+    return NewImage;
 }
 
 EG_IMAGE * egLoadImage (
@@ -482,9 +474,7 @@ EG_IMAGE * egLoadIcon (
     if ((BaseDir == NULL) || (Path == NULL)) {
         Status = EFI_INVALID_PARAMETER;
 
-        #if REFIT_DEBUG > 0
         LOG(4, LOG_LINE_NORMAL, L"In egLoadIcon, '%r' returned while trying to load '%s'", Status, Path);
-        #endif
 
         return NULL;
     }
@@ -492,9 +482,7 @@ EG_IMAGE * egLoadIcon (
     // load file
     Status = egLoadFile (BaseDir, Path, &FileData, &FileDataLength);
     if (EFI_ERROR (Status)) {
-        #if REFIT_DEBUG > 0
         LOG(4, LOG_LINE_NORMAL, L"In egLoadIcon, '%r' returned while trying to load '%s'", Status, Path);
-        #endif
 
         return NULL;
     }
@@ -505,9 +493,7 @@ EG_IMAGE * egLoadIcon (
 
     // return null if unable to decode
     if (Image == NULL) {
-        #if REFIT_DEBUG > 0
         LOG(4, LOG_LINE_NORMAL, L"In egLoadIcon, could not decode file data!!");
-        #endif
 
         return NULL;
     }
@@ -519,19 +505,15 @@ EG_IMAGE * egLoadIcon (
         if (NewImage) {
             egFreeImage (Image);
 
-            #if REFIT_DEBUG > 0
             LOG(4, LOG_LINE_NORMAL, L"Freed image (egLoadIcon)");
-            #endif
 
             Image = NewImage;
         }
         else {
-            #if REFIT_DEBUG > 0
             LOG(1, LOG_LINE_NORMAL,
                 L"Warning: Unable to scale icon from %d x %d to %d x %d from '%s'",
                 Image->Width, Image->Height, IconSize, IconSize, Path
             );
-            #endif
 
             Print(L"Warning: Unable to scale icon from %d x %d to %d x %d from '%s'\n",
                 Image->Width, Image->Height, IconSize, IconSize, Path
@@ -558,9 +540,9 @@ EG_IMAGE * egLoadIconAnyType (
     CHAR16    *FileName;
     UINTN     i = 0;
 
-    while (((Extension = FindCommaDelimited (ICON_EXTENSIONS, i++)) != NULL) && (Image == NULL)) {
+    while ((Image == NULL) && ((Extension = FindCommaDelimited (ICON_EXTENSIONS, i++)) != NULL)) {
         FileName = PoolPrint (L"%s\\%s.%s", SubdirName, BaseName, Extension);
-        Image    = egLoadIcon (BaseDir, FileName, IconSize);
+        Image = egLoadIcon (BaseDir, FileName, IconSize);
 
         MyFreePool (Extension);
         MyFreePool (FileName);
@@ -942,6 +924,18 @@ egCopyPlane (
             DestPlanePtr += 4, SrcPlanePtr += 4;
         }
     }
+}
+
+VOID
+LEAKABLEIMAGE (
+    EG_IMAGE *Image
+) {
+    if (Image) {
+        LEAKABLEPATHINC ();
+            LEAKABLEWITHPATH (Image->PixelData, "Image PixelData");
+        LEAKABLEPATHDEC ();
+    }
+    LEAKABLEWITHPATH (Image, "Image");
 }
 
 /* EOF */

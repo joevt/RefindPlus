@@ -123,13 +123,45 @@ VOID ScanVolumes (VOID);
 VOID ReinitVolumes (VOID);
 VOID UninitRefitLib (VOID);
 VOID SetVolumeIcons (VOID);
-VOID MyFreePool (IN OUT VOID *Pointer);
+
+#if REFIT_DEBUG > 0
+VOID DebugOneVolume (REFIT_VOLUME *Volume, CHAR16 *TitleEntry, CHAR16 *EntryLoaderPath);
+#else
+#define DebugOneVolume(...)
+#endif
+
+VOID MyFreePoolProc (IN OUT VOID **Pointer);
+#define MyFreePool(a) MyFreePoolProc((VOID **)&a)
+
+VOID RetainVolume (REFIT_VOLUME *Volume);
+REFIT_VOLUME * AllocateVolume ();
+REFIT_VOLUME * CopyVolume (REFIT_VOLUME *VolumeToCopy);
+VOID FreeVolume (REFIT_VOLUME **Volume);
+VOID AssignVolume (REFIT_VOLUME **Volume, REFIT_VOLUME *NewVolume);
+VOID AddToVolumeList (REFIT_VOLUME ***Volumes, UINTN *VolumesCount, REFIT_VOLUME *Volume);
+VOID FreeVolumes (REFIT_VOLUME ***Volumes, UINTN *VolumesCount);
+
+
+#if REFIT_DEBUG > 0
+VOID LEAKABLEPOOLSTR (PoolStr *Str, CHAR8 *Description);
+VOID LEAKABLEPOOLIMAGE (PoolImage *Image);
+VOID LEAKABLEVOLUME (REFIT_VOLUME *Volume);
+VOID LEAKABLEVOLUMES ();
+#else
+#define LEAKABLEPOOLIMAGE(...)
+#define LEAKABLEPOOLSTR(...)
+#define LEAKABLEVOLUME(...)
+#define LEAKABLEVOLUMES(...)
+#endif
+
+
 VOID EraseUint32List (UINT32_LIST **TheList);
 VOID SetVolumeBadgeIcon (REFIT_VOLUME *Volume);
 VOID CleanUpPathNameSlashes (IN OUT CHAR16 *PathName);
 VOID FreeList (IN OUT VOID ***ListPtr, IN OUT UINTN *ElementCount);
 VOID SplitPathName (CHAR16 *InPath, CHAR16 **VolName, CHAR16 **Path, CHAR16 **Filename);
 VOID CreateList (OUT VOID ***ListPtr, OUT UINTN *ElementCount, IN UINTN InitialElementCount);
+VOID AddListElementSized (IN OUT VOID **ListPtr, IN OUT UINTN *ElementCount, IN VOID *NewElement, IN UINTN ElementSize);
 VOID AddListElement (IN OUT VOID ***ListPtr, IN OUT UINTN *ElementCount, IN VOID *NewElement);
 VOID DirIterOpen (
     IN EFI_FILE *BaseDir,

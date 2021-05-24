@@ -26,6 +26,7 @@
 #include "global.h"
 #include "../MainLoader/screenmgt.h"
 #include "lodepng.h"
+#include "leaks.h"
 
 // EFI's equivalent of realloc requires the original buffer's size as an
 // input parameter, which the standard libc realloc does not require. Thus,
@@ -36,22 +37,26 @@
 // lodepng_malloc() should be freed via lodepng_free(), and myfree() should
 // NOT be used with memory allocated via AllocatePool() or AllocateZeroPool()!
 
+#if 0 // removed this stuff since lodepng was updated to use OC OpenCore version
+
 void* lodepng_malloc(size_t size) {
    void *ptr;
-
-   ptr = AllocateZeroPool(size + sizeof (size_t));
-   if (ptr) {
-      *(size_t *) ptr = size;
-      return ((size_t *) ptr) + 1;
+   size_t *poolPtr = AllocateZeroPool(size + sizeof (size_t));
+   if (poolPtr) {
+      *poolPtr = size;
+      ptr = poolPtr + 1;
    } else {
-      return NULL;
+      ptr = NULL;
    }
+   MsgLog("lodepng_malloc %p->%p (%d)\n", poolPtr, ptr, size);
+   return ptr;
 } // void* lodepng_malloc()
 
 void lodepng_free (void *ptr) {
    if (ptr) {
-      ptr = (void *) (((size_t *) ptr) - 1);
-      FreePool(ptr);
+      size_t *poolPtr = ((size_t *) ptr) - 1;
+      MsgLog("lodepng_free %p->%p (%d)\n", poolPtr, ptr, *poolPtr);
+      FreePool(poolPtr);
    }
 } // void lodepng_free()
 
@@ -63,16 +68,24 @@ static size_t report_size(void *ptr) {
 } // size_t report_size()
 
 void* lodepng_realloc(void *ptr, size_t new_size) {
-   size_t *new_pool;
+   size_t *newPtr;
    size_t old_size;
 
-   new_pool = lodepng_malloc(new_size);
-   if (new_pool && ptr) {
+   newPtr = lodepng_malloc(new_size);
+   if (newPtr && ptr) {
       old_size = report_size(ptr);
-      CopyMem(new_pool, ptr, (old_size < new_size) ? old_size : new_size);
+      CopyMem(newPtr, ptr, (old_size < new_size) ? old_size : new_size);
    }
-   return new_pool;
+   if (ptr) {
+	   MsgLog("lodepng_realloc old: %p->%p (%d)\n", ((size_t *) ptr) - 1, ptr, old_size);
+   }
+   if (newPtr) {
+	   MsgLog("                new: %p->%p (%d)\n", ((size_t *) newPtr) - 1, newPtr, new_size);
+   }
+   return newPtr;
 } // lodepng_realloc()
+
+#endif
 
 // Finds length of ASCII string, which MUST be NULL-terminated.
 int MyStrlen(const char *InString) {

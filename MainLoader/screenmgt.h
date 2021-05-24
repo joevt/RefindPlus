@@ -84,6 +84,8 @@ extern BOOLEAN AllowGraphicsMode;
 extern EG_PIXEL StdBackgroundPixel;
 extern EG_PIXEL MenuBackgroundPixel;
 
+extern BOOLEAN HaveOverriden;
+
 EFI_STATUS SwitchToGraphics(VOID);
 
 BOOLEAN ReadAllKeyStrokes(VOID);
