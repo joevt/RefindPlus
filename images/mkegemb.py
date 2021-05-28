@@ -59,8 +59,9 @@ def encode_plane(rawdata, planename):
 
 ### main loop
 
-print ("mkegemb 0.1a, Copyright (c) 2006 Christoph Pfisterer. Modified 2020 by Dayo Akanji")
+print ("mkegemb 0.1a, Copyright (c) 2006 Christoph Pfisterer")
 print ("              Modified 2020 for Python 3 by Dayo Akanji")
+print ("              Modified 2021 for Path Independence by Dayo Akanji")
 
 planenames = ( "blue", "green", "red", "alpha", "grey" )
 
@@ -74,7 +75,8 @@ for filename in sys.argv[1:]:
 
     print ("%s: %d x %d %s" % (filename, width, height, mode))
 
-    (basename, extension) = os.path.splitext(filename)
+    basepath = os.path.basename(filename)
+    (basename, extension) = os.path.splitext(basepath)
     identname = basename.replace("-", "_")
 
     # extract image data from PIL object
@@ -146,7 +148,7 @@ for filename in sys.argv[1:]:
 
     # generate compilable header file
 
-    output = "static const UINT8 egemb_%s_data[%d] = {\n" % (identname, len(imagedata))
+    output = "static CONST UINT8 egemb_%s_data[%d] = {\n" % (identname, len(imagedata))
     for i in range(0, len(imagedata)):
         output = output + " 0x%02x," % imagedata[i]
         if (i % 12) == 11:

@@ -13,11 +13,11 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
 #include "Platform.h"
-#include "../MainLoader/lib.h"
-#include "../MainLoader/leaks.h"
-#include "../MainLoader/mystrings.h"
-#include "../MainLoader/launch_efi.h"
+#include "../BootMaster/lib.h"
+#include "../BootMaster/mystrings.h"
+#include "../BootMaster/launch_efi.h"
 #include "../include/refit_call_wrapper.h"
+#include "../BootMaster/leaks.h"
 
 #if REFIT_DEBUG > 0
 #include "../../ShellPkg/Include/Library/HandleParsingLib.h"
@@ -34,10 +34,8 @@ extern EFI_STATUS AmendSysTable (VOID);
 extern EFI_STATUS AcquireGOP (VOID);
 
 
-STATIC
-EFI_STATUS
-EFIAPI
-daConnectController (
+static
+EFI_STATUS EFIAPI daConnectController (
     IN  EFI_HANDLE               ControllerHandle,
     IN  EFI_HANDLE               *DriverImageHandle   OPTIONAL,
     IN  EFI_DEVICE_PATH_PROTOCOL *RemainingDevicePath OPTIONAL,
@@ -67,7 +65,7 @@ daConnectController (
         MsgLog("] daConnectController HandleProtocol...%r\n", Status);
         return EFI_NOT_STARTED;
     }
-    //MyFreePool(DevicePath); // DevicePath is not always a pool allocated ptr
+    //MyFreePool(&DevicePath); // DevicePath is not always a pool allocated ptr
 
     #if 1
     _ENDIGNORE_
@@ -86,8 +84,7 @@ daConnectController (
     return Status;
 } // EFI_STATUS daConnectController()
 
-EFI_STATUS
-ScanDeviceHandles (
+EFI_STATUS ScanDeviceHandles (
     EFI_HANDLE ControllerHandle,
     UINTN      *HandleCount,
     EFI_HANDLE **HandleBuffer,
@@ -216,19 +213,19 @@ ScanDeviceHandles (
                         }
                     }
 
-                    MyFreePool (OpenInfo);
+                    MyFreePool (&OpenInfo);
                 }
             }
 
-            MyFreePool (ProtocolGuidArray);
+            MyFreePool (&ProtocolGuidArray);
         }
     }
 
     return EFI_SUCCESS;
 
 Error:
-    MyFreePool (*HandleType);
-    MyFreePool (*HandleBuffer);
+    MyFreePool (HandleType);
+    MyFreePool (HandleBuffer);
 
     *HandleCount  = 0;
     *HandleBuffer = NULL;
@@ -238,8 +235,7 @@ Error:
 } // EFI_STATUS ScanDeviceHandles()
 
 
-EFI_STATUS
-BdsLibConnectMostlyAllEfi (
+EFI_STATUS BdsLibConnectMostlyAllEfi (
     VOID
 ) {
     EFI_STATUS           XStatus;
@@ -277,7 +273,10 @@ BdsLibConnectMostlyAllEfi (
 
     DetectedDevices = FALSE;
 
-    LOG2(2, LOG_LINE_SEPARATOR, L"", L"...\n", L"%s Device Handles to Controllers%s", ReLoaded ? L"Reconnect" : L"Link", PostConnect ? L" (Post Connect)" : L"");
+    LOG2(2, LOG_LINE_SEPARATOR, L"", L"...\n", L"%s Device Handles to Controllers%s",
+        ReLoaded ? L"Reconnect" : L"Link",
+        PostConnect ? L" (Post Connect)" : L""
+    );
 
     // DISABLE scan all handles
     //Status = gBS->LocateHandleBuffer (AllHandles, NULL, NULL, &AllHandleCount, &AllHandleBuffer);
@@ -452,21 +451,8 @@ BdsLibConnectMostlyAllEfi (
                                     )
                                 );
                                 
-                                MyFreePool(Buses); MyFreePool(OptionRom);
-
-                                if (VGADevice) {
-                                    // DA-TAG: Unable to reconnect later after disconnecting here
-                                    //         Comment out and set MakeConnection to FALSE
-                                    // gBS->DisconnectController (AllHandleBuffer[i], NULL, NULL);
-                                    MakeConnection = FALSE;
-                                }
-/*
-                                else if (GFXDevice) {
-                                    // DA-TAG: Currently unable to detect GFX Device
-                                    //         Revisit Clover implementation later
-                                    //         Not currently missed but may allow new options
-                                }
-*/
+                                MyFreePool (&Buses);
+                                MyFreePool (&OptionRom);
 
                                 #endif
                             } // is readable PCI device
@@ -514,12 +500,12 @@ BdsLibConnectMostlyAllEfi (
                         if (StrCmp (GopDevicePathStr, DevicePathStr) == 0) {
                             CHAR16 *oldDeviceData = DeviceData;
                             DeviceData = PoolPrint (L"%s : 1st GOP", DeviceData);
-                            MyFreePool(oldDeviceData);
+                            MyFreePool (&oldDeviceData);
                         }
                         else if (StrStr (GopDevicePathStr, DevicePathStr)) {
                             CHAR16 *oldDeviceData = DeviceData;
                             DeviceData = PoolPrint ( L"%s : Parent of 1st GOP", DeviceData);
-                            MyFreePool(oldDeviceData);
+                            MyFreePool (&oldDeviceData);
                         }
                     }
                     
@@ -528,7 +514,7 @@ BdsLibConnectMostlyAllEfi (
                             if (GOPArray[m] == AllHandleBuffer[i]) {
                                 CHAR16 *oldDeviceData = DeviceData;
                                 DeviceData = PoolPrint ( L"%s : GOP%d", DeviceData, m);
-                                MyFreePool(oldDeviceData);
+                                MyFreePool (&oldDeviceData);
                             }
                         }
                     }
@@ -536,7 +522,7 @@ BdsLibConnectMostlyAllEfi (
                     if (gST->ConsoleOutHandle == AllHandleBuffer[i]) {
                         CHAR16 *oldDeviceData = DeviceData;
                         DeviceData = PoolPrint ( L"%s : ConsoleOut", DeviceData);
-                        MyFreePool(oldDeviceData);
+                        MyFreePool (&oldDeviceData);
                     }
 
                     #endif
@@ -596,22 +582,22 @@ BdsLibConnectMostlyAllEfi (
                 MsgLog ("\n");
             }
 
-            MyFreePool (DevicePathStr);
-            MyFreePool (DeviceData);
+            MyFreePool (&DevicePathStr);
+            MyFreePool (&DeviceData);
 
             #endif
 
-            MyFreePool (HandleBuffer);
-            MyFreePool (HandleType);
+            MyFreePool (&HandleBuffer);
+            MyFreePool (&HandleType);
         }  // for
 
         #if REFIT_DEBUG > 0
-        MyFreePool (GopDevicePathStr);
-        MyFreePool (GOPArray);
+        MyFreePool (&GopDevicePathStr);
+        MyFreePool (&GOPArray);
         #endif
     } // if !EFI_ERROR (Status)
 
-    MyFreePool (AllHandleBuffer);
+    MyFreePool (&AllHandleBuffer);
 
     return Status;
 } // EFI_STATUS BdsLibConnectMostlyAllEfi()
@@ -622,9 +608,8 @@ BdsLibConnectMostlyAllEfi (
   the corresponding controllers if have. And at the same time, make
   sure all the system controllers have driver to manage it if have.
 **/
-STATIC
-EFI_STATUS
-BdsLibConnectAllDriversToAllControllersEx (
+static
+EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (
     VOID
 ) {
     EFI_STATUS  Status;
@@ -666,7 +651,7 @@ BdsLibConnectAllDriversToAllControllersEx (
 
     } while (!EFI_ERROR (Status));
 
-    LOG(1, LOG_THREE_STAR_MID, L"Connected handles to controllers");
+    LOG(3, LOG_THREE_STAR_SEP, L"Connected Handles to Controllers");
 
     if (FoundGOP) {
         return EFI_SUCCESS;
@@ -680,8 +665,7 @@ BdsLibConnectAllDriversToAllControllersEx (
 // to the GPU's GOP drivers failing to install on not detecting UEFI 2.x. This function
 // amends SystemTable Revision information, provides the missing CreateEventEx capability
 // then reloads the GPU's ROM from RAM (If Present) which will install GOP (If Available).
-EFI_STATUS
-ApplyGOPFix (
+EFI_STATUS ApplyGOPFix (
     VOID
 ) {
     EFI_STATUS Status;
@@ -691,16 +675,12 @@ ApplyGOPFix (
     // Update Boot Services to permit reloading GPU Option ROM
     Status = AmendSysTable();
 
-    LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Amend System Table ...%r", Status);
+    LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Amend System Table ... %r", Status);
 
     if (!EFI_ERROR (Status)) {
         Status = AcquireGOP();
-        if (Status == EFI_INCOMPATIBLE_VERSION) {
-            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Acquire Option ROM on Volatile Storage ...Feature Unavailable");
-        }
-        else {
-            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Acquire Option ROM on Volatile Storage ...%r", Status);
-        }
+
+        LOG2(4, LOG_LINE_NORMAL, L"      ", L"\n\n", L"Acquire Option ROM on Volatile Storage ...%r", Status);
 
         // connect all devices
         if (!EFI_ERROR (Status)) {
@@ -719,9 +699,7 @@ ApplyGOPFix (
   the correspoinding controllers if have. And at the same time, make
   sure all the system controllers have driver to manage it if have.
 **/
-VOID
-EFIAPI
-BdsLibConnectAllDriversToAllControllers (
+VOID EFIAPI BdsLibConnectAllDriversToAllControllers (
     IN BOOLEAN ResetGOP
 ) {
     EFI_STATUS Status;
@@ -732,12 +710,7 @@ BdsLibConnectAllDriversToAllControllers (
             ReLoaded = TRUE;
             Status   = ApplyGOPFix();
 
-            if (Status == EFI_INCOMPATIBLE_VERSION) {
-                LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Issue Option ROM from Volatile Storage ...Feature Unavailable");
-            }
-            else {
-                LOG2(4, LOG_STAR_SEPARATOR, L"INFO: ", L"\n\n", L"Issue Option ROM from Volatile Storage ...%r", Status);
-            }
+            LOG2(4, LOG_STAR_SEPARATOR, L"INFO: ", L"\n\n", L"Issue Option ROM from Volatile Storage ...%r", Status);
 
             ReLoaded = FALSE;
         }

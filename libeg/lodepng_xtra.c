@@ -22,9 +22,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+/*
+ * Modified for RefindPlus
+ * Copyright (c) 2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ *
+ * Modifications distributed under the preceding terms.
+ */
 
 #include "global.h"
-#include "../MainLoader/screenmgt.h"
+#include "../BootMaster/screenmgt.h"
 #include "lodepng.h"
 #include "leaks.h"
 
@@ -77,10 +83,10 @@ void* lodepng_realloc(void *ptr, size_t new_size) {
       CopyMem(newPtr, ptr, (old_size < new_size) ? old_size : new_size);
    }
    if (ptr) {
-	   MsgLog("lodepng_realloc old: %p->%p (%d)\n", ((size_t *) ptr) - 1, ptr, old_size);
+       MsgLog("lodepng_realloc old: %p->%p (%d)\n", ((size_t *) ptr) - 1, ptr, old_size);
    }
    if (newPtr) {
-	   MsgLog("                new: %p->%p (%d)\n", ((size_t *) newPtr) - 1, newPtr, new_size);
+       MsgLog("                new: %p->%p (%d)\n", ((size_t *) newPtr) - 1, newPtr, new_size);
    }
    return newPtr;
 } // lodepng_realloc()

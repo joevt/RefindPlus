@@ -1,6 +1,6 @@
 /** @file
  * AmendSysTable.c
- * Amends the SystemTable to provide CreateEventEx and a UEFI 2 Revision Number
+ * Amends the SystemTable to provide CreateEventEx and a UEFI 2.x Revision Number
  *
  * Copyright (c) 2020 Dayo Akanji (sf.net/u/dakanji/profile)
  * Portions Copyright (c) 2020 Joe van Tunen (joevt@shaw.ca)
@@ -15,8 +15,7 @@
 /**
   @retval EFI_INCOMPATIBLE_VERSION  Running on incompatible GNUEFI compiled version
 **/
-EFI_STATUS
-AmendSysTable (
+EFI_STATUS AmendSysTable (
     VOID
 ) {
     // NOOP if not compiled using EDK II
@@ -25,12 +24,14 @@ AmendSysTable (
 
 #else
 
-#include "../MainLoader/global.h"
+#include "../BootMaster/global.h"
 #include "../include/refit_call_wrapper.h"
 #include "../../MdeModulePkg/Core/Dxe/DxeMain.h"
 #include "../../MdeModulePkg/Core/Dxe/Event/Event.h"
 
 #define EFI_FIELD_OFFSET(TYPE, Field) ((UINTN) (&(((TYPE *) 0)->Field)))
+#define MIN_EFI_REVISION   EFI_2_00_SYSTEM_TABLE_REVISION
+#define BASE_EFI_REVISION  EFI_2_30_SYSTEM_TABLE_REVISION
 
 EFI_CPU_ARCH_PROTOCOL   *gCpu       = NULL;
 EFI_SMM_BASE2_PROTOCOL  *gSmmBase2  = NULL;
@@ -73,7 +74,7 @@ EFI_STATUS FakeCreateEventEx (
     EFI_TPL           NotifyTpl,
     EFI_EVENT_NOTIFY  NotifyFunction,
     const void        *NotifyContext,
-    const EFI_GUID    *EventGroup,
+    CONST EFI_GUID    *EventGroup,
     EFI_EVENT         *Event
 );
 
@@ -81,8 +82,7 @@ EFI_STATUS FakeCreateEventEx (
   Set Interrupt State.
   @param Enable: The state of enable or disable interrupt
 **/
-VOID
-FakeSetInterruptState (
+VOID FakeSetInterruptState (
     IN BOOLEAN  Enable
 ) {
     EFI_STATUS  Status;
@@ -110,8 +110,7 @@ FakeSetInterruptState (
   Dispatches pending events.
   @param Priority: Task priority level of event notifications to dispatch
 **/
-VOID
-FakeDispatchEventNotifies (
+VOID FakeDispatchEventNotifies (
     IN EFI_TPL  Priority
 ) {
     IEVENT        *Event;
@@ -163,9 +162,7 @@ FakeDispatchEventNotifies (
   @param  NewTpl:  New task priority level
   @return The previous task priority level
 **/
-EFI_TPL
-EFIAPI
-FakeRaiseTpl (
+EFI_TPL EFIAPI FakeRaiseTpl (
     IN EFI_TPL  NewTpl
 ) {
     EFI_TPL     OldTpl;
@@ -197,9 +194,7 @@ FakeRaiseTpl (
   priority unmasks events at a higher priority, they are dispatched.
   @param  NewTpl:  New, lower, task priority
 **/
-VOID
-EFIAPI
-FakeRestoreTpl (
+VOID EFIAPI FakeRestoreTpl (
     IN EFI_TPL NewTpl
 ) {
     EFI_TPL    OldTpl;
@@ -250,8 +245,7 @@ FakeRestoreTpl (
   @param  Lock:  The lock to acquire
   @return Lock owned
 **/
-VOID
-FakeAcquireLock (
+VOID FakeAcquireLock (
     IN EFI_LOCK  *Lock
 ) {
     ASSERT (Lock != NULL);
@@ -267,8 +261,7 @@ FakeAcquireLock (
   @param  Lock:  The lock to release
   @return Lock unowned
 **/
-VOID
-FakeReleaseLock (
+VOID FakeReleaseLock (
     IN EFI_LOCK  *Lock
 ) {
     EFI_TPL Tpl;
@@ -283,20 +276,21 @@ FakeReleaseLock (
 }
 
 
-EFI_STATUS
-FakeCreateEventEx (
-    UINT32            Type,
-    EFI_TPL           NotifyTpl,
-    EFI_EVENT_NOTIFY  NotifyFunction,
-    const void        *NotifyContext,
-    const EFI_GUID    *EventGroup,
-    EFI_EVENT         *Event
+EFI_STATUS FakeCreateEventEx (
+    IN        UINT32             Type,
+    IN        EFI_TPL            NotifyTpl,
+    IN        EFI_EVENT_NOTIFY   NotifyFunction OPTIONAL,
+    IN  CONST VOID              *NotifyContext  OPTIONAL,
+    IN  CONST EFI_GUID          *EventGroup     OPTIONAL,
+    OUT       EFI_EVENT         *Event
 )
 #if 1
 {
-    EFI_STATUS      Status = EFI_SUCCESS;
+    EFI_STATUS      Status;
     IEVENT          *IEvent;
     INTN            Index;
+
+    Status = EFI_SUCCESS;
 
     // Check for invalid NotifyTpl if a notify event type
     if ((Type & (EVT_NOTIFY_WAIT | EVT_NOTIFY_SIGNAL)) != 0) {
@@ -464,47 +458,57 @@ FakeCreateEventEx (
 }
 #endif
 
-EFI_STATUS
-AmendSysTable (
+/**
+  @retval EFI_SUCCESS               The command completed successfully.
+  @retval EFI_OUT_OF_RESOURCES      Out of memory.
+  @retval EFI_ALREADY_STARTED       Already on UEFI 2.x EFI Revision.
+  @retval EFI_PROTOCOL_ERROR        Unexpected Field Offset.
+  @retval EFI_INVALID_PARAMETER     Command usage error.
+  @retval Other value               Unknown error.
+**/
+EFI_STATUS AmendSysTable (
     VOID
 ) {
     EFI_STATUS        Status;
     EFI_BOOT_SERVICES *uBS;
 
-    if (gST->Hdr.Revision <= 0x1FFFF ||
-        gBS->Hdr.HeaderSize < EFI_FIELD_OFFSET(EFI_BOOT_SERVICES, CreateEventEx) + sizeof(gBS->CreateEventEx)
-    ) {
-        uBS = (EFI_BOOT_SERVICES *) AllocateCopyPool (sizeof (*gBS) * 2, gBS);
-        if (uBS) {
-            uBS->CreateEventEx  = FakeCreateEventEx;
-            uBS->Hdr.HeaderSize = sizeof (*gBS);
-
-            gBS = uBS;
-            gBS->Hdr.CRC32 = 0;
-            gBS->CalculateCrc32 (
-                gBS,
-                gBS->Hdr.HeaderSize,
-                &gBS->Hdr.CRC32
-            );
-
-            gST->BootServices = gBS;
-            gST->Hdr.Revision = 0x0002001E;
-            gST->Hdr.CRC32 = 0;
-            gBS->CalculateCrc32 (
-                (VOID *) gST,
-                sizeof (EFI_SYSTEM_TABLE),
-                &gST->Hdr.CRC32
-            );
-
-            SetSysTab = TRUE;
-            Status = EFI_SUCCESS;
-        }
-        else {
-            Status = EFI_LOAD_ERROR;
-        }
+    if (gST->Hdr.Revision >= MIN_EFI_REVISION) {
+        Status = EFI_ALREADY_STARTED;
+    }
+    else if (gBS->Hdr.HeaderSize >= EFI_FIELD_OFFSET(EFI_BOOT_SERVICES, CreateEventEx) + sizeof(gBS->CreateEventEx)) {
+        Status = EFI_PROTOCOL_ERROR;
     }
     else {
-        Status = EFI_ALREADY_STARTED;
+        uBS = (EFI_BOOT_SERVICES *) AllocateCopyPool (sizeof (EFI_BOOT_SERVICES), gBS);
+
+        if (uBS == NULL) {
+            Status = EFI_OUT_OF_RESOURCES;
+        }
+        else {
+            uBS->CreateEventEx  = FakeCreateEventEx;
+            uBS->Hdr.HeaderSize = sizeof (EFI_BOOT_SERVICES);
+            uBS->Hdr.Revision   = BASE_EFI_REVISION;
+            uBS->Hdr.CRC32      = 0;
+            uBS->CalculateCrc32 (
+                uBS,
+                uBS->Hdr.HeaderSize,
+                &uBS->Hdr.CRC32
+            );
+
+            gBS = uBS;
+            SetSysTab = TRUE;
+            Status    = (EFI_STATUS) EFI_SUCCESS;
+
+            gST->BootServices   = gBS;
+            gST->Hdr.HeaderSize = sizeof (EFI_SYSTEM_TABLE);
+            gST->Hdr.Revision   = BASE_EFI_REVISION;
+            gST->Hdr.CRC32      = 0;
+            gST->BootServices->CalculateCrc32 (
+                gST,
+                gST->Hdr.HeaderSize,
+                &gST->Hdr.CRC32
+            );
+    }
     }
 
     return Status;

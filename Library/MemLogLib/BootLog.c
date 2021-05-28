@@ -13,10 +13,10 @@
 #include <Protocol/LoadedImage.h>
 #include <Guid/FileInfo.h>
 #include <Library/UefiBootServicesTableLib.h>
-#include "../MainLoader/global.h"
-#include "../MainLoader/lib.h"
-#include "../MainLoader/leaks.h"
-#include "../MainLoader/mystrings.h"
+#include "../BootMaster/global.h"
+#include "../BootMaster/lib.h"
+#include "../BootMaster/mystrings.h"
+#include "../BootMaster/leaks.h"
 
 extern  EFI_GUID  gEfiMiscSubClassGuid;
 
@@ -31,141 +31,139 @@ BOOLEAN  TimeStamp             = TRUE;
 BOOLEAN  UseMsgLog             = FALSE;
 
 
-CHAR16
-*GetAltMonth(
+CHAR16 * GetAltMonth (
     VOID
 ) {
     CHAR16  *AltMonth = NULL;
 
-    if (NowMonth == 1) {
+    switch (NowMonth) {
+        case 1:
         AltMonth = L"b";
-    }
-    else if (NowMonth == 2) {
+            break;
+        case 2:
         AltMonth = L"d";
-    }
-    else if (NowMonth == 3) {
+            break;
+        case 3:
         AltMonth = L"f";
-    }
-    else if (NowMonth == 4) {
+            break;
+        case 4:
         AltMonth = L"h";
-    }
-    else if (NowMonth == 5) {
+            break;
+        case 5:
         AltMonth = L"j";
-    }
-    else if (NowMonth == 6) {
+            break;
+        case 6:
         AltMonth = L"k";
-    }
-    else if (NowMonth == 7) {
+            break;
+        case 7:
         AltMonth = L"n";
-    }
-    else if (NowMonth == 8) {
+            break;
+        case 8:
         AltMonth = L"p";
-    }
-    else if (NowMonth == 9) {
+            break;
+        case 9:
         AltMonth = L"r";
-    }
-    else if (NowMonth == 10) {
+            break;
+        case 10:
         AltMonth = L"t";
-    }
-    else if (NowMonth == 11) {
+            break;
+        case 11:
         AltMonth = L"v";
-    }
-    else {
+            break;
+        default:
         AltMonth = L"x";
-    }
+    } // switch NowMonth
 
     return AltMonth;
 }
 
 
-CHAR16
-*GetAltHour(
+CHAR16 * GetAltHour (
     VOID
 ) {
     CHAR16  *AltHour = NULL;
 
-    if (NowHour == 0) {
+    switch (NowHour) {
+        case 0:
         AltHour = L"a";
-    }
-    else if (NowHour == 1) {
+            break;
+        case 1:
         AltHour = L"b";
-    }
-    else if (NowHour == 2) {
+            break;
+        case 2:
         AltHour = L"c";
-    }
-    else if (NowHour == 3) {
+            break;
+        case 3:
         AltHour = L"d";
-    }
-    else if (NowHour == 4) {
+            break;
+        case 4:
         AltHour = L"e";
-    }
-    else if (NowHour == 5) {
+            break;
+        case 5:
         AltHour = L"f";
-    }
-    else if (NowHour == 6) {
+            break;
+        case 6:
         AltHour = L"g";
-    }
-    else if (NowHour == 7) {
+            break;
+        case 7:
         AltHour = L"h";
-    }
-    else if (NowHour == 8) {
+            break;
+        case 8:
         AltHour = L"i";
-    }
-    else if (NowHour == 9) {
+            break;
+        case 9:
         AltHour = L"j";
-    }
-    else if (NowHour == 10) {
+            break;
+        case 10:
         AltHour = L"k";
-    }
-    else if (NowHour == 11) {
+            break;
+        case 11:
         AltHour = L"m";
-    }
-    else if (NowHour == 12) {
+            break;
+        case 12:
         AltHour = L"n";
-    }
-    else if (NowHour == 13) {
+            break;
+        case 13:
         AltHour = L"p";
-    }
-    else if (NowHour == 14) {
+            break;
+        case 14:
         AltHour = L"q";
-    }
-    else if (NowHour == 15) {
+            break;
+        case 15:
         AltHour = L"r";
-    }
-    else if (NowHour == 16) {
+            break;
+        case 16:
         AltHour = L"s";
-    }
-    else if (NowHour == 17) {
+            break;
+        case 17:
         AltHour = L"t";
-    }
-    else if (NowHour == 18) {
+            break;
+        case 18:
         AltHour = L"u";
-    }
-    else if (NowHour == 19) {
+            break;
+        case 19:
         AltHour = L"v";
-    }
-    else if (NowHour == 20) {
+            break;
+        case 20:
         AltHour = L"w";
-    }
-    else if (NowHour == 21) {
+            break;
+        case 21:
         AltHour = L"x";
-    }
-    else if (NowHour == 22) {
+            break;
+        case 22:
         AltHour = L"y";
-    }
-    else {
+            break;
+        default:
         AltHour = L"z";
-    }
+    } // switch NowHour
 
     return AltHour;
 }
 
-
-CHAR16
-*GetDateString(
+CHAR16 * GetDateString (
     VOID
 ) {
-    STATIC CHAR16  *DateStr = NULL;
+    static CHAR16  *DateStr = NULL;
 
     if (DateStr != NULL) {
         return DateStr;
@@ -189,8 +187,9 @@ CHAR16
 }
 
 
-EFI_FILE_PROTOCOL* GetDebugLogFile()
-{
+EFI_FILE_PROTOCOL * GetDebugLogFile (
+    VOID
+) {
   EFI_STATUS          Status;
   EFI_LOADED_IMAGE    *LoadedImage;
   EFI_FILE_PROTOCOL   *RootDir;
@@ -269,15 +268,14 @@ EFI_FILE_PROTOCOL* GetDebugLogFile()
     LogFile = NULL;
   }
 
-  MyFreePool (ourDebugLog);
+  MyFreePool (&ourDebugLog);
 
   return LogFile;
 }
 
 
-VOID SaveMessageToDebugLogFile(IN CHAR8 *LastMessage)
-{
-  STATIC BOOLEAN           FirstTimeSave = TRUE;
+VOID SaveMessageToDebugLogFile (IN CHAR8 *LastMessage) {
+  static BOOLEAN           FirstTimeSave = TRUE;
   CHAR8                   *MemLogBuffer;
   UINTN                    MemLogLen;
   CHAR8                   *Text;
@@ -304,7 +302,7 @@ VOID SaveMessageToDebugLogFile(IN CHAR8 *LastMessage)
       }
       // Write out this message
       LogFile->Write(LogFile, &TextLen, Text);
-      MyFreePool (Info);
+      MyFreePool (&Info);
     }
     LogFile->Close(LogFile);
   }
@@ -341,14 +339,18 @@ DeepLoggger (
     CHAR8   FormatString[255];
     CHAR16 *FinalMessage = NULL;
 
+#if REFIT_DEBUG < 1
+    // FreePool and return in RELEASE builds
+    MyFreePool (Message);
+
+    return;
+#endif
+
     // Make sure we are able to write
     if ( DONTLOG(DebugMode, level) ||
         !(*Message)
     ) {
-        if (*Message) {
-            FreePool (*Message);
-            *Message = NULL;
-        }
+        MyFreePool (Message);
 
         return;
     }
@@ -357,23 +359,26 @@ DeepLoggger (
     TimeStamp = FALSE;
 
     switch (type) {
+        case LOG_BLANK_LINE_SEP:
+            FinalMessage = StrDuplicate (L"\n");
+            break;
         case LOG_STAR_HEAD_SEP:
             FinalMessage = PoolPrint (L"\n              ***[ %s ]\n", *Message);
             break;
         case LOG_STAR_SEPARATOR:
-            FinalMessage = PoolPrint (L"\n\n** ** *** *** ***[ %s ]*** *** *** ** **\n\n", *Message);
+            FinalMessage = PoolPrint (L"\n\n* ** ** *** *** ***[ %s ]*** *** *** ** ** *\n\n", *Message);
             break;
         case LOG_LINE_SEPARATOR:
-            FinalMessage = PoolPrint (L"\n=================[ %s ]=================\n", *Message);
+            FinalMessage = PoolPrint (L"\n===================[ %s ]===================\n", *Message);
             break;
         case LOG_LINE_THIN_SEP:
-            FinalMessage = PoolPrint (L"\n-----------------[ %s ]-----------------\n", *Message);
+            FinalMessage = PoolPrint (L"\n-------------------[ %s ]-------------------\n", *Message);
             break;
         case LOG_LINE_DASH_SEP:
-            FinalMessage = PoolPrint (L"\n- - - - - - - - -[ %s ]- - - - - - - - -\n", *Message);
+            FinalMessage = PoolPrint (L"\n- - - - - - - - - -[ %s ]- - - - - - - - - -\n", *Message);
             break;
         case LOG_THREE_STAR_SEP:
-            FinalMessage = PoolPrint (L"\n. . . . . . . ***[ %s ]*** . . . . . . .\n", *Message);
+            FinalMessage = PoolPrint (L"\n. . . . . . . . ***[ %s ]*** . . . . . . . .\n", *Message);
             break;
         case LOG_THREE_STAR_MID:
             FinalMessage = PoolPrint (L"              ***[ %s ]\n", *Message);
@@ -400,9 +405,8 @@ DeepLoggger (
         UseMsgLog = FALSE;
     }
 
-    MyFreePool (*Message);
-   
-    MyFreePool (FinalMessage);
+    MyFreePool (Message);
+    MyFreePool (&FinalMessage);
 }
 
 
@@ -426,9 +430,7 @@ DebugLog(
 
     // Print message to log buffer
     VA_START(Marker, FormatString);
-   
     MemLogVA(TimeStamp, DebugMode, FormatString, Marker);
-   
     VA_END(Marker);
 
     TimeStamp = TRUE;

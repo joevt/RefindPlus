@@ -566,7 +566,7 @@ LibFileInfo (
     ASSERT (Buffer != NULL);
   }
   else {
-  	LOGWHERE("BufferSize is 0\n");
+    LOGWHERE("BufferSize is 0\n");
     LOGPOOL(Buffer);
   }
 
@@ -850,7 +850,7 @@ LibFindFileSystem (
         VolumeLabel,
         MenuEntry->HelpString
         );
-  	  MenuEntry->DisplayStringToken = HiiSetString (
+      MenuEntry->DisplayStringToken = HiiSetString (
                                              gFileExplorerPrivate.FeHiiHandle,
                                              0,
                                              MenuEntry->DisplayString,

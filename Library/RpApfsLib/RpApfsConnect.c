@@ -33,12 +33,12 @@
 
 #include "../../include/refit_call_wrapper.h"
 
-extern BOOLEAN SuppressVerboseAPFS;
+extern BOOLEAN SilenceAPFS;
 
 LIST_ENTRY               mApfsPrivateDataList = INITIALIZE_LIST_HEAD_VARIABLE (mApfsPrivateDataList);
-STATIC EFI_SYSTEM_TABLE  *mNullSystemTable;
+static EFI_SYSTEM_TABLE  *mNullSystemTable;
 
-STATIC
+static
 EFI_STATUS
 ApfsRegisterPartition (
     IN  EFI_HANDLE             Handle,
@@ -87,7 +87,7 @@ ApfsRegisterPartition (
     return EFI_SUCCESS;
 }
 
-STATIC
+static
 EFI_STATUS
 ApfsStartDriver (
     IN APFS_PRIVATE_DATA  *PrivateData,
@@ -126,7 +126,7 @@ ApfsStartDriver (
     }
 
     // Disable APFS verbose mode.
-    if (SuppressVerboseAPFS) {
+    if (SilenceAPFS) {
         Status = refit_call3_wrapper(
             gBS->HandleProtocol,
             ImageHandle,
@@ -177,7 +177,7 @@ ApfsStartDriver (
     return EFI_SUCCESS;
 }
 
-STATIC
+static
 EFI_STATUS
 ApfsConnectDevice (
     IN EFI_HANDLE             Handle,

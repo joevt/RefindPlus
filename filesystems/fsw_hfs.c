@@ -90,13 +90,13 @@ struct fsw_fstype_table   FSW_FSTYPE_TABLE_NAME(hfs) = {
     fsw_hfs_volume_mount, // volume open
     fsw_hfs_volume_free,  // volume close
     fsw_hfs_volume_stat,  // volume info: total_bytes, free_bytes
-    fsw_hfs_dnode_fill,   //return FSW_SUCCESS;
-    fsw_hfs_dnode_free,	  // empty
-    fsw_hfs_dnode_stat,	 //size and times
-    fsw_hfs_get_extent,	 // get the physical disk block number for the requested logical block number
-    fsw_hfs_dir_lookup,  //retrieve the directory entry with the given name
-    fsw_hfs_dir_read,	// next directory entry when reading a directory
-    fsw_hfs_readlink,   // return FSW_UNSUPPORTED;
+    fsw_hfs_dnode_fill,   // return FSW_SUCCESS;
+    fsw_hfs_dnode_free,   // empty
+    fsw_hfs_dnode_stat,   // size and times
+    fsw_hfs_get_extent,   // get the physical disk block number for the requested logical block number
+    fsw_hfs_dir_lookup,   // retrieve the directory entry with the given name
+    fsw_hfs_dir_read,     // next directory entry when reading a directory
+    fsw_hfs_readlink,     // return FSW_UNSUPPORTED;
 };
 
 static const fsw_u16 fsw_latin_case_fold[] =

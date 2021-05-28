@@ -47,24 +47,24 @@
 #include "global.h"
 #include "mok.h"
 #include "../include/refit_call_wrapper.h"
-#include "../MainLoader/lib.h"
-#include "../MainLoader/screenmgt.h"
+#include "../BootMaster/lib.h"
+#include "../BootMaster/screenmgt.h"
 
 
 /*
  * Check whether we're in Secure Boot and user mode
  */
-BOOLEAN
-secure_mode (
+BOOLEAN secure_mode (
     VOID
 ) {
     EFI_STATUS status;
     EFI_GUID global_var = EFI_GLOBAL_VARIABLE;
-    UINTN charsize      = sizeof (char);
-    UINT8 *sb = NULL, *setupmode = NULL;
+    UINTN charsize;
+    UINT8 *sb;
+    UINT8 *setupmode;
 
-    STATIC BOOLEAN DoneOnce   = FALSE;
-    STATIC BOOLEAN SecureMode = FALSE;
+    static BOOLEAN DoneOnce   = FALSE;
+    static BOOLEAN SecureMode = FALSE;
 
     if (DoneOnce) {
         return SecureMode;
@@ -73,13 +73,13 @@ secure_mode (
     status = EfivarGetRaw (
         &global_var,
         L"SecureBoot",
-        (CHAR8 **) &sb,
+        (VOID**) &sb,
         &charsize
     );
 
     /* FIXME - more paranoia here? */
     if (status != EFI_SUCCESS ||
-        charsize != sizeof (CHAR8) ||
+        charsize != sizeof (UINT8) ||
         *sb != 1
     ) {
         SecureMode = FALSE;
@@ -88,12 +88,12 @@ secure_mode (
         status = EfivarGetRaw (
             &global_var,
             L"SetupMode",
-            (CHAR8 **) &setupmode,
+            (VOID**) &setupmode,
             &charsize
         );
 
         if (status == EFI_SUCCESS &&
-            charsize == sizeof (CHAR8) &&
+            charsize == sizeof (UINT8) &&
             *setupmode == 1
         ) {
             SecureMode = FALSE;
@@ -110,8 +110,7 @@ secure_mode (
 
 // Returns TRUE if the shim program is available to verify binaries,
 // FALSE if not
-BOOLEAN
-ShimLoaded (
+BOOLEAN ShimLoaded (
     VOID
 ) {
     SHIM_LOCK   *shim_lock;
@@ -130,8 +129,7 @@ ShimLoaded (
 // The following is based on the grub_linuxefi_secure_validate() function in Fedora's
 // version of GRUB 2.
 // Returns TRUE if the specified data is validated by Shim's MOK, FALSE otherwise
-BOOLEAN
-ShimValidate (
+BOOLEAN ShimValidate (
     VOID *data,
     UINT32 size
 ) {

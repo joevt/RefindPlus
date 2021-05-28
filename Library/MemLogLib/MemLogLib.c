@@ -36,7 +36,7 @@
 #include <Library/IoLib.h>
 #include <Library/PciLib.h>
 #include "GenericIch.h"
-#include "../../MainLoader/leaks.h"
+#include "../../BootMaster/leaks.h"
 
 
 // Struct for holding mem buffer.
@@ -75,18 +75,18 @@ INTN      mMemLogPause = 0;
 CHAR8*
 GetTiming(VOID)
 {
-	UINT64    dTStartSec;
-	UINT64    dTStartMs;
-	UINT64    dTLastSec;
-	UINT64    dTLastMs;
-	UINT64    CurrentTsc;
+    UINT64    dTStartSec;
+    UINT64    dTStartMs;
+    UINT64    dTLastSec;
+    UINT64    dTLastMs;
+    UINT64    CurrentTsc;
 
-	mTimingTxt[0] = '\0';
+    mTimingTxt[0] = '\0';
 
-	if (mMemLog != NULL && mMemLog->TscFreqSec != 0) {
-		CurrentTsc = AsmReadTsc();
+    if (mMemLog != NULL && mMemLog->TscFreqSec != 0) {
+        CurrentTsc = AsmReadTsc();
 
-		dTStartMs = DivU64x64Remainder(
+        dTStartMs = DivU64x64Remainder(
             MultU64x32(
                 CurrentTsc - mMemLog->TscStart,
                 1000
@@ -94,17 +94,17 @@ GetTiming(VOID)
             mMemLog->TscFreqSec,
             NULL
         );
-		dTStartSec = DivU64x64Remainder(dTStartMs, 1000, &dTStartMs);
-        // Limit logged value to 999
+        dTStartSec = DivU64x64Remainder(dTStartMs, 1000, &dTStartMs);
+        // Limit logged value to 9999
         UINT64 dTStartSecLog;
-        if (dTStartSec > 999) {
-            dTStartSecLog = 999;
+        if (dTStartSec > 9999) {
+            dTStartSecLog = 9999;
         }
         else {
             dTStartSecLog = dTStartSec;
         }
 
-		dTLastMs = DivU64x64Remainder(
+        dTLastMs = DivU64x64Remainder(
             MultU64x32(
                 CurrentTsc - mMemLog->TscLast,
                 1000
@@ -112,29 +112,29 @@ GetTiming(VOID)
             mMemLog->TscFreqSec,
             NULL
         );
-		dTLastSec = DivU64x64Remainder(dTLastMs, 1000, &dTLastMs);
+        dTLastSec = DivU64x64Remainder(dTLastMs, 1000, &dTLastMs);
 
         // Limit logged value to 999
         UINT64 dTLastSecLog;
-        if (dTLastSec > 999) {
-            dTLastSecLog = 999;
+        if (dTLastSec > 9999) {
+            dTLastSecLog = 9999;
         }
         else {
             dTLastSecLog = dTLastSec;
         }
-		AsciiSPrint(
+        AsciiSPrint(
             mTimingTxt,
             sizeof (mTimingTxt),
-            "%3ld:%03ld %3ld:%03ld",
+            "%4ld:%03ld %4ld:%03ld",
             dTStartSecLog,
             dTStartMs,
             dTLastSecLog,
             dTLastMs
         );
-		mMemLog->TscLast = CurrentTsc;
-	}
+        mMemLog->TscLast = CurrentTsc;
+    }
 
-	return mTimingTxt;
+    return mTimingTxt;
 }
 
 

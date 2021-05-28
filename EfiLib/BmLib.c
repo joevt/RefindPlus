@@ -18,8 +18,8 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include "gnuefi-helper.h"
 #endif
 #include "../include/refit_call_wrapper.h"
-#include "../MainLoader/lib.h"
-#include "../MainLoader/leaks.h"
+#include "../BootMaster/lib.h"
+#include "../BootMaster/leaks.h"
 
 /**
 
@@ -200,7 +200,7 @@ EfiReallocatePool (
     if (NewPool != NULL) {
       CopyMem (NewPool, OldPool, OldSize < NewSize ? OldSize : NewSize);
     }
-    MyFreePool (OldPool);
+    MyFreePool (&OldPool);
   }
 
   return NewPool;

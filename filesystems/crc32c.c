@@ -43,7 +43,7 @@ init_crc32c_table (void)
 
   static int crc32c_table_inited;
   if(crc32c_table_inited)
-	  return;
+    return;
   crc32c_table_inited = 1;
 
   uint32_t polynomial = 0x1edc6f41;

@@ -42,8 +42,12 @@
 // Decompress .icns RLE data
 //
 
-VOID egDecompressIcnsRLE (IN OUT UINT8 **CompData, IN OUT UINTN *CompLen, IN UINT8 *PixelData, IN UINTN PixelCount)
-{
+VOID egDecompressIcnsRLE (
+    IN OUT UINT8 **CompData,
+    IN OUT UINTN  *CompLen,
+    IN UINT8      *PixelData,
+    IN UINTN       PixelCount
+) {
     UINT8 *cp;
     UINT8 *cp_end;
     UINT8 *pp;
@@ -101,32 +105,31 @@ EG_IMAGE * egDecodeICNS (
     IN BOOLEAN  WantAlpha
 ) {
     EG_IMAGE            *NewImage;
-    UINT8               *Ptr, *BufferEnd, *DataPtr, *MaskPtr;
     UINT32               BlockLen, DataLen, MaskLen;
-    UINTN                PixelCount, i;
-    UINT8               *CompData;
     UINTN                CompLen;
-    UINT8               *SrcPtr;
-    EG_PIXEL            *DestPtr;
-    UINTN                SizesToTry[MAX_ICNS_SIZES + 1] = {IconSize, 128, 48, 32, 16};
+    UINTN                i, PixelCount;
     UINTN                SizeToTry = 0;
+    UINTN                SizesToTry[MAX_ICNS_SIZES + 1] = {IconSize, 128, 48, 32, 16};
+    UINT8               *Ptr, *SrcPtr, *DataPtr, *MaskPtr;
+    UINT8               *CompData, *BufferEnd;
+    EG_PIXEL            *DestPtr;
 
     if (FileDataLength < 8 || FileData   == NULL ||
         FileData[0] != 'i' || FileData[1] != 'c' ||
         FileData[2] != 'n' || FileData[3] != 's'
     ) {
-        // not an icns file...
+        // not an icns file
         return NULL;
     }
 
-    DataPtr = NULL;
     DataLen = 0;
-    MaskPtr = NULL;
     MaskLen = 0;
+    DataPtr = NULL;
+    MaskPtr = NULL;
 
     do {
-        IconSize  = SizesToTry[SizeToTry];
         Ptr       = FileData + 8;
+        IconSize  = SizesToTry[SizeToTry];
         BufferEnd = FileData + FileDataLength;
 
         // iterate over tagged blocks in the file
@@ -257,15 +260,14 @@ EG_IMAGE * egDecodeICNS (
 
     // Handle Alpha
     if (WantAlpha && MaskPtr != NULL && MaskLen >= PixelCount) {
-    	// We want an image with Alpha and the icon has valid Alpha.
-        // Copy Alpha from icon to image.
+        // Add Alpha Mask if Required, Available, and Valid
         egInsertPlane (MaskPtr, PLPTR(NewImage, a), PixelCount);
     }
     else {
-    	// There is no Alpha in the icon.
+        // There is no Alpha in the icon.
         // If we want an image with Alpha, then set Alpha to Opaque (255)
         // Otherwise set the unused bytes to zero.
-        egSetPlane (PLPTRX(NewImage, a), WantAlpha ? 255 : 0, PixelCount);
+        egSetPlane (PLPTR(NewImage, a), WantAlpha ? 255 : 0, PixelCount);
     }
 
     // FUTURE: scale to originally requested size if we had to load another size

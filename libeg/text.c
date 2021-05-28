@@ -35,8 +35,8 @@
  */
 
 #include "libegint.h"
-#include "../MainLoader/global.h"
-#include "../MainLoader/leaks.h"
+#include "../BootMaster/global.h"
+#include "../BootMaster/leaks.h"
 
 #include "egemb_font.h"
 #include "egemb_font_large.h"
@@ -52,7 +52,8 @@ static UINTN FontCellWidth = 7;
 // Text rendering
 //
 
-static VOID egPrepareFont() {
+static
+VOID egPrepareFont() {
     UINTN ScreenW, ScreenH;
 
     egGetScreenSize(&ScreenW, &ScreenH);

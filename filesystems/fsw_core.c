@@ -351,7 +351,7 @@ fsw_status_t fsw_dnode_create_root_with_tree(struct fsw_volume *vol, fsw_u64 tre
 
 fsw_status_t fsw_dnode_create_root(struct fsw_volume *vol, fsw_u64 dnode_id, struct fsw_dnode **dno_out)
 {
-	return fsw_dnode_create_root_with_tree( vol, 0, dnode_id, dno_out);
+    return fsw_dnode_create_root_with_tree( vol, 0, dnode_id, dno_out);
 }
 /**
  * Create a new dnode representing a file system object. This function is called by
@@ -415,7 +415,7 @@ fsw_status_t fsw_dnode_create_with_tree(struct fsw_dnode *parent_dno, fsw_u64 tr
 fsw_status_t fsw_dnode_create(struct fsw_dnode *parent_dno, fsw_u64 dnode_id, int type,
                               struct fsw_string *name, struct fsw_dnode **dno_out)
 {
-	return fsw_dnode_create_with_tree(parent_dno, 0, dnode_id, type, name, dno_out);
+    return fsw_dnode_create_with_tree(parent_dno, 0, dnode_id, type, name, dno_out);
 }
 
 /**

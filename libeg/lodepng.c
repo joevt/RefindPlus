@@ -52,7 +52,7 @@ Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for
 #endif /*_MSC_VER */
 
 const char* LODEPNG_VERSION_STRING = "20200219";
-#include "../MainLoader/global.h"
+#include "../BootMaster/global.h"
 
 /*
 This source file is built up in the following large parts. The code sections
@@ -80,7 +80,7 @@ from here.*/
 
 #ifdef LODEPNG_COMPILE_ALLOCATORS
 static void* lodepng_malloc(size_t size) {
-	MsgLog("What we doing here? %a:%d\n", __FILE__, __LINE__);
+    MsgLog("What we doing here? %a:%d\n", __FILE__, __LINE__);
 #ifdef LODEPNG_MAX_ALLOC
   if(size > LODEPNG_MAX_ALLOC) return 0;
 #endif
@@ -89,7 +89,7 @@ static void* lodepng_malloc(size_t size) {
 
 /* NOTE: when realloc returns NULL, it leaves the original memory untouched */
 static void* lodepng_realloc(void* ptr, size_t new_size) {
-	MsgLog("What we doing here? %a:%d\n", __FILE__, __LINE__);
+    MsgLog("What we doing here? %a:%d\n", __FILE__, __LINE__);
 #ifdef LODEPNG_MAX_ALLOC
   if(new_size > LODEPNG_MAX_ALLOC) return 0;
 #endif
@@ -97,7 +97,7 @@ static void* lodepng_realloc(void* ptr, size_t new_size) {
 }
 
 static void lodepng_free(void* ptr) {
-	MsgLog("What we doing here? %a:%d\n", __FILE__, __LINE__);
+    MsgLog("What we doing here? %a:%d\n", __FILE__, __LINE__);
   free(ptr);
 }
 #else /*LODEPNG_COMPILE_ALLOCATORS*/
@@ -4113,16 +4113,16 @@ unsigned lodepng_inspect(unsigned* w, unsigned* h, LodePNGState* state,
   /*read the values given in the header*/
   width  = lodepng_read32bitInt(&in[16]);
   /* Sanitise  width */
-  // DA-TAG: Initial arbitrary large value. Needs review
-  if (width > 5000) {
+  // DA-TAG: Initial arbitrary large value (8k). Needs review
+  if (width > 7680) {
       LOGWHERE("width %d\n", width);
       CERROR_RETURN_ERROR(state->error, 28);
   }
 
   height = lodepng_read32bitInt(&in[20]);
   /* Sanitise height */
-  // DA-TAG: Initial arbitrary large value. Needs review
-  if (height > 5000) {
+  // DA-TAG: Initial arbitrary large value (8k). Needs review
+  if (height > 7680) {
       LOGWHERE("height %d\n", height);
       CERROR_RETURN_ERROR(state->error, 28);
   }

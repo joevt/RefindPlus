@@ -9,7 +9,7 @@
 #include <global.h>
 
 #include "guid.h"
-#include "../MainLoader/lib.h"
+#include "../BootMaster/lib.h"
 #include "simple_file.h"
 #include "../include/refit_call_wrapper.h"
 #include "mok.h"
@@ -32,13 +32,13 @@ typedef struct _EFI_SECURITY_PROTOCOL EFI_SECURITY_PROTOCOL;
 #endif
 
 typedef EFI_STATUS (MSABI *EFI_SECURITY_FILE_AUTHENTICATION_STATE) (
-         const EFI_SECURITY_PROTOCOL *This,
+         CONST EFI_SECURITY_PROTOCOL *This,
          UINT32 AuthenticationStatus,
-         const EFI_DEVICE_PATH_PROTOCOL *File
+         CONST EFI_DEVICE_PATH_PROTOCOL *File
                              );
 typedef EFI_STATUS (MSABI *EFI_SECURITY2_FILE_AUTHENTICATION) (
-         const EFI_SECURITY2_PROTOCOL *This,
-         const EFI_DEVICE_PATH_PROTOCOL *DevicePath,
+         CONST EFI_SECURITY2_PROTOCOL *This,
+         CONST EFI_DEVICE_PATH_PROTOCOL *DevicePath,
          VOID *FileBuffer,
          UINTN FileSize,
          BOOLEAN  BootPolicy
@@ -62,15 +62,14 @@ static EFI_SECURITY2_FILE_AUTHENTICATION es2fa = NULL;
 // returned in case of a shim/MOK authentication failure. This is done because
 // the SB failure code seems to vary from one implementation to another, and I
 // don't want to interfere with that at this time.
-static MSABI EFI_STATUS
-security2_policy_authentication (
-   const EFI_SECURITY2_PROTOCOL *This,
-   const EFI_DEVICE_PATH_PROTOCOL *DevicePath,
+static
+MSABI EFI_STATUS security2_policy_authentication (
+   CONST EFI_SECURITY2_PROTOCOL *This,
+   CONST EFI_DEVICE_PATH_PROTOCOL *DevicePath,
    VOID *FileBuffer,
    UINTN FileSize,
    BOOLEAN  BootPolicy
-             )
-{
+) {
    EFI_STATUS Status;
 
    /* Chain original security policy */
@@ -94,13 +93,12 @@ security2_policy_authentication (
 // filesystems. This also has the effect of returning whatever the platform code is for
 // authentication failure, be it EFI_ACCESS_DENIED, EFI_SECURITY_VIOLATION, or something
 // else. (This seems to vary between implementations.)
-static MSABI EFI_STATUS
-security_policy_authentication (
-   const EFI_SECURITY_PROTOCOL *This,
+static
+MSABI EFI_STATUS security_policy_authentication (
+   CONST EFI_SECURITY_PROTOCOL *This,
    UINT32 AuthenticationStatus,
-   const EFI_DEVICE_PATH_PROTOCOL *DevicePathConst
-   )
-{
+   CONST EFI_DEVICE_PATH_PROTOCOL *DevicePathConst
+) {
    EFI_STATUS        Status;
    EFI_DEVICE_PATH   *DevPath, *OrigDevPath;
    EFI_HANDLE        h;
@@ -122,7 +120,7 @@ security_policy_authentication (
    DevPathStr = DevicePathToStr(DevPath);
 
    Status = simple_file_open_by_handle(h, DevPathStr, &f, EFI_FILE_MODE_READ);
-   MyFreePool (DevPathStr);
+   MyFreePool (&DevPathStr);
    if (Status != EFI_SUCCESS)
       goto out;
 
@@ -140,13 +138,11 @@ security_policy_authentication (
    FreePool(FileBuffer);
 
  out:
-   MyFreePool (OrigDevPath);
+   MyFreePool (&OrigDevPath);
    return Status;
 } // EFI_STATUS security_policy_authentication()
 
-EFI_STATUS
-security_policy_install(void)
-{
+EFI_STATUS security_policy_install(void) {
    EFI_SECURITY_PROTOCOL *security_protocol;
    EFI_SECURITY2_PROTOCOL *security2_protocol = NULL;
    EFI_STATUS status;
@@ -176,9 +172,7 @@ security_policy_install(void)
    return EFI_SUCCESS;
 }
 
-EFI_STATUS
-security_policy_uninstall(void)
-{
+EFI_STATUS security_policy_uninstall(void) {
    EFI_STATUS status;
 
    if (esfas) {

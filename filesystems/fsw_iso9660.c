@@ -73,9 +73,9 @@
 #endif
 
 #if DEBUG_ISO == 2
-#define DBG(x...)	AsciiPrint(x)
+#define DBG(x...) AsciiPrint(x)
 #elif DEBUG_ISO == 1
-#define DBG(x...)	BootLog(x)
+#define DBG(x...) BootLog(x)
 #else
 #define DBG(x...)
 #endif

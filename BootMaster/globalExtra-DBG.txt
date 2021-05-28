@@ -1,0 +1,156 @@
+#define REFIT_DEBUG (1)
+
+#define LOG_STAR_HEAD_SEP  0
+#define LOG_LINE_NORMAL      1
+#define LOG_LINE_SEPARATOR   2
+#define LOG_LINE_THIN_SEP    3
+#define LOG_STAR_SEPARATOR   4
+#define LOG_LINE_DASH_SEP    5
+#define LOG_THREE_STAR_SEP   6
+#define LOG_THREE_STAR_MID   7
+#define LOG_THREE_STAR_END   8
+#define LOG_BLANK_LINE_SEP   9
+
+VOID
+DebugLog (
+  IN        INTN  DebugMode,
+  IN  CONST CHAR8 *FormatString, ...
+);
+
+#if 0
+__attribute__ ((format (printf, 2, 3)))
+// need a custom version of the compiler to properly verify edk2 printf format and arguments (for CHAR8 and CHAR16 variants also)
+
+UINTN
+UnicodeSPrint (
+      CHAR16 *StartOfBuffer,
+      UINTN BufferSize,
+      const CHAR16 *FormatString,
+  ...
+  ) __attribute__ ((format (printf, 3, 4)));
+
+UINTN
+UnicodeSPrintAsciiFormat (
+      CHAR16 *StartOfBuffer,
+      UINTN BufferSize,
+      const CHAR8 *FormatString,
+  ...
+  ) __attribute__ ((format (printf, 3, 4)));
+
+UINTN
+AsciiSPrint (
+      CHAR8 *StartOfBuffer,
+      UINTN BufferSize,
+      const CHAR8 *FormatString,
+  ...
+  ) __attribute__ ((format (printf, 3, 4)));
+
+UINTN
+AsciiSPrintUnicodeFormat (
+      CHAR8 *StartOfBuffer,
+      UINTN BufferSize,
+      const CHAR16 *FormatString,
+  ...
+  ) __attribute__ ((format (printf, 3, 4)));
+
+UINTN
+Print (
+     const CHAR16 *Format,
+  ...
+  ) __attribute__ ((format (printf, 1, 2)));
+
+UINTN
+ErrorPrint (
+     const CHAR16 *Format,
+  ...
+  ) __attribute__ ((format (printf, 1, 2)));
+
+UINTN
+AsciiPrint (
+     const CHAR8 *Format,
+  ...
+  ) __attribute__ ((format (printf, 1, 2)));
+
+UINTN
+AsciiErrorPrint (
+     const CHAR8 *Format,
+  ...
+  ) __attribute__ ((format (printf, 1, 2)));
+
+UINTN
+PrintXY (
+     UINTN PointX,
+     UINTN PointY,
+     EFI_GRAPHICS_OUTPUT_BLT_PIXEL *ForeGround,
+     EFI_GRAPHICS_OUTPUT_BLT_PIXEL *BackGround,
+     const CHAR16 *Format,
+  ...
+  ) __attribute__ ((format (printf, 5, 6)));
+
+UINTN
+AsciiPrintXY (
+     UINTN PointX,
+     UINTN PointY,
+     EFI_GRAPHICS_OUTPUT_BLT_PIXEL *ForeGround,
+     EFI_GRAPHICS_OUTPUT_BLT_PIXEL *BackGround,
+     const CHAR8 *Format,
+  ...
+  ) __attribute__ ((format (printf, 5, 6)));
+
+CHAR16 *
+CatSPrint (
+      CHAR16 *String,
+      const CHAR16 *FormatString,
+  ...
+  ) __attribute__ ((format (printf, 2, 3)));
+
+#endif
+
+extern BOOLEAN UseMsgLog;
+extern INTN mMemLogPause;
+
+#define DONTMSG(DebugMode) (DebugMode < 0 || (!UseMsgLog && !ForceNativeLoggging && GlobalConfig.LogLevel > 0))
+#define MsgLog(...)  do { if (1 || !mMemLogPause) DebugLog(REFIT_DEBUG, __VA_ARGS__); } while (0)
+
+VOID
+DeepLoggger (
+  IN  INTN     DebugMode,
+  IN  INTN     level,
+  IN  INTN     type,
+  IN  CHAR16 **Message
+);
+
+#define DONTLOG(DebugMode, level) (DebugMode < 1 || GlobalConfig.LogLevel < 1 || GlobalConfig.LogLevel < level)
+// NB: logTemp is freed in DeepLoggger
+#define LOG(level, type, ...) \
+	do { \
+		if (1 || !mMemLogPause) {\
+			CHAR16 *logTemp = PoolPrint( __VA_ARGS__); \
+			DeepLoggger(REFIT_DEBUG, level, type, &logTemp); \
+		} \
+	} while(0)
+
+#define LOGWHERE(format, ...) \
+	MsgLog("%a:%d " format "\n", __FILE__, __LINE__, __VA_ARGS__)
+
+#define LOGPOOL(object) \
+	LogPoolProc((VOID *)object, (VOID **)&object, #object, NULL, NULL, NULL, __FILE__, __LINE__, FALSE, TRUE)
+
+#define LOGPOOLALWAYS(object) \
+	LogPoolProc((VOID *)object, (VOID **)&object, #object, NULL, NULL, NULL, __FILE__, __LINE__, TRUE, TRUE)
+
+#define LOG2(_v, _l, _p, _x, ...) \
+	do { \
+		if (1 || !mMemLogPause) {\
+			CHAR16 *_MsgStr = PoolPrint (__VA_ARGS__); \
+			BOOLEAN _dm = DONTMSG(REFIT_DEBUG); \
+			BOOLEAN _dl = DONTLOG(REFIT_DEBUG, _v); \
+			if (!_dm && !_dl) { \
+				_dl = (_l == LOG_LINE_NORMAL); \
+				_dm = !_dl; \
+			} \
+			if (_dm) LOG(_v, _l, L"%s", _MsgStr); \
+			if (_dl) MsgLog ("%s%s%s", _p, _MsgStr, _x); \
+			MyFreePool (&_MsgStr); \
+		} \
+	} while(0)
