@@ -170,6 +170,7 @@ BOOLEAN IsValidLoader(EFI_FILE *RootDir, CHAR16 *FileName) {
             L"EFI file *NOT* valid:- '%s'",
             FileName
         );
+        
         return FALSE;
     }
 

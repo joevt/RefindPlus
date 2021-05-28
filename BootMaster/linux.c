@@ -72,9 +72,9 @@
 CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
     CHAR16              *InitrdName = NULL, *FileName, *KernelVersion, *InitrdVersion, *Path;
     CHAR16              *KernelPostNum, *InitrdPostNum;
-    UINTN               MaxSharedChars, SharedChars;
+    UINTN                MaxSharedChars, SharedChars;
     STRING_LIST         *InitrdNames = NULL, *FinalInitrdName = NULL, *CurrentInitrdName = NULL, *MaxSharedInitrd;
-    REFIT_DIR_ITER      DirIter;
+    REFIT_DIR_ITER       DirIter;
     EFI_FILE_INFO       *DirEntry;
 
     LOG(1, LOG_LINE_NORMAL,
@@ -96,6 +96,7 @@ CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
     }
 
     DirIterOpen(Volume->RootDir, Path, &DirIter);
+
     // Now add a trailing backslash if it was NOT added earlier, for consistency in
     // building the InitrdName later....
     if ((StrLen(Path) > 0) && (Path[StrLen(Path) - 1] != L'\\')) {
@@ -124,7 +125,7 @@ CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
 
     if (InitrdNames) {
         if (InitrdNames->Next == NULL) {
-            InitrdName = StrDuplicate(InitrdNames -> Value);
+            InitrdName = StrDuplicate(InitrdNames->Value);
         }
         else {
             MaxSharedInitrd = CurrentInitrdName = InitrdNames;
@@ -139,6 +140,7 @@ CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
                     MaxSharedChars = SharedChars;
                     MaxSharedInitrd = CurrentInitrdName;
                 } // if
+
                 // TODO: Compute number of shared characters & compare with max.
                 CurrentInitrdName = CurrentInitrdName->Next;
             } // while ()

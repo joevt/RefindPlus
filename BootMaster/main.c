@@ -269,9 +269,9 @@ static
 EFI_STATUS EFIAPI gRTSetVariableEx (
     IN  CHAR16    *VariableName,
     IN  EFI_GUID  *VendorGuid,
-    IN  UINT32    Attributes,
-    IN  UINTN     DataSize,
-    IN  VOID      *Data
+    IN  UINT32     Attributes,
+    IN  UINTN      VariableSize,
+    IN  VOID      *VariableData
 ) {
     EFI_STATUS   Status                 = EFI_SECURITY_VIOLATION;
     EFI_GUID     WinGuid                = MICROSOFT_VENDOR_GUID;
@@ -286,6 +286,7 @@ EFI_STATUS EFIAPI gRTSetVariableEx (
     EFI_GUID     RSA2048Sha1Guid        = EFI_CERT_RSA2048_SHA1_GUID;
     EFI_GUID     RSA2048Sha256Guid      = EFI_CERT_RSA2048_SHA256_GUID;
     EFI_GUID     TypeRSA2048Sha256Guid  = EFI_CERT_TYPE_RSA2048_SHA256_GUID;
+    UINT32       StorageFlags;
 
     BOOLEAN BlockCert = (
         (GuidsAreEqual (VendorGuid, &WinGuid) ||
@@ -308,21 +309,24 @@ EFI_STATUS EFIAPI gRTSetVariableEx (
     );
 
     if (!BlockCert && !BlockPRNG) {
-        Status = EfivarSetRaw (
-            VendorGuid,
+        StorageFlags  = EFI_VARIABLE_BOOTSERVICE_ACCESS;
+        StorageFlags |= EFI_VARIABLE_RUNTIME_ACCESS;
+        StorageFlags |= EFI_VARIABLE_NON_VOLATILE;
+        Status = AltSetVariable (
             VariableName,
-            &Data,
-            DataSize,
-            TRUE
+            VendorGuid,
+            StorageFlags,
+            VariableSize,
+            (CHAR8 *) &VariableData
         );
     }
 
+
     #if REFIT_DEBUG > 0
-    MsgLog ("INFO: Write to NVRAM:- '%s' ... %r", VariableName, Status);
+    LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"Filtered Write to NVRAM:- '%s' ... %r", VariableName, Status);
+
     if (BlockCert || BlockPRNG) {
-        MsgLog ("\n");
-        MsgLog ("      * Prevented Microsoft Secure Boot NVRAM Write Attempt");
-        MsgLog ("\n");
+        LOG2(3, LOG_THREE_STAR_MID, L"\n      * ", L"\n", L"Prevented Microsoft Secure Boot NVRAM Write Attempt");
         MsgLog ("         Successful NVRAM Write May Result in BootROM Damage");
     }
     MsgLog ("\n\n");

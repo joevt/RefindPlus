@@ -647,41 +647,20 @@ EFI_STATUS EfivarSetRaw (
     IN  UINTN      VariableSize,
     IN  BOOLEAN    Persistent
 ) {
-    EFI_STATUS   Status = EFI_ALREADY_STARTED;
-    EFI_STATUS   OldStatus;
+    EFI_STATUS   Status;
     UINT32       StorageFlags;
-    VOID        *OldBuf = NULL;
+    VOID        *OldBuf;
     UINTN        OldSize;
+    BOOLEAN      SettingMatch;
 
-        if (!GlobalConfig.UseNvram &&
-            GuidsAreEqual (VendorGUID, &RefindPlusGuid)
-        ) {
-            LOG(4, LOG_LINE_NORMAL,
-            L"Saving EFI Variable '%s' to Emulated NVRAM",
-                VariableName
-            );
+    if (!MyStriCmp (VariableName, L"HiddenTags") &&
+        !MyStriCmp (VariableName, L"HiddenTools") &&
+        !MyStriCmp (VariableName, L"HiddenLegacy") &&
+        !MyStriCmp (VariableName, L"HiddenFirmware")
+    ) {
+        Status = EfivarGetRaw (VendorGUID, VariableName, &OldBuf, &OldSize);
 
-            Status = FindVarsDir();
-            if (Status == EFI_SUCCESS) {
-            Status = egSaveFile (
-                gVarsDir, VariableName,
-                VariableData, VariableSize
-            );
-            }
-            else {
-                LOG2(3, LOG_LINE_NORMAL, L"** WARN: ", L"\n",   L"Could Not Write '%s' to Emulated NVRAM", VariableName);
-                LOG2(3, LOG_LINE_NORMAL, L"         ", L"\n\n", L"Activate the 'use_nvram' option to silence this warning");
-            }
-            return Status;
-        }
-    
-    // Check for previous match if not hidden item
-    if (!MyStriCmp (VariableName, L"Hidden")) {
-        OldStatus = EfivarGetRaw (VendorGUID, VariableName, &OldBuf, &OldSize);
-
-        if (!EFI_ERROR (OldStatus)) {
-            BOOLEAN SettingMatch;
-
+        if (!EFI_ERROR (Status)) {
             // First check for setting match (compare mem as per upstream)
             SettingMatch = (
                 VariableSize == OldSize &&
@@ -689,6 +668,7 @@ EFI_STATUS EfivarSetRaw (
             );
             if (SettingMatch) {
                 // Return if settings match
+                MyFreePool (&OldBuf);
                 return EFI_ALREADY_STARTED;
             }
 
@@ -701,21 +681,56 @@ EFI_STATUS EfivarSetRaw (
             );
             if (SettingMatch) {
                 // Return if settings match
+                MyFreePool (&OldBuf);
                 return EFI_ALREADY_STARTED;
             }
         }
+        MyFreePool (&OldBuf);
     }
 
-    // Proceed ... settings do not match or not to be filtered on match
-    if (GlobalConfig.UseNvram ||
-        !GuidsAreEqual (VendorGUID, &RefindPlusGuid)
+    // Proceed ... settings do not match
+    if (!GlobalConfig.UseNvram &&
+        GuidsAreEqual (VendorGUID, &RefindPlusGuid)
     ) {
-            LOG(4, LOG_LINE_NORMAL,
-            L"Saving EFI Variable '%s' to Hardware NVRAM",
-                VariableName
+        LOG(4, LOG_LINE_NORMAL,
+            L"Saving to Emulated NVRAM:- '%s'",
+            VariableName
+        );
+
+        Status = FindVarsDir();
+        if (Status == EFI_SUCCESS) {
+            Status = egSaveFile (
+                gVarsDir, VariableName,
+                (UINT8 *) VariableData, VariableSize
+            );
+        }
+
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL,
+            L"Save '%s' to Emulated NVRAM ... %r",
+            VariableName, Status
+        );
+
+        if (EFI_ERROR (Status)) {
+            LOG(3, LOG_THREE_STAR_MID,
+                L"Activate the 'use_nvram' option to silence this warning"
             );
 
-            StorageFlags = EFI_VARIABLE_BOOTSERVICE_ACCESS|EFI_VARIABLE_RUNTIME_ACCESS;
+            MsgLog ("** WARN: Could Not Save to Emulated NVRAM:- '%s'\n", VariableName);
+            MsgLog ("         Activate the 'use_nvram' option to silence this warning\n\n");
+        }
+        #endif
+    }
+    else {
+        // GlobalConfig.UseNvram || !GuidsAreEqual (VendorGUID, &RefindPlusGuid)
+
+        LOG(4, LOG_LINE_NORMAL,
+            L"Saving to Hardware NVRAM:- '%s'",
+            VariableName
+        );
+
+        StorageFlags  = EFI_VARIABLE_BOOTSERVICE_ACCESS;
+        StorageFlags |= EFI_VARIABLE_RUNTIME_ACCESS;
             if (Persistent) {
                 StorageFlags |= EFI_VARIABLE_NON_VOLATILE;
             }
@@ -727,17 +742,12 @@ EFI_STATUS EfivarSetRaw (
             );
 
             #if REFIT_DEBUG > 0
-            if (EFI_ERROR (Status)) {
                 LOG(3, LOG_LINE_NORMAL,
-                L"Could not Write EFI Variable '%s' to Hardware NVRAM: %r",
-                    VariableName,
-                    Status
+            L"Save '%s' to Hardware NVRAM ... %r",
+            VariableName, Status
                 );
-            }
             #endif
         }
-
-    MyFreePool (&OldBuf);
 
     return Status;
 } // EFI_STATUS EfivarSetRaw ()

@@ -229,7 +229,7 @@ EFI_STATUS WriteBootDiskHint (
    }
 
    return EFI_SUCCESS;
-}
+} // EFI_STATUS WriteBootDiskHint
 
 //
 // firmware device path discovery
@@ -247,19 +247,20 @@ EFI_DEVICE_PATH *LegacyLoaderMediaPath = (EFI_DEVICE_PATH *)LegacyLoaderMediaPat
 static
 VOID ExtractLegacyLoaderPaths (
     EFI_DEVICE_PATH **PathList,
-    UINTN MaxPaths,
+    UINTN             MaxPaths,
     EFI_DEVICE_PATH **HardcodedPathList
 ) {
     EFI_STATUS          Status;
-    UINTN               HandleCount = 0;
-    UINTN               HandleIndex, HardcodedIndex;
-    EFI_HANDLE          *Handles;
-    EFI_HANDLE          Handle;
-    UINTN               PathCount = 0;
     UINTN               PathIndex;
-    EFI_LOADED_IMAGE    *LoadedImage;
-    EFI_DEVICE_PATH     *DevicePath;
+    UINTN               PathCount   = 0;
+    UINTN               HandleCount = 0;
+    UINTN               HandleIndex;
+    UINTN               HardcodedIndex;
     BOOLEAN             Seen;
+    EFI_HANDLE         *Handles;
+    EFI_HANDLE          Handle;
+    EFI_LOADED_IMAGE   *LoadedImage;
+    EFI_DEVICE_PATH    *DevicePath;
 
     MaxPaths--;  // leave space for the terminating NULL pointer
 
@@ -284,7 +285,8 @@ VOID ExtractLegacyLoaderPaths (
             (VOID **) &LoadedImage
         );
         if (EFI_ERROR (Status)) {
-            continue;  // This can only happen if the firmware scewed up, ignore it.
+            // This can only happen if the firmware scewed up ... ignore it.
+            continue;
         }
 
         Status = refit_call3_wrapper(
@@ -294,7 +296,8 @@ VOID ExtractLegacyLoaderPaths (
             (VOID **) &DevicePath
         );
         if (EFI_ERROR (Status)) {
-            continue;  // This happens, ignore it.
+            // This happens ... ignore it.
+            continue;
         }
 
         // Only grab memory range nodes
@@ -507,7 +510,7 @@ VOID StartLegacy (
     IsBoot = TRUE;
 
     LOG(1, LOG_LINE_NORMAL,
-        L"Starting Mac-style BIOS/CSM/Legacy Loader: '%s'",
+        L"Starting Mac-style BIOS/CSM/Legacy Loader:- '%s'",
         SelectionName
     );
 
@@ -573,6 +576,7 @@ VOID StartLegacy (
             MyFreePool (&ShowScreenStrB);
         }
     }
+
     FinishExternalScreen();
 } // static VOID StartLegacy()
 
