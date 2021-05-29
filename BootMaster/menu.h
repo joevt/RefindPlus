@@ -140,7 +140,7 @@ UINTN WaitForInput(IN UINTN Timeout);
 
 REFIT_MENU_SCREEN * CopyMenuScreen (REFIT_MENU_SCREEN *Entry);
 REFIT_MENU_ENTRY * CopyMenuEntry (REFIT_MENU_ENTRY *Entry);
-VOID FreeMenuEntry (REFIT_MENU_ENTRY *Entry);
+VOID FreeMenuEntry (REFIT_MENU_ENTRY **Entry);
 VOID FreeMenuScreen (REFIT_MENU_SCREEN **Menu);
 
 #if REFIT_DEBUG > 0

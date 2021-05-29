@@ -1196,7 +1196,7 @@ VOID AddSubmenu (
         AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
     }
     else {
-        FreeMenuEntry ((REFIT_MENU_ENTRY *)SubEntry);
+        FreeMenuEntry ((REFIT_MENU_ENTRY **)&SubEntry);
     }
     Entry->me.SubScreen = SubScreen;
 } // VOID AddSubmenu()
@@ -1239,11 +1239,9 @@ LOADER_ENTRY * AddStanzaEntries (
         (Title != NULL) ? Title : L"Unknown",
         GetPoolStr (&CurrentVolume->VolName)
     ));
-    Entry->me.Row          = 0;
-    Entry->Enabled         = TRUE;
     AssignVolume (&Entry->Volume, CurrentVolume);
     CopyFromPoolImage (&Entry->me.BadgeImage, &CurrentVolume->VolBadgeImage);
-    Entry->DiscoveryType   = DISCOVERY_TYPE_MANUAL;
+    Entry->DiscoveryType = DISCOVERY_TYPE_MANUAL;
 
     // Parse the config file to add options for a single stanza, terminating when the token
     // is "}" or when the end of file is reached.
@@ -1372,7 +1370,7 @@ LOADER_ENTRY * AddStanzaEntries (
     FreeTokenLine (&TokenList, &TokenCount);
 
     if (!Entry->Enabled) {
-        FreeMenuEntry ((REFIT_MENU_ENTRY *)&Entry);
+        FreeMenuEntry ((REFIT_MENU_ENTRY **)&Entry);
         goto Done;
     }
 
@@ -1448,7 +1446,7 @@ VOID ScanUserConfigured (
                     AddPreparedLoaderEntry (Entry);
                 }
                 else {
-                    FreeMenuEntry ((REFIT_MENU_ENTRY *)Entry);
+                    FreeMenuEntry ((REFIT_MENU_ENTRY **)&Entry);
                 } // if/else
             }
             else if (MyStriCmp (TokenList[0], L"include") && (TokenCount == 2) &&

@@ -2827,36 +2827,36 @@ CopyMenuEntry (
 
 VOID
 FreeMenuEntry (
-    REFIT_MENU_ENTRY *Entry
+    REFIT_MENU_ENTRY **Entry
 ) {
-    if (Entry) {
-        MsgLog ("[ FreeMenuEntry %p %s\n", Entry, GetPoolStr (&Entry->Title));
-        //LOGPOOLALWAYS (Entry);
-        FreePoolStr (&Entry->Title);
-        FreePoolImage (&Entry->BadgeImage);
-        FreePoolImage (&Entry->Image);
-        FreeMenuScreen (&Entry->SubScreen);
+    if (Entry && *Entry) {
+        MsgLog ("[ FreeMenuEntry %p %s\n", (*Entry), GetPoolStr (&(*Entry)->Title));
+        //LOGPOOLALWAYS ((*Entry));
+        FreePoolStr (&(*Entry)->Title);
+        FreePoolImage (&(*Entry)->BadgeImage);
+        FreePoolImage (&(*Entry)->Image);
+        FreeMenuScreen (&(*Entry)->SubScreen);
 
-        switch (Entry->Tag) {
+        switch ((*Entry)->Tag) {
             case TAG_NVRAMCLEAN:
             case TAG_SHOW_BOOTKICKER:
             case TAG_LOADER:
             case TAG_TOOL:
             case TAG_FIRMWARE_LOADER:
-                FreePoolStr (&((LOADER_ENTRY *)Entry)->Title);
-                FreePoolStr (&((LOADER_ENTRY *)Entry)->LoaderPath);
-                FreePoolStr (&((LOADER_ENTRY *)Entry)->LoadOptions);
-                FreePoolStr (&((LOADER_ENTRY *)Entry)->InitrdPath);
-                MyFreePool (&((LOADER_ENTRY *)Entry)->EfiLoaderPath);
+                FreePoolStr (&((LOADER_ENTRY *)(*Entry))->Title);
+                FreePoolStr (&((LOADER_ENTRY *)(*Entry))->LoaderPath);
+                FreePoolStr (&((LOADER_ENTRY *)(*Entry))->LoadOptions);
+                FreePoolStr (&((LOADER_ENTRY *)(*Entry))->InitrdPath);
+                MyFreePool (&((LOADER_ENTRY *)(*Entry))->EfiLoaderPath);
                 break;
 
             case TAG_LEGACY:
             case TAG_LEGACY_UEFI:
-                FreePoolStr (&((LEGACY_ENTRY *)Entry)->LoadOptions);
+                FreePoolStr (&((LEGACY_ENTRY *)(*Entry))->LoadOptions);
                 break;
         }
 
-        MyFreePool (&Entry);
+        MyFreePool (Entry);
         MsgLog ("] FreeMenuEntry\n");
     }
 }
@@ -2884,7 +2884,7 @@ FreeMenuScreen (
         if ((*Menu)->Entries) {
             UINTN i;
             for (i = 0; i < (*Menu)->EntryCount; i++) {
-                FreeMenuEntry ((REFIT_MENU_ENTRY*)(*Menu)->Entries[i]);
+                FreeMenuEntry (&(*Menu)->Entries[i]);
             }
             MyFreePool (&(*Menu)->Entries);
             (*Menu)->EntryCount = 0;
@@ -2968,7 +2968,7 @@ LEAKABLEMENU (
                 UINTN i;
                 LEAKABLEPATHINC ();
                     for (i = 0; i < Menu->EntryCount; i++) {
-                        LEAKABLEMENUENTRY ((REFIT_MENU_ENTRY*)Menu->Entries[i]);
+                        LEAKABLEMENUENTRY (Menu->Entries[i]);
                     }
                 LEAKABLEPATHDEC ();
             }
