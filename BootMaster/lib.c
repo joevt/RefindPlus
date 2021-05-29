@@ -1304,7 +1304,7 @@ CHAR16 * SizeInIEEEUnits (
         SizeInIeee /= 1024;
     } // while
     Units[1] = Prefixes[Index];
-    TheValue = PoolPrint (L"%ld%s", SizeInIeee, Index ? Units, L"-byte");
+    TheValue = PoolPrint (L"%ld%s", SizeInIeee, Index ? Units : L"-byte");
     return TheValue;
 } // CHAR16 *SizeInIEEEUnits()
 

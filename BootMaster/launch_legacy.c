@@ -1075,8 +1075,6 @@ VOID WarnIfLegacyProblems (
     VOID
 ) {
     UINTN    i           = 0;
-    CHAR16   *MsgStr     = NULL;
-    CHAR16   *TmpMsgStr  = NULL;
     BOOLEAN  found       = FALSE;
 
 
@@ -1098,11 +1096,11 @@ VOID WarnIfLegacyProblems (
 
             SwitchToText (FALSE);
 
-            MsgStr =
+            CHAR16 *MsgStr =
             	L"** WARN: Your 'scanfor' config line specifies scanning for one or more legacy\n"
-                L"%s         (BIOS) boot options; however, this is not possible because your computer lacks\n"
-                L"%s         the necessary Compatibility Support Module (CSM) support or that support is\n"
-                L"%s         disabled in your firmware.";
+                L"         (BIOS) boot options; however, this is not possible because your computer lacks\n"
+                L"         the necessary Compatibility Support Module (CSM) support or that support is\n"
+                L"         disabled in your firmware.";
 
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
             PrintUglyText (MsgStr, NEXTLINE);

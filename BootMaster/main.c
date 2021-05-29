@@ -1607,7 +1607,7 @@ LogTableInfo (
     else if (CompareGuid (&gEfiDebugImageInfoTableGuid      , &t->VendorGuid)) guidName = L"Debug Image Info Table"   ;
     else if (CompareGuid (&gAppleDiagVaultProtocolGuid      , &t->VendorGuid)) guidName = L"Apple Diagnostic Vault"   ;
     else if (CompareGuid (&gAppleMysteryGuid                , &t->VendorGuid)) guidName = L"Apple ???"                ;
-    MsgLog ("%g : %p:- %s\n", t->VendorGuid, t->VendorTable, guidName);
+    MsgLog ("%g :- %s\n", t->VendorGuid, guidName);
 }
 
 // Log basic information (RefindPlus version, EFI version, etc.) to the log file.

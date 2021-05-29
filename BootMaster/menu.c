@@ -2064,9 +2064,10 @@ VOID DisplaySimpleMessage (
     CHAR16* Title,
     CHAR16 *Message
 ) {
-    LOG(4, LOG_THREE_STAR_MID, L"Entering DisplaySimpleMessage");
+    MsgLog (L"[ DisplaySimpleMessage\n");
 
     if (!Message) {
+    	MsgLog (L"] DisplaySimpleMessage : No Message!!\n");
         return;
     }
 
@@ -2087,13 +2088,13 @@ VOID DisplaySimpleMessage (
     
     SimpleMessageMenu = CopyMenuScreen (&SimpleMessageMenuSrc);
     if (!SimpleMessageMenu) {
+    	MsgLog (L"] DisplaySimpleMessage : Copy Menu Fail!!\n");
         return;
     }
 
     AddMenuInfoLineCached (SimpleMessageMenu, Message);
     AddMenuEntryCopy (SimpleMessageMenu, &MenuEntryReturn);
     MenuExit = RunGenericMenu (SimpleMessageMenu, Style, &DefaultEntry, &ChosenOption);
-    FreeMenuScreen (&SimpleMessageMenu);
 
     #if REFIT_DEBUG > 0
     LOG(2, LOG_LINE_NORMAL,
@@ -2109,6 +2110,9 @@ VOID DisplaySimpleMessage (
         LOG(1, LOG_LINE_NORMAL, L"%s - %s: MenuExit = %d", Title, Message, MenuExit);
     }
     #endif
+
+    FreeMenuScreen (&SimpleMessageMenu);
+    MsgLog (L"] DisplaySimpleMessage\n");
 } // VOID DisplaySimpleMessage()
 
 // Check each filename in FilenameList to be sure it refers to a valid file. If
