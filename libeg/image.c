@@ -686,9 +686,13 @@ EG_IMAGE * egPrepareEmbeddedImage (
     }
 
     // Handle Alpha
-    if (WantAlpha && (EmbeddedImage->PixelMode == EG_EIPIXELMODE_GRAY_ALPHA ||
-        EmbeddedImage->PixelMode == EG_EIPIXELMODE_COLOR_ALPHA ||
-        EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA)
+    if (
+    	WantAlpha && (
+			EmbeddedImage->PixelMode == EG_EIPIXELMODE_GRAY_ALPHA ||
+			EmbeddedImage->PixelMode == EG_EIPIXELMODE_COLOR_ALPHA ||
+			EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA || 
+			EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA_INVERT
+        )
     ) {
         // Add Alpha Mask if Available and Required
         if (EmbeddedImage->CompressMode == EG_EICOMPMODE_RLE) {
@@ -698,10 +702,13 @@ EG_IMAGE * egPrepareEmbeddedImage (
             egInsertPlane (CompData, PLPTR(NewImage, a), PixelCount);
             CompData += PixelCount;
         }
+        if (EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA_INVERT) {
+        	egInvertPlane (PLPTR(NewImage, a), PixelCount);
+        }
     }
     else {
-        // Default to 'Opaque' if Alpha is Unavailable or Not Required
-        egSetPlane (PLPTR(NewImage, a), 0, PixelCount);
+        // Default to 'Opaque' if Alpha is Required, otherwise clear unused bytes to 0
+        egSetPlane (PLPTR(NewImage, a), WantAlpha ? 255 : 0, PixelCount);
     }
 
     return NewImage;
@@ -906,6 +913,20 @@ VOID egInsertPlane (
     if (SrcDataPtr && DestPlanePtr) {
         for (i = 0; i < PixelCount; i++) {
             *DestPlanePtr = *SrcDataPtr++;
+            DestPlanePtr += 4;
+        }
+    }
+}
+
+VOID egInvertPlane (
+    IN UINT8 *DestPlanePtr,
+    IN UINTN PixelCount
+) {
+    UINTN i;
+
+    if (DestPlanePtr) {
+        for (i = 0; i < PixelCount; i++) {
+            *DestPlanePtr = 255 - *DestPlanePtr;
             DestPlanePtr += 4;
         }
     }

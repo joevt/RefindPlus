@@ -105,6 +105,11 @@ VOID egInsertPlane(
     IN UINTN PixelCount
 );
 
+VOID egInvertPlane(
+    IN UINT8 *DestPlanePtr,
+    IN UINTN PixelCount
+);
+
 VOID egSetPlane(
     IN UINT8 *DestPlanePtr,
     IN UINT8 Value,
