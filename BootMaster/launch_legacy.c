@@ -1097,7 +1097,7 @@ VOID WarnIfLegacyProblems (
             SwitchToText (FALSE);
 
             CHAR16 *MsgStr =
-            	L"** WARN: Your 'scanfor' config line specifies scanning for one or more legacy\n"
+                L"** WARN: Your 'scanfor' config line specifies scanning for one or more legacy\n"
                 L"         (BIOS) boot options; however, this is not possible because your computer lacks\n"
                 L"         the necessary Compatibility Support Module (CSM) support or that support is\n"
                 L"         disabled in your firmware.";

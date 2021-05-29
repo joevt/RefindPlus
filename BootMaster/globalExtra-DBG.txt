@@ -123,34 +123,34 @@ DeepLoggger (
 #define DONTLOG(DebugMode, level) (DebugMode < 1 || GlobalConfig.LogLevel < 1 || GlobalConfig.LogLevel < level)
 // NB: logTemp is freed in DeepLoggger
 #define LOG(level, type, ...) \
-	do { \
-		if (1 || !mMemLogPause) {\
-			CHAR16 *logTemp = PoolPrint( __VA_ARGS__); \
-			DeepLoggger(REFIT_DEBUG, level, type, &logTemp); \
-		} \
-	} while(0)
+    do { \
+        if (1 || !mMemLogPause) {\
+            CHAR16 *logTemp = PoolPrint( __VA_ARGS__); \
+            DeepLoggger(REFIT_DEBUG, level, type, &logTemp); \
+        } \
+    } while(0)
 
 #define LOGWHERE(format, ...) \
-	MsgLog("%a:%d " format "\n", __FILE__, __LINE__, __VA_ARGS__)
+    MsgLog("%a:%d " format "\n", __FILE__, __LINE__, __VA_ARGS__)
 
 #define LOGPOOL(object) \
-	LogPoolProc((VOID *)object, (VOID **)&object, #object, NULL, NULL, NULL, __FILE__, __LINE__, FALSE, TRUE)
+    LogPoolProc((VOID *)object, (VOID **)&object, #object, NULL, NULL, NULL, __FILE__, __LINE__, FALSE, TRUE)
 
 #define LOGPOOLALWAYS(object) \
-	LogPoolProc((VOID *)object, (VOID **)&object, #object, NULL, NULL, NULL, __FILE__, __LINE__, TRUE, TRUE)
+    LogPoolProc((VOID *)object, (VOID **)&object, #object, NULL, NULL, NULL, __FILE__, __LINE__, TRUE, TRUE)
 
 #define LOG2(_v, _l, _p, _x, ...) \
-	do { \
-		if (1 || !mMemLogPause) {\
-			CHAR16 *_MsgStr = PoolPrint (__VA_ARGS__); \
-			BOOLEAN _dm = DONTMSG(REFIT_DEBUG); \
-			BOOLEAN _dl = DONTLOG(REFIT_DEBUG, _v); \
-			if (!_dm && !_dl) { \
-				_dl = (_l == LOG_LINE_NORMAL); \
-				_dm = !_dl; \
-			} \
-			if (_dm) LOG(_v, _l, L"%s", _MsgStr); \
-			if (_dl) MsgLog ("%s%s%s", _p, _MsgStr, _x); \
-			MyFreePool (&_MsgStr); \
-		} \
-	} while(0)
+    do { \
+        if (1 || !mMemLogPause) {\
+            CHAR16 *_MsgStr = PoolPrint (__VA_ARGS__); \
+            BOOLEAN _dm = DONTMSG(REFIT_DEBUG); \
+            BOOLEAN _dl = DONTLOG(REFIT_DEBUG, _v); \
+            if (!_dm && !_dl) { \
+                _dl = (_l == LOG_LINE_NORMAL); \
+                _dm = !_dl; \
+            } \
+            if (_dm) LOG(_v, _l, L"%s", _MsgStr); \
+            if (_dl) MsgLog ("%s%s%s", _p, _MsgStr, _x); \
+            MyFreePool (&_MsgStr); \
+        } \
+    } while(0)
