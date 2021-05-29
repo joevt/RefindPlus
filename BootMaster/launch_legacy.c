@@ -259,13 +259,17 @@ VOID ExtractLegacyLoaderPaths (
     BOOLEAN             Seen;
     EFI_HANDLE         *Handles;
     EFI_HANDLE          Handle;
-    EFI_LOADED_IMAGE   *LoadedImage;
     EFI_DEVICE_PATH    *DevicePath;
+    EFI_LOADED_IMAGE   *LoadedImage;
 
     MaxPaths--;  // leave space for the terminating NULL pointer
 
     // get all LoadedImage handles
-    Status = LibLocateHandle (ByProtocol, &LoadedImageProtocol, NULL, &HandleCount, &Handles);
+    Status = LibLocateHandle (
+        ByProtocol,
+        &LoadedImageProtocol, NULL,
+        &HandleCount, &Handles
+    );
     if (CheckError (Status, L"while listing LoadedImage handles")) {
         if (HardcodedPathList) {
             for (HardcodedIndex = 0; HardcodedPathList[HardcodedIndex] && PathCount < MaxPaths; HardcodedIndex++) {
@@ -301,7 +305,9 @@ VOID ExtractLegacyLoaderPaths (
         }
 
         // Only grab memory range nodes
-        if (DevicePathType (DevicePath) != HARDWARE_DEVICE_PATH || DevicePathSubType (DevicePath) != HW_MEMMAP_DP) {
+        if (DevicePathType (DevicePath) != HARDWARE_DEVICE_PATH ||
+            DevicePathSubType (DevicePath) != HW_MEMMAP_DP
+        ) {
             continue;
         }
 
@@ -312,7 +318,11 @@ VOID ExtractLegacyLoaderPaths (
             if (DevicePathNodeLength (DevicePath) != DevicePathNodeLength (PathList[PathIndex])) {
                 continue;
             }
-            if (CompareMem (DevicePath, PathList[PathIndex], DevicePathNodeLength (DevicePath)) == 0) {
+            if (CompareMem (
+                    DevicePath, PathList[PathIndex],
+                    DevicePathNodeLength (DevicePath)
+                ) == 0
+            ) {
                 Seen = TRUE;
                 break;
             }
@@ -411,7 +421,10 @@ EFI_STATUS StartLegacyImageList (
     if (LoadOptions != NULL) {
         FullLoadOptions = StrDuplicate (LoadOptions);
     } // if (LoadOptions != NULL)
-    Print (L"Starting legacy loader\nUsing load options '%s'\n", FullLoadOptions ? FullLoadOptions : L"");
+    Print (
+        L"Starting legacy loader\nUsing load options '%s'\n",
+        FullLoadOptions ? FullLoadOptions : L""
+    );
 
     // load the image into memory
     ReturnStatus = Status = EFI_LOAD_ERROR;  // in case the list is empty
@@ -503,8 +516,8 @@ VOID StartLegacy (
     UINTN           ErrorInStep = 0;
     EFI_DEVICE_PATH *DiscoveredPathList[MAX_DISCOVERED_PATHS];
 
-    CHAR16 *ShowScreenStrA = NULL;
-    CHAR16 *ShowScreenStrB = NULL;
+    CHAR16 *MsgStrA = NULL;
+    CHAR16 *MsgStrB = NULL;
 
     MsgLog ("IsBoot = TRUE\n");
     IsBoot = TRUE;
@@ -527,53 +540,63 @@ VOID StartLegacy (
     }
 
     if (Entry->Volume->IsMbrPartition) {
-        ActivateMbrPartition (Entry->Volume->WholeDiskBlockIO, Entry->Volume->MbrPartitionIndex);
+        ActivateMbrPartition (
+            Entry->Volume->WholeDiskBlockIO,
+            Entry->Volume->MbrPartitionIndex
+        );
     }
 
-    if (Entry->Volume->DiskKind != DISK_KIND_OPTICAL && Entry->Volume->WholeDiskDevicePath != NULL) {
+    if (Entry->Volume->DiskKind != DISK_KIND_OPTICAL &&
+        Entry->Volume->WholeDiskDevicePath != NULL
+    ) {
         WriteBootDiskHint (Entry->Volume->WholeDiskDevicePath);
     }
 
-    ExtractLegacyLoaderPaths (DiscoveredPathList, MAX_DISCOVERED_PATHS, LegacyLoaderList);
+    ExtractLegacyLoaderPaths (
+        DiscoveredPathList,
+        MAX_DISCOVERED_PATHS,
+        LegacyLoaderList
+    );
 
     StoreLoaderName (SelectionName);
-    Status = StartLegacyImageList (DiscoveredPathList, GetPoolStr (&Entry->LoadOptions), &ErrorInStep);
+    Status = StartLegacyImageList (
+        DiscoveredPathList,
+        GetPoolStr (&Entry->LoadOptions),
+        &ErrorInStep
+    );
     if (Status == EFI_NOT_FOUND) {
         if (ErrorInStep == 1) {
             SwitchToText (FALSE);
 
-            ShowScreenStrA = L"Please make sure you have the latest firmware update installed.";
+            MsgStrA = L"Please make sure you have the latest firmware update installed";
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-            PrintUglyText (ShowScreenStrA, NEXTLINE);
+            PrintUglyText (MsgStrA, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-            MsgLog ("** WARN: %s\n\n", ShowScreenStrA);
+            MsgLog ("** WARN: %s\n\n", MsgStrA);
 
             PauseForKey();
             SwitchToGraphics();
-            MyFreePool (&ShowScreenStrA);
         }
         else if (ErrorInStep == 3) {
             SwitchToText (FALSE);
 
-            ShowScreenStrA = L"The firmware refused to boot from the selected volume.";
+            MsgStrA = L"The firmware refused to boot from the selected volume";
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-            PrintUglyText (ShowScreenStrA, NEXTLINE);
+            PrintUglyText (MsgStrA, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-            MsgLog ("** WARN: %s\n", ShowScreenStrA);
+            MsgLog ("** WARN: %s\n", MsgStrA);
 
-            ShowScreenStrB = L"NB: External drives are not well-supported by Apple firmware for legacy booting.";
+            MsgStrB = L"NB: External drives are not well-supported by Apple firmware for legacy booting";
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-            PrintUglyText (ShowScreenStrB, NEXTLINE);
+            PrintUglyText (MsgStrB, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-            MsgLog ("         %s\n\n", ShowScreenStrB);
+            MsgLog ("         %s\n\n", MsgStrB);
 
             PauseForKey();
             SwitchToGraphics();
-            MyFreePool (&ShowScreenStrA);
-            MyFreePool (&ShowScreenStrB);
         }
     }
 
@@ -678,7 +701,10 @@ LEGACY_ENTRY * AddLegacyEntry (
 
     // create the submenu
     SubScreen = AllocateZeroPool (sizeof (REFIT_MENU_SCREEN));
-    AssignPoolStr (&SubScreen->Title, PoolPrint (L"Boot Options for %s on %s", LoaderTitle, VolDesc));
+    AssignPoolStr (&SubScreen->Title, PoolPrint (
+        L"Boot Options for %s on %s",
+        LoaderTitle, VolDesc
+     ));
 
     CopyFromPoolImage (&SubScreen->TitleImage, &Entry->me.Image);
     AssignCachedPoolStr (&SubScreen->Hint1, SUBSCREEN_HINT1);
@@ -833,7 +859,11 @@ VOID ScanLegacyUEFI (
     } // if
 
     // Grab the boot order
-    BootOrder = BdsLibGetVariableAndSize (L"BootOrder", &EfiGlobalVariableGuid, &BootOrderSize);
+    BootOrder = BdsLibGetVariableAndSize (
+        L"BootOrder",
+        &EfiGlobalVariableGuid,
+        &BootOrderSize
+    );
     if (BootOrder == NULL) {
         BootOrderSize = 0;
     }
@@ -851,8 +881,10 @@ VOID ScanLegacyUEFI (
            // Only add the entry if it is of a requested type (e.g. USB, HD)
            // Two checks necessary because some systems return EFI boot loaders
            // with a DeviceType value that would inappropriately include them
-           // as legacy loaders....
-           if ((BbsDevicePath->DeviceType == DiskType) && (BdsOption->DevicePath->Type == DEVICE_TYPE_BIOS)) {
+            // as legacy loaders.
+            if ((BbsDevicePath->DeviceType == DiskType) &&
+                (BdsOption->DevicePath->Type == DEVICE_TYPE_BIOS)
+            ) {
               // USB flash drives appear as hard disks with certain media flags set.
               // Look for this, and if present, pass it on with the (technically
               // incorrect, but internally useful) BBS_TYPE_USB flag set.
@@ -928,7 +960,9 @@ VOID ScanLegacyDisc (
     UINTN VolumeIndex;
     REFIT_VOLUME *Volume = NULL;
 
-    LOG(1, LOG_LINE_THIN_SEP, L"Scanning Optical Discs with Mode:- 'BIOS/CSM/Legacy'");
+    LOG(1, LOG_LINE_THIN_SEP,
+        L"Scanning Optical Discs with Mode:- 'BIOS/CSM/Legacy'"
+    );
 
     FirstLegacyScan = TRUE;
     if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC) {
@@ -955,7 +989,9 @@ VOID ScanLegacyInternal (
     UINTN VolumeIndex;
     REFIT_VOLUME *Volume = NULL;
 
-    LOG(1, LOG_LINE_THIN_SEP, L"Scanning Internal Disk Volumes with Mode:- 'BIOS/CSM/Legacy'");
+    LOG(1, LOG_LINE_THIN_SEP,
+        L"Scanning Internal Disk Volumes with Mode:- 'BIOS/CSM/Legacy'"
+    );
 
     FirstLegacyScan = TRUE;
     if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC) {
@@ -984,7 +1020,9 @@ VOID ScanLegacyExternal (
    UINTN VolumeIndex;
    REFIT_VOLUME *Volume = NULL;
 
-   LOG(1, LOG_LINE_THIN_SEP, L"Scanning External Disk Volumes with Mode:- 'BIOS/CSM/Legacy'");
+   LOG(1, LOG_LINE_THIN_SEP,
+       L"Scanning External Disk Volumes with Mode:- 'BIOS/CSM/Legacy'"
+   );
 
    FirstLegacyScan = TRUE;
    if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC) {
@@ -1012,7 +1050,7 @@ VOID FindLegacyBootType (VOID) {
 
    GlobalConfig.LegacyType = LEGACY_TYPE_NONE;
 
-   // UEFI-style legacy BIOS support is available only with some EFI implementations....
+    // UEFI-style legacy BIOS support is only available with some EFI implementations
    Status = refit_call3_wrapper(
        gBS->LocateProtocol,
        &gEfiLegacyBootProtocolGuid,
@@ -1024,23 +1062,22 @@ VOID FindLegacyBootType (VOID) {
    }
 
    // Macs have their own system. If the firmware vendor code contains the
-   // string "Apple", assume it's available. Note that this overrides the
+    // string "Apple", assume it is available. Note that this overrides the
    // UEFI type, and might yield false positives if the vendor string
-   // contains "Apple" as part of something bigger, so this isn't 100%
-   // perfect.
+    // contains "Apple" as part of something bigger, so this is not perfect.
    if (StriSubCmp (L"Apple", gST->FirmwareVendor)) {
        GlobalConfig.LegacyType = LEGACY_TYPE_MAC;
    }
-} // VOID FindLegacyBootType
+} // VOID FindLegacyBootType()
 
-// Warn the user if legacy OS scans are enabled but the firmware can't support them....
+// Warn the user if legacy OS scans are enabled but the firmware can't support them
 VOID WarnIfLegacyProblems (
     VOID
 ) {
-    UINTN    i               = 0;
-    CHAR16   *ShowScreenStr  = NULL;
-    CHAR16   *TempScreenStr  = NULL;
-    BOOLEAN  found           = FALSE;
+    UINTN    i           = 0;
+    CHAR16   *MsgStr     = NULL;
+    CHAR16   *TmpMsgStr  = NULL;
+    BOOLEAN  found       = FALSE;
 
 
     if (GlobalConfig.LegacyType == LEGACY_TYPE_NONE) {
@@ -1061,32 +1098,17 @@ VOID WarnIfLegacyProblems (
 
             SwitchToText (FALSE);
 
-            TempScreenStr = StrDuplicate (
-                L"** WARN: Your 'scanfor' config line specifies scanning for one or more legacy\n"
-            );
-            ShowScreenStr = PoolPrint (
-                L"%s         (BIOS) boot options; however, this is not possible because your computer lacks\n",
-                TempScreenStr
-            );
-            MyFreePool (&TempScreenStr);
-            TempScreenStr = PoolPrint (
-                L"%s         the necessary Compatibility Support Module (CSM) support or that support is\n",
-                ShowScreenStr
-            );
-            MyFreePool (&ShowScreenStr);
-            ShowScreenStr = PoolPrint (
-                L"%s         disabled in your firmware.",
-                TempScreenStr
-            );
-            MyFreePool (&TempScreenStr);
+            MsgStr =
+            	L"** WARN: Your 'scanfor' config line specifies scanning for one or more legacy\n"
+                L"%s         (BIOS) boot options; however, this is not possible because your computer lacks\n"
+                L"%s         the necessary Compatibility Support Module (CSM) support or that support is\n"
+                L"%s         disabled in your firmware.";
 
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-            PrintUglyText (ShowScreenStr, NEXTLINE);
+            PrintUglyText (MsgStr, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-            MsgLog ("%s\n\n", ShowScreenStr);
-
-            MyFreePool (&ShowScreenStr);
+            MsgLog ("%s\n\n", MsgStr);
 
             PauseForKey();
         } // if (found)

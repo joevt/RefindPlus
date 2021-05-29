@@ -235,7 +235,6 @@ REFIT_CONFIG GlobalConfig = {
 
 CHAR16                *VendorInfo           = NULL;
 CHAR16                *gHiddenTools         = NULL;
-BOOLEAN                AptioWarn            = FALSE;
 BOOLEAN                SetSysTab            = FALSE;
 BOOLEAN                ConfigWarn           = FALSE;
 BOOLEAN                ranCleanNvram        = FALSE;
@@ -1396,7 +1395,7 @@ BOOLEAN SecureBootSetup (
 ) {
     EFI_STATUS  Status;
     BOOLEAN     Success         = FALSE;
-    CHAR16      *ShowScreenStr  = NULL;
+    CHAR16     *MsgStr  = NULL;
 
     LOG(1, LOG_LINE_NORMAL, L"Setting up Secure Boot (if applicable)");
 
@@ -1408,12 +1407,12 @@ BOOLEAN SecureBootSetup (
             Success = TRUE;
         }
         else {
-            ShowScreenStr = L"Secure boot disabled ... doing nothing";
+            MsgStr = L"Secure boot disabled ... doing nothing";
 
-            LOG2(2, LOG_LINE_NORMAL, L"** WARN: ", L"\n---------------\n\n", L"%s", ShowScreenStr);
+            LOG2(2, LOG_LINE_NORMAL, L"** WARN: ", L"\n-----------------\n\n", L"%s", MsgStr);
 
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-            PrintUglyText (ShowScreenStr, NEXTLINE);
+            PrintUglyText (MsgStr, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
             PauseForKey();
@@ -1423,13 +1422,13 @@ BOOLEAN SecureBootSetup (
     return Success;
 } // VOID SecureBootSetup()
 
-// Remove our own Secure Boot extensions....
+// Remove our own Secure Boot extensions.
 // Returns TRUE on success, FALSE otherwise
 static
 BOOLEAN SecureBootUninstall (VOID) {
     EFI_STATUS  Status;
-    BOOLEAN     Success         = TRUE;
-    CHAR16      *ShowScreenStr  = NULL;
+    BOOLEAN     Success = TRUE;
+    CHAR16     *MsgStr;
 
     if (secure_mode()) {
         Status = security_policy_uninstall();
@@ -1437,15 +1436,13 @@ BOOLEAN SecureBootUninstall (VOID) {
             Success = FALSE;
             BeginTextScreen (L"Secure Boot Policy Failure");
 
-            ShowScreenStr = L"Failed to Uninstall MOK Secure Boot Extensions ...Forcing Shutdown in 9 Seconds";
+            MsgStr = L"Failed to Uninstall MOK Secure Boot Extensions ... Forcing Shutdown in 9 Seconds";
 
-            MsgLog ("%s\n---------------\n\n", ShowScreenStr);
+            MsgLog ("%s\n-----------------\n\n", MsgStr);
 
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-            PrintUglyText (ShowScreenStr, NEXTLINE);
+            PrintUglyText (MsgStr, NEXTLINE);
             refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
-
-            MyFreePool (&ShowScreenStr);
 
             PauseSeconds(9);
 
@@ -1472,7 +1469,7 @@ VOID SetConfigFilename (EFI_HANDLE ImageHandle) {
     CHAR16            *Options;
     CHAR16            *FileName;
     CHAR16            *SubString;
-    CHAR16            *ShowScreenStr = NULL;
+    CHAR16            *MsgStr;
     EFI_LOADED_IMAGE  *Info;
 
     Status = refit_call3_wrapper(
@@ -1498,33 +1495,26 @@ VOID SetConfigFilename (EFI_HANDLE ImageHandle) {
                 MsgLog ("  - Config File:- '%s'\n\n", FileName);
             }
             else {
-                ShowScreenStr = L"Specified Config File Not Found";
-                MsgLog ("** WARN: %s\n", ShowScreenStr);
-                PrintUglyText (ShowScreenStr, NEXTLINE);
+                MsgStr = L"Specified Config File Not Found";
+                MsgLog ("** WARN: %s\n", MsgStr);
+                PrintUglyText (MsgStr, NEXTLINE);
 
-                MyFreePool (&ShowScreenStr);
-
-                ShowScreenStr = L"Try Default:- 'config.conf / refind.conf'";
-                PrintUglyText (ShowScreenStr, NEXTLINE);
-
-                MsgLog ("         %s\n\n", ShowScreenStr);
-
-                PrintUglyText (ShowScreenStr, NEXTLINE);
+                MsgStr = L"Try Default:- 'config.conf / refind.conf'";
+                MsgLog ("         %s\n\n", MsgStr);
+                PrintUglyText (MsgStr, NEXTLINE);
 
                 HaltForKey();
-                MyFreePool (&ShowScreenStr);
             } // if/else
 
             MyFreePool (&FileName);
         } // if
         else {
-            ShowScreenStr = L"Invalid Load Option";
+            MsgStr = L"Invalid Load Option";
 
-            MsgLog ("** WARN: %s\n", ShowScreenStr);
-            PrintUglyText (ShowScreenStr, NEXTLINE);
+            MsgLog ("** WARN: %s\n", MsgStr);
+            PrintUglyText (MsgStr, NEXTLINE);
 
             HaltForKey();
-            MyFreePool (&ShowScreenStr);
         }
     } // if
 } // VOID SetConfigFilename()
@@ -1782,8 +1772,8 @@ EFI_STATUS EFIAPI efi_main (
     UINTN  MenuExit = 0;
 
     EG_PIXEL  BGColor        = COLOR_LIGHTBLUE;
+    CHAR16    *MsgStr;
     CHAR16    *SelectionName = NULL;
-    CHAR16    *ShowScreenStr = NULL;
 
     // Force Native Logging
     ForceNativeLoggging = TRUE;
@@ -1825,12 +1815,19 @@ EFI_STATUS EFIAPI efi_main (
 
     #if REFIT_DEBUG > 0
     InitBooterLog();
-    MsgLog (
-        "Loading RefindPlus v%s on %s Firmware\n",
-        REFINDPLUS_VERSION,
-        VendorInfo
+
+    CONST CHAR16 *ConstDateStr = PoolPrint (
+        L"%d-%02d-%02d %02d:%02d:%02d",
+        NowYear, NowMonth,
+        NowDay, NowHour,
+        NowMinute, NowSecond
     );
 
+    MsgLog (
+        "Loading RefindPlus v%s on %s Firmware\n",
+        REFINDPLUS_VERSION, VendorInfo
+    );
+    
     MsgLog (" Compiled:- '%a %a'\n", __DATE__, __TIME__);
 
 #if defined(__MAKEWITH_GNUEFI)
@@ -1838,18 +1835,9 @@ EFI_STATUS EFIAPI efi_main (
 #else
     MsgLog ("Made With:- 'TianoCore EDK II'\n");
 #endif
-    CONST CHAR16 *ConstDateStr = PoolPrint (
-        L"%d-%02d-%02d %02d:%02d:%02d",
-        NowYear,
-        NowMonth,
-        NowDay,
-        NowHour,
-        NowMinute,
-        NowSecond
-    );
     MsgLog ("Timestamp:- '%s (GMT)'\n\n", ConstDateStr);
     MyFreePool (&ConstDateStr);
-
+    
     // Log System Details
     LogBasicInfo ();
     #endif
@@ -2047,7 +2035,10 @@ EFI_STATUS EFIAPI efi_main (
        if (GlobalConfig.ScanDelay > 1) {
            LOG(1, LOG_LINE_NORMAL, L"Pausing before re-scan");
 
-           egDisplayMessage (L"Pausing before disc scan. Please wait....", &BGColor, CENTER);
+            egDisplayMessage (
+                L"Pausing before disc scan. Please wait....",
+                &BGColor, CENTER
+            );
        }
 
        MsgLog ("Pause for Scan Delay:\n");
@@ -2073,8 +2064,8 @@ EFI_STATUS EFIAPI efi_main (
         AssignCachedPoolStr (&MainMenu->TimeoutText, L"Shutdown");
     }
 
-    // show misc warnings
-    if (AptioWarn || ConfigWarn) {
+    // show config mismatch warning
+    if (ConfigWarn) {
         MsgLog ("INFO: Displaying User Warning\n\n");
 
         SwitchToText (FALSE);
@@ -2083,16 +2074,11 @@ EFI_STATUS EFIAPI efi_main (
         if (ConfigWarn) {
             PrintUglyText (L"                                                                          ", NEXTLINE);
             PrintUglyText (L" WARN: Could Not Find RefindPlus Configuration File                       ", NEXTLINE);
+            PrintUglyText (L"                                                           ", NEXTLINE);
             PrintUglyText (L"       Trying rEFInd's Configuration File:- 'refind.conf'                 ", NEXTLINE);
             PrintUglyText (L"       Provide 'config.conf' file to silence this warning                 ", NEXTLINE);
             PrintUglyText (L"       You can rename 'refind.conf' file as 'config.conf'                 ", NEXTLINE);
             PrintUglyText (L"       NB: Will not contain all RefindPlus config tokens                  ", NEXTLINE);
-            PrintUglyText (L"                                                                          ", NEXTLINE);
-        }
-        if (AptioWarn) {
-            PrintUglyText (L"                                                                          ", NEXTLINE);
-            PrintUglyText (L" WARN: Aptio 'Memory Fix' drivers are not compatible with Apple Firmware  ", NEXTLINE);
-            PrintUglyText (L"       Remove any such drivers to silence this warning on Apple Firmware  ", NEXTLINE);
             PrintUglyText (L"                                                                          ", NEXTLINE);
         }
         refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
@@ -2202,9 +2188,10 @@ EFI_STATUS EFIAPI efi_main (
                         0, NULL
                     );
 
-                    ShowScreenStr = L"System Restart FAILED!!";
-                    PrintUglyText (ShowScreenStr, NEXTLINE);
-                    LOG2(1, LOG_THREE_STAR_SEP, L"INFO: ", L"\n\n", L"%s", ShowScreenStr);
+                    MsgStr = L"System Restart FAILED!!";
+                    PrintUglyText (MsgStr, NEXTLINE);
+                    LOG2(1, LOG_THREE_STAR_SEP, L"INFO: ", L"\n\n", L"%s", MsgStr);
+
                     PauseForKey();
 
                     MainLoopRunning = FALSE;   // just in case we get this far
@@ -2556,23 +2543,21 @@ EFI_STATUS EFIAPI efi_main (
 
     SwitchToText (FALSE);
 
-    ShowScreenStr = L"INFO: Reboot Failed ...Entering Endless Idle Loop";
+    MsgStr = L"INFO: Reboot Failed ... Entering Endless Idle Loop";
 
     refit_call2_wrapper(
         gST->ConOut->SetAttribute,
         gST->ConOut,
         ATTR_ERROR
     );
-    PrintUglyText (ShowScreenStr, NEXTLINE);
+    PrintUglyText (MsgStr, NEXTLINE);
     refit_call2_wrapper(
         gST->ConOut->SetAttribute,
         gST->ConOut,
         ATTR_BASIC
     );
 
-    MsgLog ("%s\n-----------------\n\n", ShowScreenStr);
-
-    MyFreePool (&ShowScreenStr);
+    MsgLog ("%s\n-----------------\n\n", MsgStr);
 
     PauseForKey();
     EndlessIdleLoop();

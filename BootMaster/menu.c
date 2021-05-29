@@ -2487,22 +2487,22 @@ BOOLEAN HideLegacyTag (
     REFIT_MENU_ENTRY   *ChosenOption;
     INTN               DefaultEntry = 1;
     UINTN              MenuExit;
-    CHAR16             *Name = NULL;
+    CHAR16             *Name;
     BOOLEAN            TagHidden = FALSE;
 
     if (AllowGraphicsMode)
         Style = GraphicsMenuStyle;
 
     if ((GlobalConfig.LegacyType == LEGACY_TYPE_MAC) && GetPoolStr (&LegacyLoader->me.Title)) {
-        Name = StrDuplicate (GetPoolStr (&LegacyLoader->me.Title));
+        Name = GetPoolStr (&LegacyLoader->me.Title);
     }
     if ((GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) &&
         LegacyLoader->BdsOption && LegacyLoader->BdsOption->Description
     ) {
-        Name = StrDuplicate (LegacyLoader->BdsOption->Description);
+        Name = LegacyLoader->BdsOption->Description;
     }
     if (!Name) {
-        Name = StrDuplicate (L"Legacy OS");
+        Name = L"Legacy OS";
     }
     AddMenuInfoLinePool (HideItemMenu, PoolPrint (L"Are you sure you want to hide '%s'?", Name));
     AddMenuEntryCopy (HideItemMenu, &MenuEntryYes);
@@ -2518,7 +2518,6 @@ BOOLEAN HideLegacyTag (
         AddToHiddenTags (L"HiddenLegacy", Name);
         TagHidden = TRUE;
     }
-    MyFreePool (&Name);
 
     return TagHidden;
 } // BOOLEAN HideLegacyTag()

@@ -1292,7 +1292,7 @@ CHAR16 * SizeInIEEEUnits (
 ) {
     UINTN   NumPrefixes;
     UINTN   Index    = 0;
-    CHAR16 *Units    = NULL;
+    CHAR16  Units[]  = L"  iB";
     CHAR16 *Prefixes = L" KMGTPEZ";
     CHAR16 *TheValue;
     UINT64  SizeInIeee;
@@ -1303,17 +1303,8 @@ CHAR16 * SizeInIEEEUnits (
         Index++;
         SizeInIeee /= 1024;
     } // while
-
-    if (Prefixes[Index] == ' ') {
-        Units = StrDuplicate (L"-byte");
-    } else {
-        Units = StrDuplicate (L"  iB");
-        Units[1] = Prefixes[Index];
-    } // if/else
-
-    TheValue = PoolPrint (L"%ld%s", SizeInIeee, Units);
-    MyFreePool (&Units);
-
+    Units[1] = Prefixes[Index];
+    TheValue = PoolPrint (L"%ld%s", SizeInIeee, Index ? Units, L"-byte");
     return TheValue;
 } // CHAR16 *SizeInIEEEUnits()
 

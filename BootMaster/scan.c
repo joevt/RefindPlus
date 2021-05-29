@@ -2237,7 +2237,7 @@ VOID ScanForTools (VOID) {
                 TempMenuEntry = CopyMenuEntry (&menu); \
                 CopyFromPoolImage_PI_ (&TempMenuEntry->Image_PI_, BuiltinIcon (icon)); \
                 AddMenuEntry (MainMenu, TempMenuEntry); \
-                LOG2(2, LOG_THREE_STAR_MID, L"              - ", L"\n", L"Added Tool:- '%s'", ToolName); \
+                LOG2(2, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added Tool:- '%s'", ToolName); \
             } while (0)
 
 
@@ -2312,7 +2312,7 @@ VOID ScanForTools (VOID) {
                             FALSE
                         );
 
-                        LOG2(1, LOG_THREE_STAR_MID, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
+                        LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
                     } // if
 
                     MyFreePool (&FileName);
@@ -2344,7 +2344,7 @@ VOID ScanForTools (VOID) {
                             FALSE
                         );
 
-                        LOG2(1, LOG_THREE_STAR_MID, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
+                        LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
                     } // if
 
                     MyFreePool (&FileName);
@@ -2372,7 +2372,7 @@ VOID ScanForTools (VOID) {
                             FALSE
                         );
 
-                        LOG2(1, LOG_THREE_STAR_MID, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
+                        LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
                   } // if
                     MyFreePool (&FileName);
                 } // while
@@ -2398,7 +2398,7 @@ VOID ScanForTools (VOID) {
                             FALSE
                         );
 
-                        LOG2(1, LOG_THREE_STAR_MID, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
+                        LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
                     } // if
 
                     MyFreePool (&FileName);
@@ -2435,7 +2435,7 @@ VOID ScanForTools (VOID) {
                                     TRUE
                                 );
 
-                                LOG2(1, LOG_THREE_STAR_MID, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
+                                LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
                             } // if
                         } // if
                         MyFreePool (&FileName);
@@ -2476,7 +2476,7 @@ VOID ScanForTools (VOID) {
 
                             MyFreePool (&Description);
 
-                            LOG2(1, LOG_THREE_STAR_MID, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
+                            LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
                         } // if
                     } // for
 

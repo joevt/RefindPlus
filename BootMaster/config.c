@@ -597,8 +597,8 @@ VOID ReadConfig (
     CHAR16          **TokenList;
     CHAR16           *FlagName;
     CHAR16           *TempStr = NULL;
+    CHAR16           *MsgStr;
     UINTN             TokenCount, i;
-    CHAR16           *ShowScreenStr = NULL;
 
     MsgLog ("[ ReadConfig %s\n", FileName);
 
@@ -640,24 +640,22 @@ VOID ReadConfig (
     if (!FileExists (SelfDir, FileName)) {
         SwitchToText (FALSE);
 
-        ShowScreenStr = L"  - WARN: Cannot Find Configuration File. Loading Defaults";
-        PrintUglyText (ShowScreenStr, NEXTLINE);
+        MsgStr = L"  - WARN: Cannot Find Configuration File. Loading Defaults";
+        PrintUglyText (MsgStr, NEXTLINE);
 
-        MsgLog ("%s\n", ShowScreenStr);
+        MsgLog ("%s\n", MsgStr);
 
        if (!FileExists (SelfDir, L"icons")) {
-           MyFreePool (&ShowScreenStr);
-           ShowScreenStr = L"  - WARN: Cannot Find Icons Directory. Switching to Text Mode";
-           PrintUglyText (ShowScreenStr, NEXTLINE);
+           MsgStr = L"  - WARN: Cannot Find Icons Directory. Switching to Text Mode";
+           PrintUglyText (MsgStr, NEXTLINE);
 
-           MsgLog ("%s\n", ShowScreenStr);
+           MsgLog ("%s\n", MsgStr);
 
           GlobalConfig.TextOnly = TRUE;
        }
 
        PauseForKey();
        SwitchToGraphics();
-       MyFreePool (&ShowScreenStr);
 
        MsgLog ("] ReadConfig (file not found)\n");
        return;
@@ -717,16 +715,16 @@ VOID ReadConfig (
                 else {
                     SwitchToText (FALSE);
 
-                    ShowScreenStr = PoolPrint (
+                    MsgStr = PoolPrint (
                         L"  - WARN: Invalid 'hideui flag' Flag: '%s'",
                         FlagName
                     );
-                    PrintUglyText (ShowScreenStr, NEXTLINE);
+                    PrintUglyText (MsgStr, NEXTLINE);
 
-                    MsgLog ("%s\n", ShowScreenStr);
+                    MsgLog ("%s\n", MsgStr);
 
                     PauseForKey();
-                    MyFreePool (&ShowScreenStr);
+                    MyFreePool (&MsgStr);
                 }
             }
         }
@@ -879,16 +877,16 @@ VOID ReadConfig (
               GlobalConfig.BannerScale = BANNER_FILLSCREEN;
            }
            else {
-                ShowScreenStr = PoolPrint (
+                MsgStr = PoolPrint (
                    L"  - WARN: Invalid 'banner_type' Flag: '%s'",
                    TokenList[1]
                );
-               PrintUglyText (ShowScreenStr, NEXTLINE);
+               PrintUglyText (MsgStr, NEXTLINE);
 
-               MsgLog ("%s\n", ShowScreenStr);
+               MsgLog ("%s\n", MsgStr);
 
                PauseForKey();
-               MyFreePool (&ShowScreenStr);
+               MyFreePool (&MsgStr);
            } // if/else
         }
         else if (MyStriCmp (TokenList[0], L"small_icon_size") && (TokenCount == 2)) {
@@ -1252,7 +1250,7 @@ LOADER_ENTRY * AddStanzaEntries (
     }
     OtherCall = TRUE;
 
-    LOG(1, LOG_LINE_NORMAL, L"Adding Manual Loader for '%s'", GetPoolStr (&Entry->Title));
+    LOG(1, LOG_LINE_NORMAL, L"Adding Manually Configured Loader:- '%s'", GetPoolStr (&Entry->Title));
     #endif
 
     while (((TokenCount = ReadTokenLine (File, &TokenList)) > 0) && (StrCmp (TokenList[0], L"}") != 0)) {

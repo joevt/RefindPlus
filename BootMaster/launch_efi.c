@@ -82,11 +82,11 @@ VOID WarnSecureBootError(
     CHAR16 *Name,
     BOOLEAN Verbose
 ) {
-    CHAR16 *ShowScreenStrA = NULL;
-    CHAR16 *ShowScreenStrB = NULL;
-    CHAR16 *ShowScreenStrC = NULL;
-    CHAR16 *ShowScreenStrD = NULL;
-    CHAR16 *ShowScreenStrE = NULL;
+    CHAR16 *MsgStrA = NULL;
+    CHAR16 *MsgStrB = NULL;
+    CHAR16 *MsgStrC = NULL;
+    CHAR16 *MsgStrD = NULL;
+    CHAR16 *MsgStrE = NULL;
 
     if (Name == NULL) {
         Name = L"the Loader";
@@ -94,47 +94,47 @@ VOID WarnSecureBootError(
 
     SwitchToText (FALSE);
 
-    ShowScreenStrA = PoolPrint (L"Secure Boot Validation Failure While Loading %s!!", Name);
+    MsgStrA = PoolPrint (L"Secure Boot Validation Failure While Loading %s!!", Name);
 
     refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-    PrintUglyText (ShowScreenStrA, NEXTLINE);
+    PrintUglyText (MsgStrA, NEXTLINE);
     refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
     if (Verbose && secure_mode()) {
-        ShowScreenStrB = PoolPrint (
+        MsgStrB = PoolPrint (
             L"This computer is configured with Secure Boot active but '%s' has failed validation.",
             Name
         );
-        PrintUglyText (ShowScreenStrB, NEXTLINE);
+        PrintUglyText (MsgStrB, NEXTLINE);
         PrintUglyText (L"You can:", NEXTLINE);
         PrintUglyText (L" * Launch another boot loader", NEXTLINE);
         PrintUglyText (L" * Disable Secure Boot in your firmware", NEXTLINE);
-        ShowScreenStrC = PoolPrint (
+        MsgStrC = PoolPrint (
             L" * Sign %s with a machine owner key (MOK)",
             Name
         );
-        PrintUglyText (ShowScreenStrC, NEXTLINE);
-        ShowScreenStrD = PoolPrint (
+        PrintUglyText (MsgStrC, NEXTLINE);
+        MsgStrD = PoolPrint (
             L" * Use a MOK utility to add a MOK with which '%s' has already been signed.",
             Name
         );
-        PrintUglyText (ShowScreenStrD, NEXTLINE);
-        ShowScreenStrE = PoolPrint (
+        PrintUglyText (MsgStrD, NEXTLINE);
+        MsgStrE = PoolPrint (
             L" * Use a MOK utility to register '%s' ('Enroll its Hash') without signing it",
             Name
         );
-        PrintUglyText (ShowScreenStrE, NEXTLINE);
+        PrintUglyText (MsgStrE, NEXTLINE);
         PrintUglyText (L"See http://www.rodsbooks.com/refind/secureboot.html for more information", NEXTLINE);
 
     } // if
     PauseForKey();
     SwitchToGraphics();
 
-    MyFreePool (&ShowScreenStrA);
-    MyFreePool (&ShowScreenStrB);
-    MyFreePool (&ShowScreenStrC);
-    MyFreePool (&ShowScreenStrD);
-    MyFreePool (&ShowScreenStrE);
+    MyFreePool (&MsgStrA);
+    MyFreePool (&MsgStrB);
+    MyFreePool (&MsgStrC);
+    MyFreePool (&MsgStrD);
+    MyFreePool (&MsgStrE);
 } // VOID WarnSecureBootError()
 
 // Returns TRUE if this file is a valid EFI loader file, and is proper ARCH
@@ -152,7 +152,7 @@ BOOLEAN IsValidLoader(EFI_FILE *RootDir, CHAR16 *FileName) {
         // when launching from a Firewire drive. This should be handled better, but
         // fix would have to be in StartEFIImage() and/or in FindVolumeAndFilename().
         LOG(4, LOG_THREE_STAR_MID,
-            L"EFI file *ASSUMED* to be valid:- '%s'",
+            L"EFI file is *ASSUMED* to be valid:- '%s'",
             FileName
         );
 
@@ -167,7 +167,7 @@ BOOLEAN IsValidLoader(EFI_FILE *RootDir, CHAR16 *FileName) {
 
     if (EFI_ERROR (Status)) {
         LOG(4, LOG_THREE_STAR_MID,
-            L"EFI file *NOT* valid:- '%s'",
+            L"EFI file is *NOT* valid:- '%s'",
             FileName
         );
         
@@ -187,7 +187,7 @@ BOOLEAN IsValidLoader(EFI_FILE *RootDir, CHAR16 *FileName) {
               (*(UINT32 *)&Header == FAT_ARCH));
 
     LOG(4, LOG_THREE_STAR_MID,
-        L"EFI file %s:- '%s'",
+        L"EFI file is %s:- '%s'",
         IsValid ? L"valid" : L"*NOT* valid",
         FileName
     );
@@ -419,8 +419,8 @@ bailout:
 
 // From gummiboot: Reboot the computer into its built-in user interface
 EFI_STATUS RebootIntoFirmware (VOID) {
-    VOID       *ItemBuffer;
-    CHAR16     *ShowScreenStr = NULL;
+    CHAR8      *ItemBuffer;
+    CHAR16     *MsgStr = NULL;
     UINT64     osind;
     EFI_STATUS err;
 
@@ -466,19 +466,19 @@ EFI_STATUS RebootIntoFirmware (VOID) {
 
     ReinitRefitLib();
 
-    ShowScreenStr = PoolPrint (L"Error calling ResetSystem ...%r", err);
+    MsgStr = PoolPrint (L"Error calling ResetSystem ... %r", err);
 
     refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-    PrintUglyText (ShowScreenStr, NEXTLINE);
+    PrintUglyText (MsgStr, NEXTLINE);
     refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
-    MsgLog ("** WARN: %s\n\n", ShowScreenStr);
+    MsgLog ("** WARN: %s\n\n", MsgStr);
 
     PauseForKey();
 
-    LOG(1, LOG_LINE_NORMAL, ShowScreenStr, err);
+    LOG(1, LOG_LINE_NORMAL, MsgStr, err);
 
-    MyFreePool (&ShowScreenStr);
+    MyFreePool (&MsgStr);
 
     return err;
 } // EFI_STATUS RebootIntoFirmware()
