@@ -992,12 +992,11 @@ UINTN PickOneBootOption (IN BOOT_ENTRY_LIST *Entries, IN OUT UINTN *BootOrderNum
 
 static
 EFI_STATUS DeleteInvalidBootEntries (VOID) {
+	MsgLog ("[ DeleteInvalidBootEntries\n");
     UINTN    Status, VarSize, ListSize, i, j = 0;
     UINT16   *BootOrder, *NewBootOrder;
     VOID     *Contents;
     CHAR16   *VarName;
-
-    LOG(1, LOG_LINE_NORMAL, L"Deleting invalid boot entries from internal BootOrder list");
 
     Status = EfivarGetRaw (&GlobalGuid, L"BootOrder", (VOID**) &BootOrder, &VarSize);
     if (Status == EFI_SUCCESS) {
@@ -1012,13 +1011,17 @@ EFI_STATUS DeleteInvalidBootEntries (VOID) {
                 MyFreePool (&Contents);
             } // if
         } // for
-        Status = EfivarSetRaw (
-            &GlobalGuid, L"BootOrder", NewBootOrder, j * sizeof (UINT16), TRUE
-        );
+        if (j < ListSize) {
+		    LOG(1, LOG_LINE_NORMAL, L"Deleting %d invalid boot entries from internal BootOrder list", ListSize - j);
+			Status = EfivarSetRaw (
+				&GlobalGuid, L"BootOrder", NewBootOrder, j * sizeof (UINT16), TRUE
+			);
+        }
         MyFreePool (&NewBootOrder);
         MyFreePool (&BootOrder);
     } // if
 
+	MsgLog ("] DeleteInvalidBootEntries\n");
     return Status;
 } // EFI_STATUS DeleteInvalidBootEntries()
 
