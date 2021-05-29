@@ -120,20 +120,24 @@ static
 VOID InitSelection (
     VOID
 ) {
+    MsgLog ("[ InitSelection\n");
     EG_IMAGE  *TempSmallImage   = NULL;
     EG_IMAGE  *TempBigImage     = NULL;
     BOOLEAN   LoadedSmallImage  = FALSE;
     BOOLEAN   TaintFree         = TRUE;
 
     if (!AllowGraphicsMode || (SelectionImages[0] != NULL)) {
+        MsgLog ("] InitSelection AllowGraphicsMode:%d SelectionImages[0]:%d\n", AllowGraphicsMode, SelectionImages[0] != NULL);
         return;
     }
 
     // load small selection image
     if (GlobalConfig.SelectionSmallFileName != NULL) {
+        MsgLog ("TempSmallImage = egLoadImage SelectionSmallFileName\n");
         TempSmallImage = egLoadImage (SelfDir, GlobalConfig.SelectionSmallFileName, TRUE);
     }
     if (TempSmallImage == NULL) {
+        MsgLog ("TempSmallImage = egPrepareEmbeddedImage egemb_back_selected_small\n");
         TempSmallImage = egPrepareEmbeddedImage (&egemb_back_selected_small, TRUE);
     }
     else {
@@ -141,34 +145,42 @@ VOID InitSelection (
     }
 
     if ((TempSmallImage->Width != TileSizes[1]) || (TempSmallImage->Height != TileSizes[1])) {
+        MsgLog ("SelectionImages[1] = egScaleImage TempSmallImage\n");
         SelectionImages[1] = egScaleImage (TempSmallImage, TileSizes[1], TileSizes[1]);
     }
     else {
+        MsgLog ("SelectionImages[1] = egCopyImage TempSmallImage\n");
         SelectionImages[1] = egCopyImage (TempSmallImage);
     }
     LEAKABLEONEIMAGE(SelectionImages[1], "SelectionImages 1");
     
     // load big selection image
     if (GlobalConfig.SelectionBigFileName != NULL) {
+        MsgLog ("TempSmallImage = egLoadImage SelectionSmallFileName\n");
         TempBigImage = egLoadImage (SelfDir, GlobalConfig.SelectionBigFileName, TRUE);
     }
     if (TempBigImage == NULL) {
         if (TempSmallImage->Width > 128 || TempSmallImage->Height > 128) {
+            MsgLog ("TaintFree = FALSE\n");
             TaintFree = FALSE;
         }
         if (TaintFree && LoadedSmallImage) {
-           // calculate big selection image from small one
-           TempBigImage = egCopyImage (TempSmallImage);
+            // calculate big selection image from small one
+            MsgLog ("TempBigImage = egCopyImage TempSmallImage\n");
+            TempBigImage = egCopyImage (TempSmallImage);
         }
         else {
-           TempBigImage = egPrepareEmbeddedImage (&egemb_back_selected_big, TRUE);
+            MsgLog ("TempBigImage = egPrepareEmbeddedImage egemb_back_selected_big\n");
+            TempBigImage = egPrepareEmbeddedImage (&egemb_back_selected_big, TRUE);
         }
     }
 
     if ((TempBigImage->Width != TileSizes[0]) || (TempBigImage->Height != TileSizes[0])) {
+        MsgLog ("SelectionImages[0] = egScaleImage TempBigImage\n");
         SelectionImages[0] = egScaleImage (TempBigImage, TileSizes[0], TileSizes[0]);
     }
     else {
+        MsgLog ("SelectionImages[0] = egCopyImage TempBigImage\n");
         SelectionImages[0] = egCopyImage (TempBigImage);
     }
     LEAKABLEONEIMAGE(SelectionImages[0], "SelectionImages 0");
@@ -179,6 +191,7 @@ VOID InitSelection (
     if (TempBigImage) {
         egFreeImage (TempBigImage);
     }
+    MsgLog ("] InitSelection\n");
 } // VOID InitSelection()
 
 //
@@ -1534,6 +1547,8 @@ VOID DrawMainMenuEntry (
 ) {
     EG_IMAGE *Background;
 
+    MsgLog ("DrawMainMenuEntry selected:%d DrawSelection:%d Row:%d\n", selected, DrawSelection, Entry->Row);
+
     // if using pointer, don't draw selection image when not hovering
     if (selected && DrawSelection) {
         Background = egCropImage (
@@ -1557,6 +1572,9 @@ VOID DrawMainMenuEntry (
             );
             egFreeImage (Background);
         } // if
+        else {
+            MsgLog ("No Background\n");
+        }
     }
     else {
         // Image not selected; copy background
@@ -2064,10 +2082,10 @@ VOID DisplaySimpleMessage (
     CHAR16* Title,
     CHAR16 *Message
 ) {
-    MsgLog (L"[ DisplaySimpleMessage\n");
+    MsgLog ("[ DisplaySimpleMessage\n");
 
     if (!Message) {
-    	MsgLog (L"] DisplaySimpleMessage : No Message!!\n");
+        MsgLog ("] DisplaySimpleMessage : No Message!!\n");
         return;
     }
 
@@ -2088,7 +2106,7 @@ VOID DisplaySimpleMessage (
     
     SimpleMessageMenu = CopyMenuScreen (&SimpleMessageMenuSrc);
     if (!SimpleMessageMenu) {
-    	MsgLog (L"] DisplaySimpleMessage : Copy Menu Fail!!\n");
+        MsgLog ("] DisplaySimpleMessage : Copy Menu Fail!!\n");
         return;
     }
 
@@ -2112,7 +2130,7 @@ VOID DisplaySimpleMessage (
     #endif
 
     FreeMenuScreen (&SimpleMessageMenu);
-    MsgLog (L"] DisplaySimpleMessage\n");
+    MsgLog ("] DisplaySimpleMessage\n");
 } // VOID DisplaySimpleMessage()
 
 // Check each filename in FilenameList to be sure it refers to a valid file. If
