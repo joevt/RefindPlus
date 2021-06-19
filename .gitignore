@@ -10,3 +10,7 @@ Thumbs.db
 # Build generated files #
 #########################
 globalExtra.h
+RefindPlusPkg.dsc
+*.xcodeproj
+DerivedData
+*.xctestplan
