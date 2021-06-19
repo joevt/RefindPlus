@@ -2001,10 +2001,12 @@ VOID ScanForBootloaders (
             }
             MainMenu->Entries[i]->ShortcutDigit = ShortCutKey;
 
+            #if REFIT_DEBUG > 0
             LOG2(3, LOG_LINE_NORMAL, L"  - ", (k < MainMenu->EntryCount && MainMenu->Entries[i]->Row == 0 && k != 0) ? L"\n" : L"\n\n",
                 L"Set Key '%d' to %s",
                 k, GetPoolStr (&MainMenu->Entries[i]->Title)
             );
+            #endif
         }  // for
 
         LOG2(4, LOG_THREE_STAR_SEP, L"INFO: ", L"\n\n",

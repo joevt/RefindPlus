@@ -1,8 +1,15 @@
 #define REFIT_DEBUG (0)
 
-#define MsgLog(...)
-#define LOG(...)
+#if 0
+#define MsgLog(f,...) AsciiPrint(f, ##__VA_ARGS__)
+#define LOG(x,y,f,...) Print(f L"\n", ##__VA_ARGS__)
+#define LOG2(x,y,pre,post,f,...) Print(L"%s" f L"%s", pre, ##__VA_ARGS__, post)
+#else
+#define MsgLog(f,...)
+#define LOG(x,y,f,...)
+#define LOG2(x,y,pre,post,f,...)
+#endif
+
 #define LOGWHERE(...)
 #define LOGPOOL(...)
 #define LOGPOOLALWAYS(...)
-#define LOG2(...)

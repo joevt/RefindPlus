@@ -407,7 +407,9 @@ VOID ActiveCSR (
             }
 
             // Finalise and flush the log buffer
+            #if REFIT_DEBUG > 0
             MsgLog ("%r\n\n", Status);
+            #endif
         }
     }
 } // VOID ActiveCSR()

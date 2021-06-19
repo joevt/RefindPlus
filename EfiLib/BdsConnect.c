@@ -18,10 +18,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include "../BootMaster/launch_efi.h"
 #include "../include/refit_call_wrapper.h"
 #include "../BootMaster/leaks.h"
-
-#if REFIT_DEBUG > 0
 #include "../../ShellPkg/Include/Library/HandleParsingLib.h"
-#endif
 
 #define IS_PCI_GFX(_p) IS_CLASS2 (_p, PCI_CLASS_DISPLAY, PCI_CLASS_DISPLAY_OTHER)
 
@@ -540,12 +537,16 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                     #endif
 
                     if (Parent) {
+                        #if REFIT_DEBUG > 0
                         LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ...Skipped [Parent Device]%s", DeviceData);
+                        #endif
                     }
                     else if (!EFI_ERROR (XStatus)) {
                         DetectedDevices = TRUE;
 
+                        #if REFIT_DEBUG > 0
                         LOG2(3, LOG_LINE_NORMAL, L"", L"", L"     * %r                %s", XStatus, DeviceData);
+                        #endif
                     }
                     else {
                         #if REFIT_DEBUG > 0

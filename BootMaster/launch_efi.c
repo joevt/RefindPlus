@@ -476,7 +476,7 @@ EFI_STATUS RebootIntoFirmware (VOID) {
 
     PauseForKey();
 
-    LOG(1, LOG_LINE_NORMAL, MsgStr, err);
+    LOG(1, LOG_LINE_NORMAL, L"%s", MsgStr);
 
     MyFreePool (&MsgStr);
 

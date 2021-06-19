@@ -1201,7 +1201,7 @@ BOOLEAN egSetScreenSize (
                 }
                 else {
                     MsgStr = L"Error : Could Not Query GOPDraw Mode";
-                    LOG2(1, LOG_LINE_NORMAL, L"  - ", L"", MsgStr);
+                    LOG2(1, LOG_LINE_NORMAL, L"  - ", L"", L"%s", MsgStr);
                     PrintUglyText (MsgStr, NEXTLINE);
                 } // if
             } while (++ModeNum < GOPDraw->Mode->MaxMode);
@@ -1245,7 +1245,7 @@ BOOLEAN egSetScreenSize (
                 *ScreenHeight
             );
             PrintUglyText (MsgStr, NEXTLINE);
-            LOG2(1, LOG_LINE_NORMAL, L"", L"\n", MsgStr);
+            LOG2(1, LOG_LINE_NORMAL, L"", L"\n", L"%s", MsgStr);
             MyFreePool (&MsgStr);
         } // if/else
     } // if/else if (UGADraw != NULL)

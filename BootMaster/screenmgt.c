@@ -243,7 +243,7 @@ VOID SetupScreen (
     else if (AllowGraphicsMode) {
         gotGraphics = egIsGraphicsModeEnabled();
         if (!gotGraphics || !BannerLoaded) {
-            LOG2(2, LOG_LINE_NORMAL, L"", L":\n", gotGraphics ? L"Prepare Placeholder Display" : L"Prepare Graphics Mode Switch");
+            LOG2(2, LOG_LINE_NORMAL, L"", L":\n", L"%s", gotGraphics ? L"Prepare Placeholder Display" : L"Prepare Graphics Mode Switch");
             LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n", L"Screen Vertical Resolution:- '%dpx'", ScreenH);
 
             // scale icons up for HiDPI monitors if required
@@ -705,7 +705,7 @@ BOOLEAN CheckFatalError (
     refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
     haveError = TRUE;
 
-    LOG(1, LOG_LINE_NORMAL, Temp);
+    LOG(1, LOG_LINE_NORMAL, L"%s", Temp);
 
     MyFreePool (&Temp);
 
@@ -749,7 +749,7 @@ BOOLEAN CheckError (
         haveError = TRUE;
     }
 
-    LOG(1, LOG_THREE_STAR_SEP, Temp);
+    LOG(1, LOG_THREE_STAR_SEP, L"%s", Temp);
 
     MyFreePool (&Temp);
 
