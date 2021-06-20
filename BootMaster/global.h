@@ -164,16 +164,16 @@ typedef enum {
 // Names of binaries that can manage MOKs....
 #if defined (EFIX64)
     #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,\
-    KeyTool.efi,KeyTool-signed.efi,mmx64.efi"
+KeyTool.efi,KeyTool-signed.efi,mmx64.efi"
 #elif defined(EFI32)
     #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,\
-    KeyTool.efi,KeyTool-signed.efi,mmia32.efi"
+KeyTool.efi,KeyTool-signed.efi,mmia32.efi"
 #elif defined(EFIAARCH64)
     #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,\
-    KeyTool.efi,KeyTool-signed.efi,mmaa64.efi"
+KeyTool.efi,KeyTool-signed.efi,mmaa64.efi"
 #else
     #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,\
-    KeyTool.efi,KeyTool-signed.efi"
+KeyTool.efi,KeyTool-signed.efi"
 #endif
 
 // Names of binaries that can update firmware....
