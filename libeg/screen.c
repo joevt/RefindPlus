@@ -330,6 +330,7 @@ EFI_STATUS egDumpGOPVideoModes (
                     );
                 }
                 #endif
+                MyFreePool (&Info);
             }
             else {
                 LOG2(4, LOG_THREE_STAR_MID, L"  - ", L"\n", L"Mode[%d]: %r", Mode, Status);
@@ -475,16 +476,16 @@ EFI_STATUS egSetMaxResolution (
         );
 
         if (!EFI_ERROR (Status)) {
-            if (Width > Info->HorizontalResolution) {
-                continue;
+            if (
+                Info->HorizontalResolution > Width
+                || (
+                    Info->HorizontalResolution = Width && Info->VerticalResolution >= Height
+            )) {
+                BestMode = Mode;
+                Width = Info->HorizontalResolution;
+                Height = Info->VerticalResolution;
             }
-            if (Height > Info->VerticalResolution) {
-                continue;
-            }
-
-            BestMode = Mode;
-            Width    = Info->HorizontalResolution;
-            Height   = Info->VerticalResolution;
+            MyFreePool (&Info);
         }
     }
 
@@ -1036,7 +1037,9 @@ VOID egInitScreen (
         #endif
     }
 
+    #if REFIT_DEBUG > 0
     MsgLog ("%sGraphics Available:- '%s'\n\n", PrevFlag ? L"      " : L"INFO: ", egHasGraphics ? L"Yes" : L"No");
+    #endif
 }
 
 // Convert a graphics mode (in *ModeWidth) to a width and height (returned in
@@ -1682,39 +1685,42 @@ EG_IMAGE * egCopyScreenArea (
 ) {
     EG_IMAGE *Image = NULL;
 
-   if (!egHasGraphics) {
+    if (!egHasGraphics) {
+        return NULL;
+    }
+ 
+    // allocate a buffer for the screen area
+    Image = egCreateImage (Width, Height, FALSE);
+    if (Image == NULL) {
+        MsgLog ("egCopyScreenArea NULL\n");
        return NULL;
-   }
-
-   // allocate a buffer for the screen area
-   Image = egCreateImage (Width, Height, FALSE);
-   if (Image == NULL) {
-      return NULL;
-   }
-
-   // get full screen image
-   if (GOPDraw != NULL) {
-       refit_call10_wrapper(
-           GOPDraw->Blt, GOPDraw,
-           (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *) Image->PixelData,
-           EfiBltVideoToBltBuffer,
-           XPos, YPos,
-           0, 0,
-           Image->Width, Image->Height, 0
+    }
+ 
+    // get full screen image
+    if (GOPDraw != NULL) {
+        MsgLog ("GOPDraw->Blt EfiBltVideoToBltBuffer %d,%d %d,%d\n", XPos, YPos, Image->Width, Image->Height);
+        refit_call10_wrapper(
+            GOPDraw->Blt, GOPDraw,
+            (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *) Image->PixelData,
+            EfiBltVideoToBltBuffer,
+            XPos, YPos,
+            0, 0,
+            Image->Width, Image->Height, 0
        );
-   }
-   else if (UGADraw != NULL) {
-       refit_call10_wrapper(
-           UGADraw->Blt, UGADraw,
-           (EFI_UGA_PIXEL *) Image->PixelData,
-           EfiUgaVideoToBltBuffer,
-           XPos, YPos,
-           0, 0,
-           Image->Width, Image->Height, 0
-       );
-   }
+    }
+    else if (UGADraw != NULL) {
+        refit_call10_wrapper(
+            MsgLog ("UGADraw->Blt %d,%d %d,%d\n", XPos, YPos, Image->Width, Image->Height);
+            UGADraw->Blt, UGADraw,
+            (EFI_UGA_PIXEL *) Image->PixelData,
+            EfiUgaVideoToBltBuffer,
+            XPos, YPos,
+            0, 0,
+            Image->Width, Image->Height, 0
+        );
+    }
 
-   return Image;
+    return Image;
 } // EG_IMAGE * egCopyScreenArea()
 
 //
@@ -1732,11 +1738,10 @@ VOID egScreenShot (
     UINTN        i = 0;
     UINTN        FileDataSize;         ///< Size in bytes
     UINTN        FilePixelSize;        ///< Size in pixels
-    CHAR16       *FileName = NULL;
+    CHAR16       *FileName;
     CHAR16       *MsgStr;
 
-    MsgLog ("User Input Received:\n");
-    MsgLog ("  - Take Screenshot\n");
+    MsgLog ("[ egScreenShot\n");
 
     Image = egCopyScreen();
     if (Image == NULL) {
@@ -1776,97 +1781,72 @@ VOID egScreenShot (
 
     egFreeImage (Image);
     if (EFI_ERROR (Status)) {
-        SwitchToText (FALSE);
-
         MsgStr = L"Error: Could Not Encode PNG";
-
-        refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-        PrintUglyText (MsgStr, NEXTLINE);
-        refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
-
-        LOG2(1, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"%s", MsgStr);
-
-        HaltForKey();
-        SwitchToGraphics();
-
-        return;
+        goto error_exit;
     }
 
-    // Save to first available ESP if not running from ESP
-    if (!MyStriCmp (GetPoolStr (&SelfVolume->VolName), L"EFI") &&
-        !MyStriCmp (GetPoolStr (&SelfVolume->VolName), L"ESP")
-    ) {
-        Status = egFindESP (&BaseDir);
-        if (EFI_ERROR (Status)) {
-            SwitchToText (FALSE);
-
-            MsgStr = L"    * Error: Could Not Save Screenshot";
-
-            refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-            PrintUglyText (MsgStr, NEXTLINE);
-            refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
-
-            MsgLog ("%s\n\n", MsgStr);
-
-            HaltForKey();
-            SwitchToGraphics();
-
-            return;
-        }
-    }
-    else {
+    if (!SelfRootDir) {
         SelfRootDir = LibOpenRoot (SelfLoadedImage->DeviceHandle);
-        if (SelfRootDir != NULL) {
-            BaseDir = SelfRootDir;
-        }
-        else {
-            // Try to save to first available ESP
-            Status = egFindESP (&BaseDir);
-            if (EFI_ERROR (Status)) {
-                SwitchToText (FALSE);
-
-                MsgStr = L"    * Error: Could Not Find ESP for Screenshot";
-
-                refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
-                PrintUglyText (MsgStr, NEXTLINE);
-                refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
-
-                MsgLog ("%s\n\n", MsgStr);
-
-                HaltForKey();
-                SwitchToGraphics();
-
-                return;
+    }
+    if (SelfRootDir) {
+        Status = egSaveFileNumbered (SelfRootDir, L"ScreenShot_%03d.png", FileData, FileDataSize, &FileName);
+    }
+    if (EFI_ERROR (Status)) {
+        UINTN HandleCount = 0;
+        EFI_HANDLE *Handles;
+        UINTN HandleIndex;
+        EFI_GUID ESPGuid = ESP_GUID_VALUE;
+        
+        Status = gBS->LocateHandleBuffer (ByProtocol, &ESPGuid, NULL, &HandleCount, &Handles);
+        if (!EFI_ERROR (Status)) {
+            for (HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
+                BaseDir = LibOpenRoot (Handles[HandleIndex]);
+                if (!BaseDir) {
+                    Status = EFI_NOT_FOUND;
+                }
+                else {
+                    Status = egSaveFileNumbered (BaseDir, L"ScreenShot_%03d.png", FileData, FileDataSize, &FileName);
+                    if (!EFI_ERROR (Status)) {
+                        break;
+                    }
+                }
             }
+            MyFreePool (&Handles);
         }
     }
 
-    // Search for existing screen shot files; increment number to an unused value...
-    i = 0;
-    do {
-        MyFreePool (&FileName);
-        FileName = PoolPrint (L"ScreenShot_%03d.png", i++);
-    } while (FileExists (BaseDir, FileName));
-
-    // save to file on the ESP
-    Status = egSaveFile (BaseDir, FileName, (UINT8 *) FileData, FileDataSize);
-    FreePool (FileData);
+    MyFreePool (&FileData);
+    
     if (CheckError (Status, L"in egSaveFile")) {
         goto bailout_wait;
     }
 
     MsgLog ("    * Screenshot Taken:- '%s'\n\n", FileName);
 
+    MyFreePool (&FileName);
+    MsgLog ("] egScreenShot\n");
     return;
 
     // DEBUG: switch to text mode
 bailout_wait:
+    MsgLog ("] egScreenShot bailout\n");
     i = 0;
     egSetGraphicsModeEnabled (FALSE);
     refit_call3_wrapper(
         gBS->WaitForEvent, 1,
         &gST->ConIn->WaitForKey, &i
     );
+    return;
+
+error_exit:
+    SwitchToText (FALSE);
+    refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
+    PrintUglyText (MsgStr, NEXTLINE);
+    refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
+    MsgLog ("%s\n\n", MsgStr);
+    HaltForKey();
+    SwitchToGraphics();
+    return;
 }
 
 /* EOF */
