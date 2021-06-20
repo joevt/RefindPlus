@@ -2701,9 +2701,10 @@ UINTN RunMainMenu (
     TileSizes[0] = (GlobalConfig.IconSizes[ICON_SIZE_BIG] * 9) / 8;
     TileSizes[1] = (GlobalConfig.IconSizes[ICON_SIZE_SMALL] * 4) / 3;
 
-    if ((DefaultSelection != NULL) && (*DefaultSelection != NULL)) {
+    if (DefaultSelection && *DefaultSelection) {
         // Find a menu entry that includes *DefaultSelection as a substring
         DefaultEntryIndex = FindMenuShortcutEntry (Screen, *DefaultSelection);
+        MyFreePool (DefaultSelection);
     }
 
     if (AllowGraphicsMode) {
@@ -2776,8 +2777,7 @@ UINTN RunMainMenu (
     }
 
     if (DefaultSelection) {
-       MyFreePool (DefaultSelection);
-       *DefaultSelection = MenuTitle;
+        *DefaultSelection = MenuTitle;
     }
     else {
         MyFreePool (&MenuTitle);
