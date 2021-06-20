@@ -68,6 +68,9 @@
 #include "../libeg/libeg.h"
 #include "asm.h"
 #include "leaks.h"
+#include "gpt.h"
+#include "BootLog.h"
+#include "MemLogLib.h"
 
 #ifndef __MAKEWITH_GNUEFI
 #define LibLocateProtocol EfiLibLocateProtocol
@@ -213,10 +216,6 @@ EFI_GUID               RefindPlusGuid       = REFINDPLUS_GUID;
 EFI_SET_VARIABLE       AltSetVariable;
 EFI_OPEN_PROTOCOL      OrigOpenProtocol;
 EFI_HANDLE_PROTOCOL    OrigHandleProtocol;
-
-#if REFIT_DEBUG > 0
-extern VOID InitBooterLog (VOID);
-#endif
 
 extern EFI_STATUS RpApfsConnectDevices (VOID);
 
@@ -662,7 +661,7 @@ EFI_STATUS EFIAPI HandleProtocolEx (
     OUT  VOID        **Interface
 ) {
     EFI_STATUS Status;
-
+    LEAKABLEEXTERNALSTART ("HandleProtocolEx OpenProtocol");
     Status = refit_call6_wrapper(
         gBS->OpenProtocol,
         Handle,
@@ -672,7 +671,7 @@ EFI_STATUS EFIAPI HandleProtocolEx (
         NULL,
         EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL
     );
-
+    LEAKABLEEXTERNALSTOP ();
     return Status;
 } // EFI_STATUS HandleProtocolEx()
 
@@ -1726,6 +1725,21 @@ VOID LogBasicInfo (
 } // VOID LogBasicInfo()
 #endif
 
+#define MyPrint(x, ...) AsciiPrint(x, ##__VA_ARGS__)
+//#define MyPrint(x) DebugPrint(DEBUG_INFO, x)
+
+UINTN
+EFIAPI
+MyPrintMemLogCallback (
+    IN INTN DebugMode,
+    IN CHAR8 *LastMessage
+) {
+  LEAKABLEEXTERNALSTART ("MyPrintMemLogCallback AsciiPrint");
+  UINTN BytesWritten = AsciiPrint ("%a", LastMessage);
+  LEAKABLEEXTERNALSTOP ();
+  return BytesWritten;
+}
+
 //
 // main entry point
 //
@@ -1755,16 +1769,37 @@ EFI_STATUS EFIAPI efi_main (
     // bootstrap
     InitializeLib (ImageHandle, SystemTable);
 
-    #if REFIT_DEBUG > 0
-    ReMapPoolFunctions();
+    // disable EFI watchdog timer
+    refit_call4_wrapper(
+        gBS->SetWatchdogTimer,
+        0x0000, 0x0000, 0x0000,
+        NULL
+    );
+
+    #if 0
+    // Pause startup so we can start the debugger here.
+    DebugLoop ();
     #endif
 
+    //MyPrint("efi_main\n");
+    #if 0
+    SetMemLogCallback (MyPrintMemLogCallback);
+    #endif
+
+    #if REFIT_DEBUG > 0
+    //MyPrint("ReMapPoolFunctions\n");
+    ReMapPoolFunctions ();
+    AdjustStackMax ();
+    #endif
+
+    //MyPrint("InitRefitLib\n");
     Status = InitRefitLib (ImageHandle);
 
     if (EFI_ERROR (Status)) {
         return Status;
     }
 
+    //MyPrint("GetTime\n");
     EFI_TIME Now;
     gRT->GetTime (&Now, NULL);
     NowYear   = Now.Year;
@@ -1774,6 +1809,7 @@ EFI_STATUS EFIAPI efi_main (
     NowMinute = Now.Minute;
     NowSecond = Now.Second;
 
+    //MyPrint("VendorInfo\n");
     if (MyStrStr (gST->FirmwareVendor, L"Apple") != NULL) {
         VendorInfo = StrDuplicate (L"Apple");
     }
@@ -1787,9 +1823,11 @@ EFI_STATUS EFIAPI efi_main (
     }
     LEAKABLE (VendorInfo, "VendorInfo");
 
+    //MyPrint("InitBooterLog\n");
     #if REFIT_DEBUG > 0
     InitBooterLog();
 
+    //MyPrint("ConstDateStr\n");
     CONST CHAR16 *ConstDateStr = PoolPrint (
         L"%d-%02d-%02d %02d:%02d:%02d",
         NowYear, NowMonth,
@@ -1797,6 +1835,7 @@ EFI_STATUS EFIAPI efi_main (
         NowMinute, NowSecond
     );
 
+    //MyPrint("MsgLog Loading RefindPlus\n");
     MsgLog (
         "Loading RefindPlus v%s on %s Firmware\n",
         REFINDPLUS_VERSION, VendorInfo
@@ -1816,10 +1855,10 @@ EFI_STATUS EFIAPI efi_main (
     LogBasicInfo ();
     #endif
 
-    UINTN pass;
-    for (pass = 0; pass < 2; pass++) {
-        DumpCallStack (NULL, pass == 1);
-    }
+    //MyPrint("DumpCallStack\n");
+    #if 0
+    DumpCallStack (NULL, TRUE);
+    #endif
 
     // read configuration
     CopyMem (GlobalConfig.ScanFor, "ieom       ", NUM_SCAN_OPTIONS);
@@ -1957,13 +1996,6 @@ EFI_STATUS EFIAPI efi_main (
 
     // Disable Forced Native Logging
     //ForceNativeLoggging = FALSE;
-
-    // disable EFI watchdog timer
-    refit_call4_wrapper(
-        gBS->SetWatchdogTimer,
-        0x0000, 0x0000, 0x0000,
-        NULL
-    );
 
     LoadDrivers();
 

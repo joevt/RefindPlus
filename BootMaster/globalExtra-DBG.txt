@@ -107,10 +107,9 @@ CatSPrint (
 #endif
 
 extern BOOLEAN UseMsgLog;
-extern INTN mMemLogPause;
 
 #define DONTMSG(DebugMode) (DebugMode < 0 || (!UseMsgLog && !ForceNativeLoggging && GlobalConfig.LogLevel > 0))
-#define MsgLog(...)  do { if (1 || !mMemLogPause) DebugLog(REFIT_DEBUG, __VA_ARGS__); } while (0)
+#define MsgLog(...)  DebugLog(REFIT_DEBUG, __VA_ARGS__)
 
 VOID
 DeepLoggger (
@@ -124,10 +123,8 @@ DeepLoggger (
 // NB: logTemp is freed in DeepLoggger
 #define LOG(level, type, ...) \
     do { \
-        if (1 || !mMemLogPause) {\
-            CHAR16 *logTemp = PoolPrint( __VA_ARGS__); \
-            DeepLoggger(REFIT_DEBUG, level, type, &logTemp); \
-        } \
+		CHAR16 *logTemp = PoolPrint( __VA_ARGS__); \
+		DeepLoggger(REFIT_DEBUG, level, type, &logTemp); \
     } while(0)
 
 #define LOGWHERE(format, ...) \
@@ -141,16 +138,14 @@ DeepLoggger (
 
 #define LOG2(_v, _l, _p, _x, ...) \
     do { \
-        if (1 || !mMemLogPause) {\
-            CHAR16 *_MsgStr = PoolPrint (__VA_ARGS__); \
-            BOOLEAN _dm = DONTMSG(REFIT_DEBUG); \
-            BOOLEAN _dl = DONTLOG(REFIT_DEBUG, _v); \
-            if (!_dm && !_dl) { \
-                _dl = (_l == LOG_LINE_NORMAL); \
-                _dm = !_dl; \
-            } \
-            if (_dm) LOG(_v, _l, L"%s", _MsgStr); \
-            if (_dl) MsgLog ("%s%s%s", _p, _MsgStr, _x); \
-            MyFreePool (&_MsgStr); \
-        } \
+		CHAR16 *_MsgStr = PoolPrint (__VA_ARGS__); \
+		BOOLEAN _dm = DONTMSG(REFIT_DEBUG); \
+		BOOLEAN _dl = DONTLOG(REFIT_DEBUG, _v); \
+		if (!_dm && !_dl) { \
+			_dl = (_l == LOG_LINE_NORMAL); \
+			_dm = !_dl; \
+		} \
+		if (_dm) LOG(_v, _l, L"%s", _MsgStr); \
+		if (_dl) MsgLog ("%s%s%s", _p, _MsgStr, _x); \
+		MyFreePool (&_MsgStr); \
     } while(0)

@@ -274,6 +274,14 @@ VOID egFreeImage (
 // Basic file operations
 //
 
+#define LOG_ALL_LOADS 0
+
+#if LOG_ALL_LOADS
+#define LOG_PRE ""
+#else
+#define LOG_PRE "["
+#endif
+
 EFI_STATUS egLoadFile (
     IN EFI_FILE  *BaseDir,
     IN CHAR16    *FileName,
@@ -286,26 +294,37 @@ EFI_STATUS egLoadFile (
     UINT8               *Buffer;
     EFI_FILE_INFO      *FileInfo;
     EFI_FILE_HANDLE     FileHandle;
+    
+    if (FileData) *FileData = NULL;
 
+    #if LOG_ALL_LOADS
+    MsgLog ("[ egLoadFile '%s'\n", FileName);
+    #endif
+    
     if ((BaseDir == NULL) || (FileName == NULL)) {
-
+        MsgLog (LOG_PRE "] egLoadFile '%s' invalid parameter!!\n", FileName);
         return EFI_INVALID_PARAMETER;
     }
 
+    LEAKABLEEXTERNALSTART ("egLoadFile Start");
     Status = refit_call5_wrapper(BaseDir->Open, BaseDir, &FileHandle, FileName, EFI_FILE_MODE_READ, 0);
+    LEAKABLEEXTERNALSTOP ();
     if (EFI_ERROR (Status)) {
+        #if LOG_ALL_LOADS
+        MsgLog (LOG_PRE "] egLoadFile '%s' not opened (%r)\n", FileName, Status);
+        #endif
         return Status;
     }
 
     FileInfo = LibFileInfo (FileHandle);
     if (FileInfo == NULL) {
         refit_call1_wrapper(FileHandle->Close, FileHandle);
-
+        MsgLog (LOG_PRE "] egLoadFile '%s' can't get info\n", FileName);
         return EFI_NOT_FOUND;
     }
     #if REFIT_DEBUG > 0
     if (LOGPOOL(FileInfo) < 0) {
-        LOGWHERE("egLoadFile %s\n", FileName);
+        LOGWHERE("egLoadFile '%s'\n", FileName);
     }
     #endif
 
@@ -321,22 +340,28 @@ EFI_STATUS egLoadFile (
     Buffer = (UINT8 *) AllocatePool (BufferSize);
     if (Buffer == NULL) {
         refit_call1_wrapper(FileHandle->Close, FileHandle);
-
+        MsgLog (LOG_PRE "] egLoadFile '%s' no memory\n", FileName);
         return EFI_OUT_OF_RESOURCES;
     }
 
     Status = refit_call3_wrapper(FileHandle->Read, FileHandle, &BufferSize, Buffer);
     refit_call1_wrapper(FileHandle->Close, FileHandle);
     if (EFI_ERROR (Status)) {
-        FreePool (Buffer);
-
+        MyFreePool (&Buffer);
+        MsgLog (LOG_PRE "] egLoadFile '%s' can't read (%r)\n", FileName, Status);
         return Status;
     }
 
-    *FileData       = Buffer;
-    *FileDataLength = BufferSize;
+    if (FileData) {
+        *FileData = Buffer;
+    } else {
+        MyFreePool (&Buffer);
+    }
+    if (FileDataLength) *FileDataLength = BufferSize;
 
-    LOG(3, LOG_THREE_STAR_MID, L"In egLoadFile, Loaded:- '%s'", FileName);
+    #if LOG_ALL_LOADS
+    MsgLog ("] egLoadFile '%s' loaded\n", FileName);
+    #endif
 
     return EFI_SUCCESS;
 }
@@ -379,30 +404,67 @@ EFI_STATUS egSaveFile (
             return Status;
         }
     }
-
+    LEAKABLEEXTERNALSTART ("egSaveFile Open");
     Status = refit_call5_wrapper(
         BaseDir->Open, BaseDir,
         &FileHandle, FileName,
         EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE|EFI_FILE_MODE_CREATE, 0
     );
-
+    LEAKABLEEXTERNALSTOP ();
     if (EFI_ERROR (Status)) {
         return Status;
     }
 
     if (FileDataLength > 0) {
         BufferSize = FileDataLength;
-        Status     = refit_call3_wrapper(
+        LEAKABLEEXTERNALSTART ("egSaveFile Write");
+        Status = refit_call3_wrapper(
             FileHandle->Write, FileHandle,
             &BufferSize, FileData
         );
+        LEAKABLEEXTERNALSTOP ();
+        LEAKABLEEXTERNALSTART ("egSaveFile Close");
         refit_call1_wrapper(FileHandle->Close, FileHandle);
+        LEAKABLEEXTERNALSTOP ();
     } else {
         Status = refit_call1_wrapper(FileHandle->Delete, FileHandle);
     } // if/else (FileDataLength > 0)
 
     return Status;
-}
+} // egSaveFile
+
+EFI_STATUS egSaveFileNumbered (
+    IN EFI_FILE  *BaseDir,
+    IN CHAR16    *FileNamePattern,
+    IN UINT8     *FileData,
+    IN UINTN     FileDataLength,
+    OUT CHAR16   **OutFileName
+) {
+    CHAR16 *FileName = NULL;
+    EFI_STATUS Status;
+    
+    // Search for existing screen shot files; increment number to an unused value...
+    UINTN i = 0;
+    do {
+        MyFreePool (&FileName);
+        FileName = PoolPrint (FileNamePattern, i++);
+    } while (FileExists (BaseDir, FileName));
+
+    // save to file on the ESP
+    Status = egSaveFile (BaseDir, FileName, FileData, FileDataLength);
+    
+    if (!EFI_ERROR (Status) && OutFileName) {
+        *OutFileName = FileName;
+    }
+    else {
+        if (OutFileName) {
+            *OutFileName = NULL;
+        }
+        MyFreePool (&FileName);
+    }
+
+    return Status;
+} // egSaveFileNumbered
 
 //
 // Loading images from files and embedded data
@@ -481,21 +543,18 @@ EG_IMAGE * egLoadIcon (
     }
     else {
         // try to load file if able to get to image
-    Status = egLoadFile (BaseDir, Path, &FileData, &FileDataLength);
+        Status = egLoadFile (BaseDir, Path, &FileData, &FileDataLength);
     }
 
     if (EFI_ERROR (Status)) {
-        LOG(4, LOG_LINE_NORMAL,
-            L"In egLoadIcon, '%r' returned while trying to load '%s'",
-            Status, Path
-        );
-
         // return null if error
         return NULL;
     }
 
     // decode it
+    LOGPOOL (FileData);
     Image = egDecodeAny (FileData, FileDataLength, IconSize, TRUE);
+    LOGPOOL (FileData);
     MyFreePool (&FileData);
 
     // return null if unable to decode
@@ -547,20 +606,9 @@ EG_IMAGE * egLoadIconAnyType (
     CHAR16    *FileName;
     UINTN     i = 0;
 
-    #if REFIT_DEBUG > 0
-    CHAR16 *TmpDirName;
-    if (StrLen (SubdirName) != 0) {
-        TmpDirName = StrDuplicate (SubdirName);
-    }
-    else {
-        TmpDirName = StrDuplicate (L"\\");
-    }
-    LOG(3, LOG_LINE_NORMAL,
-        L"Trying to load icon from '%s' with base name: '%s'",
-        TmpDirName, BaseName
-        );
-    MyFreePool (&TmpDirName);
-    #endif
+    MsgLog ("[ egLoadIconAnyType from '%s\\%s' with extensions '%s'\n",
+        SubdirName, BaseName, ICON_EXTENSIONS
+    );
     
     while ((Image == NULL) && ((Extension = FindCommaDelimited (ICON_EXTENSIONS, i++)) != NULL)) {
         FileName = PoolPrint (L"%s\\%s.%s", SubdirName, BaseName, Extension);
@@ -570,14 +618,7 @@ EG_IMAGE * egLoadIconAnyType (
         MyFreePool (&FileName);
     } // while()
 
-    #if REFIT_DEBUG > 0
-    if (Image == NULL) {
-        LOG(3, LOG_LINE_NORMAL, L"Could not load icon in 'egLoadIconAnyType'");
-    }
-    else {
-        LOG(3, LOG_LINE_NORMAL, L"Loaded icon in 'egLoadIconAnyType'");
-    }
-    #endif
+    MsgLog ("] egLoadIconAnyType %s\n", Image ? L"Success" : L"Fail" );
 
     return Image;
 } // EG_IMAGE *egLoadIconAnyType()
@@ -687,11 +728,11 @@ EG_IMAGE * egPrepareEmbeddedImage (
 
     // Handle Alpha
     if (
-    	WantAlpha && (
-			EmbeddedImage->PixelMode == EG_EIPIXELMODE_GRAY_ALPHA ||
-			EmbeddedImage->PixelMode == EG_EIPIXELMODE_COLOR_ALPHA ||
-			EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA || 
-			EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA_INVERT
+        WantAlpha && (
+            EmbeddedImage->PixelMode == EG_EIPIXELMODE_GRAY_ALPHA ||
+            EmbeddedImage->PixelMode == EG_EIPIXELMODE_COLOR_ALPHA ||
+            EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA || 
+            EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA_INVERT
         )
     ) {
         // Add Alpha Mask if Available and Required
@@ -703,7 +744,7 @@ EG_IMAGE * egPrepareEmbeddedImage (
             CompData += PixelCount;
         }
         if (EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA_INVERT) {
-        	egInvertPlane (PLPTR(NewImage, a), PixelCount);
+            egInvertPlane (PLPTR(NewImage, a), PixelCount);
         }
     }
     else {

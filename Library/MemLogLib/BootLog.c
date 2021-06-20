@@ -7,7 +7,7 @@
  *  Initial idea from Kabyl
  */
 
-#include "../include/tiano_includes.h"
+#include "BootLog.h"
 #include "../Library/MemLogLib/MemLogLib.h"
 #include <Protocol/SimpleFileSystem.h>
 #include <Protocol/LoadedImage.h>
@@ -29,6 +29,9 @@ extern  INT16  NowSecond;
 
 BOOLEAN  TimeStamp             = TRUE;
 BOOLEAN  UseMsgLog             = FALSE;
+
+INTN Debug1BooterLogCallbackIndex = -1;
+INTN Debug2BooterLogCallbackIndex = -1;
 
 
 CHAR16 * GetAltMonth (
@@ -160,6 +163,7 @@ CHAR16 * GetAltHour (
     return AltHour;
 }
 
+
 CHAR16 * GetDateString (
     VOID
 ) {
@@ -168,7 +172,6 @@ CHAR16 * GetDateString (
     if (DateStr != NULL) {
         return DateStr;
     }
-
     INT16   ourYear    = (NowYear % 100);
     CHAR16  *ourMonth  = GetAltMonth();
     CHAR16  *ourHour   = GetAltHour();
@@ -182,7 +185,6 @@ CHAR16 * GetDateString (
         NowSecond
     );
     LEAKABLE (DateStr, "DateStr");
-
     return DateStr;
 }
 
@@ -197,11 +199,14 @@ EFI_FILE_PROTOCOL * GetDebugLogFile (
   CHAR16              *ourDebugLog = NULL;
 
   // get RootDir from device we are loaded from
+  LEAKABLEEXTERNALSTART ("GetDebugLogFile HandleProtocol");
   Status = gBS->HandleProtocol(
       gImageHandle,
       &gEfiLoadedImageProtocolGuid,
       (VOID **) &LoadedImage
   );
+  LEAKABLEEXTERNALSTOP ();
+  
   if (EFI_ERROR (Status)) {
     return NULL;
   }
@@ -217,6 +222,7 @@ EFI_FILE_PROTOCOL * GetDebugLogFile (
   );
 
   // Open log file from current root
+  LEAKABLEEXTERNALSTART ("GetDebugLogFile Open");
   Status = RootDir->Open(
       RootDir,
       &LogFile,
@@ -224,9 +230,11 @@ EFI_FILE_PROTOCOL * GetDebugLogFile (
       EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE,
       0
   );
+  LEAKABLEEXTERNALSTOP ();
 
   // If the log file is not found try to create it
   if (Status == EFI_NOT_FOUND) {
+    LEAKABLEEXTERNALSTART ("GetDebugLogFile Create");
     Status = RootDir->Open(
         RootDir,
         &LogFile,
@@ -234,14 +242,17 @@ EFI_FILE_PROTOCOL * GetDebugLogFile (
         EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE | EFI_FILE_MODE_CREATE,
         0
     );
+    LEAKABLEEXTERNALSTOP ();
   }
   RootDir->Close(RootDir);
+  
   RootDir = NULL;
 
   if (EFI_ERROR (Status)) {
     // try on first EFI partition
     Status = egFindESP(&RootDir);
     if (!EFI_ERROR (Status)) {
+      LEAKABLEEXTERNALSTART ("GetDebugLogFile Open from EFI");
       Status = RootDir->Open(
           RootDir,
           &LogFile,
@@ -249,8 +260,10 @@ EFI_FILE_PROTOCOL * GetDebugLogFile (
           EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE,
           0
       );
+      LEAKABLEEXTERNALSTOP ();
       // If the log file is not found try to create it
       if (Status == EFI_NOT_FOUND) {
+        LEAKABLEEXTERNALSTART ("GetDebugLogFile Create on EFI");
         Status = RootDir->Open(
             RootDir,
             &LogFile,
@@ -258,6 +271,7 @@ EFI_FILE_PROTOCOL * GetDebugLogFile (
             EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE | EFI_FILE_MODE_CREATE,
             0
         );
+        LEAKABLEEXTERNALSTOP ();
       }
       RootDir->Close(RootDir);
       RootDir = NULL;
@@ -274,55 +288,80 @@ EFI_FILE_PROTOCOL * GetDebugLogFile (
 }
 
 
-VOID SaveMessageToDebugLogFile (IN CHAR8 *LastMessage) {
-  static BOOLEAN           FirstTimeSave = TRUE;
-  CHAR8                   *MemLogBuffer;
-  UINTN                    MemLogLen;
-  CHAR8                   *Text;
-  UINTN                    TextLen;
-  EFI_FILE_HANDLE          LogFile;
+UINTN SaveMessageToDebugLogFile (IN CHAR8 *LastMessage) {
+  UINTN BytesWritten = 0;
+  UINTN TextLen = AsciiStrLen(LastMessage);
 
-  MemLogBuffer = GetMemLogBuffer();
-  MemLogLen    = GetMemLogLen();
-  Text         = LastMessage;
-  TextLen      = AsciiStrLen(LastMessage);
-  LogFile      = GetDebugLogFile();
+  EFI_FILE_HANDLE LogFile = GetDebugLogFile();
 
+  LEAKABLEEXTERNALSTART ("SaveMessageToDebugLogFile");
   // Write to the log file
   if (LogFile != NULL) {
     // Advance to the EOF so we append
     EFI_FILE_INFO *Info = EfiLibFileInfo(LogFile);
     if (Info) {
       LogFile->SetPosition(LogFile, Info->FileSize);
-      // Write out whole log if we have not had root before this
-      if (FirstTimeSave) {
-        Text          = MemLogBuffer;
-        TextLen       = MemLogLen;
-        FirstTimeSave = FALSE;
-      }
       // Write out this message
-      LogFile->Write(LogFile, &TextLen, Text);
+      LogFile->Write(LogFile, &TextLen, LastMessage);
+      BytesWritten = TextLen;
       MyFreePool (&Info);
     }
     LogFile->Close(LogFile);
   }
+  LEAKABLEEXTERNALSTOP ();
+
+  return BytesWritten;
+}
+
+
+UINTN
+EFIAPI
+Debug2BootLogMemLogCallback (
+    IN INTN DebugMode,
+    IN CHAR8 *LastMessage
+) {
+    UINTN BytesWritten = 0;
+    // Print message to console
+    if (DebugMode >= 2) {
+        LEAKABLEEXTERNALSTART ("Debug2BootLogMemLogCallback AsciiPrint");
+        BytesWritten = AsciiPrint ("%a", LastMessage);
+        LEAKABLEEXTERNALSTOP ();
+    }
+    return BytesWritten;
+}
+
+UINTN
+EFIAPI
+Debug1BootLogMemLogCallback (
+    IN INTN DebugMode,
+    IN CHAR8 *LastMessage
+) {
+    UINTN BytesWritten = 0;
+    if ( (DebugMode >= 1) ) {
+        BytesWritten = SaveMessageToDebugLogFile (LastMessage);
+    }
+    return BytesWritten;
+}
+
+
+BOOLEAN
+BootLogIsPaused (
+) {
+ return MemLogCallbackIsPaused (Debug1BooterLogCallbackIndex);
+}
+
+
+INTN
+BootLogPause (
+) {
+  return PauseMemLogCallback (Debug1BooterLogCallbackIndex);
 }
 
 
 VOID
-EFIAPI
-MemLogCallback (
-    IN INTN DebugMode,
-    IN CHAR8 *LastMessage
+BootLogResume (
 ) {
-    // Print message to console
-    if (DebugMode >= 2) {
-        AsciiPrint (LastMessage);
-    }
-
-    if ( (DebugMode >= 1) ) {
-        SaveMessageToDebugLogFile (LastMessage);
-    }
+  ResumeMemLogCallback (Debug1BooterLogCallbackIndex);
 }
 
 
@@ -441,5 +480,6 @@ DebugLog(
 VOID InitBooterLog(
     VOID
 ) {
-  SetMemLogCallback(MemLogCallback);
+  Debug2BooterLogCallbackIndex = SetMemLogCallback (Debug2BootLogMemLogCallback);
+  Debug1BooterLogCallbackIndex = SetMemLogCallback (Debug1BootLogMemLogCallback);
 }

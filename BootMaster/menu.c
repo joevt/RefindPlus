@@ -863,7 +863,7 @@ UINTN RunGenericMenu (
                     MinAllocation = GetNextAllocationNum ();
                     break;
                 case SCAN_F6:
-                    DumpAllocations (MinAllocation, TRUE, 4);
+                    DumpAllocations (MinAllocation, TRUE, 0);
                     break;
 #endif
                 case SCAN_DELETE:

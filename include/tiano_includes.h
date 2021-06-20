@@ -34,6 +34,7 @@
 #include <Protocol/DiskIo.h>
 #include <Protocol/EdidActive.h>
 #include <Protocol/EdidDiscovered.h>
+#include <Protocol/FirmwareVolume.h>
 #include <Protocol/FirmwareVolume2.h>
 #include <Protocol/FrameworkHii.h>
 #include <Protocol/GraphicsOutput.h>

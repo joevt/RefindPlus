@@ -121,6 +121,8 @@ EFI_STATUS egLoadFile(IN EFI_FILE* BaseDir, IN CHAR16 *FileName,
 EFI_STATUS egFindESP(OUT EFI_FILE_HANDLE *RootDir);
 EFI_STATUS egSaveFile(IN EFI_FILE* BaseDir OPTIONAL, IN CHAR16 *FileName,
                       IN UINT8 *FileData, IN UINTN FileDataLength);
+EFI_STATUS egSaveFileNumbered(IN EFI_FILE* BaseDir OPTIONAL, IN CHAR16 *FileNamePattern,
+                      IN UINT8 *FileData, IN UINTN FileDataLength, OUT CHAR16 **OutFileName);
 
 VOID egFillImage(IN OUT EG_IMAGE *CompImage, IN EG_PIXEL *Color);
 VOID egFillImageArea(IN OUT EG_IMAGE *CompImage,

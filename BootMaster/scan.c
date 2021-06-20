@@ -1128,6 +1128,7 @@ BOOLEAN IsSymbolicLink (
     EFI_STATUS      Status;
     UINTN           FileSize2 = 0;
 
+    LEAKABLEEXTERNALSTART ("IsSymbolicLink Open");
     Status = refit_call5_wrapper(
         Volume->RootDir->Open,
         Volume->RootDir,
@@ -1136,6 +1137,7 @@ BOOLEAN IsSymbolicLink (
         EFI_FILE_MODE_READ,
         0
     );
+    LEAKABLEEXTERNALSTOP ();
     if (Status == EFI_SUCCESS) {
         FileInfo = LibFileInfo (FileHandle);
         if (FileInfo != NULL) {

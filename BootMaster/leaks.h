@@ -38,6 +38,8 @@
 #define __LEAKS_H_
 
 #include "globalExtra.h"
+#include <Protocol/LoadedImage.h>
+
 
 typedef struct {
     UINTN StackAddress;
@@ -45,6 +47,32 @@ typedef struct {
     UINTN FramePointerAddress;
 } StackFrame;
 
+enum {
+    kLeakableVolumes = 1000,
+    kLeakablePartitions = 2000,
+    kLeakableHandles = 3000,
+    kLeakableBuiltinIcons = 4000,
+    kLeakableMenuMain = 5000,
+    kLeakableMenuAbout,
+    kLeakableMenuCleanNvram,
+    kLeakableMenuBootKicker
+};
+
+typedef enum {
+    ImageFlag_ProtocolLoaded = 1,
+    ImageFlag_Include = 2,
+    ImageFlag_NameLoaded = 4
+} LoadedImageFlags;
+
+typedef struct {
+    EFI_HANDLE Handle;
+    EFI_LOADED_IMAGE_PROTOCOL *Protocol;
+    CHAR16 *Name;
+    UINTN ImageFlags;
+} LoadedImageRec;
+
+
+VOID DebugLoop ();
 
 #if REFIT_DEBUG > 0
 
@@ -58,17 +86,6 @@ INTN LogPoolProc (
     BOOLEAN DoDumpCallStack
 );
 
-enum {
-    kLeakableVolumes = 1000,
-    kLeakablePartitions = 2000,
-    kLeakableHandles = 3000,
-    kLeakableBuiltinIcons = 4000,
-    kLeakableMenuMain = 5000,
-    kLeakableMenuAbout,
-    kLeakableMenuCleanNvram,
-    kLeakableMenuBootKicker
-};
-
 
 VOID LeakableProc (VOID *Buffer, CHAR8 *What, BOOLEAN IncludePath);
 VOID LEAKABLEPATHINIT (UINT16 LeakableObjectID);
@@ -78,24 +95,11 @@ VOID LEAKABLEPATHDEC ();
 VOID LEAKABLEPATHSETID (UINT16 ID);
 VOID LEAKABLEWITHPATH (VOID *object, CHAR8 *description);
 #define LEAKABLE(object,discription) LeakableProc(object,discription, FALSE)
+VOID LEAKABLEEXTERNALSTART (CHAR8 *description);
+VOID LEAKABLEEXTERNALSTOP ();
 
 
 INTN PoolVersion (VOID *Pointer);
-#define _END_
-#define _ENDIGNORE_
-/*
-find:
-^([ \t].*;)[ \t]*$
-
-replace:
-\1 _END_
-
-make sure none of these exist:
-^\s*(if|while|else|(for\s*\([^;]*;[^;]*;))[^{;]+; _END_
-*/
-
-extern CHAR8 *_F;
-extern UINTN _L;
 
 UINTN
 GetNextAllocationNum ();
@@ -110,11 +114,31 @@ DumpAllocations (
 VOID
 ReMapPoolFunctions ();
 
+StackFrame *
+GetCallStack (
+    IN UINTN StackAddress,
+    IN UINTN IpAddress,
+    IN UINTN FramePointerAddress,
+    BOOLEAN DoFullScan,
+    LoadedImageRec *LoadedImages
+);
+
+VOID
+FreeCallStack (
+    StackFrame *Stack
+);
+
 VOID
 DumpCallStack (
     StackFrame *Stack,
-    BOOLEAN DoFullScan
+    BOOLEAN DoDumpLoadedImages
 );
+
+VOID
+AdjustStackMax ();
+
+VOID
+SetStackScanType (BOOLEAN DoFullScan);
 
 #else
 
@@ -126,12 +150,18 @@ DumpCallStack (
 #define LEAKABLEPATHSETID(...)
 #define LEAKABLEWITHPATH(...)
 #define LEAKABLE(...)
+#define LEAKABLEEXTERNALSTART(...)
+#define LEAKABLEEXTERNALSTOP(...)
+
 
 #define PoolVersion(...) (0)
-#define _END_
-#define _ENDIGNORE_
 
+#define GetNextAllocationNum(...) (0)
+#define DumpAllocations(...)
+#define ReMapPoolFunctions(...)
 #define DumpCallStack(...)
+#define AdjustStackMax(...)
+#define SetStackScanType(...)
 
 #endif
 

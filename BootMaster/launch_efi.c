@@ -159,11 +159,13 @@ BOOLEAN IsValidLoader(EFI_FILE *RootDir, CHAR16 *FileName) {
         return TRUE;
     } // if
 
+    LEAKABLEEXTERNALSTART ("IsValidLoader Open");
     Status = refit_call5_wrapper(
         RootDir->Open, RootDir,
         &FileHandle, FileName,
         EFI_FILE_MODE_READ, 0
     );
+    LEAKABLEEXTERNALSTOP ();
 
     if (EFI_ERROR (Status)) {
         LOG(4, LOG_THREE_STAR_MID,
@@ -219,23 +221,12 @@ EFI_STATUS StartEFIImage (
     CHAR16            *EspGUID           = NULL;
     EFI_GUID           SystemdGuid       = SYSTEMD_GUID_VALUE;
 
-    #if REFIT_DEBUG > 0
-    CHAR16 *MsgStr = NULL;
-    #endif
+
+    MsgLog ("[ StartEFIImage Title:'%s' FileName:'%s'\n", ImageTitle, Filename);
 
     if (!Volume) {
         ReturnStatus = EFI_INVALID_PARAMETER;
-
-        #if REFIT_DEBUG > 0
-        MsgStr = PoolPrint (
-            L"'%r' while starting EFI image!!",
-            ReturnStatus
-        );
-        LOG(1, LOG_LINE_NORMAL, L"ERROR: %s", MsgStr);
-        MsgLog ("* ERROR: %s\n\n", MsgStr);
-        MyFreePool (&MsgStr);
-        #endif
-
+        MsgLog ("] StartEFIImage Volume is NULL\n");
         return ReturnStatus;
     }
 
@@ -253,7 +244,7 @@ EFI_STATUS StartEFIImage (
         L"Starting '%s' ... Load Options:- '%s'",
         ImageTitle,
         FullLoadOptions ? FullLoadOptions : L""
-        );
+    );
 
     if (Verbose) {
         Print(
@@ -263,10 +254,10 @@ EFI_STATUS StartEFIImage (
         );
     }
 
-        ReturnStatus = Status = EFI_LOAD_ERROR;  // in case the list is empty
-        // Some EFIs crash if attempting to load driver for invalid architecture, so
-        // protect for this condition; but sometimes Volume comes back NULL, so provide
-        // an exception. (TODO: Handle this special condition better.)
+    ReturnStatus = Status = EFI_LOAD_ERROR;  // in case the list is empty
+    // Some EFIs crash if attempting to load driver for invalid architecture, so
+    // protect for this condition; but sometimes Volume comes back NULL, so provide
+    // an exception. (TODO: Handle this special condition better.)
     if (IsValidLoader(Volume->RootDir, Filename)) {
         DevicePath = FileDevicePath(Volume->DeviceHandle, Filename);
         // NOTE: Commented-out line below could be more efficient if file were read ahead of
@@ -277,12 +268,14 @@ EFI_STATUS StartEFIImage (
         // Status = refit_call6_wrapper(gBS->LoadImage, FALSE, SelfImageHandle, DevicePath,
         //                              ImageData, ImageSize, &ChildImageHandle);
         // ReturnStatus = Status;
+        LEAKABLEEXTERNALSTART ("StartEFIImage LoadImage");
         Status = refit_call6_wrapper(
             gBS->LoadImage, FALSE,
             SelfImageHandle, DevicePath,
             NULL, 0,
             &ChildImageHandle
         );
+        LEAKABLEEXTERNALSTOP ();
         MyFreePool (&DevicePath);
         ReturnStatus = Status;
 
@@ -377,13 +370,12 @@ EFI_STATUS StartEFIImage (
     // close open file handles
     UninitRefitLib();
 
-    LOG(3, LOG_LINE_NORMAL, L"Running '%s'", ImageTitle);
-
-    _ENDIGNORE_
+    MsgLog("[ StartImage '%s'\n", ImageTitle);
+    LEAKABLEEXTERNALSTART ("StartEFIImage StartImage");
     Status = refit_call3_wrapper(gBS->StartImage, ChildImageHandle, NULL, NULL);
+    LEAKABLEEXTERNALSTOP ();
     ReturnStatus = Status;
-    _END_
-
+    MsgLog("] StartImage\n");
     // control returns here when the child image calls Exit()
     ErrorInfo = PoolPrint (L"returned from %s", ImageTitle);
     CheckError (ReturnStatus, ErrorInfo);
@@ -410,10 +402,7 @@ bailout:
         FinishExternalScreen();
     }
 
-    #if REFIT_DEBUG > 0
-    LOG(1, LOG_LINE_NORMAL, L"Load '%s' ... %r", ImageTitle, ReturnStatus);
-    #endif
-
+    MsgLog ("] StartEFIImage ... %r\n", ReturnStatus);
     return ReturnStatus;
 } // EFI_STATUS StartEFIImage()
 

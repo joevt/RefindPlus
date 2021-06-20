@@ -38,6 +38,17 @@
 #include "lib.h"
 #include "asm.h"
 #include "MemLogLib.h"
+#include "BootLog.h"
+
+
+UINTN DebugLoopVar = 1;
+
+VOID DebugLoop () {
+    while (DebugLoopVar++) {
+        AsciiPrint ("%d\n", DebugLoopVar);
+    }
+}
+
 
 #if REFIT_DEBUG > 0
 
@@ -175,7 +186,7 @@ LogPoolProc (
             if (maxLogProc > maxReported) {
                 maxReported = maxLogProc;
                 if (maxReported > 1) {
-                    MsgLog("LogPoolProc maxReported:%d\n", maxReported);
+                    MsgLog ("LogPoolProc maxReported:%d\n", maxReported);
                 }
             }
         }
@@ -190,7 +201,7 @@ LogPoolProc (
         switch (result) {
             case 1:
                 if (always) {
-                    MsgLog("%a:%d &%a:%p->%p size:%d type:%d\n", f, l, StrPointer, AtPointer, Pointer, head1size, head1->Type);
+                    MsgLog ("%a:%d &%a:%p->%p size:%d type:%d\n", f, l, StrPointer, AtPointer, Pointer, head1size, head1->Type);
                 }
                 else {
                     DoDumpCStack = FALSE;
@@ -202,7 +213,7 @@ LogPoolProc (
                 break;
             case 2:
                 if (always) {
-                    MsgLog("%a:%d &%a:%p->%p size:%d type:%d\n", f, l, StrPointer, AtPointer, Pointer, head2size, head2->Type);
+                    MsgLog ("%a:%d &%a:%p->%p size:%d type:%d\n", f, l, StrPointer, AtPointer, Pointer, head2size, head2->Type);
                 }
                 else {
                     DoDumpCStack = FALSE;
@@ -213,17 +224,17 @@ LogPoolProc (
                 result = head2size;
                 break;
             case -1: case -2: case -3: case -5: case -7: case -9: case -10:
-                MsgLog("%a:%d &%a:%p->%p problem:%d head:%016lX%016lX%016lX tail:%016lX%016lX\n", f, l, StrPointer, AtPointer, Pointer,
+                MsgLog ("%a:%d &%a:%p->%p problem:%d head:%016lX%016lX%016lX tail:%016lX%016lX\n", f, l, StrPointer, AtPointer, Pointer,
                     result, ((UINTN*)head1)[0], ((UINTN*)head1)[1], ((UINTN*)head1)[2], ((UINTN*)tail1)[0], ((UINTN*)tail1)[1]
                 );
                 break;
             case -4: case -6: case -8: case -11: case -12:
-                MsgLog("%a:%d &%a:%p->%p problem:%d head:%016lX%016lX%016lX tail:%016lX%016lX\n", f, l, StrPointer, AtPointer, Pointer,
+                MsgLog ("%a:%d &%a:%p->%p problem:%d head:%016lX%016lX%016lX tail:%016lX%016lX\n", f, l, StrPointer, AtPointer, Pointer,
                     result, ((UINTN*)head2)[0], ((UINTN*)head2)[1], ((UINTN*)head2)[2], ((UINTN*)tail2)[0], ((UINTN*)tail2)[1]
                 );
                 break;
             case -13: case -14: default:
-                MsgLog("%a:%d &%a:%p->%p problem:%d head:%016lX%016lX%016lX\n", f, l, StrPointer, AtPointer, Pointer,
+                MsgLog ("%a:%d &%a:%p->%p problem:%d head:%016lX%016lX%016lX\n", f, l, StrPointer, AtPointer, Pointer,
                     result, ((UINTN*)head1)[0], ((UINTN*)head1)[1], ((UINTN*)head1)[2]
                 );
                 break;
@@ -262,6 +273,14 @@ typedef enum {
     kAllocationTypeLocateHandleBuffer
 } AllocationTypeEnum;
 
+// Some functions we do not override at all, but we can surround calls to them with LEAKABLEEXTERNALSTART and LEAKABLEEXTERNALSTOP to set a flag.
+#define LEAKABLEEXTERNALMAX 20
+UINTN LEAKABLEEXTERNALNEXT = 0;
+static CHAR8* LEAKABLEEXTERNALSTACK[LEAKABLEEXTERNALMAX];
+
+typedef enum {
+    kAllocFlagExternal = 1
+} AllocFlags;
 
 typedef struct Allocation Allocation;
 struct Allocation {
@@ -270,34 +289,84 @@ struct Allocation {
     UINTN Size;                  // Size of allocation (should be less than pool size).
     UINTN Num;                   // When it was allocated - it is a number that increases with each allocation, not a time stamp (maybe we should use a timestamp)
     AllocationTypeEnum Type;     // What function did the allocation (usually kAllocationTypeAllocatePool).
+    UINTN AllocFlags;            // AllocFlags
     CHAR8 *What;                 // A constant string used for allocations that are allowed to leak once (must be a literal - or we could use another enumeration or a string compare (strings need a destructor if pool allocated))
     UINT16 *Path;                // A path describing multiple objects in a list or tree that is allowed to leak once (for the entire list or tree). See LEAKABLEPATH.
     StackFrame *Stack;           // The callstack when the allocation was created, used to help find the source of leaks.
 };
 
-typedef enum {
-    ImageFlag_ProtocolLoaded = 1,
-    ImageFlag_Include = 2,
-    ImageFlag_NameLoaded = 4
-} LoadedImageFlags;
-
-
-typedef struct {
-    EFI_HANDLE Handle;
-    EFI_LOADED_IMAGE *Protocol;
-    CHAR16 *Name;
-    UINTN Flags;
-} LoadedImageRec;
-
 UINTN StackMin = 0;
 UINTN StackMax = 0;
 
-EFI_ALLOCATE_POOL OrigAllocatePool;
-EFI_FREE_POOL OrigFreePool;
-EFI_OPEN_PROTOCOL_INFORMATION OrigOpenProtocolInformation;
-EFI_PROTOCOLS_PER_HANDLE OrigProtocolsPerHandle;
-EFI_LOCATE_HANDLE_BUFFER OrigLocateHandleBuffer;
-EFI_CONNECT_CONTROLLER OrigConnectController;
+EFI_ALLOCATE_POOL OrigAllocatePool = NULL;
+EFI_FREE_POOL OrigFreePool = NULL;
+EFI_OPEN_PROTOCOL_INFORMATION OrigOpenProtocolInformation = NULL;
+EFI_PROTOCOLS_PER_HANDLE OrigProtocolsPerHandle = NULL;
+EFI_LOCATE_HANDLE_BUFFER OrigLocateHandleBuffer = NULL;
+EFI_CONNECT_CONTROLLER OrigConnectController = NULL;
+
+#define LEAKS_FULL_SCAN 0
+#define LEAKS_FILL_FREED 0
+#define LEAKS_FILL_STACK 1
+#define LEAKS_INVALIDATE_TAIL 1
+#define LEAKS_DUMP_STACK 1
+#define LEAKS_SHOW_PATHS 0
+#define LEAKS_DO_CLEANUP 1
+
+
+VOID
+CheckStackPointer () {
+    if (StackMin && AsmGetStackPointerAddress() < (StackMin + 8000)) {
+        DebugLoop ();
+    }
+}
+
+
+VOID *
+LeaksAllocatePool (
+    UINTN Size
+) {
+    CheckStackPointer ();
+    VOID * Result = NULL;
+    if (OrigAllocatePool) {
+        OrigAllocatePool (EfiBootServicesData, Size, &Result);
+    }
+    else {
+        STATIC BOOLEAN DidDumpMessage = FALSE;
+        if (!DidDumpMessage) {
+            DidDumpMessage = TRUE;
+            MsgLog ("Allocation Error: OrigAllocatePool is not set yet\n");
+            //DumpCallStack (NULL, FALSE);
+        }
+        Result = AllocatePool (Size);
+    }
+    return Result;
+}
+
+
+// Only use this on objects created by LeaksAllocatePool
+VOID
+LeaksFreePool (
+    VOID **Buffer
+) {
+    CheckStackPointer ();
+    if (Buffer) {
+        if (OrigFreePool) {
+            OrigFreePool (*Buffer);
+            *Buffer = NULL;
+        }
+        else {
+            STATIC BOOLEAN DidDumpMessage = FALSE;
+            if (!DidDumpMessage) {
+                DidDumpMessage = TRUE;
+                MsgLog ("Allocation Error: OrigFreePool is not set yet\n");
+                //DumpCallStack (NULL, FALSE);
+            }
+            MyFreePool (Buffer);
+        }
+    }
+}
+
 
 STATIC Allocation* AllocationsList = NULL;
 STATIC Allocation* FreeAllocations = NULL;
@@ -310,6 +379,7 @@ CHAR16 *
 AllocationTypeString (
         AllocationTypeEnum AllocationType
 ) {
+    CheckStackPointer ();
     switch (AllocationType) {
         case kAllocationTypeAllocatePool            : return L"AllocatePoolEx";
         case kAllocationTypeFindLoadedImageFileName : return L"FindLoadedImageFileName";
@@ -327,15 +397,22 @@ RemoveAllocation (
     Allocation *prev,
     Allocation *a
 ) {
-    //#warn should FreeCallStack
-    // FreeCallStack (a->Stack);
-    a->Stack = NULL;
+    CheckStackPointer ();
     prev->Next = a->Next;
-    a->Next = FreeAllocations;
+    if (a->Stack) {
+        #if LEAKS_DO_CLEANUP
+        FreeCallStack (a->Stack);
+        #endif
+        a->Stack = NULL;
+    }
     if (a->Path) {
-        //OrigFreePool (a->Path);
+        #if LEAKS_DO_CLEANUP
+        LeaksFreePool ((VOID **) &a->Path);
+        #endif
         a->Path = NULL;
     }
+
+    a->Next = FreeAllocations;
     FreeAllocations = a;
 }
 
@@ -345,7 +422,9 @@ VOID
 GetStackLimits (
     IN UINTN FramePointerAddress
 ) {
+    CheckStackPointer ();
     if (FramePointerAddress < StackMin || FramePointerAddress >= StackMax) {
+        MsgLog ("[ GetStackLimits\n");
         UINTN MemoryMapSize = 0;
         EFI_MEMORY_DESCRIPTOR *MemoryMap = NULL;
         UINTN MapKey;
@@ -362,7 +441,7 @@ GetStackLimits (
         );
         
         do {
-            MemoryMap = AllocatePool (MemoryMapSize);
+            MemoryMap = LeaksAllocatePool (MemoryMapSize);
             if (MemoryMap) {
                 Status = gBS->GetMemoryMap (
                     &MemoryMapSize,
@@ -395,13 +474,11 @@ GetStackLimits (
                 }
                 MemoryMapEntry = NEXT_MEMORY_DESCRIPTOR (MemoryMapEntry, DescriptorSize);
             }
-            FreePool (MemoryMap);
+            LeaksFreePool ((VOID **) &MemoryMap);
         }
+        MsgLog ("] GetStackLimits\n");
     }
 }
-
-
-STATIC UINTN DumpingStack = 0;
 
 
 STATIC
@@ -413,7 +490,6 @@ AddAllocation(
 );
 
 
-// from 
 /**
   Function to find the file name associated with a LoadedImageProtocol.
 
@@ -428,66 +504,91 @@ FindLoadedImageFileName (
   IN EFI_LOADED_IMAGE_PROTOCOL *LoadedImage
   )
 {
-  EFI_GUID                       *NameGuid;
-  EFI_STATUS                     Status;
-  EFI_FIRMWARE_VOLUME2_PROTOCOL  *Fv;
-  VOID                           *Buffer;
-  UINTN                          BufferSize;
-  UINT32                         AuthenticationStatus;
+    EFI_GUID                       *NameGuid;
+    EFI_STATUS                     Status;
+    EFI_FIRMWARE_VOLUME2_PROTOCOL  *Fv2;
+    EFI_FIRMWARE_VOLUME_PROTOCOL   *Fv1;
+    VOID                           *Buffer = NULL;
+    UINTN                          BufferSize = 0;
+    UINT32                         AuthenticationStatus;
+  
+    if ((LoadedImage == NULL) || (LoadedImage->FilePath == NULL)) {
+        return NULL;
+    }
+  
+    NameGuid = EfiGetNameGuidFromFwVolDevicePathNode((MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *)LoadedImage->FilePath);
+    if (NameGuid) {
+        /*        */ {
+            //
+            // Get the FirmwareVolume2Protocol of the device handle that this image was loaded from.
+            //
+            Status = gBS->HandleProtocol (LoadedImage->DeviceHandle, &gEfiFirmwareVolume2ProtocolGuid, (VOID**) &Fv2);
+            //MsgLog ("gBS->HandleProtocol gEfiFirmwareVolume2ProtocolGuid Status:%r Fv2:%p\n", Status, Fv2);
+  
+            //
+            // FirmwareVolume2Protocol is PI, and is not required to be available.
+            //
+            if (!EFI_ERROR (Status)) {
+                //
+                // Read the user interface section of the image.
+                //
+                BufferSize = 0;
+                Status = Fv2->ReadSection(Fv2, NameGuid, EFI_SECTION_USER_INTERFACE, 0, &Buffer, &BufferSize, &AuthenticationStatus);
+                //MsgLog ("Fv2->ReadSection Status:%r Name:%s\n", Status, Buffer ? Buffer : L"NULL");
+            }
+        }
+    
+        if (!Buffer) {
+            //
+            // Get the FirmwareVolume1Protocol of the device handle that this image was loaded from.
+            //
+            Status = gBS->HandleProtocol (LoadedImage->DeviceHandle, &gEfiFirmwareVolumeProtocolGuid, (VOID**) &Fv1);
+            //MsgLog ("gBS->HandleProtocol gEfiFirmwareVolume1ProtocolGuid Status:%r Fv1:%p\n", Status, Fv1);
+        
+            if (!EFI_ERROR (Status)) {
+                //
+                // Read the user interface section of the image.
+                //
+                BufferSize = 0;
+                Status = Fv1->ReadSection(Fv1, NameGuid, EFI_SECTION_USER_INTERFACE, 0, &Buffer, &BufferSize, &AuthenticationStatus);
+                //MsgLog ("Fv1->ReadSection Status:'%r' Guid:%g Name:%s\n", Status, NameGuid, Buffer ? Buffer : L"NULL");
+            }
+        }
 
-  if ((LoadedImage == NULL) || (LoadedImage->FilePath == NULL)) {
-    return NULL;
-  }
+        if (!Buffer) {
+            Buffer = PoolPrint (L"%g", NameGuid);
+        }
+    }
+    else {
+        Buffer = ConvertDevicePathToText (LoadedImage->FilePath, TRUE, TRUE);
+        if (!Buffer) {
+            Buffer = PoolPrint (L"Handle%p", LoadedImage->DeviceHandle);
+        }
+    }
 
-  NameGuid = EfiGetNameGuidFromFwVolDevicePathNode((MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *)LoadedImage->FilePath);
+    if (Buffer) {
+        // need to keep track of allocations made by Fv->ReadSection so we don't get an error when we free the allocation
+        AddAllocation (Buffer, BufferSize, kAllocationTypeFindLoadedImageFileName);
+    }
 
-  if (NameGuid == NULL) {
-    return NULL;
-  }
-
-  //
-  // Get the FirmwareVolume2Protocol of the device handle that this image was loaded from.
-  //
-  Status = gBS->HandleProtocol (LoadedImage->DeviceHandle, &gEfiFirmwareVolume2ProtocolGuid, (VOID**) &Fv);
-
-  //
-  // FirmwareVolume2Protocol is PI, and is not required to be available.
-  //
-  if (EFI_ERROR (Status)) {
-    return NULL;
-  }
-
-  //
-  // Read the user interface section of the image.
-  //
-  Buffer = NULL;
-  BufferSize = 0;
-  Status = Fv->ReadSection(Fv, NameGuid, EFI_SECTION_USER_INTERFACE, 0, &Buffer, &BufferSize, &AuthenticationStatus);
-
-  if (EFI_ERROR (Status)) {
-    return NULL;
-  }
-  AddAllocation (Buffer, BufferSize, kAllocationTypeFindLoadedImageFileName);
-
-  //
-  // ReadSection returns just the section data, without any section header. For
-  // a user interface section, the only data is the file name.
-  //
-  return Buffer;
+    //
+    // ReadSection returns just the section data, without any section header. For
+    // a user interface section, the only data is the file name.
+    //
+    return Buffer;
 }
 
 
 STATIC
 CHAR16 *
 GetLoadedImageName (
-    EFI_LOADED_IMAGE *LoadedImage
+    EFI_LOADED_IMAGE_PROTOCOL *LoadedImage
 ) {
+    CheckStackPointer ();
     CHAR16 *FileName = NULL;
     if (LoadedImage) {
+        //DumpHexString (64 /* GetDevicePathSize (LoadedImage->FilePath) */, LoadedImage->FilePath); // GetDevicePathSize may crash for paths in EFI 1.1 that use type 0xFF
         FileName = FindLoadedImageFileName (LoadedImage);
-        if (FileName == NULL) {
-            FileName = ConvertDevicePathToText (LoadedImage->FilePath, TRUE, TRUE);
-        }
     }
     return FileName;
 }
@@ -498,14 +599,17 @@ VOID
 LoadedImageGetProtocol (
     LoadedImageRec *LoadedImage
 ) {
+    CheckStackPointer ();
     if (LoadedImage) {
-        if (!(LoadedImage->Flags & ImageFlag_ProtocolLoaded)) {
+        if (!(LoadedImage->ImageFlags & ImageFlag_ProtocolLoaded)) {
+            //MsgLog ("[ gBS->HandleProtocol Handle:%p\n", LoadedImage->Handle);
             gBS->HandleProtocol (
                 LoadedImage->Handle,
                 &gEfiLoadedImageProtocolGuid,
                 (VOID**)&LoadedImage->Protocol
             );
-            LoadedImage->Flags |= ImageFlag_ProtocolLoaded;
+            //MsgLog ("] gBS->HandleProtocol Protocol:%p\n", LoadedImage->Protocol);
+            LoadedImage->ImageFlags |= ImageFlag_ProtocolLoaded;
         }
     }
 }
@@ -516,11 +620,12 @@ VOID
 LoadedImageGetName (
     LoadedImageRec *LoadedImage
 ) {
+    CheckStackPointer ();
     if (LoadedImage) {
-        if (!(LoadedImage->Flags & ImageFlag_NameLoaded)) {
+        if (!(LoadedImage->ImageFlags & ImageFlag_NameLoaded)) {
             LoadedImageGetProtocol (LoadedImage);
             LoadedImage->Name = GetLoadedImageName (LoadedImage->Protocol);
-            LoadedImage->Flags |= ImageFlag_NameLoaded;
+            LoadedImage->ImageFlags |= ImageFlag_NameLoaded;
         }
     }
 }
@@ -534,6 +639,7 @@ GetLoadedImageInfoForAddress (
     CHAR16 **Name,
     UINTN *Offset
 ) {
+    CheckStackPointer ();
     BOOLEAN result = FALSE;
     if (Name) *Name = NULL;
     if (Offset) *Offset = 0;
@@ -543,10 +649,14 @@ GetLoadedImageInfoForAddress (
             LoadedImageGetProtocol (LoadedImage);
             if (LoadedImage->Protocol) {
                 if (p >= LoadedImage->Protocol->ImageBase && p < LoadedImage->Protocol->ImageBase + LoadedImage->Protocol->ImageSize) {
-                    LoadedImageGetName (LoadedImage);
-                    *Name = LoadedImage->Name;
-                    *Offset = p - LoadedImage->Protocol->ImageBase;
-                    LoadedImage->Flags |= ImageFlag_Include;
+                    if (Name) {
+                        LoadedImageGetName (LoadedImage);
+                        *Name = LoadedImage->Name;
+                    }
+                    if (Offset) {
+                        *Offset = p - LoadedImage->Protocol->ImageBase;
+                    }
+                    LoadedImage->ImageFlags |= ImageFlag_Include;
                     result = TRUE;
                     break;
                 }
@@ -565,6 +675,9 @@ GetCallStack (
     BOOLEAN DoFullScan,
     LoadedImageRec *LoadedImages
 ) {
+    CheckStackPointer ();
+    DoingAlloc++;
+
     StackFrame *CallStack = NULL;
 
     INTN FrameCount;
@@ -582,7 +695,7 @@ GetCallStack (
     for (Pass = 0; Pass < 2; Pass++) {
         if (Pass) {
             AllocFrameCount = FrameCount;
-            OrigAllocatePool (EfiBootServicesData, FrameCount * sizeof(*CallStack), (VOID **)&CallStack);
+            CallStack = LeaksAllocatePool (FrameCount * sizeof(*CallStack));
             if (!CallStack)
                 break;
         }
@@ -623,9 +736,9 @@ GetCallStack (
                         CurrentFramePointerAddress >= StackMax 
                     )
                 )
-                || (mMemLogPause && FrameCount > 99)
+                || (BootLogIsPaused () && FrameCount > 200)
             ) {
-                if (mMemLogPause && FrameCount > 99) {
+                if (BootLogIsPaused () && FrameCount > 200) {
                     dumpit = TRUE;
                 }
                 CurrentIpAddress = 0;
@@ -721,25 +834,49 @@ GetCallStack (
         }
     } // if DoFullScan
 
-    if (dumpit && !DumpingStack) {
+    if (dumpit) {
         MsgLog ("[ dumpit\n");
         DumpCallStack (CallStack, FALSE);
         MsgLog ("] dumpit\n");
     }
-    
+
+    DoingAlloc--;
     return CallStack;
 } // GetCallStack
 
 
-STATIC
 VOID
 FreeCallStack (
     StackFrame *Stack
 ) {
+    CheckStackPointer ();
     if (Stack) {
-        OrigFreePool (Stack);
+        LeaksFreePool ((VOID **) &Stack);
     }
 }
+
+
+STATIC BOOLEAN STACK_SCAN_TYPE = FALSE;
+VOID
+SetStackScanType (
+    BOOLEAN DoFullScan
+) {
+    CheckStackPointer ();
+    STACK_SCAN_TYPE = DoFullScan;
+}
+
+
+STATIC
+LoadedImageRec *
+GetLoadedImages(
+);
+
+
+STATIC
+VOID
+FreeLoadedImages (
+    LoadedImageRec *LoadedImages
+);
 
 
 STATIC
@@ -749,22 +886,50 @@ AddAllocation(
     UINTN Size,
     AllocationTypeEnum Type
 ) {
+    CheckStackPointer ();
+    if (DoingAlloc) {
+        return;
+    }
+
     Allocation *prev = (Allocation *)&AllocationsList;
     Allocation *a = AllocationsList;
     while (a) {
         if (a->Where == Buffer) {
-            MsgLog ("Allocation Error: already allocated %p (%d) (was %d) Type:%s (was %s)\n", Buffer, Size, a->Size, AllocationTypeString (Type), AllocationTypeString (a->Type));
-            if (a->Size == Size && Type != kAllocationTypeAllocatePool && a->Type == kAllocationTypeAllocatePool) {
+            if (
+                (
+                    a->Size == Size
+                    // Ignore size for kAllocationTypeFindLoadedImageFileName because we
+                    // don't know the allocation size for that type in all cases.
+                    || Type == kAllocationTypeFindLoadedImageFileName
+                )
+                && Type != kAllocationTypeAllocatePool
+                && a->Type == kAllocationTypeAllocatePool
+            ) {
+                // If the size is also the same and the previous type was kAllocationTypeAllocatePool
+                // and the new type is not, then we just want to change the type.
+                a->Type = Type;
                 return;
             }
             else {
+                // if the previous type was not kAllocationTypeAllocatePool but the new type is,
+                // then it probably means we missed a free so don't report it.
+                BOOLEAN reportit = !(Type == kAllocationTypeAllocatePool && a->Type != kAllocationTypeAllocatePool);
+                if (reportit) {
+                    MsgLog ("Allocation Error: already allocated %p (%d) (was %d) Type:%s (was %s)\n",
+                        Buffer, Size, a->Size, AllocationTypeString (Type), AllocationTypeString (a->Type)
+                    );
+                }
                 StackFrame *PrevousStack = a->Stack;
                 a->Stack = NULL;
                 RemoveAllocation (prev, a);
-                DumpCallStack (NULL, FALSE);
-                MsgLog ("Previous:\n");
-                if (PrevousStack) DumpCallStack (PrevousStack, FALSE);
-                // FreeCallStack (PrevousStack);
+                if (reportit) {
+                    DumpCallStack (NULL, FALSE);
+                    MsgLog ("Previous:\n");
+                    if (PrevousStack) DumpCallStack (PrevousStack, FALSE);
+                }
+                #if LEAKS_DO_CLEANUP
+                FreeCallStack (PrevousStack);
+                #endif
             }
             break;
         }
@@ -777,37 +942,60 @@ AddAllocation(
         FreeAllocations = a->Next;
     }
     else {
-        a = NULL;
-        OrigAllocatePool (EfiBootServicesData, sizeof(Allocation), (VOID **)&a);
+        a = LeaksAllocatePool (sizeof(Allocation));
     }
     if (a) {
         a->Where = Buffer;
         a->Num = NextAllocationNum++;
         a->Size = Size;
         a->Type = Type;
-        a->What = NULL;
+        a->What = LEAKABLEEXTERNALNEXT ? LEAKABLEEXTERNALSTACK[LEAKABLEEXTERNALNEXT - 1] : NULL;
+        a->AllocFlags = 0;
+        if (a->What) {
+            a->AllocFlags |= kAllocFlagExternal;
+        }
         a->Path = NULL;
         a->Stack = NULL;
-        if (1 || !mMemLogPause) {
-            if (!DoingAlloc++) {
-                a->Stack = GetCallStack (AsmGetStackPointerAddress (), AsmGetCurrentIpAddress (), AsmGetFramePointerAddress (), FALSE, NULL);
+        if (!(a->AllocFlags & kAllocFlagExternal)) {
+            if (!DoingAlloc) {
+                DoingAlloc++;
+                LoadedImageRec *LoadedImages = NULL;
+                if (STACK_SCAN_TYPE) {
+                    LoadedImages = GetLoadedImages ();
+                }
+                a->Stack = GetCallStack (AsmGetStackPointerAddress (), AsmGetCurrentIpAddress (), AsmGetFramePointerAddress (), STACK_SCAN_TYPE, LoadedImages);
+                if (STACK_SCAN_TYPE) {
+                    FreeLoadedImages (LoadedImages);
+                }
+                DoingAlloc--;
             }
-            DoingAlloc--;
         }
+
         a->Next = AllocationsList;
         AllocationsList = a;
     }
 }
 
 
+extern VOID *MyMemSet(VOID *s, int c, UINTN n);
+
+
 STATIC
 LoadedImageRec *
 GetLoadedImages(
 ) {
+    CheckStackPointer ();
     LoadedImageRec *LoadedImages = NULL;
+
+    BootLogPause ();
+    UINTN OldInAlloc = DoingAlloc++;
+    
+    if (!OldInAlloc) MsgLog ("[ GetLoadedImages\n");
+
     UINTN LoadedImagesCount = 0;
     EFI_HANDLE *LoadedImagesHandles = NULL;
-    BOOLEAN DoOrig;
+
+    //if (!OldInAlloc) MsgLog ("[ LocateHandleBuffer\n");
     EFI_STATUS Status = gBS->LocateHandleBuffer (
         ByProtocol,
         &gEfiLoadedImageProtocolGuid,
@@ -815,30 +1003,28 @@ GetLoadedImages(
         &LoadedImagesCount,
         &LoadedImagesHandles
     );
+    //if (!OldInAlloc) MsgLog ("] LocateHandleBuffer\n");
+
     if (!EFI_ERROR(Status) && LoadedImagesHandles) {
-        if (DoingAlloc) {
-            OrigAllocatePool (EfiBootServicesData, (LoadedImagesCount + 1) * sizeof(LoadedImageRec), (VOID **)&LoadedImages);
-            DoOrig = TRUE;
-        }
-        else {
-            LoadedImages = AllocateZeroPool ((LoadedImagesCount + 1) * sizeof(LoadedImageRec));
-            DoOrig = FALSE;
-        }
+        UINTN LoadedImagesSize = (LoadedImagesCount + 1) * sizeof(LoadedImageRec);
+        LoadedImages = LeaksAllocatePool (LoadedImagesSize);
         if (LoadedImages) {
+            MyMemSet(LoadedImages, 0, LoadedImagesSize);
             UINTN LoadedImageIndex;
             for (LoadedImageIndex = 0; LoadedImageIndex < LoadedImagesCount; LoadedImageIndex++) {
                 LoadedImages[LoadedImageIndex].Handle = LoadedImagesHandles[LoadedImageIndex];
             }
         }
-        if (DoOrig) {
-            OrigFreePool (LoadedImagesHandles);
-        }
-        else {
-            MyFreePool (&LoadedImagesHandles);
-        }
+        MyFreePool (&LoadedImagesHandles);
     }
+
+    if (!OldInAlloc) MsgLog ("] GetLoadedImages %p\n", LoadedImages);
+
+    DoingAlloc--;
+    BootLogResume ();
+
     return LoadedImages;
-}
+} // GetLoadedImages
 
 
 STATIC
@@ -846,11 +1032,12 @@ VOID
 DumpLoadedImages (
     LoadedImageRec *LoadedImages
 ) {
+    CheckStackPointer ();
     if (LoadedImages) {
         LoadedImageRec *LoadedImage;
         BOOLEAN NeedTitle = TRUE;
         for (LoadedImage = LoadedImages; LoadedImage->Handle; LoadedImage++) {
-            if (LoadedImage->Flags & ImageFlag_Include) {
+            if (LoadedImage->ImageFlags & ImageFlag_Include) {
                 if (NeedTitle) {
                     MsgLog ("Loaded Images:\n");
                     NeedTitle = FALSE;
@@ -868,7 +1055,7 @@ DumpLoadedImages (
             }
         } // for LoadedImage
     } // if LoadedImagesHandles
-}
+} // DumpLoadedImages
 
 
 STATIC
@@ -876,6 +1063,7 @@ VOID
 FreeLoadedImages (
     LoadedImageRec *LoadedImages
 ) {
+    CheckStackPointer ();
     if (LoadedImages) {
         LoadedImageRec *LoadedImage;
         for (LoadedImage = LoadedImages; LoadedImage->Handle; LoadedImage++) {
@@ -883,9 +1071,12 @@ FreeLoadedImages (
                 MyFreePool (&LoadedImage->Name);
             }
         } // for LoadedImage
-        MyFreePool (&LoadedImages);
+        LeaksFreePool ((VOID **) &LoadedImages);
     } // if LoadedImagesHandles
 }
+
+
+STATIC UINTN DumpingStack = 0;
 
 
 STATIC
@@ -894,46 +1085,60 @@ DumpOneCallStack (
     StackFrame *Stack,
     LoadedImageRec *LoadedImages
 ) {
-    if (Stack) {
-        if (!DumpingStack++) {
-            UINTN FrameCount;
-            VOID *p;
-            MsgLog ("Call Stack:\n");
-            for (FrameCount = 0; (p = (VOID*)Stack[FrameCount].IPAddress); FrameCount++) {
-                CHAR16 *Name;
-                UINTN Offset;
-                GetLoadedImageInfoForAddress (p, LoadedImages, &Name, &Offset);
-                /*
-                Subtract one from the return address so that it points into the call 
-                instruction. This gives better results for `dwarfdump --lookup`.
-                */
-                #if 0
-                if (Name) {
-                    MsgLog ("  %2d: %8p %8p %p = %s+0x%X\n", FrameCount, Stack[FrameCount].StackAddress, Stack[FrameCount].FramePointerAddress, p - 1, Name, Offset - 1);
-                }
-                else {
-                    MsgLog ("  %2d: %8p %8p %p\n", FrameCount, Stack[FrameCount].StackAddress, Stack[FrameCount].FramePointerAddress, p - 1);
-                }
-                #else
-                if (Name) {
-                    MsgLog ("  %2d: %p = %s+0x%X\n", FrameCount, p - 1, Name, Offset - 1);
-                }
-                else {
-                    MsgLog ("  %2d: %p\n", FrameCount, p - 1);
-                }
-                #endif
-            }
-            DumpingStack--;
-        } // if !DumpingStack
-    } // if Stack
+    CheckStackPointer ();
+    if (!Stack) {
+        return;
+    }
+        
+    if (DumpingStack >= 4) {
+        return;
+    }
+
+    DumpingStack++;
+    UINTN FrameCount;
+    VOID *p;
+    MsgLog ("Call Stack:\n");
+    for (FrameCount = 0; (p = (VOID*)Stack[FrameCount].IPAddress); FrameCount++) {
+        CHAR16 *Name;
+        UINTN Offset;
+        GetLoadedImageInfoForAddress (p, LoadedImages, &Name, &Offset);
+        /*
+        Subtract one from the return address so that it points into the call 
+        instruction. This gives better results for `dwarfdump --lookup`.
+        */
+        #if 1
+        if (Name) {
+            MsgLog ("  %2d: %8p %8p %p = %s+0x%X\n", FrameCount, Stack[FrameCount].StackAddress, Stack[FrameCount].FramePointerAddress, p - 1, Name, Offset - 1);
+        }
+        else {
+            MsgLog ("  %2d: %8p %8p %p\n", FrameCount, Stack[FrameCount].StackAddress, Stack[FrameCount].FramePointerAddress, p - 1);
+        }
+        #else
+        if (Name) {
+            MsgLog ("  %2d: %p = %s+0x%X\n", FrameCount, p - 1, Name, Offset - 1);
+        }
+        else {
+            MsgLog ("  %2d: %p\n", FrameCount, p - 1);
+        }
+        #endif
+    }
+    DumpingStack--;
 }
 
 
 VOID
 DumpCallStack (
     StackFrame *Stack,
-    BOOLEAN DoFullScan
+    BOOLEAN DoDumpLoadedImages
 ) {
+    CheckStackPointer ();
+    #if LEAKS_DUMP_STACK
+    if (DumpingStack >= 4) {
+        return;
+    }
+
+    DumpingStack++;
+
     if (Stack) {
         MsgLog ("[ DumpCallStack %p\n", Stack);
     }
@@ -941,18 +1146,25 @@ DumpCallStack (
         MsgLog ("[ DumpCallStack CurrentStack\n");
     }
     LoadedImageRec *LoadedImages = GetLoadedImages ();
+    
+    BOOLEAN DoFreeStack = FALSE;
     if (!Stack) {
-        Stack = GetCallStack (AsmGetStackPointerAddress (), AsmGetCurrentIpAddress (), AsmGetFramePointerAddress (), DoFullScan, LoadedImages);
+        Stack = GetCallStack (AsmGetStackPointerAddress (), AsmGetCurrentIpAddress (), AsmGetFramePointerAddress (), STACK_SCAN_TYPE, LoadedImages);
+        DoFreeStack = TRUE;
     }
     DumpOneCallStack (Stack, LoadedImages);
-    if (DoFullScan) {
+    if (DoDumpLoadedImages) {
         DumpLoadedImages (LoadedImages);
     }
     FreeLoadedImages (LoadedImages);
-    FreeCallStack (Stack);
+    if (DoFreeStack) {
+        FreeCallStack (Stack);
+    }
     MsgLog ("] DumpCallStack\n");
-}
 
+    DumpingStack--;
+    #endif
+}
 
 
 STATIC
@@ -960,6 +1172,7 @@ UINTN
 GetCallStackLength (
     StackFrame *Stack
 ) {
+    CheckStackPointer ();
     UINTN FrameCount = 0;
     if (Stack) {
         VOID *p;
@@ -970,13 +1183,60 @@ GetCallStackLength (
 }
 
 
+STATIC
+VOID
+SetStackMax (
+    UINTN NewStackMax
+) {
+    CheckStackPointer ();
+    MsgLog ("StackMax changed from %p to %p before allocation %d\n", StackMax, NewStackMax, NextAllocationNum);
+    StackMax = NewStackMax;
+}
+
+
+VOID
+AdjustStackMax (
+) {
+    CheckStackPointer ();
+    BootLogPause ();
+    MsgLog ("[ AdjustStackMax\n");
+    LoadedImageRec *LoadedImages = GetLoadedImages ();
+    StackFrame * Stack = GetCallStack (AsmGetStackPointerAddress (), AsmGetCurrentIpAddress (), AsmGetFramePointerAddress (), FALSE, NULL);
+    if (Stack) {
+        DumpOneCallStack (Stack, LoadedImages);
+        UINTN StackLength = GetCallStackLength (Stack);
+        if (StackLength) {
+            SetStackMax (Stack[StackLength - 1].StackAddress + sizeof(VOID*));
+        }
+        FreeCallStack (Stack);
+    }
+    FreeLoadedImages (LoadedImages);
+    
+    #if LEAKS_FILL_STACK
+        VOID *e = (VOID *)(AsmGetStackPointerAddress () & ~7);
+        UINTN *p = (UINTN *)StackMin;
+        MsgLog ("Filling %p to %p\n", p, e);
+        while ((VOID *)p < e) *p++ = 0x4041424344454660; // 0x0000006b006a0069; // "ijk"
+        UINT8 *q = (VOID *)p;
+        while ((VOID *)q < e) *q++ = 0x69;
+    #endif
+    
+    MsgLog ("] AdjustStackMax\n");
+    BootLogResume ();
+    SetStackScanType(LEAKS_FULL_SCAN);
+}
+
+
 VOID
 DumpLeakablePath (
     UINT16 *Path
 ) {
-    UINTN PathIndex;
-    for (PathIndex = 1; PathIndex <= Path[0]; PathIndex++) {
-        MsgLog ("%d ", Path[PathIndex]);
+    CheckStackPointer ();
+    if (Path) {
+        UINTN PathIndex;
+        for (PathIndex = 1; PathIndex <= Path[0]; PathIndex++) {
+            MsgLog ("%d ", Path[PathIndex]);
+        }
     }
 }
 
@@ -988,12 +1248,13 @@ BOOLEAN LeakablePathsAreEqual (
     UINT16 *bPath,
     BOOLEAN noPathIsAnyPath
 ) {
+    CheckStackPointer ();
     return (
         (bWhat == aWhat)
         && (
             (noPathIsAnyPath && (!aPath || !bPath))
             || (!aPath && !bPath)
-            || (aPath && bPath && aPath[0] == bPath[0] && !CompareMem(&aPath[1], &bPath[1], aPath[0] * sizeof (aPath[0])))
+            || (aPath && bPath && (aPath[0] == bPath[0]) && !CompareMem(&aPath[1], &bPath[1], aPath[0] * sizeof (aPath[0])))
         )
     );
 }
@@ -1004,50 +1265,128 @@ DumpAllocations (
     BOOLEAN ExcludeLeakable,
     UINTN MinStackLength
 ) {
+    CheckStackPointer ();
+    UINTN TypeIndex;
     UINTN MaxAllocationNum = NextAllocationNum;
+
     MsgLog ("[ DumpAllocations\n");
+
+    enum {
+        atExcludedRange     = (1 << 0), // exclude
+        atExcludedStackSize = (1 << 1), // exclude
+        atExcludedExternal  = (1 << 2), // exclude
+        atExcludedLeakable  = (1 << 3), // exclude
+        atTypeLeakable      = (1 << 4), // descriptor
+        atTotal             = (1 << 5),
+    };
+
+    UINTN TotalAllocs = 0;
+    UINTN StackLength;
+    UINTN AllocTypesSize = atTotal * sizeof(UINTN);
+    UINTN *AllocTypes = LeaksAllocatePool (AllocTypesSize);
+    if (AllocTypes) {
+        MyMemSet (AllocTypes, 0, AllocTypesSize);
+    }
+    
     LoadedImageRec *LoadedImages = GetLoadedImages ();
     Allocation *a = AllocationsList;
     while (a) {
-        if (a->Num >= MinAllocationNum && a->Num < MaxAllocationNum) {
-            BOOLEAN Found = TRUE;
-            if (ExcludeLeakable && a->What) {
-                Found = FALSE; // Report leakable allocation only if there is another occurrence.
-                Allocation *b = AllocationsList;
-                while (b) {
-                    // Report if the items are different but have the same What.
-                    if (b != a && LeakablePathsAreEqual (a->What, b->What, a->Path, b->Path, TRUE)) {
-                        // Report if neither doesn't have a path or the paths are the same.
-                        // Basically, only one item is allowed to have a What and Path combination, otherwise it's a leak.
-                        Found = TRUE;
-                        break;
-                    }
-                    a = a->Next;
+        TypeIndex = 0;
+        StackLength = GetCallStackLength (a->Stack);
+        
+        if (a->Num < MinAllocationNum || a->Num >= MaxAllocationNum) {
+            TypeIndex |= atExcludedRange;
+        }
+        if (a->Stack && StackLength < MinStackLength) {
+            TypeIndex |= atExcludedStackSize;
+        }
+        if (a->AllocFlags & kAllocFlagExternal) {
+            TypeIndex |= atExcludedExternal;
+        }
+        else if (a->What) { // use else here since externals cannot be leakables
+            TypeIndex |= atTypeLeakable;
+            TypeIndex |= atExcludedLeakable;
+            // Report leakable allocation only if there is another occurrence.
+            Allocation *b = AllocationsList;
+            while (b) {
+                // Report if the items are different but have the same What.
+                if (b != a && LeakablePathsAreEqual (a->What, b->What, a->Path, b->Path, TRUE)) {
+                    // Report if neither doesn't have a path or the paths are the same.
+                    // Basically, only one item is allowed to have a What and Path combination, otherwise it's a leak.
+                    TypeIndex &= ~atExcludedLeakable;
+                    break;
                 }
-            }
-            if (Found && GetCallStackLength (a->Stack) >= MinStackLength) {
-                MsgLog ("Allocation:%p (%d) #%d Type:%s %a%a",
-                    a->Where, a->Size, a->Num, AllocationTypeString (a->Type),
-                    a->What ? " What:" : "", a->What ? a->What : ""
-                );
-                if (a->Path) {
-                    MsgLog (" Path:");
-                    DumpLeakablePath (a->Path);
-                }
-                MsgLog ("\n");
-                DumpOneCallStack (a->Stack, LoadedImages);
+                b = b->Next;
             }
         }
+        
+        if (
+               (!(TypeIndex & atExcludedRange))
+            && (!(TypeIndex & atExcludedStackSize))
+            && (!(TypeIndex & atExcludedExternal))
+            && (!(TypeIndex & atExcludedLeakable) || !ExcludeLeakable)
+        ) {
+            MsgLog ("Allocation:%p (%d) #%d Type:%s flags:%s%s%s%s%s%s %a%a",
+                a->Where, a->Size, a->Num, AllocationTypeString (a->Type),
+                (!TypeIndex)                      ? L", Normal"              : L"",
+                (TypeIndex & atExcludedRange    ) ? L", Excluded Range"      : L"",
+                (TypeIndex & atExcludedStackSize) ? L", Excluded Stack Size" : L"",
+                (TypeIndex & atExcludedExternal ) ? L", Excluded External"   : L"",
+                (TypeIndex & atExcludedLeakable ) ? L", Excluded Leakable"   : L"",
+                (TypeIndex & atTypeLeakable     ) ? L", Leakable"            : L"",
+                a->What ? " What:" : "", a->What ? a->What : ""
+            );
+            if (a->Path) {
+                MsgLog (" Path:");
+                DumpLeakablePath (a->Path);
+            }
+            MsgLog ("\n");
+            DumpOneCallStack (a->Stack, LoadedImages);
+        }
+
+        if (AllocTypes) {
+            AllocTypes[TypeIndex]++;
+        }
+        TotalAllocs++;
+
         a = a->Next;
+    } // while
+
+    if (AllocTypes) {
+        BOOLEAN CountsTitle = TRUE;
+        for (TypeIndex = 0; TypeIndex < atTotal; TypeIndex++) {
+            if (AllocTypes[TypeIndex]) {
+                if (CountsTitle) {
+                    MsgLog ("Counts:\n");
+                    CountsTitle = FALSE;
+                }
+                MsgLog ("  %5d:%s%s%s%s%s%s\n",
+                    AllocTypes[TypeIndex],
+                    (!TypeIndex)                      ? L", Normal"              : L"",
+                    (TypeIndex & atExcludedRange    ) ? L", Excluded Range"      : L"",
+                    (TypeIndex & atExcludedStackSize) ? L", Excluded Stack Size" : L"",
+                    (TypeIndex & atExcludedExternal ) ? L", Excluded External"   : L"",
+                    (TypeIndex & atExcludedLeakable ) ? L", Excluded Leakable"   : L"",
+                    (TypeIndex & atTypeLeakable     ) ? L", Leakable"            : L""
+                );
+            }
+        }
+        LeaksFreePool ((VOID **) &AllocTypes);
     }
-    // DumpLoadedImages (LoadedImages);
+    
+    if (TotalAllocs > 0) {
+        MsgLog ("  %5d:,Total\n", TotalAllocs);
+    }
+    DumpLoadedImages (LoadedImages);
     FreeLoadedImages (LoadedImages);
+
     MsgLog ("] DumpAllocations\n");
 }
 
 
 UINTN
 GetNextAllocationNum () {
+    CheckStackPointer ();
     MsgLog ("[] GetNextAllocationNum\n");
     return NextAllocationNum;
 }
@@ -1061,25 +1400,23 @@ AllocatePoolEx (
     UINTN Size,
     VOID **Buffer
 ) {
-    //INTN OldInAlloc = DoingAlloc++;
+    CheckStackPointer ();
     EFI_STATUS Status = OrigAllocatePool (PoolType, Size, Buffer);
-    //if (!OldInAlloc)
-    {
-        //MsgLog ("[ AllocatePoolEx %p (%d)\n", Buffer, Size);
-        if (EFI_ERROR(Status)) {
-            MsgLog ("Allocation Error: cannot allocate %d\n", Size);
-            DumpCallStack (NULL, FALSE);
-        }
-        else if (Buffer && *Buffer) {
-            AddAllocation (*Buffer, Size, kAllocationTypeAllocatePool);
-        }
-        else {
-            MsgLog ("Allocation Error: buffer is null\n");
-            DumpCallStack (NULL, FALSE);
-        }
-        //MsgLog ("] AllocatePoolEx %p\n", *Buffer);
+    
+    //MsgLog ("[ AllocatePoolEx %p (%d)\n", Buffer, Size);
+    if (EFI_ERROR(Status)) {
+        MsgLog ("Allocation Error: cannot allocate %d\n", Size);
+        //DumpCallStack (NULL, FALSE);
     }
-    //DoingAlloc--;
+    else if (Buffer && *Buffer) {
+        AddAllocation (*Buffer, Size, kAllocationTypeAllocatePool);
+    }
+    else {
+        MsgLog ("Allocation Error: buffer is null\n");
+        //DumpCallStack (NULL, FALSE);
+    }
+    //MsgLog ("] AllocatePoolEx %p\n", *Buffer);
+
     return Status;
 }
 
@@ -1090,7 +1427,7 @@ EFIAPI
 FreePoolEx (
     VOID *Buffer
 ) {
-    //INTN OldInAlloc = DoingAlloc++;
+    CheckStackPointer ();
     BOOLEAN Found = FALSE;
     BOOLEAN DoDumpCStack = FALSE;
 
@@ -1130,11 +1467,13 @@ FreePoolEx (
                 }
             }
             if (size > 0) {
-                VOID *e = Buffer + size;
-                UINTN *p = Buffer;
-                while ((VOID *)p < e) *p++ = 0x0000006700660065; // "efg"
-                UINT8 *q = (VOID *)p;
-                while ((VOID *)q < e) *q++ = 0x65;
+                #if LEAKS_FILL_FREED
+                    VOID *e = Buffer + size;
+                    UINTN *p = Buffer;
+                    while ((VOID *)p < e) *p++ = 0x0000006700660065; // "efg"
+                    UINT8 *q = (VOID *)p;
+                    while ((VOID *)q < e) *q++ = 0x65;
+                #endif
             }
             if (tail1->Signature != POOL_TAIL_SIGNATURE) {
                 MsgLog ("Allocation Error: tail mismatch %p (pool:%d allocated:%d tail:%X)\n", Buffer, size, a->Size, tail1->Signature);
@@ -1154,19 +1493,24 @@ FreePoolEx (
             DoDumpCStack = TRUE;
         }
         else {
-            tail1->Signature = EFI_SIGNATURE_32('d','t','a','l'); // change the 'p' to a 'd' for "deleted"
+            #if LEAKS_INVALIDATE_TAIL
+                tail1->Signature = EFI_SIGNATURE_32('d','t','a','l'); // change the 'p' to a 'd' for "deleted"
+            #endif
         }
     }
 
-    //if (!OldInAlloc)
     {
         if (EFI_ERROR(Status)) {
             MsgLog ("Allocation Error: cannot free %p %r\n", Buffer, Status);
             DoDumpCStack = TRUE;
         }
         else if (!Found) {
-            MsgLog ("Allocation Error: attempt to free unallocated %p\n", Buffer);
-            DoDumpCStack = TRUE;
+            if (!LEAKABLEEXTERNALNEXT && !DoingAlloc) {
+                #if 1
+                MsgLog ("Allocation Error: attempt to free unallocated %p\n", Buffer);
+                DoDumpCStack = TRUE;
+                #endif
+            }
         }
         //MsgLog ("] FreePoolEx %p\n", Buffer);
     }
@@ -1175,7 +1519,6 @@ FreePoolEx (
         DumpCallStack (NULL, FALSE);
     }
 
-    //DoingAlloc--;
     return Status;
 }
 
@@ -1189,14 +1532,13 @@ OpenProtocolInformationEx (
     EFI_OPEN_PROTOCOL_INFORMATION_ENTRY **EntryBuffer,
     UINTN *EntryCount
 ) {
+    CheckStackPointer ();
     EFI_STATUS Status = OrigOpenProtocolInformation(Handle, Protocol, EntryBuffer, EntryCount);
-    //if (!DoingAlloc++)
     {
         if (!EFI_ERROR(Status) && EntryBuffer && *EntryBuffer) {
             AddAllocation (*EntryBuffer, *EntryCount * sizeof(*EntryBuffer), kAllocationTypeOpenProtocolInformation);
         }
     }
-    //DoingAlloc--;
     return Status;
 }
 
@@ -1209,14 +1551,13 @@ ProtocolsPerHandleEx (
     EFI_GUID ***ProtocolBuffer,
     UINTN *ProtocolBufferCount
 ) {
+    CheckStackPointer ();
     EFI_STATUS Status = OrigProtocolsPerHandle(Handle, ProtocolBuffer, ProtocolBufferCount);
-    //if (!DoingAlloc++)
     {
         if (!EFI_ERROR(Status) && ProtocolBuffer && *ProtocolBuffer) {
             AddAllocation (*ProtocolBuffer, *ProtocolBufferCount * sizeof(*ProtocolBuffer), kAllocationTypeProtocolsPerHandle);
         }
     }
-    //DoingAlloc--;
     return Status;
 }
 
@@ -1231,14 +1572,13 @@ LocateHandleBufferEx (
     UINTN *NoHandles,
     EFI_HANDLE **Buffer
 ) {
+    CheckStackPointer ();
     EFI_STATUS Status = OrigLocateHandleBuffer(SearchType, Protocol, SearchKey, NoHandles, Buffer);
-    //if (!DoingAlloc++)
     {
         if (!EFI_ERROR(Status) && Buffer && *Buffer) {
             AddAllocation (*Buffer, *NoHandles * sizeof(*Buffer), kAllocationTypeLocateHandleBuffer);
         }
     }
-    //DoingAlloc--;
     return Status;
 }
 
@@ -1252,14 +1592,16 @@ ConnectControllerEx (
     EFI_DEVICE_PATH_PROTOCOL *RemainingDevicePath,
     BOOLEAN Recursive
 ) {
+    CheckStackPointer ();
     MsgLog ("[ ConnectControllerEx\n");
-    UINTN MinAllocation = GetNextAllocationNum ();
 
-    mMemLogPause++;
-    EFI_STATUS Status = OrigConnectController (ControllerHandle, DriverImageHandle, RemainingDevicePath, Recursive);
-    mMemLogPause--;
+    // Probably shouldn't log to disk while connecting controllers
+    BootLogPause ();
+        LEAKABLEEXTERNALSTART ("ConnectControllerEx OrigConnectController");
+            EFI_STATUS Status = OrigConnectController (ControllerHandle, DriverImageHandle, RemainingDevicePath, Recursive);
+        LEAKABLEEXTERNALSTOP ();
+    BootLogResume ();
 
-    DumpAllocations (MinAllocation, TRUE, 0);
     MsgLog ("] ConnectControllerEx ...%r\n", Status);
     return Status;
 }
@@ -1269,6 +1611,7 @@ VOID
 ReMapPoolFunctions (
     VOID
 ) {
+    CheckStackPointer ();
     #define OVERRIDE(a) do { Orig##a = gBS->a; gBS->a = a##Ex; } while (0)
         OVERRIDE(AllocatePool);
         OVERRIDE(FreePool);
@@ -1286,13 +1629,14 @@ ReMapPoolFunctions (
 // LEAKABLE functions
 
 #define LEAKABLEPATHMAXLENGTH (19)
-UINT16 LEAKABLEPATH[LEAKABLEPATHMAXLENGTH + 1]; // begins with path length
+UINT16 LEAKABLEPATH[LEAKABLEPATHMAXLENGTH + 1] = {0}; // begins with path length
 UINT16 LEAKABLEROOTOBJECTID = 0;
 
 VOID
 LEAKABLEPATHINIT (
     UINT16 LeakableObjectID
 ) {
+    CheckStackPointer ();
     if (LEAKABLEPATH[0] > 0) {
         MsgLog ("Allocation Error: Leakable Path was not done\n");
     }
@@ -1304,6 +1648,7 @@ LEAKABLEPATHINIT (
 VOID
 LEAKABLEPATHDONE (
 ) {
+    CheckStackPointer ();
     LEAKABLEPATHDEC ();
     if (LEAKABLEPATH[0] > 0) {
         MsgLog ("Allocation Error: Leakable Path is not done\n");
@@ -1313,6 +1658,7 @@ LEAKABLEPATHDONE (
 VOID
 LEAKABLEPATHINC (
 ) {
+    CheckStackPointer ();
     if (LEAKABLEPATH[0] < LEAKABLEPATHMAXLENGTH) {
         LEAKABLEPATH[0] += 1;
         LEAKABLEPATH[LEAKABLEPATH[0]] = 0;
@@ -1325,6 +1671,7 @@ LEAKABLEPATHINC (
 VOID
 LEAKABLEPATHDEC (
 ) {
+    CheckStackPointer ();
     if (LEAKABLEPATH[0] > 0) {
         LEAKABLEPATH[0]--;
     } else {
@@ -1336,12 +1683,14 @@ LEAKABLEPATHDEC (
 VOID
 LEAKABLEPATHCHECK (
 ) {
+    CheckStackPointer ();
     if (LEAKABLEPATH[0] > 0) {
         if (LEAKABLEPATH[0] == 1 && LEAKABLEPATH[1] != LEAKABLEROOTOBJECTID) {
-            MsgLog ("AllocationError: Leakable Root Object ID should not be incremented\n");
+            MsgLog ("Allocation Error: Leakable Root Object ID should not be incremented\n");
         }
     } else {
         MsgLog ("Allocation Error: Leakable Path is empty\n");
+        DumpCallStack (NULL, FALSE);
     }
 }
 
@@ -1350,6 +1699,7 @@ VOID
 LEAKABLEPATHSETID (
     UINT16 ID
 ) {
+    CheckStackPointer ();
     LEAKABLEPATHCHECK ();
     if (LEAKABLEPATH[0] > 0) {
         LEAKABLEPATH[LEAKABLEPATH[0]] = ID;
@@ -1361,11 +1711,15 @@ LEAKABLEWITHPATH (
     VOID *object,
     CHAR8 *description
 ) {
+    CheckStackPointer ();
     LEAKABLEPATHCHECK ();
 
+#if LEAKS_SHOW_PATHS
+    // show the leakable hierarchy
     DumpLeakablePath (LEAKABLEPATH);
     MsgLog (" : %8p %a\n", object, description);
-    
+#endif
+
     LeakableProc (object, description, TRUE);
 
     if (LEAKABLEPATH[0] > 0) {
@@ -1384,6 +1738,7 @@ LeakableProc (
     IN CHAR8 *What,
     IN BOOLEAN IncludePath
 ) {
+    CheckStackPointer ();
     if (!What) {
         MsgLog ("Allocation Error: Missing leakable description\n");
         return;
@@ -1405,12 +1760,11 @@ LeakableProc (
                 }
                 a->What = What;
                 if (a->Path) {
-                    OrigFreePool (a->Path);
-                    a->Path = NULL;
+                    LeaksFreePool ((VOID **) &a->Path);
                 }
                 if (IncludePath) {
                     UINTN LeakablePathSize = (LEAKABLEPATH[0]+1) * sizeof(LEAKABLEPATH[0]);
-                    OrigAllocatePool (EfiBootServicesData, LeakablePathSize, (VOID**)&a->Path);
+                    a->Path = LeaksAllocatePool (LeakablePathSize);
                     if (a->Path) {
                         CopyMem (a->Path, LEAKABLEPATH, LeakablePathSize);
                     }
@@ -1421,5 +1775,40 @@ LeakableProc (
         }
     }
 }
+
+
+VOID
+LEAKABLEEXTERNALSTART (
+    CHAR8 *description
+) {
+    CheckStackPointer ();
+    if (LEAKABLEEXTERNALNEXT >= LEAKABLEEXTERNALMAX) {
+        MsgLog ("Allocation Error: LEAKABLEEXTERNAL stack is full\n");
+        DumpCallStack (NULL, FALSE);
+        while (1) {
+        }
+    }
+    else {
+        LEAKABLEEXTERNALSTACK[LEAKABLEEXTERNALNEXT++] = description;
+        //MsgLog ("[ LEAKABLEEXTERNAL %d:%a\n", LEAKABLEEXTERNALNEXT - 1, description);
+    }
+}
+
+
+VOID
+LEAKABLEEXTERNALSTOP () {
+    CheckStackPointer ();
+    if (LEAKABLEEXTERNALNEXT == 0) {
+        MsgLog ("Allocation Error: LEAKABLEEXTERNAL stack is empty\n");
+        DumpCallStack (NULL, FALSE);
+        while (1) {
+        }
+    }
+    else {
+        //MsgLog ("] LEAKABLEEXTERNAL %d:%a\n", LEAKABLEEXTERNALNEXT - 1, LEAKABLEEXTERNALSTACK[LEAKABLEEXTERNALNEXT - 1]);
+        --LEAKABLEEXTERNALNEXT;
+    }
+}
+
 
 #endif // REFIT_DEBUG > 0

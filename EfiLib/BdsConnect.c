@@ -64,18 +64,14 @@ EFI_STATUS EFIAPI daConnectController (
     }
     //MyFreePool(&DevicePath); // DevicePath is not always a pool allocated ptr
 
-    #if 1
-    _ENDIGNORE_
+    LEAKABLEEXTERNALSTART ("daConnectController ConnectController");
     Status = gBS->ConnectController (
         ControllerHandle,
         DriverImageHandle,
         RemainingDevicePath,
         Recursive
     );
-    _END_
-    #else
-    Status = EFI_SUCCESS;
-    #endif
+    LEAKABLEEXTERNALSTOP ();
     
     MsgLog("] daConnectController ConnectController...%r\n", Status);
     return Status;
@@ -272,6 +268,10 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
 
     LOG2(2, LOG_LINE_SEPARATOR, L"", L"...\n", L"%s Device Handles to Controllers%s",
         ReLoaded ? L"Reconnect" : L"Link",
+        PostConnect ? L" (Post Connect)" : L""
+    );
+    MsgLog ("[ BdsLibConnectMostlyAllEfi%s%s\n",
+        ReLoaded ? L" (Reconnect)" : L" (Link)",
         PostConnect ? L" (Post Connect)" : L""
     );
 
@@ -600,6 +600,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
 
     MyFreePool (&AllHandleBuffer);
 
+    MsgLog ("] BdsLibConnectMostlyAllEfi\n");
     return Status;
 } // EFI_STATUS BdsLibConnectMostlyAllEfi()
 

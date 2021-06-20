@@ -32,6 +32,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include "MemLogLib.h"
 #include <Library/DebugLib.h>
+#include <Library/UefiLib.h>
 
 #include <Library/IoLib.h>
 #include <Library/PciLib.h>
@@ -40,12 +41,23 @@
 
 
 // Struct for holding mem buffer.
+
+#define MAX_CALLBACKS 5
+
+
+typedef struct {
+    INTN              cbPause;
+    CHAR8             *cbPos;
+    MEM_LOG_CALLBACK  Callback;
+} MEM_LOG_CB_INFO;
+
 typedef struct {
   CHAR8             *Buffer;
   CHAR8             *Cursor;
-  CHAR8             *cbPos;
   UINTN             BufferSize;
-  MEM_LOG_CALLBACK  Callback;
+  
+  UINTN             CallbacksCount;
+  MEM_LOG_CB_INFO   Callbacks[MAX_CALLBACKS];
 
   /// Start debug ticks.
   UINT64            TscStart;
@@ -64,8 +76,6 @@ MEM_LOG   *mMemLog = NULL;
 
 // Buffer for debug time.
 CHAR8     mTimingTxt[32];
-
-INTN      mMemLogPause = 0;
 
 /**
   Inits mem log.
@@ -138,6 +148,24 @@ GetTiming(VOID)
 }
 
 
+UINTN
+EFIAPI
+StandardDebugMemLogCallback (
+    IN INTN DebugMode,
+    IN CHAR8 *LastMessage
+) {
+  // Write to standard debug device also
+  LEAKABLEEXTERNALSTART ("StandardDebugMemLogCallback DebugPrint");
+  DebugPrint(DEBUG_INFO, "%a", LastMessage);
+  LEAKABLEEXTERNALSTOP ();
+  return AsciiStrLen (LastMessage);
+}
+
+
+UINTN mMemLogPause = 0;
+UINTN mMemLogMessageNumber = 0;
+UINTN mMemLogSkippedMessages = 0;
+
 
 /**
   Inits mem log.
@@ -157,9 +185,15 @@ MemLogInit (
   CHAR8           InitError[50];
 
   if (mMemLog != NULL) {
-    return  EFI_SUCCESS;
+    return EFI_SUCCESS;
+  }
+  
+  if (mMemLogPause) {
+    return EFI_NOT_READY;
   }
 
+  mMemLogPause++;
+  
   // Try to use existing MEM_LOG
   Status = gBS->LocateProtocol (&mMemLogProtocolGuid, NULL, (VOID **) &mMemLog);
   if (Status == EFI_SUCCESS && mMemLog != NULL) {
@@ -172,11 +206,15 @@ MemLogInit (
   if (mMemLog == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
+  LEAKABLE (mMemLog, "MemLogInit mMemLog");
   mMemLog->BufferSize = MEM_LOG_INITIAL_SIZE;
-  mMemLog->Buffer     = AllocateZeroPool (MEM_LOG_INITIAL_SIZE);
-  mMemLog->Cursor     = mMemLog->Buffer;
-  mMemLog->cbPos      = mMemLog->Buffer;
-  mMemLog->Callback   = NULL;
+  mMemLog->Buffer = AllocateZeroPool (MEM_LOG_INITIAL_SIZE);
+  if (mMemLog->Buffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+  LEAKABLE (mMemLog->Buffer, "mMemLog->Buffer");
+  mMemLog->Cursor = mMemLog->Buffer;
+  SetMemLogCallback (StandardDebugMemLogCallback);
 
   // Calibrate TSC for timings
   InitError[0]='\0';
@@ -282,12 +320,13 @@ MemLogInit (
       mMemLog,
       NULL
   );
+  mMemLogPause--;
 
-// Show Notice if Required
-if (InitError[0] != '\0') {
-    MemLog(FALSE, 1, "INFO: Could Not Calibrate ACPI PM Timer\n");
-    MemLog(FALSE, 1, "      %a\n\n", InitError);
-}
+  // Show Notice if Required
+  if (InitError[0] != '\0') {
+      MemLog(FALSE, 1, "INFO: Could Not Calibrate ACPI PM Timer\n");
+      MemLog(FALSE, 1, "      %a\n\n", InitError);
+  }
 
   return Status;
 }
@@ -309,44 +348,67 @@ MemLogVA (
   IN  VA_LIST       Marker
   )
 {
-  EFI_STATUS      Status;
   UINTN           DataWritten;
   STATIC INTN     mLogIndent = 0;
+  UINTN           cbIndex;
+  
+  mMemLogMessageNumber++;
 
-  if (Format == NULL) {
+  if (mMemLogPause) {
+    mMemLogSkippedMessages++;
     return;
   }
 
-  Status = MemLogInit ();
-  if (EFI_ERROR (Status)) {
-      return;
+  if (Format == NULL) {
+    mMemLogSkippedMessages++;
+    return;
   }
 
+  EFI_STATUS Status = MemLogInit ();
+  if (EFI_ERROR (Status)) {
+    mMemLogSkippedMessages++;
+    return;
+  }
+  
   // Check if buffer can accept MEM_LOG_MAX_LINE_SIZE chars.
   // Increase buffer if not.
   if ((UINTN)(mMemLog->Cursor - mMemLog->Buffer) + MEM_LOG_MAX_LINE_SIZE > mMemLog->BufferSize) {
-      UINTN Offset;
-      UINTN cbOffset;
-      // not enough place for max line - make buffer bigger
-      // but not too big (if something gets out of control)
-      if (mMemLog->BufferSize + MEM_LOG_INITIAL_SIZE > MEM_LOG_MAX_SIZE) {
-      // Out of resources!
-        return;
-      }
-      Offset = mMemLog->Cursor - mMemLog->Buffer;
-      cbOffset = mMemLog->cbPos - mMemLog->Buffer;
-      mMemLog->Buffer = ReallocatePool(
-          mMemLog->BufferSize, mMemLog->BufferSize + MEM_LOG_INITIAL_SIZE,
-          mMemLog->Buffer
-      );
-      if (mMemLog->Buffer == NULL) {
-          return;
-      }
-      LEAKABLE (mMemLog->Buffer, "mMemLog->Buffer");
-      mMemLog->BufferSize += MEM_LOG_INITIAL_SIZE;
-      mMemLog->Cursor = mMemLog->Buffer + Offset;
-      mMemLog->cbPos = mMemLog->Buffer + cbOffset;
+
+    // Pause all callbacks before resizing the buffer.
+    mMemLogPause++;
+    for (cbIndex = 0; cbIndex < mMemLog->CallbacksCount; cbIndex++) {
+      mMemLog->Callbacks[cbIndex].cbPause++;
     }
+
+    // not enough place for max line - make buffer bigger
+    // but not too big (if something gets out of control)
+    if (mMemLog->BufferSize + MEM_LOG_INITIAL_SIZE > MEM_LOG_MAX_SIZE) {
+      // Out of resources!
+      mMemLogSkippedMessages++;
+      return;
+    }
+
+    CHAR8 * oldBuffer = mMemLog->Buffer;
+    mMemLog->Buffer = ReallocatePool(
+      mMemLog->BufferSize, mMemLog->BufferSize + MEM_LOG_INITIAL_SIZE,
+      mMemLog->Buffer
+    );
+    if (mMemLog->Buffer == NULL) {
+      mMemLogSkippedMessages++;
+      return;
+    }
+    mMemLog->BufferSize += MEM_LOG_INITIAL_SIZE;
+    mMemLog->Cursor = mMemLog->Buffer + (mMemLog->Cursor - oldBuffer);
+
+    // Adjust all call back position pointers and resume.
+    for (cbIndex = 0; cbIndex < mMemLog->CallbacksCount; cbIndex++) {
+      mMemLog->Callbacks[cbIndex].cbPos = mMemLog->Buffer + (mMemLog->Callbacks[cbIndex].cbPos - oldBuffer);
+      mMemLog->Callbacks[cbIndex].cbPause--;
+    }
+    mMemLogPause--;
+ 
+    LEAKABLE (mMemLog->Buffer, "mMemLog->Buffer");
+  }
 
   BOOLEAN OutputIndent = FALSE;
   // Add log to buffer
@@ -354,11 +416,17 @@ MemLogVA (
     // Write timing only when starting a new line
     if ((mMemLog->Buffer[0] == '\0') || (mMemLog->Cursor[-1] == '\n')) {
       OutputIndent = TRUE;
+      
       DataWritten = AsciiSPrint(
-          mMemLog->Cursor,
-          mMemLog->BufferSize - (mMemLog->Cursor - mMemLog->Buffer),
+        mMemLog->Cursor,
+        mMemLog->BufferSize - (mMemLog->Cursor - mMemLog->Buffer),
+        #if 1
           "%a  ",
           GetTiming ()
+        #else
+          "%5d  ",
+          mMemLogMessageNumber
+        #endif
       );
       mMemLog->Cursor += DataWritten;
     }
@@ -411,16 +479,20 @@ MemLogVA (
   );
   mMemLog->Cursor += DataWritten;
 
-  if (!mMemLogPause) {
-    // Pass this last message to callback if defined
-    if (mMemLog->Callback != NULL) {
-      mMemLog->Callback(DebugMode, mMemLog->cbPos);
+  for (cbIndex = 0; cbIndex < mMemLog->CallbacksCount; cbIndex++) {
+    if (!PauseMemLogCallback (cbIndex)) {
+      // Pass this last message to callback if defined
+      if (mMemLog->Callbacks[cbIndex].Callback != NULL) {
+        UINTN BytesWritten;
+        while (
+            mMemLog->Callbacks[cbIndex].cbPos < mMemLog->Cursor
+            && (BytesWritten = mMemLog->Callbacks[cbIndex].Callback (DebugMode, mMemLog->Callbacks[cbIndex].cbPos))
+        ) {
+          mMemLog->Callbacks[cbIndex].cbPos += BytesWritten;
+        }
+      }
     }
-
-    // Write to standard debug device also
-    DebugPrint(DEBUG_INFO, mMemLog->cbPos);
-    
-    mMemLog->cbPos = mMemLog->Cursor;
+    ResumeMemLogCallback (cbIndex);
   }
 } // MemLogVA
 
@@ -465,9 +537,7 @@ GetMemLogBuffer (
   VOID
   )
 {
-  EFI_STATUS        Status;
-
-  Status = MemLogInit ();
+  EFI_STATUS Status = MemLogInit ();
   if (EFI_ERROR (Status)) {
       return NULL;
   }
@@ -485,9 +555,7 @@ GetMemLogLen (
   VOID
   )
 {
-  EFI_STATUS        Status;
-
-  Status = MemLogInit ();
+  EFI_STATUS Status = MemLogInit ();
   if (EFI_ERROR (Status)) {
       return 0;
   }
@@ -498,19 +566,70 @@ GetMemLogLen (
 /**
   Sets callback that will be called when message is added to mem log.
  **/
-VOID
+INTN
 EFIAPI
 SetMemLogCallback (
   MEM_LOG_CALLBACK  Callback
   )
 {
-  EFI_STATUS        Status;
+  EFI_STATUS Status = MemLogInit ();
+  if (EFI_ERROR (Status)) {
+      return -1;
+  }
+  UINTN NewCallbackIndex = mMemLog->CallbacksCount;
+  if (NewCallbackIndex < MAX_CALLBACKS) {
+    mMemLog->CallbacksCount++;
+    mMemLog->Callbacks[NewCallbackIndex].cbPos = mMemLog->Buffer;
+    mMemLog->Callbacks[NewCallbackIndex].cbPause = 0;
+    mMemLog->Callbacks[NewCallbackIndex].Callback = Callback;
+  }
+  return NewCallbackIndex;
+}
 
-  Status = MemLogInit ();
+BOOLEAN
+MemLogCallbackIsPaused (
+  INTN CallbackIndex
+)
+{
+  INTN OldPause = 0;
+  EFI_STATUS Status = MemLogInit ();
+  if (EFI_ERROR (Status)) {
+      return OldPause;
+  }
+  if (CallbackIndex >= 0) {
+    OldPause = mMemLog->Callbacks[CallbackIndex].cbPause;
+  }
+  return OldPause > 0;
+}
+
+INTN
+PauseMemLogCallback (
+  INTN CallbackIndex
+)
+{
+  INTN OldPause = 0;
+  EFI_STATUS Status = MemLogInit ();
+  if (EFI_ERROR (Status)) {
+      return OldPause;
+  }
+  if (CallbackIndex >= 0) {
+    OldPause = mMemLog->Callbacks[CallbackIndex].cbPause++;
+  }
+  return OldPause;
+}
+
+VOID
+ResumeMemLogCallback (
+  INTN CallbackIndex
+)
+{
+  EFI_STATUS Status = MemLogInit ();
   if (EFI_ERROR (Status)) {
       return;
   }
-  mMemLog->Callback = Callback;
+  if (CallbackIndex >= 0) {
+    mMemLog->Callbacks[CallbackIndex].cbPause--;
+  }
 }
 
 /**
@@ -520,9 +639,7 @@ UINT64
 EFIAPI
 GetMemLogTscTicksPerSecond (VOID)
 {
-  EFI_STATUS        Status;
-
-  Status = MemLogInit ();
+  EFI_STATUS Status = MemLogInit ();
   if (EFI_ERROR (Status)) {
       return 0;
   }

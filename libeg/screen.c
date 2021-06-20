@@ -359,13 +359,13 @@ EFI_STATUS GopSetModeAndReconnectTextOut (
         return EFI_UNSUPPORTED;
     }
 
-    _ENDIGNORE_
+    LEAKABLEEXTERNALSTART ("GopSetModeAndReconnectTextOut SetMode");
     Status = refit_call2_wrapper(
         GOPDraw->SetMode,
         GOPDraw,
         ModeNumber
     );
-    _END_
+    LEAKABLEEXTERNALSTOP ();
     LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Switch to GOP Mode[%d] ...%r", ModeNumber, Status);
 
     return Status;

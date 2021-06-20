@@ -246,7 +246,9 @@ EFI_STATUS FinishInitRefitLib (
     }
 
     if (!EFI_ERROR(Status)) {
+        LEAKABLEEXTERNALSTART ("FinishInitRefitLib Open");
         Status = refit_call5_wrapper(SelfRootDir->Open, SelfRootDir, &SelfDir, SelfDirPath, EFI_FILE_MODE_READ, 0);
+        LEAKABLEEXTERNALSTOP ();
         if (CheckFatalError (Status, L"while opening our installation directory")) {
             Status = EFI_LOAD_ERROR;
         }
@@ -405,16 +407,12 @@ VOID UninitRefitLib (
     UninitVolumes();
 
     if (SelfDir != NULL) {
-        _ENDIGNORE_
         refit_call1_wrapper(SelfDir->Close, SelfDir);
-        _END_
         SelfDir = NULL;
     }
 
     if (SelfRootDir != NULL) {
-       _ENDIGNORE_
        refit_call1_wrapper(SelfRootDir->Close, SelfRootDir);
-        _END_
        SelfRootDir = NULL;
     }
     MsgLog ("] UninitRefitLib\n");
@@ -473,12 +471,14 @@ EFI_STATUS FindVarsDir (
     EFI_FILE_HANDLE  EspRootDir;
 
     if (gVarsDir == NULL) {
+        LEAKABLEEXTERNALSTART ("FindVarsDir Open");
         Status = refit_call5_wrapper(
             SelfDir->Open, SelfDir,
             &gVarsDir, L"vars",
             EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE | EFI_FILE_MODE_CREATE,
             EFI_FILE_DIRECTORY
         );
+        LEAKABLEEXTERNALSTOP ();
 
         LOG(1, LOG_LINE_NORMAL,
             L"Locate/Create Emulated NVRAM in Installation Folder for RefindPlus-Specific Items ... %r",
@@ -2286,6 +2286,7 @@ BOOLEAN FileExists (
     EFI_FILE_HANDLE TestFile;
 
     if (BaseDir != NULL) {
+        LEAKABLEEXTERNALSTART ("FileExists Open");
         Status = refit_call5_wrapper(
             BaseDir->Open, BaseDir,
             &TestFile,
@@ -2293,6 +2294,7 @@ BOOLEAN FileExists (
             EFI_FILE_MODE_READ,
             0
         );
+        LEAKABLEEXTERNALSTOP ();
         if (Status == EFI_SUCCESS) {
             refit_call1_wrapper(TestFile->Close, TestFile);
             return TRUE;
@@ -2324,11 +2326,13 @@ EFI_STATUS DirNextEntry (
         }
 
         for (IterCount = 0; ; IterCount++) {
+            LEAKABLEEXTERNALSTART ("DirNextEntry Read");
             Status = refit_call3_wrapper(
                 Directory->Read, Directory,
                 &BufferSize,
                 Buffer
             );
+            LEAKABLEEXTERNALSTOP ();
 
             if (Status != EFI_BUFFER_TOO_SMALL || IterCount >= 4) {
                 break;
@@ -2359,7 +2363,6 @@ EFI_STATUS DirNextEntry (
 
         if (EFI_ERROR (Status)) {
             MyFreePool (&Buffer);
-            Buffer = NULL;
             break;
         }
 
@@ -2368,7 +2371,6 @@ EFI_STATUS DirNextEntry (
         if (BufferSize == 0) {
             // end of directory listing
             MyFreePool (&Buffer);
-            Buffer = NULL;
             break;
         }
 
@@ -2408,11 +2410,13 @@ VOID DirIterOpen (
         DirIter->CloseDirHandle = FALSE;
     }
     else {
+        LEAKABLEEXTERNALSTART ("DirIterOpen Open");
         DirIter->LastStatus = refit_call5_wrapper(
             BaseDir->Open, BaseDir,
             &(DirIter->DirHandle), RelativePath,
             EFI_FILE_MODE_READ, 0
         );
+        LEAKABLEEXTERNALSTOP ();
         DirIter->CloseDirHandle = EFI_ERROR (DirIter->LastStatus) ? FALSE : TRUE;
     }
     DirIter->LastFileInfo = NULL;
@@ -2483,7 +2487,6 @@ BOOLEAN DirIterNext (
     CHAR16  *OnePattern;
 
     MyFreePool (&DirIter->LastFileInfo);
-    DirIter->LastFileInfo = NULL;
 
     if (EFI_ERROR (DirIter->LastStatus)) {
         // stop iteration

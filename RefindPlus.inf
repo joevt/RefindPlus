@@ -165,6 +165,7 @@
   gEfiDiskIoProtocolGuid                        # PROTOCOL CONSUMES
   gEfiExtScsiPassThruProtocolGuid               ## PROTOCOL SOMETIMES_CONSUMES
   gEfiFirmwareVolume2ProtocolGuid               # PROTOCOL CONSUMES
+  gEfiFirmwareVolumeProtocolGuid                # PROTOCOL CONSUMES
   gEfiGraphicsOutputProtocolGuid                # PROTOCOL SOMETIMES_CONSUMES
   gEfiHiiFontProtocolGuid                       # PROTOCOL CONSUMES
   gEfiLegacy8259ProtocolGuid					## PROTOCOL SOMETIMES_CONSUMES

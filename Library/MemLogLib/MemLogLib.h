@@ -15,9 +15,7 @@
 
 
 /** Callback that can be installed to be called when some message is printed with MemLog() or MemLogVA(). **/
-typedef VOID (EFIAPI *MEM_LOG_CALLBACK) (IN INTN DebugMode, IN CHAR8 *LastMessage);
-
-extern INTN mMemLogPause;
+typedef UINTN (EFIAPI *MEM_LOG_CALLBACK) (IN INTN DebugMode, IN CHAR8 *LastMessage);
 
 /**
   Prints a log message to memory buffer.
@@ -81,12 +79,40 @@ GetMemLogLen (
 
 /**
   Sets callback that will be called when message is added to mem log.
+  Returns a callback index.
  **/
-VOID
+INTN
 EFIAPI
 SetMemLogCallback (
   MEM_LOG_CALLBACK  Callback
   );
+
+
+/**
+  Check if a callback is paused.
+ **/
+BOOLEAN
+MemLogCallbackIsPaused (
+  INTN CallbackIndex
+);
+
+
+/**
+  Pauses a callback - messages are still added to the mem log.
+ **/
+INTN
+PauseMemLogCallback (
+  INTN CallbackIndex
+);
+
+
+/**
+  Resumes a callback - messages that were added to the mem log will be output after the next message is added.
+ **/
+VOID
+ResumeMemLogCallback (
+  INTN CallbackIndex
+);
 
 
 /**
