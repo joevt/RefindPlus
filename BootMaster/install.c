@@ -17,6 +17,7 @@
  */
 
 #include "global.h"
+#include "icns.h"
 #include "lib.h"
 #include "leaks.h"
 #include "screenmgt.h"
@@ -111,6 +112,7 @@ static ESP_LIST * FindAllESPs (VOID) {
         {L"Select a destination and press Enter or", TRUE},
         {L"press Esc to return to main menu without changes", TRUE}
     };
+    CopyFromPoolImage_PI_ (&InstallMenuSrc.TitleImage_PI_, BuiltinIcon (BUILTIN_ICON_FUNC_INSTALL));
 
     LOG(2, LOG_LINE_NORMAL, L"Prompting user to select an ESP for installation");
 
@@ -921,6 +923,8 @@ UINTN PickOneBootOption (IN BOOT_ENTRY_LIST *Entries, IN OUT UINTN *BootOrderNum
         {L"Select an option and press Enter to make it the default, press '-' or", TRUE},
         {L"Delete to delete it, or Esc to return to main menu without changes", TRUE}
     };
+    CopyFromPoolImage_PI_ (&PickOneMenuSrc.TitleImage_PI_, BuiltinIcon (BUILTIN_ICON_FUNC_BOOTORDER));
+
     if (AllowGraphicsMode) {
         Style = GraphicsMenuStyle;
     }
@@ -1030,7 +1034,7 @@ VOID ManageBootorder (VOID) {
     UINTN           BootNum = 0, Operation;
     CHAR16          *Name, *Message;
 
-    LOG(1, LOG_LINE_NORMAL, L"Managing boot order list");
+    MsgLog ("[ ManageBootorder\n");
 
     Entries = FindBootOrderEntries();
     Operation = PickOneBootOption (Entries, &BootNum);
@@ -1040,14 +1044,16 @@ VOID ManageBootorder (VOID) {
         DeleteInvalidBootEntries();
         Message = PoolPrint (L"Boot%04x has been deleted.", BootNum);
         DisplaySimpleMessage (L"Information", Message);
-         MyFreePool (&Name);
-         MyFreePool (&Message);
+        MyFreePool (&Name);
+        MyFreePool (&Message);
     }
     if (Operation == EFI_BOOT_OPTION_MAKE_DEFAULT) {
         SetBootDefault (BootNum);
         Message = PoolPrint (L"Boot%04x is now the default EFI boot option.", BootNum);
         DisplaySimpleMessage (L"Information", Message);
-         MyFreePool (&Message);
+        MyFreePool (&Message);
     }
     DeleteBootOrderEntries (Entries);
+
+    MsgLog ("] ManageBootorder\n");
 } // VOID ManageBootorder()
