@@ -1233,7 +1233,9 @@ VOID ScanVolumeBootcode (
                 if (Status == EFI_NO_MEDIA) {
                     MediaCheck = TRUE;
                 }
-                MsgLog ("\n");
+                if (EFI_ERROR (Status)) {
+                    MsgLog ("\n");
+                }
                 CheckError (Status, L"Found While Reading Boot Sector on Volume Below");
             }
             #endif
@@ -1245,13 +1247,15 @@ VOID ScanVolumeBootcode (
 VOID SetVolumeBadgeIcon (
     REFIT_VOLUME *Volume
 ) {
+    MsgLog ("[ SetVolumeBadgeIcon '%s'\n", GetPoolStr (&Volume->VolName));
+
     if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_BADGES) {
-        LOG(2, LOG_LINE_NORMAL, L"VolumeBadge Config Setting is 'Hidden'");
+        MsgLog ("] SetVolumeBadgeIcon Hidden\n");
         return;
     }
 
     if (Volume == NULL) {
-        LOG(2, LOG_LINE_NORMAL, L"NULL Volume!!");
+        MsgLog ("] SetVolumeBadgeIcon NULL Volume!!\n");
         return;
     }
 
@@ -1272,6 +1276,7 @@ VOID SetVolumeBadgeIcon (
             case DISK_KIND_NET     : CopyFromPoolImage_PI_ (&Volume->VolBadgeImage_PI_, BuiltinIcon (BUILTIN_ICON_VOL_NET     )); break;
         } // switch()
     }
+    MsgLog ("] SetVolumeBadgeIcon %sFound\n", GetPoolImage (&Volume->VolBadgeImage) ? L"" : L"Not ");
 } // VOID SetVolumeBadgeIcon()
 
 // Return a string representing the input size in IEEE-1541 units.
@@ -1429,7 +1434,7 @@ VOID SetPartGuidAndName (
     REFIT_VOLUME *Volume,
     EFI_DEVICE_PATH_PROTOCOL *DevicePath
 ) {
-    MsgLog ("[ SetPartGuidAndName %p(#%d)\n", Volume, Volume ? Volume->ReferenceCount : -1);
+    //MsgLog ("[ SetPartGuidAndName %p(#%d)\n", Volume, Volume ? Volume->ReferenceCount : -1);
     HARDDRIVE_DEVICE_PATH    *HdDevicePath;
     GPT_ENTRY                *PartInfo;
 
@@ -1463,7 +1468,7 @@ VOID SetPartGuidAndName (
             } // if/else (GPT disk)
         } // if (disk device)
     }
-    MsgLog ("] SetPartGuidAndName %p(#%d)\n", Volume, Volume ? Volume->ReferenceCount : -1);
+    //MsgLog ("] SetPartGuidAndName %p(#%d)\n", Volume, Volume ? Volume->ReferenceCount : -1);
 } // VOID SetPartGuid()
 
 // Return TRUE if NTFS boot files are found or if Volume is unreadable,
@@ -1489,7 +1494,6 @@ BOOLEAN HasWindowsBiosBootFiles (
 } // static VOID HasWindowsBiosBootFiles()
 
 VOID
-EFIAPI
 DumpHexString (
   IN UINTN        DataSize,
   IN VOID         *UserData
@@ -1530,6 +1534,7 @@ DumpHexString (
 VOID ScanVolume (
     REFIT_VOLUME *Volume
 ) {
+    //MsgLog ("[ ScanVolume\n");
     EFI_STATUS        Status;
     EFI_DEVICE_PATH  *DevicePath;
     EFI_DEVICE_PATH  *NextDevicePath;
@@ -1545,12 +1550,14 @@ VOID ScanVolume (
     );
     if (Volume->DevicePath != NULL) {
         #if REFIT_DEBUG >= 2
+        //MsgLog ("Volume->DevicePath:");
         DumpHexString (GetDevicePathSize (Volume->DevicePath), Volume->DevicePath);
         #endif
     }
 
     Volume->DiskKind = DISK_KIND_INTERNAL;  // default
 
+    //MsgLog ("Get BlockIoProtocol\n");
     // get block i/o
     Status = refit_call3_wrapper(
         gBS->HandleProtocol,
@@ -1568,15 +1575,18 @@ VOID ScanVolume (
 
     // scan for bootcode and MBR table
     Bootable = FALSE;
+    //MsgLog ("ScanVolumeBootcode\n");
     ScanVolumeBootcode (Volume, &Bootable);
 
     // detect device type
+    //MsgLog ("while DevicePath\n");
     DevicePath = Volume->DevicePath;
     while (DevicePath != NULL && !IsDevicePathEndType (DevicePath)) {
         NextDevicePath = NextDevicePathNode (DevicePath);
 
         if (DevicePathType (DevicePath) == MEDIA_DEVICE_PATH) {
-           SetPartGuidAndName (Volume, DevicePath);
+            //MsgLog ("SetPartGuidAndName\n");
+            SetPartGuidAndName (Volume, DevicePath);
         }
         if (DevicePathType (DevicePath) == MESSAGING_DEVICE_PATH &&
             (DevicePathSubType (DevicePath) == MSG_USB_DP ||
@@ -1608,6 +1618,7 @@ VOID ScanVolume (
                 sizeof (EFI_DEVICE_PATH)
             );
 
+            //MsgLog ("LocateDevicePath\n");
             // get the handle for that path
             RemainingDevicePath = DiskDevicePath;
             Status = refit_call3_wrapper(
@@ -1620,6 +1631,7 @@ VOID ScanVolume (
 
             if (!EFI_ERROR (Status)) {
                 // get the device path for later
+                //MsgLog ("HandleProtocol\n");
                 Status = refit_call3_wrapper(
                     gBS->HandleProtocol,
                     WholeDiskHandle,
@@ -1671,14 +1683,17 @@ VOID ScanVolume (
         Volume->HasBootCode = FALSE;
     }
 
+    //MsgLog ("LibOpenRoot\n");
     // open the root directory of the volume
     Volume->RootDir = LibOpenRoot (Volume->DeviceHandle);
 
+    //MsgLog ("SetFilesystemName\n");
     SetFilesystemName (Volume);
     AssignPoolStr (&Volume->VolName, GetVolumeName (Volume));
 
     if (Volume->RootDir == NULL) {
         Volume->IsReadable = FALSE;
+        //MsgLog ("] ScanVolume No Root Dir\n");
         return;
     }
     else {
@@ -1689,9 +1704,11 @@ VOID ScanVolume (
         ) {
             // VBR boot code found on NTFS, but volume is not actually bootable
             // unless there are actual boot file, so check for them....
+            //MsgLog ("HasWindowsBiosBootFiles\n");
             Volume->HasBootCode = HasWindowsBiosBootFiles (Volume);
         }
     } // if/else
+    //MsgLog ("] ScanVolume\n");
 } // ScanVolume()
 
 static
@@ -1921,7 +1938,7 @@ VOID ScanVolumes (
 
     LOG(1, LOG_LINE_SEPARATOR, L"Scanning for Volumes");
 
-    MsgLog ("[ FreeVolumes Volumes\n");
+    MsgLog ("[ FreeVolumes Volumes %d\n", VolumesCount);
     FreeVolumes (&Volumes, &VolumesCount);
     MsgLog ("] FreeVolumes Volumes\n");
     ForgetPartitionTables();
@@ -1939,10 +1956,12 @@ VOID ScanVolumes (
         goto Done;
     }
 
+/*
     LOG(3, LOG_LINE_NORMAL,
         L"Found Handles for %d Volumes",
         HandleCount
     );
+*/
 
     UuidList = AllocateZeroPool (sizeof (EFI_GUID) * HandleCount);
     if (UuidList == NULL) {
@@ -1951,10 +1970,10 @@ VOID ScanVolumes (
     }
 
     // first pass: collect information about all handles
-    MsgLog ("[ ScanVolumes first pass\n");
+    MsgLog ("[ ScanVolumes first pass [%d]\n", HandleCount);
     for (HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
         MsgLog ("[ Volumes[%d]\n", HandleIndex);
-        LOG(3, LOG_THREE_STAR_SEP, L"NEXT VOLUME %d", VolumesCount);
+        //LOG(3, LOG_THREE_STAR_SEP, L"NEXT VOLUME %d", VolumesCount);
 
         AllocateVolume (&Volume);
         if (Volume == NULL) {
@@ -1991,11 +2010,12 @@ VOID ScanVolumes (
             } // if
         } // for
 
+        //MsgLog ("AddToVolumeList\n");
         AddToVolumeList (&Volumes, &VolumesCount, Volume);
 
         if (Volume->DeviceHandle == SelfLoadedImage->DeviceHandle) {
             SelfVolSet = TRUE;
-            MsgLog ("[ SelfVolume\n");
+            MsgLog ("[ SelfVolume at %d of %d\n", HandleIndex, HandleCount);
             AssignVolume (&SelfVolume, Volume);
             MsgLog ("] SelfVolume\n");
         }
@@ -2005,6 +2025,9 @@ VOID ScanVolumes (
             DebugOneVolume(Volume, NULL, NULL);
         }
         #endif
+        
+        // since Volume started as NULL, free it if it is not NULL
+        FreeVolume (&Volume);
         
         MsgLog ("] Volumes[%d]\n", HandleIndex);
     } // for: first pass
@@ -2042,7 +2065,7 @@ VOID ScanVolumes (
             Volume->BlockIO == Volume->WholeDiskBlockIO && Volume->BlockIOOffset == 0 &&
             Volume->MbrPartitionTable != NULL
         ) {
-            MsgLog ("check MBR partition table for extended partitions\n");
+            //MsgLog ("check MBR partition table for extended partitions\n");
             MbrTable = Volume->MbrPartitionTable;
             for (PartitionIndex = 0; PartitionIndex < 4; PartitionIndex++) {
                 if (IS_EXTENDED_PART_TYPE (MbrTable[PartitionIndex].Type)) {
@@ -2056,14 +2079,14 @@ VOID ScanVolumes (
         if (Volume->BlockIO != NULL && Volume->WholeDiskBlockIO != NULL &&
             Volume->BlockIO != Volume->WholeDiskBlockIO
         ) {
-            MsgLog ("search for corresponding whole disk volume entry\n");
+            //MsgLog ("search for corresponding whole disk volume entry\n");
             for (VolumeIndex2 = 0; VolumeIndex2 < VolumesCount; VolumeIndex2++) {
                 if (Volumes[VolumeIndex2]->BlockIO == Volume->WholeDiskBlockIO &&
                     Volumes[VolumeIndex2]->BlockIOOffset == 0
                 ) {
-                    MsgLog ("[ WholeDiskVolume\n");
+                    //MsgLog ("[ WholeDiskVolume\n");
                     AssignVolume (&WholeDiskVolume, Volumes[VolumeIndex2]);
-                    MsgLog ("] WholeDiskVolume\n");
+                    //MsgLog ("] WholeDiskVolume\n");
                 }
             }
         }
@@ -2071,7 +2094,7 @@ VOID ScanVolumes (
         if (WholeDiskVolume != NULL &&
             WholeDiskVolume->MbrPartitionTable != NULL
         ) {
-            MsgLog ("check if this volume is one of the partitions in the table\n");
+            //MsgLog ("check if this volume is one of the partitions in the table\n");
             // check if this volume is one of the partitions in the table
             MbrTable = WholeDiskVolume->MbrPartitionTable;
             SectorBuffer1 = AllocatePool (512);
@@ -2165,16 +2188,13 @@ static
 VOID GetVolumeBadgeIcons (
     VOID
 ) {
+    MsgLog ("[ GetVolumeBadgeIcons\n");
+
     UINTN VolumeIndex;
     REFIT_VOLUME *Volume;
 
-    #if REFIT_DEBUG > 0
-    BOOLEAN LoopOnce = FALSE;
-    LOG(1, LOG_LINE_THIN_SEP, L"Setting VolumeBadges for Volumes");
-    #endif
-
     if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_BADGES) {
-        LOG(1, LOG_LINE_NORMAL, L"'HideUI Badges' Config Setting is Active");
+        MsgLog ("] GetVolumeBadgeIcons Hidden\n");
         return;
     }
 
@@ -2188,36 +2208,27 @@ VOID GetVolumeBadgeIcons (
         }
 
         if (Volume->IsReadable) {
-            LOG(2, LoopOnce ? LOG_STAR_HEAD_SEP : LOG_THREE_STAR_MID, L"Trying to Set VolumeBadge for '%s'", GetPoolStr (&Volume->VolName));
-
             // Set volume badge icon
             SetVolumeBadgeIcon (Volume);
-
-            #if REFIT_DEBUG > 0
-            LOG(1, LOG_LINE_NORMAL, L"VolumeBadge %sFound", GetPoolImage (&Volume->VolBadgeImage) ? L"" : L"Not ");
-            LoopOnce = TRUE;
-            #endif
         } // if Volume->IsReadable
     } // for
+
+    MsgLog ("] GetVolumeBadgeIcons\n");
 } // VOID GetVolumeBadgeIcons()
 
 VOID SetVolumeIcons (
     VOID
 ) {
+    MsgLog ("[ SetVolumeIcons\n");
+
     UINTN         VolumeIndex;
     REFIT_VOLUME *Volume;
-
-    #if REFIT_DEBUG > 0
-    BOOLEAN  LoopOnce = FALSE;
-    #endif
 
     // Set volume badge icon
     GetVolumeBadgeIcons();
 
-    LOG(1, LOG_LINE_THIN_SEP, L"Setting '.VolumeIcon' icns for Internal Volumes");
-
     if (GlobalConfig.IgnoreVolumeICNS) {
-        LOG(1, LOG_LINE_NORMAL, L"'IgnoreVolumeICNS' Config Setting is Active");
+        MsgLog ("] SetVolumeIcons IgnoreVolumeICNS\n");
         return;
     }
 
@@ -2231,7 +2242,7 @@ VOID SetVolumeIcons (
         }
 
         if (Volume->IsReadable) {
-            LOG(2, LoopOnce ? LOG_STAR_HEAD_SEP : LOG_THREE_STAR_MID, L"Trying to Set VolumeIcon for '%s'", GetPoolStr (&Volume->VolName));
+            MsgLog ("[ Volumes[%d] '%s'\n", VolumeIndex, GetPoolStr (&Volume->VolName));
 
             // load custom volume icon for internal disks if present
             if (!GetPoolImage (&Volume->VolIconImage)) {
@@ -2244,24 +2255,18 @@ VOID SetVolumeIcons (
                     ));
                 }
                 else {
-                    LOG(2, LOG_LINE_NORMAL,
-                        L"Skipped '%s' ... Not Internal Volume",
-                        GetPoolStr (&Volume->VolName)
-                    );
+                    MsgLog ("Skipped '%s' ... Not Internal Volume\n", GetPoolStr (&Volume->VolName));
                 }
             }
             else {
-                LOG(2, LOG_LINE_NORMAL,
-                    L"Skipped '%s' ... Icon Already Set",
-                    GetPoolStr (&Volume->VolName)
-                );
+                MsgLog ("Skipped '%s' ... Icon Already Set\n", GetPoolStr (&Volume->VolName));
             }
 
-            #if REFIT_DEBUG > 0
-            LoopOnce = TRUE;
-            #endif
+            MsgLog ("] Volumes[%d] '%s'\n", VolumeIndex, GetPoolStr (&Volume->VolName));
         } // if Volume->IsReadable
     } // for
+
+    MsgLog ("] SetVolumeIcons\n");
 } // VOID SetVolumeIcons()
 
 //
@@ -3030,6 +3035,14 @@ VOID EraseUint32List (
 // volume functions for maintaining reference count
 //
 
+#define DEBUG_VOLUMES 0
+
+#if DEBUG_VOLUMES == 1
+#define VolumeLog(x) x
+#else
+#define VolumeLog(x)
+#endif
+
 /*
     If Volume is an input argument to a function, then you probably want to retain it during the function.
 */
@@ -3046,12 +3059,12 @@ VOID
 AllocateVolume (
     REFIT_VOLUME **Volume
 ) {
-    MsgLog ("[ AllocateVolume\n");
+    VolumeLog (MsgLog ("[ AllocateVolume\n"));
     if (Volume) {
         *Volume = AllocateZeroPool (sizeof (REFIT_VOLUME));
         RetainVolume (*Volume);
     }
-    MsgLog ("] AllocateVolume %p(#%d)\n", Volume ? *Volume : NULL, (Volume && *Volume) ? (*Volume)->ReferenceCount : -1);
+    VolumeLog (MsgLog ("] AllocateVolume %p(#%d)\n", Volume ? *Volume : NULL, (Volume && *Volume) ? (*Volume)->ReferenceCount : -1));
 }
 
 REFIT_VOLUME *
@@ -3084,15 +3097,25 @@ FreeVolume (
     REFIT_VOLUME **Volume
 ) {
     if (Volume && *Volume) {
-        MsgLog ("[ FreeVolume %p->%p(#%d)\n", Volume, *Volume, (*Volume)->ReferenceCount);
+        VolumeLog (MsgLog ("[ FreeVolume %p->%p(#%d)\n", Volume, *Volume, (*Volume)->ReferenceCount));
         if ((*Volume)->ReferenceCount > 0) {
             (*Volume)->ReferenceCount--;
             if ((*Volume)->ReferenceCount == 0) {
+                MsgLog ("FreeVolume %p->%p(#%d)\n", Volume, *Volume, (*Volume)->ReferenceCount);
                 MyFreePool (&(*Volume)->DevicePath);
                 FreePoolStr (&(*Volume)->PartName);
                 FreePoolStr (&(*Volume)->FsName);
                 FreePoolStr (&(*Volume)->VolName);
+                FreePoolImage (&(*Volume)->VolIconImage);
+                FreePoolImage (&(*Volume)->VolBadgeImage);
+                FreePoolStr (&(*Volume)->OSIconName);
+                FreePoolStr (&(*Volume)->OSName);
                 MyFreePool (&(*Volume)->WholeDiskDevicePath);
+                MyFreePool (&(*Volume)->MbrPartitionTable);
+                if ((*Volume)->RootDir != NULL) {
+                    refit_call1_wrapper((*Volume)->RootDir->Close, (*Volume)->RootDir);
+                    (*Volume)->RootDir = NULL;
+                }
                 MyFreePool (Volume);
             }
         }
@@ -3100,7 +3123,7 @@ FreeVolume (
             MsgLog ("Allocation Error: Volume reference count is already zero.\n");
             DumpCallStack(NULL, FALSE);
         }
-        MsgLog ("] FreeVolume %p->%p(#%d)\n", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1);
+        VolumeLog (MsgLog ("] FreeVolume %p->%p(#%d)\n", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1));
         *Volume = NULL;
     }
 }
@@ -3114,7 +3137,7 @@ AssignVolume (
     REFIT_VOLUME *NewVolume
 ) {
     if (Volume) {
-        MsgLog ("[ AssignVolume Old:%p->%p(#%d) New:%p(#%d)\n", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1, NewVolume, NewVolume ? NewVolume->ReferenceCount : -1);
+        VolumeLog (MsgLog ("[ AssignVolume Old:%p->%p(#%d) New:%p(#%d)\n", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1, NewVolume, NewVolume ? NewVolume->ReferenceCount : -1));
         if (NewVolume && (NewVolume->ReferenceCount & 0xFFFF0000)) {
             MsgLog ("Allocation Error: weird volume reference count 0x%X\n", NewVolume->ReferenceCount);
             DumpCallStack(NULL, FALSE);
@@ -3125,7 +3148,7 @@ AssignVolume (
         RetainVolume (NewVolume);
         *Volume = NewVolume;
         FreeVolume (&OldVolume);
-        MsgLog ("] AssignVolume Current:%p->%p(#%d) Old:%p(#%d)\n", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1, OldVolume, OldVolume ? OldVolume->ReferenceCount : -1);
+        VolumeLog (MsgLog ("] AssignVolume Current:%p->%p(#%d) Old:%p(#%d)\n", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1, OldVolume, OldVolume ? OldVolume->ReferenceCount : -1));
     }
 }
 
@@ -3142,7 +3165,7 @@ AddToVolumeList (
     AddListElement ((VOID***)Volumes, VolumesCount, Volume);
     if (Volume) {
         RetainVolume (Volume);
-        MsgLog ("[] AddToVolumeList %p->%p[%d] = %p(#%d)\n", Volumes, *Volumes ? *Volumes : 0, VolumesCount ? *VolumesCount - 1 : -1, Volume, Volume ? Volume->ReferenceCount : -1);
+        VolumeLog (MsgLog ("[] AddToVolumeList %p->%p[%d] = %p(#%d)\n", Volumes, *Volumes ? *Volumes : 0, VolumesCount ? *VolumesCount - 1 : -1, Volume, Volume ? Volume->ReferenceCount : -1));
     }
     else {
         MsgLog ("Allocation Error: Assigning null volume to list\n");
@@ -3155,14 +3178,24 @@ LEAKABLEPOOLSTR (
     PoolStr *Str,
     CHAR8 *Description
 ) {
-    LEAKABLEWITHPATH (Str && !Str->Cached ? Str->Str : NULL, Description);
+    LEAKABLEWITHPATH ((Str && !Str->Cached) ? Str->Str : NULL, Description);
+}
+
+VOID
+LEAKABLEONEPOOLSTR (
+    PoolStr *Str,
+    CHAR8 *Description
+) {
+    if (Str && Str->Str && !Str->Cached) {
+        LEAKABLE (Str->Str, Description);
+    }
 }
 
 VOID
 LEAKABLEPOOLIMAGE (
     PoolImage *Image
 ) {
-    LEAKABLEIMAGE (Image && !Image->Cached ? Image->Image : NULL);
+    LEAKABLEIMAGE ((Image && !Image->Cached) ? Image->Image : NULL);
 }
 
 VOID
@@ -3171,11 +3204,16 @@ LEAKABLEVOLUME (
 ) {
     if (Volume) {
         LEAKABLEPATHINC (); // space for Volume info
-            LEAKABLEWITHPATH (Volume->DevicePath, "Volume DevicePath");
-            LEAKABLEPOOLSTR (&Volume->PartName_PS_, "Volume PartName");
-            LEAKABLEPOOLSTR (&Volume->FsName_PS_, "Volume FsName");
-            LEAKABLEPOOLSTR (&Volume->VolName_PS_, "Volume VolName");
-            LEAKABLEWITHPATH (Volume->WholeDiskDevicePath, "Volume WholeDiskDevicePath");
+            LEAKABLEWITHPATH  (Volume->DevicePath, "Volume DevicePath");
+            LEAKABLEPOOLSTR   (&Volume->PartName_PS_, "Volume PartName");
+            LEAKABLEPOOLSTR   (&Volume->FsName_PS_, "Volume FsName");
+            LEAKABLEPOOLSTR   (&Volume->VolName_PS_, "Volume VolName");
+            LEAKABLEPOOLIMAGE (&Volume->VolIconImage_PI_);
+            LEAKABLEPOOLIMAGE (&Volume->VolBadgeImage_PI_);
+            LEAKABLEPOOLSTR   (&Volume->OSIconName_PS_, "Volume OSIconName");
+            LEAKABLEPOOLSTR   (&Volume->OSName_PS_, "Volume OSName");
+            LEAKABLEWITHPATH  (Volume->WholeDiskDevicePath, "Volume WholeDiskDevicePath");
+            LEAKABLEWITHPATH  (Volume->MbrPartitionTable, "Volume MbrPartitionTable");
         LEAKABLEPATHDEC ();
     }
     LEAKABLEWITHPATH (Volume, "Volume");
@@ -3210,9 +3248,9 @@ FreeVolumes (
         UINTN VolumeIndex;
         if (VolumesCount && *VolumesCount) {
             for (VolumeIndex = 0; VolumeIndex < *VolumesCount; VolumeIndex++) {
-                MsgLog ("[ Volumes[%d] %p\n", VolumeIndex, (*Volumes)[VolumeIndex]);
+                //MsgLog ("[] Volumes[%d] %p\n", VolumeIndex, (*Volumes)[VolumeIndex]);
                 FreeVolume (&(*Volumes)[VolumeIndex]);
-                MsgLog ("] Volumes[%d] %p\n", VolumeIndex, (*Volumes)[VolumeIndex]);
+                //MsgLog ("] Volumes[%d]\n", VolumeIndex);
             }
             *VolumesCount = 0;
         }

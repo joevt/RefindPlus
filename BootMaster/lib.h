@@ -144,12 +144,14 @@ VOID FreeVolumes (REFIT_VOLUME ***Volumes, UINTN *VolumesCount);
 
 #if REFIT_DEBUG > 0
 VOID LEAKABLEPOOLSTR (PoolStr *Str, CHAR8 *Description);
+VOID LEAKABLEONEPOOLSTR(PoolStr *Str, CHAR8 *Description);
 VOID LEAKABLEPOOLIMAGE (PoolImage *Image);
 VOID LEAKABLEVOLUME (REFIT_VOLUME *Volume);
 VOID LEAKABLEVOLUMES ();
 #else
 #define LEAKABLEPOOLIMAGE(...)
 #define LEAKABLEPOOLSTR(...)
+#define LEAKABLEONEPOOLSTR(...)
 #define LEAKABLEVOLUME(...)
 #define LEAKABLEVOLUMES(...)
 #endif
@@ -184,6 +186,7 @@ CHAR16 *SplitDeviceString (IN OUT CHAR16 *InString);
 
 BOOLEAN EjectMedia (VOID);
 BOOLEAN HasWindowsBiosBootFiles (REFIT_VOLUME *Volume);
+VOID DumpHexString (IN UINTN DataSize, IN VOID *UserData);
 BOOLEAN GuidsAreEqual (EFI_GUID *Guid1, EFI_GUID *Guid2);
 BOOLEAN FindVolume (REFIT_VOLUME **Volume, CHAR16 *Identifier);
 BOOLEAN FileExists (IN EFI_FILE *BaseDir, IN CHAR16 *RelativePath);
