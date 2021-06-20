@@ -1353,7 +1353,7 @@ Done:
     FreeVolume (&CurrentVolume);
     FreeVolume (&PreviousVolume);
  
-     MsgLog("] AddStanzaEntries&s\n", Entry ? L"" : L" (Entry not enabled)");
+     MsgLog("] AddStanzaEntries%s\n", Entry ? L"" : L" (Entry not enabled)");
     return (Entry);
 } // static VOID AddStanzaEntries()
 

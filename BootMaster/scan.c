@@ -842,7 +842,7 @@ LOADER_ENTRY * AddLoaderEntry (
         LOG(1, LOG_THREE_STAR_MID, L"Could not initialise loader entry");
     }
 
-    MsgLog ("] AddLoaderEntry &p\n", Entry);
+    MsgLog ("] AddLoaderEntry %p\n", Entry);
     return (Entry);
 } // LOADER_ENTRY * AddLoaderEntry()
 
