@@ -1419,7 +1419,6 @@ VOID GraphicsMenuStyle (
     static UINTN EntriesPosX, EntriesPosY;
     static UINTN TitlePosX, TimeoutPosY, CharWidth;
     EG_IMAGE *Window;
-    EG_PIXEL *BackgroundPixel = &(GlobalConfig.ScreenBackground->PixelData[0]);
 
     CharWidth = egGetFontCellWidth();
     State->ScrollMode = SCROLL_MODE_TEXT;
@@ -1435,10 +1434,10 @@ VOID GraphicsMenuStyle (
             );
             TimeoutPosY = EntriesPosY + (Screen->EntryCount + 1) * TextLineHeight();
 
-            // initial painting
+            // initial painting (this will change GlobalConfig.ScreenBackground->PixelData)
             SwitchToGraphicsAndClear (TRUE);
 
-            Window = egCreateFilledImage (MenuWidth, MenuHeight, FALSE, BackgroundPixel);
+            Window = egCreateFilledImage (MenuWidth, MenuHeight, FALSE, GlobalConfig.ScreenBackground->PixelData);
             if (Window) {
                 egDrawImage (Window, EntriesPosX, EntriesPosY);
                 egFreeImage (Window);
@@ -1484,7 +1483,7 @@ VOID GraphicsMenuStyle (
                     GetPoolImage (&Screen->TitleImage),
                     EntriesPosX + TITLEICON_SPACING,
                     EntriesPosY + TextLineHeight() * 2,
-                    BackgroundPixel
+                    GlobalConfig.ScreenBackground->PixelData
                 );
                 EntriesPosX += (GetPoolImage (&Screen->TitleImage)->Width + TITLEICON_SPACING * 2);
             }
