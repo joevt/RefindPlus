@@ -767,7 +767,7 @@ VOID SwitchToGraphicsAndClear (
     EFI_STATUS Status;
 
     #if REFIT_DEBUG > 0
-    BOOLEAN    gotGraphics = egIsGraphicsModeEnabled();
+    BOOLEAN gotGraphics = egIsGraphicsModeEnabled();
     #endif
 
     Status = SwitchToGraphics();
@@ -892,12 +892,15 @@ VOID BltClearScreen (
     //         Likely related to Qemu Specific Issue.
     if (1 || DetectedDevices) {
         egFreeImage (GlobalConfig.ScreenBackground);
+        MsgLog ("FreeImage GlobalConfig.ScreenBackground\n");
     }
     else {
         MyFreePool (&GlobalConfig.ScreenBackground);
+        MsgLog ("FreePool GlobalConfig.ScreenBackground\n");
     }
 
     GlobalConfig.ScreenBackground = egCopyScreen();
+    MsgLog ("GlobalConfig.ScreenBackground = egCopyScreen\n");
     LEAKABLEONEIMAGE(GlobalConfig.ScreenBackground, "ScreenBackground image");
 
     MsgLog ("] BltClearScreen\n");
