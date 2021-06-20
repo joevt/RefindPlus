@@ -61,7 +61,6 @@
 #include "../EfiLib/legacy.h"
 #include "../include/Handle.h"
 
-extern REFIT_MENU_ENTRY MenuEntryReturn;
 extern REFIT_MENU_SCREEN *MainMenu;
 
 #ifndef __MAKEWITH_GNUEFI
@@ -726,7 +725,7 @@ LEGACY_ENTRY * AddLegacyEntry (
     CopyFromPoolStr (&SubEntry->LoadOptions, &Entry->LoadOptions);
 
     AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
-    AddMenuEntryCopy (SubScreen, &MenuEntryReturn);
+    AddMenuEntryCopy (SubScreen, &TagMenuEntry[TAG_RETURN]);
 
     Entry->me.SubScreen = SubScreen;
     AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *) Entry);
@@ -803,7 +802,7 @@ LEGACY_ENTRY * AddLegacyEntryUEFI (
 
     AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
 
-    AddMenuEntryCopy (SubScreen, &MenuEntryReturn);
+    AddMenuEntryCopy (SubScreen, &TagMenuEntry[TAG_RETURN]);
     Entry->me.SubScreen = SubScreen;
     AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *)Entry);
 

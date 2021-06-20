@@ -75,9 +75,6 @@
 
 BOOLEAN SilenceAPFS;
 
-// extern REFIT_MENU_ENTRY MenuEntryReturn;
-//static REFIT_MENU_ENTRY MenuEntryReturn   = { L"Return to Main Menu", TAG_RETURN, 0, 0, 0, NULL, NULL, NULL };
-
 //
 // read a file into a buffer
 //
@@ -798,71 +795,22 @@ VOID ReadConfig (
             GlobalConfig.HiddenTags = FALSE;
             for (i = 1; (i < TokenCount) && (i < NUM_TOOLS); i++) {
                 FlagName = TokenList[i];
-                if (MyStriCmp (FlagName, L"shell")) {
-                    GlobalConfig.ShowTools[i - 1] = TAG_SHELL;
-                }
-                else if (MyStriCmp (FlagName, L"gptsync")) {
-                    GlobalConfig.ShowTools[i - 1] = TAG_GPTSYNC;
-                }
-                else if (MyStriCmp (FlagName, L"gdisk")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_GDISK;
-                }
-                else if (MyStriCmp (FlagName, L"about")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_ABOUT;
-                }
-                else if (MyStriCmp (FlagName, L"exit")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_EXIT;
-                }
-                else if (MyStriCmp (FlagName, L"reboot")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_REBOOT;
-                }
-                else if (MyStriCmp (FlagName, L"shutdown")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_SHUTDOWN;
-                }
-                else if (MyStriCmp (FlagName, L"install")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_INSTALL;
-                }
-                else if (MyStriCmp (FlagName, L"bootorder")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_BOOTORDER;
-                }
-                else if (MyStriCmp (FlagName, L"apple_recovery")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_APPLE_RECOVERY;
-                }
-                else if (MyStriCmp (FlagName, L"windows_recovery")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_WINDOWS_RECOVERY;
-                }
-                else if (MyStriCmp (FlagName, L"mok_tool")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_MOK_TOOL;
-                }
-                else if (MyStriCmp (FlagName, L"fwupdate")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_FWUPDATE_TOOL;
-                }
-                else if (MyStriCmp (FlagName, L"csr_rotate")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_CSR_ROTATE;
-                }
-                else if (MyStriCmp (FlagName, L"firmware")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_FIRMWARE;
-                }
-                else if (MyStriCmp (FlagName, L"memtest86") ||
-                    MyStriCmp (FlagName, L"memtest")
-                ) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_MEMTEST;
-                }
-                else if (MyStriCmp (FlagName, L"netboot")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_NETBOOT;
-                }
-                else if (MyStriCmp (FlagName, L"hidden_tags")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_HIDDEN;
+                CHAR16 *OneFlag = PoolPrint (L",%s,", FlagName);
+                ToLower (OneFlag);
+                UINTN TheTag;
+                #define TAGS_FLAG_TO_TAG
+                #include "tags.include"
+                MyFreePool (&OneFlag);
+                
+                if (TheTag == TAG_HIDDEN) {
                    GlobalConfig.HiddenTags = TRUE;
                 }
-                else if (MyStriCmp (FlagName, L"show_bootscreen")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_PRE_BOOTKICKER;
-                }
-                else if (MyStriCmp (FlagName, L"clean_nvram")) {
-                   GlobalConfig.ShowTools[i - 1] = TAG_PRE_NVRAMCLEAN;
+                
+                if (TheTag == TAG_NONE) {
+                    Print (L" unknown showtools flag: '%s'\n", FlagName);
                 }
                 else {
-                   Print (L" unknown showtools flag: '%s'\n", FlagName);
+                    GlobalConfig.ShowTools[i - 1] = TheTag;
                 }
             } // showtools options
         }
@@ -1373,7 +1321,7 @@ LOADER_ENTRY * AddStanzaEntries (
     }
 
     if (AddedSubmenu) {
-        AddMenuEntryCopy (Entry->me.SubScreen, &MenuEntryReturn);
+        AddMenuEntryCopy (Entry->me.SubScreen, &TagMenuEntry[TAG_RETURN]);
     }
 
     if (GetPoolStr (&Entry->InitrdPath) && StrLen (GetPoolStr (&Entry->InitrdPath)) > 0) {

@@ -90,13 +90,6 @@ VOID *memset(VOID *s, int c, UINTN n) {
 //
 // Some built-in menu definitions....
 
-REFIT_MENU_ENTRY MenuEntryReturn = {
-    {L"Return to Main Menu", TRUE},
-    TAG_RETURN,
-    1, 0, 0,
-    {NULL, FALSE}, {NULL, FALSE}, NULL
-};
-
 REFIT_MENU_SCREEN *MainMenu = NULL;
 REFIT_MENU_SCREEN MainMenuSrc = {
     {L"Main Menu", TRUE},
@@ -117,20 +110,6 @@ STATIC REFIT_MENU_SCREEN AboutMenuSrc = {
     0, {NULL, FALSE},
     {L"Press 'Enter' to return to main menu", TRUE},
     {L"", TRUE}
-};
-
-REFIT_MENU_ENTRY MenuEntryBootKicker = {
-    {L"Load BootKicker", TRUE},
-    TAG_LOAD_BOOTKICKER,
-    1, 0, 0,
-    {NULL, FALSE}, {NULL, FALSE}, NULL
-};
-
-REFIT_MENU_ENTRY MenuEntryCleanNvram = {
-    {L"Load CleanNvram", TRUE},
-    TAG_LOAD_NVRAMCLEAN,
-    1, 0, 0,
-    {NULL, FALSE}, {NULL, FALSE}, NULL
 };
 
 REFIT_CONFIG GlobalConfig = {
@@ -207,19 +186,10 @@ REFIT_CONFIG GlobalConfig = {
     /* *SpoofOSXVersion = */ NULL,
     /* CsrValues = */ NULL,
     /* ShowTools = */ {
-        TAG_SHELL,
-        TAG_MEMTEST,
-        TAG_GDISK,
-        TAG_APPLE_RECOVERY,
-        TAG_WINDOWS_RECOVERY,
-        TAG_MOK_TOOL,
-        TAG_ABOUT,
-        TAG_HIDDEN,
-        TAG_SHUTDOWN,
-        TAG_REBOOT,
-        TAG_FIRMWARE,
-        TAG_FWUPDATE_TOOL,
-        0, 0, 0, 0, 0, 0, 0, 0, 0
+        #define TAGS_DEFAULT_SHOWTOOL
+        #include "tags.include"
+        #define TAGS_DEFAULT_NOT_SHOWTOOL
+        #include "tags.include"
     }
 };
 
@@ -617,8 +587,9 @@ EFI_STATUS EFIAPI OpenProtocolEx (
 
     if (Status == EFI_UNSUPPORTED) {
         if (GuidsAreEqual (&gEfiGraphicsOutputProtocolGuid, Protocol)) {
+            MsgLog ("[ OpenProtocolEx gEfiGraphicsOutputProtocolGuid\n");
             if (GOPDraw != NULL) {
-                Status     = EFI_SUCCESS;
+                Status = EFI_SUCCESS;
                 if (Interface) {
                     MsgLog("Using GOPDraw interface for Open GOP Protocol...%r\n", Status);
                 }
@@ -673,6 +644,7 @@ EFI_STATUS EFIAPI OpenProtocolEx (
                 }
                 MyFreePool (&HandleBuffer);
             } // If GOPDraw != NULL
+            MsgLog ("] OpenProtocolEx gEfiGraphicsOutputProtocolGuid\n");
         } // if GuidsAreEqual
 
     } // if Status == EFI_UNSUPPORTED
@@ -825,8 +797,8 @@ VOID preBootKicker (
         AddMenuInfoLineCached (BootKickerMenu, L"");
         AddMenuInfoLineCached (BootKickerMenu, L"");
 
-        AddMenuEntryCopy (BootKickerMenu, &MenuEntryBootKicker);
-        AddMenuEntryCopy (BootKickerMenu, &MenuEntryReturn);
+        AddMenuEntryCopy (BootKickerMenu, &TagMenuEntry[TAG_LOAD_BOOTKICKER]);
+        AddMenuEntryCopy (BootKickerMenu, &TagMenuEntry[TAG_RETURN]);
         
         LEAKABLEROOTMENU (kLeakableMenuBootKicker, BootKickerMenu);
     }
@@ -959,8 +931,8 @@ VOID preCleanNvram (
         AddMenuInfoLineCached (CleanNvramMenu, L"");
         AddMenuInfoLineCached (CleanNvramMenu, L"");
 
-        AddMenuEntryCopy (CleanNvramMenu, &MenuEntryCleanNvram);
-        AddMenuEntryCopy (CleanNvramMenu, &MenuEntryReturn);
+        AddMenuEntryCopy (CleanNvramMenu, &TagMenuEntry[TAG_LOAD_NVRAMCLEAN]);
+        AddMenuEntryCopy (CleanNvramMenu, &TagMenuEntry[TAG_RETURN]);
         
         LEAKABLEROOTMENU (kLeakableMenuCleanNvram, CleanNvramMenu);
     }
@@ -1130,7 +1102,7 @@ VOID AboutRefindPlus (
         AddMenuInfoLineCached (AboutMenu, L"");
         AddMenuInfoLineCached (AboutMenu, L"For information on rEFInd, visit:");
         AddMenuInfoLineCached (AboutMenu, L"http://www.rodsbooks.com/refind");
-        AddMenuEntryCopy (AboutMenu, &MenuEntryReturn);
+        AddMenuEntryCopy (AboutMenu, &TagMenuEntry[TAG_RETURN]);
         MyFreePool (&FirmwareVendor);
         
         LEAKABLEROOTMENU (kLeakableMenuAbout, AboutMenu);
@@ -1871,11 +1843,11 @@ EFI_STATUS EFIAPI efi_main (
     if (!FileExists (SelfDir, GlobalConfig.ConfigFilename)) {
         ConfigWarn = TRUE;
 
-        MsgLog ("** WARN: Could Not Find RefindPlus Configuration File:- 'config.conf'\n");
-        MsgLog ("         Trying rEFInd's Configuration File:- 'refind.conf'\n");
-        MsgLog ("         Provide 'config.conf' file to silence this warning\n");
-        MsgLog ("         You can rename 'refind.conf' file as 'config.conf'\n");
-        MsgLog ("         NB: Will not contain all RefindPlus config tokens\n\n");
+        MsgLog ("** WARN: Could Not Find RefindPlus Configuration File:- 'config.conf'\n"
+                "         Trying rEFInd's Configuration File:- 'refind.conf'\n"
+                "         Provide 'config.conf' file to silence this warning\n"
+                "         You can rename 'refind.conf' file as 'config.conf'\n"
+                "         NB: Will not contain all RefindPlus config tokens\n\n");
 
         GlobalConfig.ConfigFilename = L"refind.conf";
     }
@@ -2076,7 +2048,7 @@ EFI_STATUS EFIAPI efi_main (
         if (ConfigWarn) {
             PrintUglyText (L"                                                                          ", NEXTLINE);
             PrintUglyText (L" WARN: Could Not Find RefindPlus Configuration File                       ", NEXTLINE);
-            PrintUglyText (L"                                                           ", NEXTLINE);
+            PrintUglyText (L"                                                                          ", NEXTLINE);
             PrintUglyText (L"       Trying rEFInd's Configuration File:- 'refind.conf'                 ", NEXTLINE);
             PrintUglyText (L"       Provide 'config.conf' file to silence this warning                 ", NEXTLINE);
             PrintUglyText (L"       You can rename 'refind.conf' file as 'config.conf'                 ", NEXTLINE);
@@ -2112,7 +2084,8 @@ EFI_STATUS EFIAPI efi_main (
     ActiveCSR();
 
     LOG2(1, LOG_STAR_SEPARATOR, L"INFO: ", L"\n\n", L"Loaded RefindPlus v%s on %s Firmware", REFINDPLUS_VERSION, VendorInfo);
-    LOG(1, LOG_LINE_SEPARATOR, L"Entering Main Loop");
+
+    MsgLog ("[ Main Loop\n");
 
     while (MainLoopRunning) {
         // Set to false as may not be booting
@@ -2134,23 +2107,9 @@ EFI_STATUS EFIAPI efi_main (
             MsgLog ("No chosen entry %a:%d\n", __FILE__, __LINE__);
             continue;
         }
-        switch (ChosenEntry->Tag) {
-            case TAG_NVRAMCLEAN:
-            case TAG_SHOW_BOOTKICKER:
-            case TAG_LOADER:
-            case TAG_TOOL:
-            case TAG_FIRMWARE_LOADER:
-                ChosenEntry = (REFIT_MENU_ENTRY *)AllocateCopyPool (sizeof(LOADER_ENTRY), ChosenEntry); // shallow copy
-                break;
 
-            case TAG_LEGACY:
-            case TAG_LEGACY_UEFI:
-                ChosenEntry = (REFIT_MENU_ENTRY *)AllocateCopyPool (sizeof(LEGACY_ENTRY), ChosenEntry); // shallow copy
-                break;
+        ChosenEntry = CopyMenuEntryShallow (ChosenEntry);
 
-            default:
-                ChosenEntry = (REFIT_MENU_ENTRY *)AllocateCopyPool (sizeof(REFIT_MENU_ENTRY), ChosenEntry); // shallow copy
-        }
         if (!ChosenEntry) {
             MsgLog ("No chosen entry copy %a:%d\n", __FILE__, __LINE__);
             continue;
@@ -2159,7 +2118,15 @@ EFI_STATUS EFIAPI efi_main (
         if ((MenuExit == MENU_EXIT_TIMEOUT) && GlobalConfig.ShutdownAfterTimeout) {
             ChosenEntry->Tag = TAG_SHUTDOWN;
         }
-
+        
+        CHAR8 *TheTagName = "NULL";
+        switch (ChosenEntry->Tag) {
+            #define TAGS_TAG_NAME
+            #include "tags.include"
+        }
+        
+        MsgLog ("[ %a\n", TheTagName);
+        
         switch (ChosenEntry->Tag) {
 
             case TAG_NVRAMCLEAN:    // Clean NVRAM
@@ -2394,8 +2361,6 @@ EFI_STATUS EFIAPI efi_main (
                     );
                 }
 
-                MsgLog ("\n-----------------\n\n");
-
                 StartLoader (ourLoaderEntry, SelectionName);
                 break;
 
@@ -2483,6 +2448,7 @@ EFI_STATUS EFIAPI efi_main (
                 }
                 else {
                    BeginTextScreen (L" ");
+                   MsgLog ("] %a (leaving main)\n", TheTagName);
                    return EFI_SUCCESS;
                 }
                 break;
@@ -2519,8 +2485,14 @@ EFI_STATUS EFIAPI efi_main (
                 break;
 
         } // switch()
+
+        MsgLog ("] %a\n", TheTagName);
+
         MyFreePool (&ChosenEntry); // free the shallow copy
     } // while()
+
+    MsgLog ("] Main Loop\n");
+
     // MyFreePool (&SelectionName); // this should never happen - don't do it since it may be from a menu entry
 
     // If we end up here, things have gone wrong. Try to reboot, and if that

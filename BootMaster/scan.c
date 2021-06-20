@@ -84,10 +84,7 @@
         L"\\EFI\\tools_x64\\ipxe.efi,\\EFI\\tools_x64\\ipxe_x64.efi,\\EFI\\tools\\ipxe.efi,\\EFI\\tools\\ipxe_x64.efi,\
 \\EFI\\ipxe.efi,\\EFI\\ipxe_x64.efi,\\ipxe.efi,\\ipxe_x64.efi"
     #define MEMTEST_NAMES \
-        L"\\EFI\\tools_x64\\memtest.efi,\\EFI\\tools_x64\\memtest_x64.efi,\\EFI\\tools\\memtest.efi,\
-\\EFI\\tools\\memtest_x64.efi,\\EFI\\memtest.efi,\\EFI\\memtest_x64.efi,\\memtest.efi,\\memtest_x64.efi,\
-\\EFI\\tools_x64\\memtest86.efi,\\EFI\\tools_x64\\memtest86_x64.efi,\\EFI\\tools\\memtest86.efi,\
-\\EFI\\tools\\memtest86_x64.efi,\\EFI\\memtest86.efi,\\EFI\\memtest86_x64.efi,\\memtest86.efi,\\memtest86_x64.efi"
+        L"memtest86_x64.efi,memtest_x64.efi,memtest86.efi,memtest.efi"
     #define BOOTKICKER_NAMES \
         L"\\EFI\\tools_x64\\x64_BootKicker.efi,\\EFI\\tools_x64\\BootKicker_x64.efi,\\EFI\\tools_x64\\BootKicker.efi,\
 \\EFI\\tools\\x64_BootKicker.efi\\EFI\\tools\\BootKicker_x64.efi,\\EFI\\tools\\BootKicker.efi,\
@@ -115,11 +112,7 @@
         L"\\EFI\\tools_ia32\\ipxe.efi,\\EFI\\tools_ia32\\ipxe_ia32.efi,\\EFI\\tools\\ipxe.efi,\
 \\EFI\\tools\\ipxe_ia32.efi,\\EFI\\ipxe.efi,\\EFI\\ipxe_ia32.efi,\\ipxe.efi,\\ipxe_ia32.efi"
     #define MEMTEST_NAMES \
-        L"\\EFI\\tools_ia32\\memtest.efi,\\EFI\\tools_ia32\\memtest_ia32.efi,\\EFI\\tools\\memtest.efi,\
-\\EFI\\tools\\memtest_ia32.efi,\\EFI\\memtest.efi,\\EFI\\memtest_ia32.efi,\\memtest.efi,\\memtest_ia32.efi,\
-\\EFI\\tools_ia32\\memtest86.efi,\\EFI\\tools_ia32\\memtest86_ia32.efi,\\EFI\\tools\\memtest86.efi,\
-\\EFI\\tools\\memtest86_ia32.efi,\\EFI\\memtest86.efi,\\EFI\\memtest86_ia32.efi,\\memtest86.efi,\
-\\memtest86_ia32.efi"
+        L"memtest86_ia32.efi,memtest_ia32.efi,memtest86.efi,memtest.efi"
     #define BOOTKICKER_NAMES \
         L"\\EFI\\tools_ia32\\ia32_BootKicker.efi,\\EFI\\tools_ia32\\BootKicker_ia32.efi,\
 \\EFI\\tools_ia32\\BootKicker.efi,\\EFI\\tools\\ia32_BootKicker.efi\\EFI\\tools\\BootKicker_ia32.efi,\
@@ -147,11 +140,7 @@
         L"\\EFI\\tools_aa64\\ipxe.efi,\\EFI\\tools_aa64\\ipxe_aa64.efi,\\EFI\\tools\\ipxe.efi,\
 \\EFI\\tools\\ipxe_aa64.efi,\\EFI\\ipxe.efi,\\EFI\\ipxe_aa64.efi,\\ipxe.efi,\\ipxe_aa64.efi"
     #define MEMTEST_NAMES \
-        L"\\EFI\\tools_aa64\\memtest.efi,\\EFI\\tools_aa64\\memtest_aa64.efi,\\EFI\\tools\\memtest.efi,\
-\\EFI\\tools\\memtest_aa64.efi,\\EFI\\memtest.efi,\\EFI\\memtest_aa64.efi,\\memtest.efi,\\memtest_aa64.efi,\
-\\EFI\\tools_aa64\\memtest86.efi,\\EFI\\tools_aa64\\memtest86_aa64.efi,\\EFI\\tools\\memtest86.efi,\
-\\EFI\\tools\\memtest86_aa64.efi,\\EFI\\memtest86.efi,\\EFI\\memtest86_aa64.efi,\\memtest86.efi,\
-\\memtest86_aa64.efi"
+        L"memtest86_aa64.efi,memtest_aa64.efi,memtest86.efi,memtest.efi"
     #define BOOTKICKER_NAMES \
         L"\\EFI\\tools_aa64\\aa64_BootKicker.efi,\\EFI\\tools_aa64\\BootKicker_aa64.efi,\
 \\EFI\\tools_aa64\\BootKicker.efi,\\EFI\\tools\\aa64_BootKicker.efi\\EFI\\tools\\BootKicker_aa64.efi,\
@@ -169,7 +158,7 @@
     #define GPTSYNC_NAMES           L"\\EFI\\tools\\gptsync.efi"
     #define GDISK_NAMES             L"\\EFI\\tools\\gdisk.efi"
     #define NETBOOT_NAMES           L"\\EFI\\tools\\ipxe.efi"
-    #define MEMTEST_NAMES           L"\\memtest.efi,\\memtest86.efi"
+    #define MEMTEST_NAMES           L"memtest.efi,memtest86.efi"
     #define BOOTKICKER_NAMES        L"\\BootKicker.efi"
     #define NVRAMCLEAN_NAMES        L"\\CleanNvram.efi"
     #define DRIVER_DIRS             L"drivers"
@@ -190,18 +179,6 @@ EFI_GUID GlobalGuid      = EFI_GLOBAL_VARIABLE;
 BOOLEAN  ScanningLoaders = FALSE;
 BOOLEAN  FirstLoaderScan = FALSE;
 
-
-static REFIT_MENU_ENTRY MenuEntryAbout         = { {L"About RefindPlus"          , TRUE}, TAG_ABOUT         , 1, 0, 'A', {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY MenuEntryReset         = { {L"System Restart"            , TRUE}, TAG_REBOOT        , 1, 0, 'R', {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY MenuEntryShutdown      = { {L"System Shutdown"           , TRUE}, TAG_SHUTDOWN      , 1, 0, 'U', {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY MenuEntryRotateCsr     = { {L"Toggle CSR Policy"         , TRUE}, TAG_CSR_ROTATE    , 1, 0, 0  , {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY MenuEntryFirmware      = { {L"Boot into Firmaware"       , TRUE}, TAG_FIRMWARE      , 1, 0, 0  , {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY MenuEntryHiddenTags    = { {L"Manage Hidden Tags"        , TRUE}, TAG_HIDDEN        , 1, 0, 0  , {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY MenuEntryInstall       = { {L"Install RefindPlus"        , TRUE}, TAG_INSTALL       , 1, 0, 0  , {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY MenuEntryBootorder     = { {L"Manage Boot Order"         , TRUE}, TAG_BOOTORDER     , 1, 0, 0  , {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY MenuEntryExit          = { {L"Exit RefindPlus"           , TRUE}, TAG_EXIT          , 1, 0, 0  , {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY MenuEntryPreBootKicker = { {L"Show Bootscreen"           , TRUE}, TAG_PRE_BOOTKICKER, 1, 0, 0  , {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY MenuEntryPreCleanNvram = { {L"Clean NVRAM"               , TRUE}, TAG_PRE_NVRAMCLEAN, 1, 0, 0  , {NULL, FALSE}, {NULL, FALSE}, NULL };
 
 // Structure used to hold boot loader filenames and time stamps in
 // a linked list; used to sort entries within a directory.
@@ -506,7 +483,7 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
             }
         } // entries for xom.efi
         if (GenerateReturn) {
-            AddMenuEntryCopy (SubScreen, &MenuEntryReturn);
+            AddMenuEntryCopy (SubScreen, &TagMenuEntry[TAG_RETURN]);
         }
         Entry->me.SubScreen = SubScreen;
     }
@@ -1282,7 +1259,7 @@ BOOLEAN ScanLoaderDir (
 
             if (FirstKernel != NULL && IsLinux && GlobalConfig.FoldLinuxKernels) {
                 LOG(4, LOG_LINE_NORMAL, L"Adding 'Return' entry to folded Linux kernels");
-                AddMenuEntryCopy (FirstKernel->me.SubScreen, &MenuEntryReturn);
+                AddMenuEntryCopy (FirstKernel->me.SubScreen, &TagMenuEntry[TAG_RETURN]);
             }
 
             CleanUpLoaderList (LoaderList);
@@ -2155,7 +2132,7 @@ BOOLEAN FindTool (
                         PathName,
                         Description,
                         BuiltinIcon (Icon),
-                        'S',
+                        0,
                         FALSE
                     );
 
@@ -2183,14 +2160,12 @@ VOID ScanForTools (VOID) {
     UINTN             i, j;
     UINTN             VolumeIndex;
     VOID             *ItemBuffer = NULL;
-    CHAR16           *ToolName   = NULL;
     CHAR16           *FileName   = NULL;
     CHAR16           *VolName    = NULL;
     CHAR16           *MokLocations;
     CHAR16           *Description;
     UINT64            osind;
     UINT32            CsrValue;
-    BOOLEAN           FoundTool;
 
     MsgLog ("[ ScanForTools\n");
     //LOG2(1, LOG_LINE_SEPARATOR, L"", L"...\n", L"Scan for Builtin/External Tools");
@@ -2199,79 +2174,64 @@ VOID ScanForTools (VOID) {
 
     for (i = 0; i < NUM_TOOLS; i++) {
         // Reset Vars
-        FoundTool = FALSE;
-
-        #if REFIT_DEBUG > 0
+        BOOLEAN FoundTool = FALSE;
         BOOLEAN Skipped = FALSE;
-        switch (GlobalConfig.ShowTools[i]) {
-            case TAG_SHUTDOWN        : ToolName = L"Shut Computer Down" ; break;
-            case TAG_REBOOT          : ToolName = L"Restart Computer"   ; break;
-            case TAG_ABOUT           : ToolName = L"About RefindPlus"   ; break;
-            case TAG_EXIT            : ToolName = L"Exit RefindPlus"    ; break;
-            case TAG_HIDDEN          : ToolName = L"Hidden Tags"        ; break;
-            case TAG_FIRMWARE        : ToolName = L"Reboot to Firmware" ; break;
-            case TAG_SHELL           : ToolName = L"UEFI Shell"         ; break;
-            case TAG_GPTSYNC         : ToolName = L"GPT Sync"           ; break;
-            case TAG_GDISK           : ToolName = L"GDisk"              ; break;
-            case TAG_NETBOOT         : ToolName = L"Net Boot"           ; break;
-            case TAG_APPLE_RECOVERY  : ToolName = L"Apple Recovery"     ; break;
-            case TAG_WINDOWS_RECOVERY: ToolName = L"Windows Recovery"   ; break;
-            case TAG_MOK_TOOL        : ToolName = L"MOK"                ; break;
-            case TAG_FWUPDATE_TOOL   : ToolName = L"Firmware Update"    ; break;
-            case TAG_CSR_ROTATE      : ToolName = L"Toggle Mac CSR"     ; break;
-            case TAG_INSTALL         : ToolName = L"Install RefindPlus" ; break;
-            case TAG_BOOTORDER       : ToolName = L"Manage Boot Order"  ; break;
-            case TAG_PRE_BOOTKICKER  : ToolName = L"Mac BootKicker"     ; break;
-            case TAG_PRE_NVRAMCLEAN  : ToolName = L"Clean Mac Nvram"    ; break;
-            case TAG_MEMTEST         : ToolName = L"Memtest"            ; break;
-            default                  : ToolName = L"Skipped"            ;
-                Skipped = TRUE;
-        }
-        if (!Skipped) {
-            MsgLog ("Tool Type %02d ...%s:\n", i + 1, ToolName);
-        }
-        #endif
 
-        #define TagAddMenuEntry(menu, icon) \
+        UINTN TheTag = GlobalConfig.ShowTools[i];
+
+        CHAR16 *TheTitle = GetPoolStr (&TagMenuEntry[TheTag].Title);
+
+        CHAR16 *ToolName = NULL;
+        UINTN TheIcon = 0;
+        switch (TheTag) {
+            #define TAGS_TAG_TO_TOOL_AND_ICON
+            #include "tags.include"
+        }
+        if (!ToolName) {
+            Skipped = TRUE;
+            ToolName = L"Skipped";
+        }
+        
+        if (!Skipped) {
+            MsgLog ("[ Tool Type %02d ...%s\n", i + 1, ToolName);
+        }
+
+        #define TagAddMenuEntry() \
             do { \
                 REFIT_MENU_ENTRY *TempMenuEntry; \
                 FoundTool = TRUE; \
-                TempMenuEntry = CopyMenuEntry (&menu); \
-                CopyFromPoolImage_PI_ (&TempMenuEntry->Image_PI_, BuiltinIcon (icon)); \
+                TempMenuEntry = CopyMenuEntry (&TagMenuEntry[TheTag]); \
+                CopyFromPoolImage_PI_ (&TempMenuEntry->Image_PI_, BuiltinIcon (TheIcon)); \
                 AddMenuEntry (MainMenu, TempMenuEntry); \
                 LOG2(2, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added Tool:- '%s'", ToolName); \
             } while (0)
 
 
-        switch (GlobalConfig.ShowTools[i]) {
+        switch (TheTag) {
+
             case TAG_PRE_NVRAMCLEAN:
-                TagAddMenuEntry(MenuEntryPreCleanNvram, BUILTIN_ICON_TOOL_NVRAMCLEAN);
-                break;
-
             case TAG_PRE_BOOTKICKER:
-                TagAddMenuEntry(MenuEntryPreBootKicker, BUILTIN_ICON_TOOL_BOOTKICKER);
-                break;
+            case TAG_SHUTDOWN      :
+            case TAG_REBOOT        :
+            case TAG_ABOUT         :
+            case TAG_EXIT          :
+            case TAG_INSTALL       :
+            case TAG_BOOTORDER     : TagAddMenuEntry(); break;
 
-            case TAG_SHUTDOWN:
-                TagAddMenuEntry(MenuEntryShutdown, BUILTIN_ICON_FUNC_SHUTDOWN);
-                break;
-
-            case TAG_REBOOT:
-                TagAddMenuEntry(MenuEntryReset, BUILTIN_ICON_FUNC_RESET);
-                break;
-
-            case TAG_ABOUT:
-                TagAddMenuEntry(MenuEntryAbout, BUILTIN_ICON_FUNC_ABOUT);
-                break;
-
-            case TAG_EXIT:
-                TagAddMenuEntry(MenuEntryExit, BUILTIN_ICON_FUNC_EXIT);
-                break;
+            case TAG_MOK_TOOL     : FoundTool = FindTool (MokLocations                        , MOK_NAMES     , TheTitle, TheIcon); break;
+            case TAG_FWUPDATE_TOOL: FoundTool = FindTool (MokLocations                        , FWUPDATE_NAMES, TheTitle, TheIcon); break;
+            case TAG_MEMTEST      : FoundTool = FindTool (MEMTEST_LOCATIONS MEMTEST_LOCATIONS2, MEMTEST_NAMES , TheTitle, TheIcon); break;
 
             case TAG_HIDDEN:
                 if (GlobalConfig.HiddenTags) {
-                    TagAddMenuEntry(MenuEntryHiddenTags, BUILTIN_ICON_FUNC_HIDDEN);
+                    TagAddMenuEntry();
                 }
+                break;
+
+            case TAG_CSR_ROTATE:
+                if ((GetCsrStatus (&CsrValue) == EFI_SUCCESS) && (GlobalConfig.CsrValues)) {
+                    TagAddMenuEntry();
+                } // if
                 break;
 
             case TAG_FIRMWARE:
@@ -2283,7 +2243,7 @@ VOID ScanForTools (VOID) {
                 ) == EFI_SUCCESS) {
                     osind = *(UINT64*) ItemBuffer;
                     if (osind & EFI_OS_INDICATIONS_BOOT_TO_FW_UI) {
-                        TagAddMenuEntry(MenuEntryFirmware, BUILTIN_ICON_FUNC_FIRMWARE);
+                        TagAddMenuEntry();
                     } // if
                     MyFreePool (&ItemBuffer);
                 }
@@ -2308,8 +2268,8 @@ VOID ScanForTools (VOID) {
                         AddToolEntry (
                             SelfVolume,
                             FileName,
-                            L"UEFI Shell",
-                            BuiltinIcon (BUILTIN_ICON_TOOL_SHELL),
+                            TheTitle,
+                            BuiltinIcon (TheIcon),
                             'S',
                             FALSE
                         );
@@ -2321,7 +2281,7 @@ VOID ScanForTools (VOID) {
                     FileName = NULL;
                 } // while
 
-                if (ScanFirmwareDefined (1, L"Shell", BuiltinIcon(BUILTIN_ICON_TOOL_SHELL))) {
+                if (ScanFirmwareDefined (1, L"Shell", BuiltinIcon(TheIcon))) {
                     FoundTool = TRUE;
                 }
                 break;
@@ -2340,8 +2300,8 @@ VOID ScanForTools (VOID) {
                         AddToolEntry (
                             SelfVolume,
                             FileName,
-                            L"Hybrid MBR tool",
-                            BuiltinIcon (BUILTIN_ICON_TOOL_PART),
+                            TheTitle,
+                            BuiltinIcon (TheIcon),
                             'P',
                             FALSE
                         );
@@ -2368,8 +2328,8 @@ VOID ScanForTools (VOID) {
                         AddToolEntry (
                             SelfVolume,
                             FileName,
-                            L"disk partitioning tool",
-                            BuiltinIcon (BUILTIN_ICON_TOOL_PART),
+                            TheTitle,
+                            BuiltinIcon (TheIcon),
                             'G',
                             FALSE
                         );
@@ -2394,8 +2354,8 @@ VOID ScanForTools (VOID) {
                         AddToolEntry (
                             SelfVolume,
                             FileName,
-                            L"Netboot",
-                            BuiltinIcon (BUILTIN_ICON_TOOL_NETBOOT),
+                            TheTitle,
+                            BuiltinIcon (TheIcon),
                             'N',
                             FALSE
                         );
@@ -2432,7 +2392,7 @@ VOID ScanForTools (VOID) {
                                     Volumes[VolumeIndex],
                                     FileName,
                                     Description,
-                                    BuiltinIcon (BUILTIN_ICON_TOOL_APPLE_RESCUE),
+                                    BuiltinIcon (TheIcon),
                                     'R',
                                     TRUE
                                 );
@@ -2471,7 +2431,7 @@ VOID ScanForTools (VOID) {
                                 Volumes[VolumeIndex],
                                 FileName,
                                 Description,
-                                BuiltinIcon (BUILTIN_ICON_TOOL_WINDOWS_RESCUE),
+                                BuiltinIcon (TheIcon),
                                 'R',
                                 TRUE
                             );
@@ -2488,56 +2448,19 @@ VOID ScanForTools (VOID) {
                 } // while
                 break;
 
-            case TAG_MOK_TOOL:
-                FoundTool = FindTool (
-                    MokLocations,
-                    MOK_NAMES,
-                    L"MOK Utility",
-                    BUILTIN_ICON_TOOL_MOK_TOOL
-                );
-                break;
-
-            case TAG_FWUPDATE_TOOL:
-                FoundTool = FindTool (
-                    MokLocations,
-                    FWUPDATE_NAMES,
-                    L"Firmware Update Utility",
-                    BUILTIN_ICON_TOOL_FWUPDATE
-                );
-                break;
-
-            case TAG_CSR_ROTATE:
-                if ((GetCsrStatus (&CsrValue) == EFI_SUCCESS) && (GlobalConfig.CsrValues)) {
-                    TagAddMenuEntry(MenuEntryRotateCsr, BUILTIN_ICON_FUNC_CSR_ROTATE);
-                } // if
-                break;
-
-            case TAG_INSTALL:
-                TagAddMenuEntry(MenuEntryInstall, BUILTIN_ICON_FUNC_INSTALL);
-                break;
-
-            case TAG_BOOTORDER:
-                TagAddMenuEntry(MenuEntryBootorder, BUILTIN_ICON_FUNC_BOOTORDER);
-                break;
-
-            case TAG_MEMTEST:
-                FoundTool = FindTool (
-                    MEMTEST_LOCATIONS,
-                    MEMTEST_NAMES,
-                    L"Memory Test Utility",
-                    BUILTIN_ICON_TOOL_MEMTEST
-                );
-                break;
         } // switch()
         
         #if REFIT_DEBUG > 0
         if (Skipped) {
             if (FoundTool) {
-                MsgLog ("              * WARN: Found tool for '%s'\n", ToolName);
+                MsgLog ("* WARN: Found tool for '%s'\n", ToolName);
             }
         }
-        else if (!FoundTool) {
-            MsgLog ("              * WARN: Could not find '%s'\n", ToolName);
+        else {
+            if (!FoundTool) {
+                MsgLog ("* WARN: Could not find '%s'\n", ToolName);
+            }
+            MsgLog ("] Tool Type %02d ...%s\n", i + 1, ToolName);
         }
         #endif
 

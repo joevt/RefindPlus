@@ -64,41 +64,17 @@
 
 // Tag classifications; used in various ways.
 enum {
-    TAG_ZERO             ,
-    TAG_ABOUT            ,
-    TAG_REBOOT           ,
-    TAG_SHUTDOWN         ,
-    TAG_TOOL             ,
-    TAG_LOADER           ,
-    TAG_LEGACY           ,
-    TAG_FIRMWARE_LOADER  ,
-    TAG_EXIT             ,
-    TAG_SHELL            ,
-    TAG_GPTSYNC          ,
-    TAG_LEGACY_UEFI      ,
-    TAG_APPLE_RECOVERY   ,
-    TAG_WINDOWS_RECOVERY ,
-    TAG_MOK_TOOL         ,
-    TAG_FIRMWARE         ,
-    TAG_MEMTEST          ,
-    TAG_GDISK            ,
-    TAG_NETBOOT          ,
-    TAG_CSR_ROTATE       ,
-    TAG_FWUPDATE_TOOL    ,
-    TAG_HIDDEN           ,
-    TAG_INSTALL          ,
-    TAG_BOOTORDER        ,
-
-    TAG_PRE_BOOTKICKER   ,
-    TAG_LOAD_BOOTKICKER  ,
-    TAG_SHOW_BOOTKICKER  ,
-
-    TAG_PRE_NVRAMCLEAN   ,
-    TAG_LOAD_NVRAMCLEAN  ,
-    TAG_NVRAMCLEAN       ,
-
-    NUM_TOOLS            ,
+    #define TAGS_TAG
+    #include "tags.include"
+    NUM_TOOLS
 };
+
+// Menu entry types - depends on the tag of the menu entry
+typedef enum {
+    EntryTypeRefitMenuEntry,
+    EntryTypeLoaderEntry,
+    EntryTypeLegacyEntry,
+} ENTRY_TYPE;
 
 #define NUM_SCAN_OPTIONS 11
 
@@ -215,26 +191,33 @@ enum {
 // searched in addition to these locations....
 #define MOK_LOCATIONS \
 L"\\,EFI\\tools,EFI\\fedora,EFI\\redhat,EFI\\ubuntu,EFI\\suse,EFI\\opensuse,EFI\\altlinux"
+
 // Directories to search for memtest86....
+// Warning: These are also used for DontScanDirs so don't add EFI here.
 #if defined (EFIX64)
-#define MEMTEST_LOCATIONS          L"EFI\\BOOT\\x64_tools,EFI\\tools_x64,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#define MEMTEST_LOCATIONS L"EFI\\BOOT\\x64_tools,EFI\\BOOT\\tools_x64,EFI\\tools_x64,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
 #elif defined (EFI32)
-#define MEMTEST_LOCATIONS        L"EFI\\BOOT\\tools_ia32,EFI\\tools_ia32,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#define MEMTEST_LOCATIONS                    L"EFI\\BOOT\\tools_ia32,EFI\\tools_ia32,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
 #elif defined (EFIAARCH64)
-#define MEMTEST_LOCATIONS        L"EFI\\BOOT\\tools_aa64,EFI\\tools_aa64,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#define MEMTEST_LOCATIONS                    L"EFI\\BOOT\\tools_aa64,EFI\\tools_aa64,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
 else
-#define MEMTEST_LOCATIONS                                              L"EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#define MEMTEST_LOCATIONS                                                          L"EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
 #endif
+#define MEMTEST_LOCATIONS2 L",EFI"
+
 // Directories to search for BootKicker....
 #define BOOTKICKER_LOCATIONS \
 L"\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
+
 // Directories to search for CleanNvram....
 #define NVRAMCLEAN_LOCATIONS \
 L"\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
+
 // Files that may be Windows recovery files
 #define WINDOWS_RECOVERY_FILES \
 L"EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootx64.efi,\
 Recovery:\\EFI\\BOOT\\bootia32.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
+
 // Files that may be Mac OS recovery files
 #define MACOS_RECOVERY_FILES    L"com.apple.recovery.boot\\boot.efi"
 #define MACOSX_LOADER_DIR       L"System\\Library\\CoreServices"
@@ -532,8 +515,6 @@ extern REFIT_VOLUME       **PreBootVolumes;
 extern REFIT_CONFIG         GlobalConfig;
 
 extern REFIT_MENU_SCREEN   *MainMenu;
-
-extern REFIT_MENU_ENTRY     MenuEntryReturn;
 
 
 VOID AboutRefindPlus(VOID);

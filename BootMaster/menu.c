@@ -102,11 +102,13 @@ BOOLEAN PointerEnabled = FALSE;
 BOOLEAN PointerActive  = FALSE;
 BOOLEAN DrawSelection  = TRUE;
 
-extern EFI_GUID          RefindPlusGuid;
-extern REFIT_MENU_ENTRY  MenuEntryReturn;
+extern EFI_GUID RefindPlusGuid;
 
-static REFIT_MENU_ENTRY  MenuEntryYes  = { {L"Yes", TRUE}, TAG_RETURN, 1, 0, 0, {NULL, FALSE}, {NULL, FALSE}, NULL };
-static REFIT_MENU_ENTRY  MenuEntryNo   = { {L"No" , TRUE}, TAG_RETURN, 1, 0, 0, {NULL, FALSE}, {NULL, FALSE}, NULL };
+
+REFIT_MENU_ENTRY TagMenuEntry[] = {
+    #define TAGS_MENU
+    #include "tags.include"
+};
 
 #if REFIT_DEBUG > 0
 STATIC UINTN MinAllocation = 0;
@@ -425,7 +427,7 @@ VOID AddMenuEntry (
     IN REFIT_MENU_SCREEN *Screen,
     IN REFIT_MENU_ENTRY  *Entry
 ) {
-    MsgLog ("[ AddMenuEntry Screen:%p '%s' Entry:%p '%s'\n",
+    MsgLog ("AddMenuEntry Screen:%p '%s' Entry:%p '%s'\n",
         Screen, Screen && GetPoolStr (&Screen->Title) ? GetPoolStr (&Screen->Title) : L"NULL",
         Entry, Entry && GetPoolStr (&Entry->Title ) ? GetPoolStr (&Entry->Title ) : L"NULL"
     );
@@ -434,7 +436,7 @@ VOID AddMenuEntry (
     }
     LOGPOOL (Entry);
     AddListElement ((VOID ***) &(Screen->Entries), &(Screen->EntryCount), Entry);
-    MsgLog ("] AddMenuEntry\n");
+    //MsgLog ("] AddMenuEntry\n");
 }
 
 VOID
@@ -1564,7 +1566,7 @@ VOID DrawMainMenuEntry (
 ) {
     EG_IMAGE *Background;
 
-    MsgLog ("DrawMainMenuEntry selected:%d DrawSelection:%d Row:%d\n", selected, DrawSelection, Entry->Row);
+    //MsgLog ("DrawMainMenuEntry selected:%d DrawSelection:%d Row:%d\n", selected, DrawSelection, Entry->Row);
 
     // if using pointer, don't draw selection image when not hovering
     if (selected && DrawSelection) {
@@ -2128,7 +2130,7 @@ VOID DisplaySimpleMessage (
     }
 
     AddMenuInfoLineCached (SimpleMessageMenu, Message);
-    AddMenuEntryCopy (SimpleMessageMenu, &MenuEntryReturn);
+    AddMenuEntryCopy (SimpleMessageMenu, &TagMenuEntry[TAG_RETURN]);
     MenuExit = RunGenericMenu (SimpleMessageMenu, Style, &DefaultEntry, &ChosenOption);
 
     #if REFIT_DEBUG > 0
@@ -2445,8 +2447,8 @@ BOOLEAN HideEfiTag (
     }
     MergeStrings (&FullPath, GetPoolStr (&Loader->LoaderPath), L':');
     AddMenuInfoLinePool (HideItemMenu, PoolPrint (L"Are you sure you want to hide %s?", FullPath));
-    AddMenuEntryCopy (HideItemMenu, &MenuEntryYes);
-    AddMenuEntryCopy (HideItemMenu, &MenuEntryNo);
+    AddMenuEntryCopy (HideItemMenu, &TagMenuEntry[TAG_YES]);
+    AddMenuEntryCopy (HideItemMenu, &TagMenuEntry[TAG_NO]);
 
     MenuExit = RunGenericMenu (HideItemMenu, Style, &DefaultEntry, &ChosenOption);
     LOG(2, LOG_LINE_NORMAL,
@@ -2496,8 +2498,8 @@ BOOLEAN HideFirmwareTag(
     }
 
     AddMenuInfoLinePool (HideItemMenu, PoolPrint(L"Really hide '%s'?", GetPoolStr (&Loader->Title)));
-    AddMenuEntryCopy (HideItemMenu, &MenuEntryYes);
-    AddMenuEntryCopy (HideItemMenu, &MenuEntryNo);
+    AddMenuEntryCopy (HideItemMenu, &TagMenuEntry[TAG_YES]);
+    AddMenuEntryCopy (HideItemMenu, &TagMenuEntry[TAG_NO]);
 
     MenuExit = RunGenericMenu(HideItemMenu, Style, &DefaultEntry, &ChosenOption);
 
@@ -2544,8 +2546,8 @@ BOOLEAN HideLegacyTag (
         Name = L"Legacy OS";
     }
     AddMenuInfoLinePool (HideItemMenu, PoolPrint (L"Are you sure you want to hide '%s'?", Name));
-    AddMenuEntryCopy (HideItemMenu, &MenuEntryYes);
-    AddMenuEntryCopy (HideItemMenu, &MenuEntryNo);
+    AddMenuEntryCopy (HideItemMenu, &TagMenuEntry[TAG_YES]);
+    AddMenuEntryCopy (HideItemMenu, &TagMenuEntry[TAG_NO]);
     MenuExit = RunGenericMenu (HideItemMenu, Style, &DefaultEntry, &ChosenOption);
 
     LOG(2, LOG_LINE_NORMAL,
@@ -2825,6 +2827,38 @@ CopyMenuScreen (
     return (NewEntry);
 } // REFIT_MENU_SCREEN* CopyMenuScreen()
 
+
+ENTRY_TYPE
+GetMenuEntryType (
+    REFIT_MENU_ENTRY *Entry
+) {
+    ENTRY_TYPE EntryType = EntryTypeRefitMenuEntry;
+    switch (Entry->Tag) {
+        #define TAGS_TAG_TO_ENTRY_TYPE
+        #include "tags.include"
+    }
+    return EntryType;
+}
+
+// Creates a shallow copy of a menu entry. Intended for an entry that can be modified.
+// The entry is not meant to be used by any menu functions.
+// This entry should only exist while the original entry exists. Use MyFreePool to free
+// the result since this is a shallow copy only.
+REFIT_MENU_ENTRY *
+CopyMenuEntryShallow (
+    REFIT_MENU_ENTRY *Entry
+) {
+    ENTRY_TYPE EntryType = GetMenuEntryType (Entry);
+    REFIT_MENU_ENTRY *NewEntry = NULL;
+    switch (EntryType) {
+        case EntryTypeLoaderEntry: NewEntry = (REFIT_MENU_ENTRY *)AllocateCopyPool (sizeof(LOADER_ENTRY    ), Entry); MsgLog ("Copied LOADER_ENTRY\n"    ); break;
+        case EntryTypeLegacyEntry: NewEntry = (REFIT_MENU_ENTRY *)AllocateCopyPool (sizeof(LEGACY_ENTRY    ), Entry); MsgLog ("Copied LEGACY_ENTRY\n"    ); break;
+        default                  : NewEntry = (REFIT_MENU_ENTRY *)AllocateCopyPool (sizeof(REFIT_MENU_ENTRY), Entry); MsgLog ("Copied REFIT_MENU_ENTRY\n"); break;
+    }
+    return NewEntry;
+}
+
+
 // Creates a copy of a menu entry. Intended to enable moving a stack-based
 // menu entry (such as the ones for the "reboot" and "exit" functions) to
 // to the heap. This enables easier deletion of the whole set of menu
@@ -2841,17 +2875,12 @@ CopyMenuEntry (
         ZeroPoolStr (&NewEntry->Title); // set to null so CopyPoolStr doesn't try to free it
         ZeroPoolImage (&NewEntry->BadgeImage);
         ZeroPoolImage (&NewEntry->Image);
+
 #if REFIT_DEBUG > 0
-        switch (Entry->Tag) {
-            case TAG_NVRAMCLEAN: 
-            case TAG_SHOW_BOOTKICKER: 
-            case TAG_LOADER: 
-            case TAG_TOOL: 
-            case TAG_FIRMWARE_LOADER: 
-            case TAG_LEGACY: 
-            case TAG_LEGACY_UEFI:
-                DumpCallStack (NULL, FALSE);
-                break;
+        ENTRY_TYPE EntryType = GetMenuEntryType (Entry);
+        if (EntryType != EntryTypeRefitMenuEntry) {
+            MsgLog ("Allocation Error: Cannot copy special menu entries\n");
+            DumpCallStack (NULL, FALSE);
         }
 #endif
         CopyPoolStr (&NewEntry->Title, Entry->Title_PS_.Str); // the source string might not be a pool str
@@ -2875,23 +2904,18 @@ FreeMenuEntry (
         FreePoolImage (&(*Entry)->Image);
         FreeMenuScreen (&(*Entry)->SubScreen);
 
-        switch ((*Entry)->Tag) {
-            case TAG_NVRAMCLEAN:
-            case TAG_SHOW_BOOTKICKER:
-            case TAG_LOADER:
-            case TAG_TOOL:
-            case TAG_FIRMWARE_LOADER:
-                FreePoolStr (&((LOADER_ENTRY *)(*Entry))->Title);
-                FreePoolStr (&((LOADER_ENTRY *)(*Entry))->LoaderPath);
-                FreePoolStr (&((LOADER_ENTRY *)(*Entry))->LoadOptions);
-                FreePoolStr (&((LOADER_ENTRY *)(*Entry))->InitrdPath);
-                MyFreePool (&((LOADER_ENTRY *)(*Entry))->EfiLoaderPath);
-                break;
-
-            case TAG_LEGACY:
-            case TAG_LEGACY_UEFI:
-                FreePoolStr (&((LEGACY_ENTRY *)(*Entry))->LoadOptions);
-                break;
+        ENTRY_TYPE EntryType = GetMenuEntryType (*Entry);
+        if (EntryType == EntryTypeLoaderEntry) {
+            FreePoolStr (&((LOADER_ENTRY *)(*Entry))->Title);
+            FreePoolStr (&((LOADER_ENTRY *)(*Entry))->LoaderPath);
+            FreePoolStr (&((LOADER_ENTRY *)(*Entry))->LoadOptions);
+            FreePoolStr (&((LOADER_ENTRY *)(*Entry))->InitrdPath);
+            MyFreePool (&((LOADER_ENTRY *)(*Entry))->EfiLoaderPath);
+            FreeVolume (&((LOADER_ENTRY *)(*Entry))->Volume);
+        }
+        else if (EntryType == EntryTypeLegacyEntry) {
+            FreePoolStr (&((LEGACY_ENTRY *)(*Entry))->LoadOptions);
+            FreeVolume (&((LOADER_ENTRY *)(*Entry))->Volume);
         }
 
         MyFreePool (Entry);
@@ -2951,31 +2975,14 @@ LEAKABLEMENUENTRY (
             LEAKABLEPOOLIMAGE (&Entry->Image_PI_);
             LEAKABLEMENU (Entry->SubScreen);
 
-            BOOLEAN IsLoader = FALSE;
-            BOOLEAN IsLegacy = FALSE;
+            ENTRY_TYPE EntryType = GetMenuEntryType (Entry);
+            LEAKABLEPOOLSTR  ((EntryType == EntryTypeLoaderEntry) ? &((LOADER_ENTRY *)Entry)->Title_PS_       : NULL, "Loader Entry Title");
+            LEAKABLEPOOLSTR  ((EntryType == EntryTypeLoaderEntry) ? &((LOADER_ENTRY *)Entry)->LoaderPath_PS_  : NULL, "Loader Entry Loader Path");
+            LEAKABLEPOOLSTR  ((EntryType == EntryTypeLoaderEntry) ? &((LOADER_ENTRY *)Entry)->LoadOptions_PS_ : NULL, "Loader Entry Loader Options");
+            LEAKABLEPOOLSTR  ((EntryType == EntryTypeLoaderEntry) ? &((LOADER_ENTRY *)Entry)->InitrdPath_PS_  : NULL, "Loader Entry Initrd Path");
+            LEAKABLEWITHPATH ((EntryType == EntryTypeLoaderEntry) ? ((LOADER_ENTRY *)Entry)->EfiLoaderPath    : NULL, "Loader Efi Loader Path");
 
-            switch (Entry->Tag) {
-                case TAG_NVRAMCLEAN:
-                case TAG_SHOW_BOOTKICKER:
-                case TAG_LOADER:
-                case TAG_TOOL:
-                case TAG_FIRMWARE_LOADER:
-                    IsLoader = TRUE;
-                    break;
-
-                case TAG_LEGACY:
-                case TAG_LEGACY_UEFI:
-                    IsLegacy = TRUE;
-                    break;
-            }
-
-            LEAKABLEPOOLSTR  (IsLoader ? &((LOADER_ENTRY *)Entry)->Title_PS_       : NULL, "Loader Entry Title");
-            LEAKABLEPOOLSTR  (IsLoader ? &((LOADER_ENTRY *)Entry)->LoaderPath_PS_  : NULL, "Loader Entry Loader Path");
-            LEAKABLEPOOLSTR  (IsLoader ? &((LOADER_ENTRY *)Entry)->LoadOptions_PS_ : NULL, "Loader Entry Loader Options");
-            LEAKABLEPOOLSTR  (IsLoader ? &((LOADER_ENTRY *)Entry)->InitrdPath_PS_  : NULL, "Loader Entry Initrd Path");
-            LEAKABLEWITHPATH (IsLoader ? ((LOADER_ENTRY *)Entry)->EfiLoaderPath    : NULL, "Loader Efi Loader Path");
-
-            LEAKABLEPOOLSTR  (IsLegacy ? &((LEGACY_ENTRY *)Entry)->LoadOptions_PS_ : NULL, "Legacy Entry Loader Options");
+            LEAKABLEPOOLSTR  ((EntryType == EntryTypeLegacyEntry) ? &((LEGACY_ENTRY *)Entry)->LoadOptions_PS_ : NULL, "Legacy Entry Loader Options");
         LEAKABLEPATHDEC ();
     }
     LEAKABLEWITHPATH (Entry, "Menu Entry");

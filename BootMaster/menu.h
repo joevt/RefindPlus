@@ -68,8 +68,6 @@
 #define MENU_EXIT_EJECT   (5)
 #define MENU_EXIT_HIDE    (6)
 
-#define TAG_RETURN       (99)
-
 // scrolling definitions
 
 typedef struct {
@@ -105,7 +103,7 @@ typedef struct {
 // Maximum length of a text string in certain menus
 #define MAX_LINE_LENGTH 65
 
-struct _refit_menu_screen;
+extern REFIT_MENU_ENTRY TagMenuEntry[];
 
 typedef VOID (*MENU_STYLE_FUNC)(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN Function, IN CHAR16 *ParamText);
 
@@ -143,6 +141,8 @@ UINTN WaitForInput(IN UINTN Timeout);
 
 REFIT_MENU_SCREEN * CopyMenuScreen (REFIT_MENU_SCREEN *Entry);
 REFIT_MENU_ENTRY * CopyMenuEntry (REFIT_MENU_ENTRY *Entry);
+REFIT_MENU_ENTRY * CopyMenuEntryShallow (REFIT_MENU_ENTRY *Entry);
+
 VOID FreeMenuEntry (REFIT_MENU_ENTRY **Entry);
 VOID FreeMenuScreen (REFIT_MENU_SCREEN **Menu);
 
