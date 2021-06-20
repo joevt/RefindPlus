@@ -497,36 +497,39 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
 VOID SetLoaderDefaults (
     LOADER_ENTRY *Entry, CHAR16 *LoaderPath, REFIT_VOLUME *Volume
 ) {
-    CHAR16      *NameClues, *PathOnly, *NoExtension, *OSIconName = NULL, *Temp;
-    CHAR16      ShortcutLetter = 0;
+    MsgLog ("[ SetLoaderDefaults for '%s'\n", GetPoolStr (&Entry->me.Title));
 
-    NameClues   = Basename (LoaderPath);
-    PathOnly    = FindPath (LoaderPath);
+    CHAR16 *NameClues;
+    CHAR16 *PathOnly;
+    CHAR16 *OSIconName = NULL;
+    CHAR16 ShortcutLetter = 0;
 
-    LOG(3, LOG_LINE_NORMAL, L"Get Default Loader Settings for '%s'", GetPoolStr (&Entry->me.Title));
+    NameClues = Basename (LoaderPath);
+    PathOnly = FindPath (LoaderPath);
 
     if (Volume->DiskKind == DISK_KIND_NET) {
         MergeStrings (&NameClues, GetPoolStr (&Entry->me.Title), L' ');
     }
     else {
         if (GetPoolImage (&Entry->me.Image) == NULL) {
-            NoExtension = StripEfiExtension (NameClues);
+            CHAR16 *NoExtension = StripEfiExtension (NameClues);
             if (NoExtension != NULL) {
-        // locate a custom icon for the loader
-        // Anything found here takes precedence over the "hints" in the OSIconName variable
+                // locate a custom icon for the loader
+                // Anything found here takes precedence over the "hints" in the OSIconName variable
                 LOG(4, LOG_LINE_NORMAL, L"Trying to load icon from boot loader's directory");
 
-        if (!GetPoolImage (&Entry->me.Image)) {
-            AssignPoolImage (&Entry->me.Image, egLoadIconAnyType (
-                Volume->RootDir,
-                PathOnly,
-                NoExtension,
-                GlobalConfig.IconSizes[ICON_SIZE_BIG]
-            ));
-        }
-        if (!GetPoolImage (&Entry->me.Image)) {
-            CopyFromPoolImage (&Entry->me.Image, &Volume->VolIconImage);
-        }
+                if (!GetPoolImage (&Entry->me.Image)) {
+                    AssignPoolImage (&Entry->me.Image, egLoadIconAnyType (
+                        Volume->RootDir,
+                        PathOnly,
+                        NoExtension,
+                        GlobalConfig.IconSizes[ICON_SIZE_BIG]
+                    ));
+                }
+                if (!GetPoolImage (&Entry->me.Image)) {
+                    CopyFromPoolImage (&Entry->me.Image, &Volume->VolIconImage);
+                }
+                MyFreePool (&NoExtension);
             }
         }
 
@@ -538,10 +541,9 @@ VOID SetLoaderDefaults (
         }
         #endif
 
-        Temp = FindLastDirName (LoaderPath);
+        CHAR16 *Temp = FindLastDirName (LoaderPath);
         MergeStrings (&OSIconName, Temp, L',');
         MyFreePool (&Temp);
-        Temp = NULL;
         if (OSIconName != NULL) {
             ShortcutLetter = OSIconName[0];
         }
@@ -603,6 +605,8 @@ VOID SetLoaderDefaults (
             GuessLinuxDistribution (&OSIconName, Volume, LoaderPath);
             AssignPoolStr (&Entry->LoadOptions, GetMainLinuxOptions (LoaderPath, Volume));
         }
+        MsgLog ("Linux distribution guesses: %s\n", OSIconName);
+        //DebugLoop ();
         MergeStrings (&OSIconName, L"linux", L',');
         Entry->OSType = 'L';
         if (ShortcutLetter == 0) {
@@ -698,8 +702,8 @@ VOID SetLoaderDefaults (
 
     MyFreePool (&PathOnly);
     MyFreePool (&OSIconName);
-    MyFreePool (&NoExtension);
     MyFreePool (&NameClues);
+    MsgLog ("] SetLoaderDefaults\n");
 } // VOID SetLoaderDefaults()
 
 // Add an NVRAM-based EFI boot loader entry to the menu.
