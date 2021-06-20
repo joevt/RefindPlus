@@ -404,6 +404,23 @@ AddMenuInfoLineCached (
     AddMenuInfoLine (Screen, InfoLine, TRUE);
 }
 
+VOID AddMenuInfoLinePoolStr_PS_ (
+    IN REFIT_MENU_SCREEN *Screen,
+    IN PoolStr *InfoLine
+) {
+    if (InfoLine && InfoLine->Str) {
+        if (InfoLine->Cached) {
+            AddMenuInfoLineCached (Screen, InfoLine->Str);
+        }
+        else {
+            AddMenuInfoLinePool (Screen, StrDuplicate (InfoLine->Str));
+        }
+    }
+    else {
+        AddMenuInfoLineCached (Screen, NULL);
+    }
+}
+
 VOID AddMenuEntry (
     IN REFIT_MENU_SCREEN *Screen,
     IN REFIT_MENU_ENTRY  *Entry

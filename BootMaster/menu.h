@@ -112,6 +112,9 @@ typedef VOID (*MENU_STYLE_FUNC)(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *S
 VOID AddMenuInfoLine(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine, IN BOOLEAN Cached);
 VOID AddMenuInfoLinePool(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine);
 VOID AddMenuInfoLineCached(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine);
+VOID AddMenuInfoLinePoolStr_PS_ (IN REFIT_MENU_SCREEN *Screen, IN PoolStr *InfoLine);
+#define AddMenuInfoLinePoolStr(s, i) AddMenuInfoLinePoolStr_PS_ (s, i##_PS_)
+
 VOID AddMenuEntry(IN REFIT_MENU_SCREEN *Screen, IN REFIT_MENU_ENTRY *Entry);
 VOID AddMenuEntryCopy(IN REFIT_MENU_SCREEN *Screen, IN REFIT_MENU_ENTRY *Entry);
 

@@ -33,7 +33,7 @@
 #include "mystrings.h"
 #include "../include/refit_call_wrapper.h"
 
-CHAR16 *gCsrStatus = NULL;
+PoolStr gCsrStatus_PS_ = {NULL, FALSE};
 
 // Get CSR (Apple's Configurable Security Restrictions; aka System Integrity
 // Protection [SIP], or "rootless") status information. If the variable is not
@@ -60,8 +60,9 @@ EFI_STATUS GetCsrStatus (
                 *CsrStatus = *ReturnValue;
             }
             else {
-                Status     = EFI_BAD_BUFFER_SIZE;
-                gCsrStatus = StrDuplicate (L"Unknown SIP/SSV Status");
+                Status = EFI_BAD_BUFFER_SIZE;
+                AssignCachedPoolStr (&gCsrStatus, L"Unknown SIP/SSV Status");
+                LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
             }
 
             MyFreePool (&ReturnValue);
@@ -89,60 +90,66 @@ VOID RecordgCsrStatus (
     switch (CsrStatus) {
         // SIP "Enabled" Setting
         case SIP_ENABLED:
-            gCsrStatus = PoolPrint (
+            AssignPoolStr (&gCsrStatus, PoolPrint (
                 L"SIP/SSV Enabled (0x%04x)",
                 CsrStatus
-            );
+            ));
+            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
             break;
 
         // SIP "Disabled" Settings
         case SIP_DISABLED:
-            gCsrStatus = PoolPrint (
+            AssignPoolStr (&gCsrStatus, PoolPrint (
                 L"SIP Disabled (0x%04x)",
                 CsrStatus
-            );
+            ));
+            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
             break;
 
         // SSV "Disabled" Settings
         case SSV_DISABLED:
         case SSV_DISABLED_EX:
-            gCsrStatus = PoolPrint (
+            AssignPoolStr (&gCsrStatus, PoolPrint (
                 L"SIP and SSV Disabled (0x%04x)",
                 CsrStatus
-            );
+            ));
+            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
             break;
 
         // Recognised Custom SIP "Disabled" Settings
         case SSV_DISABLED_ANY:
         case SSV_DISABLED_KEXT:
         case SSV_DISABLED_ANY_EX:
-            gCsrStatus = PoolPrint (
+            AssignPoolStr (&gCsrStatus, PoolPrint (
                 L"SIP and SSV Disabled (0x%04x - Custom Setting)",
                 CsrStatus
-            );
+            ));
+            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
             break;
 
         // Wide Open and Max Legal CSR "Disabled" Settings
         case SSV_DISABLED_WIDE_OPEN:
         case CSR_MAX_LEGAL_VALUE:
-            gCsrStatus = PoolPrint (
+            AssignPoolStr (&gCsrStatus, PoolPrint (
                 L"SIP and SSV Removed (0x%04x - Caution!)",
                 CsrStatus
-            );
+            ));
+            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
             break;
 
         // Unknown Custom Setting
         default:
-            gCsrStatus = PoolPrint (
+            AssignPoolStr (&gCsrStatus, PoolPrint (
                 L"SIP/SSV Disabled: 0x%04x - Caution: Unknown Custom Setting",
                 CsrStatus
-            );
+            ));
+            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
     } // switch
 
     if (DisplayMessage) {
-        MsgLog ("    * %s\n\n", gCsrStatus);
+        MsgLog ("    * %s\n\n", GetPoolStr (&gCsrStatus));
 
-        egDisplayMessage (gCsrStatus, &BGColor, CENTER);
+        egDisplayMessage (GetPoolStr (&gCsrStatus), &BGColor, CENTER);
         PauseSeconds (3);
     } // if
 } // VOID RecordgCsrStatus()
@@ -192,13 +199,14 @@ VOID RotateCsrValue (VOID) {
             LOG(2, LOG_LINE_NORMAL, L"Successful setting of CSR value of 0x%04x", TargetCsr);
         }
         else {
-            gCsrStatus = StrDuplicate (L"Error While Setting SIP/SSV Status");
+            AssignCachedPoolStr (&gCsrStatus, L"Error While Setting SIP/SSV Status");
+            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
 
-            LOG(1, LOG_LINE_NORMAL, gCsrStatus);
+            LOG(1, LOG_LINE_NORMAL, L"%s", GetPoolStr (&gCsrStatus));
 
             EG_PIXEL BGColor = COLOR_LIGHTBLUE;
             egDisplayMessage (
-                gCsrStatus,
+                GetPoolStr (&gCsrStatus),
                 &BGColor,
                 CENTER
             );
@@ -206,13 +214,14 @@ VOID RotateCsrValue (VOID) {
         }
     }
     else {
-        gCsrStatus = StrDuplicate (L"Could Not Retrieve SIP/SSV Status");
+        AssignCachedPoolStr (&gCsrStatus, L"Could Not Retrieve SIP/SSV Status");
+        LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
 
-        LOG(1, LOG_LINE_NORMAL, gCsrStatus);
+        LOG(1, LOG_LINE_NORMAL, L"%s", GetPoolStr (&gCsrStatus));
 
         EG_PIXEL BGColor = COLOR_LIGHTBLUE;
         egDisplayMessage (
-            gCsrStatus,
+            GetPoolStr (&gCsrStatus),
             &BGColor,
             CENTER
         );

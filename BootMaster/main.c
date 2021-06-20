@@ -367,7 +367,7 @@ VOID ActiveCSR (
             RecordgCsrStatus (CsrStatus, FALSE);
 
             // Check 'gCsrStatus' variable for 'Enabled' term
-            if (MyStrStr (gCsrStatus, L"Enabled") != NULL) {
+            if (MyStrStr (GetPoolStr (&gCsrStatus), L"Enabled") != NULL) {
                 // 'Enabled' found
                 CsrEnabled = TRUE;
             }
@@ -1117,7 +1117,7 @@ VOID AboutRefindPlus (
 
         if (GetCsrStatus (&CsrStatus) == EFI_SUCCESS) {
             RecordgCsrStatus (CsrStatus, FALSE);
-            AddMenuInfoLineCached (AboutMenu, gCsrStatus);
+            AddMenuInfoLinePoolStr (AboutMenu, &gCsrStatus);
         }
 
         TempStr = egScreenDescription();
