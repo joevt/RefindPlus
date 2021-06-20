@@ -1450,173 +1450,174 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
     LOG(1, FirstLoaderScan ? LOG_THREE_STAR_MID : LOG_THREE_STAR_SEP,
         L"Scanning Volume '%s' for EFI Loaders",
         GetPoolStr (&Volume->VolName)
-        );
+    );
 
     FirstLoaderScan = FALSE;
 
-        MatchPatterns = StrDuplicate (LOADER_MATCH_PATTERNS);
-        if (GlobalConfig.ScanAllLinux) {
-            MergeStrings (&MatchPatterns, LINUX_MATCH_PATTERNS, L',');
+    MatchPatterns = StrDuplicate (LOADER_MATCH_PATTERNS);
+    if (GlobalConfig.ScanAllLinux) {
+        MergeStrings (&MatchPatterns, LINUX_MATCH_PATTERNS, L',');
+    }
+
+    // check for Mac OS boot loader
+    if (ShouldScan (Volume, MACOSX_LOADER_DIR)) {
+        FileName = StrDuplicate (MACOSX_LOADER_PATH);
+        ScanFallbackLoader &= ScanMacOsLoader (Volume, FileName);
+        MyFreePool (&FileName);
+        DirIterOpen (Volume->RootDir, L"\\", &EfiDirIter);
+
+        while (DirIterNext (&EfiDirIter, 1, NULL, &EfiDirEntry)) {
+            if (IsGuid (EfiDirEntry->FileName)) {
+                FileName = PoolPrint (L"%s\\%s", EfiDirEntry->FileName, MACOSX_LOADER_PATH);
+                ScanFallbackLoader &= ScanMacOsLoader (Volume, FileName);
+                MyFreePool (&FileName);
+                FileName = PoolPrint (L"%s\\%s", EfiDirEntry->FileName, L"boot.efi");
+
+                if (!StriSubCmp (FileName, GlobalConfig.MacOSRecoveryFiles)) {
+                    MergeStrings (&GlobalConfig.MacOSRecoveryFiles, FileName, L',');
+                    LEAKABLE (GlobalConfig.MacOSRecoveryFiles, "MacOSRecoveryFiles");
+                }
+
+                MyFreePool (&FileName);
+            } // if
+        } // while
+        DirIterClose (&EfiDirIter);
+
+        // check for XOM
+        FileName = StrDuplicate (L"System\\Library\\CoreServices\\xom.efi");
+        if (FileExists (Volume->RootDir, FileName) &&
+            !FilenameIn (Volume, MACOSX_LOADER_DIR, L"xom.efi", GlobalConfig.DontScanFiles)
+        ) {
+            AddLoaderEntry (FileName, L"Windows XP (XoM)", Volume, TRUE);
+            if (DuplicatesFallback (Volume, FileName)) {
+                ScanFallbackLoader = FALSE;
+            }
         }
-
-        // check for Mac OS boot loader
-        if (ShouldScan (Volume, MACOSX_LOADER_DIR)) {
-            FileName = StrDuplicate (MACOSX_LOADER_PATH);
-            ScanFallbackLoader &= ScanMacOsLoader (Volume, FileName);
         MyFreePool (&FileName);
-            DirIterOpen (Volume->RootDir, L"\\", &EfiDirIter);
+    } // if should scan Mac directory
 
-            while (DirIterNext (&EfiDirIter, 1, NULL, &EfiDirEntry)) {
-                if (IsGuid (EfiDirEntry->FileName)) {
-                    FileName = PoolPrint (L"%s\\%s", EfiDirEntry->FileName, MACOSX_LOADER_PATH);
-                    ScanFallbackLoader &= ScanMacOsLoader (Volume, FileName);
-                MyFreePool (&FileName);
-                    FileName = PoolPrint (L"%s\\%s", EfiDirEntry->FileName, L"boot.efi");
-
-                    if (!StriSubCmp (FileName, GlobalConfig.MacOSRecoveryFiles)) {
-                        MergeStrings (&GlobalConfig.MacOSRecoveryFiles, FileName, L',');
-                    }
-
-                MyFreePool (&FileName);
-                } // if
-            } // while
-            DirIterClose (&EfiDirIter);
-
-            // check for XOM
-            FileName = StrDuplicate (L"System\\Library\\CoreServices\\xom.efi");
-            if (FileExists (Volume->RootDir, FileName) &&
-                !FilenameIn (Volume, MACOSX_LOADER_DIR, L"xom.efi", GlobalConfig.DontScanFiles)
-            ) {
-                AddLoaderEntry (FileName, L"Windows XP (XoM)", Volume, TRUE);
-                if (DuplicatesFallback (Volume, FileName)) {
-                    ScanFallbackLoader = FALSE;
-                }
+    // check for Microsoft boot loader/menu
+    if (ShouldScan (Volume, L"EFI\\Microsoft\\Boot")) {
+        FileName = StrDuplicate (L"EFI\\Microsoft\\Boot\\bkpbootmgfw.efi");
+        if (FileExists (Volume->RootDir, FileName) &&
+            !FilenameIn (
+                Volume,
+                L"EFI\\Microsoft\\Boot",
+                L"bkpbootmgfw.efi",
+                GlobalConfig.DontScanFiles
+            )
+        ) {
+            AddLoaderEntry (FileName, L"Windows (UEFI - Boot Repair Backup)", Volume, TRUE);
+            FoundBRBackup = TRUE;
+            if (DuplicatesFallback (Volume, FileName)) {
+                ScanFallbackLoader = FALSE;
             }
+        }
         MyFreePool (&FileName);
-        } // if should scan Mac directory
 
-        // check for Microsoft boot loader/menu
-        if (ShouldScan (Volume, L"EFI\\Microsoft\\Boot")) {
-            FileName = StrDuplicate (L"EFI\\Microsoft\\Boot\\bkpbootmgfw.efi");
-            if (FileExists (Volume->RootDir, FileName) &&
-                !FilenameIn (
+        FileName = StrDuplicate (L"EFI\\Microsoft\\Boot\\bootmgfw.efi");
+        if (FileExists (Volume->RootDir, FileName) &&
+            !FilenameIn (
+                Volume,
+                L"EFI\\Microsoft\\Boot",
+                L"bootmgfw.efi",
+                GlobalConfig.DontScanFiles
+            )
+        ) {
+            if (FoundBRBackup) {
+                AddLoaderEntry (
+                    FileName,
+                    L"Assumed Windows (UEFI - Probably GRUB)",
                     Volume,
-                    L"EFI\\Microsoft\\Boot",
-                    L"bkpbootmgfw.efi",
-                    GlobalConfig.DontScanFiles
-                )
-            ) {
-                AddLoaderEntry (FileName, L"Windows (UEFI - Boot Repair Backup)", Volume, TRUE);
-                FoundBRBackup = TRUE;
-                if (DuplicatesFallback (Volume, FileName)) {
-                    ScanFallbackLoader = FALSE;
-                }
+                    TRUE
+                );
             }
-        MyFreePool (&FileName);
-
-            FileName = StrDuplicate (L"EFI\\Microsoft\\Boot\\bootmgfw.efi");
-            if (FileExists (Volume->RootDir, FileName) &&
-                !FilenameIn (
+            else {
+                AddLoaderEntry (
+                    FileName,
+                    L"Windows (UEFI)",
                     Volume,
-                    L"EFI\\Microsoft\\Boot",
-                    L"bootmgfw.efi",
-                    GlobalConfig.DontScanFiles
-                )
-            ) {
-                if (FoundBRBackup) {
-                    AddLoaderEntry (
-                        FileName,
-                        L"Assumed Windows (UEFI - Probably GRUB)",
-                        Volume,
-                        TRUE
-                    );
-                }
-                else {
-                    AddLoaderEntry (
-                        FileName,
-                        L"Windows (UEFI)",
-                        Volume,
-                        TRUE
-                    );
-                }
+                    TRUE
+                );
+            }
 
-                if (DuplicatesFallback (Volume, FileName)) {
-                    ScanFallbackLoader = FALSE;
-                }
+            if (DuplicatesFallback (Volume, FileName)) {
+                ScanFallbackLoader = FALSE;
+            }
         } // if FileExists Volume->RootDir
 
         MyFreePool (&FileName);
     } // if ShouldScan Windows directory
 
-        // scan the root directory for EFI executables
-        if (ScanLoaderDir (Volume, L"\\", MatchPatterns)) {
+    // scan the root directory for EFI executables
+    if (ScanLoaderDir (Volume, L"\\", MatchPatterns)) {
+        ScanFallbackLoader = FALSE;
+    }
+
+    // scan subdirectories of the EFI directory (as per the standard)
+    DirIterOpen (Volume->RootDir, L"EFI", &EfiDirIter);
+    while (DirIterNext (&EfiDirIter, 1, NULL, &EfiDirEntry)) {
+
+        if (MyStriCmp (EfiDirEntry->FileName, L"tools") ||
+            EfiDirEntry->FileName[0] == '.'
+        ) {
+            // skip this, doesn't contain boot loaders or is scanned later
+            continue;
+        }
+
+        FileName = PoolPrint (L"EFI\\%s", EfiDirEntry->FileName);
+        if (ScanLoaderDir (Volume, FileName, MatchPatterns)) {
             ScanFallbackLoader = FALSE;
         }
 
-        // scan subdirectories of the EFI directory (as per the standard)
-        DirIterOpen (Volume->RootDir, L"EFI", &EfiDirIter);
-        while (DirIterNext (&EfiDirIter, 1, NULL, &EfiDirEntry)) {
+        MyFreePool (&FileName);
+    } // while()
 
-            if (MyStriCmp (EfiDirEntry->FileName, L"tools") ||
-                EfiDirEntry->FileName[0] == '.'
-            ) {
-                // skip this, doesn't contain boot loaders or is scanned later
-                continue;
-            }
+    Status = DirIterClose (&EfiDirIter);
+    if ((Status != EFI_NOT_FOUND) && (Status != EFI_INVALID_PARAMETER)) {
+        Temp = PoolPrint (L"While Scanning the EFI System Partition on '%s'", GetPoolStr (&Volume->VolName));
+        CheckError (Status, Temp);
+        MyFreePool (&Temp);
+    } // if
 
-            FileName = PoolPrint (L"EFI\\%s", EfiDirEntry->FileName);
-            if (ScanLoaderDir (Volume, FileName, MatchPatterns)) {
+    // Scan user-specified (or additional default) directories....
+    i = 0;
+    while ((Directory = FindCommaDelimited (GlobalConfig.AlsoScan, i++)) != NULL) {
+        if (ShouldScan (Volume, Directory)) {
+            SplitVolumeAndFilename (&Directory, &VolName);
+            CleanUpPathNameSlashes (Directory);
+
+            Length = StrLen (Directory);
+            if ((Length > 0) && ScanLoaderDir (Volume, Directory, MatchPatterns)) {
                 ScanFallbackLoader = FALSE;
             }
 
-        MyFreePool (&FileName);
-        } // while()
-
-        Status = DirIterClose (&EfiDirIter);
-        if ((Status != EFI_NOT_FOUND) && (Status != EFI_INVALID_PARAMETER)) {
-            Temp = PoolPrint (L"While Scanning the EFI System Partition on '%s'", GetPoolStr (&Volume->VolName));
-            CheckError (Status, Temp);
-        MyFreePool (&Temp);
-        } // if
-
-        // Scan user-specified (or additional default) directories....
-        i = 0;
-        while ((Directory = FindCommaDelimited (GlobalConfig.AlsoScan, i++)) != NULL) {
-            if (ShouldScan (Volume, Directory)) {
-                SplitVolumeAndFilename (&Directory, &VolName);
-                CleanUpPathNameSlashes (Directory);
-
-                Length = StrLen (Directory);
-                if ((Length > 0) && ScanLoaderDir (Volume, Directory, MatchPatterns)) {
-                    ScanFallbackLoader = FALSE;
-                }
-
             MyFreePool (&VolName);
-            } // if should scan dir
+        } // if should scan dir
 
         MyFreePool (&Directory);
-        } // while
+    } // while
 
-        // Don't scan the fallback loader if it's on the same volume and a duplicate of RefindPlus itself....
-        SelfPath = DevicePathToStr (SelfLoadedImage->FilePath);
-        CleanUpPathNameSlashes (SelfPath);
+    // Don't scan the fallback loader if it's on the same volume and a duplicate of RefindPlus itself....
+    SelfPath = DevicePathToStr (SelfLoadedImage->FilePath);
+    CleanUpPathNameSlashes (SelfPath);
 
-        if ((Volume->DeviceHandle == SelfLoadedImage->DeviceHandle) &&
-            DuplicatesFallback (Volume, SelfPath)
-        ) {
-            ScanFallbackLoader = FALSE;
-        }
+    if ((Volume->DeviceHandle == SelfLoadedImage->DeviceHandle) &&
+        DuplicatesFallback (Volume, SelfPath)
+    ) {
+        ScanFallbackLoader = FALSE;
+    }
     MyFreePool (&SelfPath);
 
-        // If not a duplicate & if it exists & if it's not us, create an entry
-        // for the fallback boot loader
-        if (ScanFallbackLoader &&
-            FileExists (Volume->RootDir, FALLBACK_FULLNAME) &&
-            ShouldScan (Volume, L"EFI\\BOOT") &&
-            !FilenameIn (Volume, L"EFI\\BOOT", FALLBACK_BASENAME, GlobalConfig.DontScanFiles)
-        ) {
-            AddLoaderEntry (FALLBACK_FULLNAME, L"Fallback Boot Loader", Volume, TRUE);
-        }
+    // If not a duplicate & if it exists & if it's not us, create an entry
+    // for the fallback boot loader
+    if (ScanFallbackLoader &&
+        FileExists (Volume->RootDir, FALLBACK_FULLNAME) &&
+        ShouldScan (Volume, L"EFI\\BOOT") &&
+        !FilenameIn (Volume, L"EFI\\BOOT", FALLBACK_BASENAME, GlobalConfig.DontScanFiles)
+    ) {
+        AddLoaderEntry (FALLBACK_FULLNAME, L"Fallback Boot Loader", Volume, TRUE);
+    }
 
     MyFreePool (&MatchPatterns);
 } // static VOID ScanEfiFiles()
