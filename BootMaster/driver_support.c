@@ -676,17 +676,12 @@ UINTN ScanDriverDir (
     CHAR16          *FileName;
     UINTN            NumFound  = 0;
 
-    CleanUpPathNameSlashes(Path);
+    MsgLog ("[ ScanDriverDir '%s' Folder\n", Path);
 
-    MsgLog ("\n");
-    MsgLog ("Scan '%s' Folder:\n", Path);
+    CleanUpPathNameSlashes(Path);
 
     // look through contents of the directory
     DirIterOpen (SelfRootDir, Path, &DirIter);
-
-    #if REFIT_DEBUG > 0
-    BOOLEAN RunOnce = FALSE;
-    #endif
 
     while (DirIterNext (&DirIter, 2, LOADER_MATCH_PATTERNS, &DirEntry)) {
         if (DirEntry->FileName[0] == '.') {
@@ -698,18 +693,13 @@ UINTN ScanDriverDir (
         NumFound++;
         FileName = PoolPrint (L"%s\\%s", Path, DirEntry->FileName);
 
+        MsgLog ("[ Loading '%s'\n", FileName);
         if (MyStrStr (FileName, L"OsxAptioFix") != NULL &&
             MyStrStr (gST->FirmwareVendor, L"Apple") != NULL
         ) {
             Status = EFI_UNSUPPORTED;
         }
         else {
-            #if REFIT_DEBUG > 0
-            if (RunOnce) {
-                LOG(1, LOG_THREE_STAR_SEP, L"NEXT DRIVER");
-            }
-            #endif
-
             Status = StartEFIImage(
                 SelfVolume,
                 FileName,
@@ -723,15 +713,7 @@ UINTN ScanDriverDir (
 
         MyFreePool (&DirEntry);
 
-        #if REFIT_DEBUG > 0
-        if (RunOnce) {
-            MsgLog ("\n");
-        }
-        RunOnce = TRUE;
-
-        MsgLog ("  - Load '%s' ... %r", FileName, Status);
-        #endif
-
+        MsgLog ("] Loading '%s' Result:%r\n", FileName, Status);
         MyFreePool (&FileName);
     } // while
 
@@ -742,6 +724,7 @@ UINTN ScanDriverDir (
         MyFreePool (&FileName);
     }
 
+    MsgLog ("] ScanDriverDir Found:%d\n", NumFound);
     return (NumFound);
 } // static UINTN ScanDriverDir()
 
