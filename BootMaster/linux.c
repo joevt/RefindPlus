@@ -77,10 +77,7 @@ CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
     REFIT_DIR_ITER       DirIter;
     EFI_FILE_INFO       *DirEntry;
 
-    LOG(1, LOG_LINE_NORMAL,
-        L"Searching for an initrd to match '%s' on '%s'",
-        LoaderPath, GetPoolStr (&Volume->VolName)
-    );
+    MsgLog ("[ FindInitrd to match '%s' on '%s'\n", LoaderPath, GetPoolStr (&Volume->VolName));
 
     FileName      = Basename(LoaderPath);
     KernelVersion = FindNumbers(FileName);
@@ -156,10 +153,10 @@ CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
     MyFreePool (&FileName);
     MyFreePool (&Path);
 
-    LOG(1, LOG_LINE_NORMAL, L"Located initrd is '%s'", InitrdName);
+    MsgLog ("] FindInitrd  Located initrd is '%s'\n", InitrdName ? InitrdName : L"NULL");
 
     return (InitrdName);
-} // static CHAR16 * FindInitrd()
+} // FindInitrd
 
 // Adds InitrdPath to Options, but only if Options doesn't already include an
 // initrd= line or a `%v` variable. Done to enable overriding the default initrd
@@ -194,6 +191,7 @@ CHAR16 *AddInitrdToOptions(CHAR16 *Options, CHAR16 *InitrdPath) {
 // kernel's directory; and if present, adds an initrd= option for an initial
 // RAM disk file with the same version number as the kernel file.
 CHAR16 * GetMainLinuxOptions(IN CHAR16 * LoaderPath, IN REFIT_VOLUME *Volume) {
+    MsgLog ("[ GetMainLinuxOptions LoaderPath:'%s' Volume:'%s'\n", LoaderPath, GetPoolStr (&Volume->VolName));
     CHAR16 *Options = NULL, *InitrdName, *FullOptions = NULL, *KernelVersion;
 
     Options       = GetFirstOptionsFromFile(LoaderPath, Volume);
@@ -206,6 +204,7 @@ CHAR16 * GetMainLinuxOptions(IN CHAR16 * LoaderPath, IN REFIT_VOLUME *Volume) {
     MyFreePool (&InitrdName);
     MyFreePool (&KernelVersion);
 
+    MsgLog ("] GetMainLinuxOptions Options:%s\n", FullOptions);
     return (FullOptions);
 } // static CHAR16 * GetMainLinuxOptions()
 
