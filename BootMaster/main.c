@@ -1330,6 +1330,8 @@ VOID RescanAll (
     SetVolumeIcons();
     ScanForBootloaders (DisplayMessage);
     ScanForTools();
+    LEAKABLEVOLUMES();
+    LEAKABLEPARTITIONS();
     LEAKABLEROOTMENU (kLeakableMenuMain, MainMenu);
     MsgLog ("] RescanAll\n");
 } // VOID RescanAll()
@@ -2031,7 +2033,10 @@ EFI_STATUS EFIAPI efi_main (
     SetVolumeIcons();
     ScanForBootloaders (FALSE);
     ScanForTools();
+    LEAKABLEVOLUMES();
+    LEAKABLEPARTITIONS();
     LEAKABLEROOTMENU (kLeakableMenuMain, MainMenu);
+
     // SetupScreen() clears the screen; but ScanForBootloaders() may display a
     // message that must be deleted, so do so
     BltClearScreen (TRUE);
