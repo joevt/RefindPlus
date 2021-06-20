@@ -1218,17 +1218,17 @@ BOOLEAN ScanLoaderDir (
                 !IsValidLoader (Volume->RootDir, FullName)
             ) {
                 // skip this
-                continue;
             }
+            else {
+                NewLoader = AllocateZeroPool (sizeof (struct LOADER_LIST));
+                if (NewLoader != NULL) {
+                    NewLoader->FileName  = StrDuplicate (FullName);
+                    NewLoader->TimeStamp = DirEntry->ModificationTime;
+                    LoaderList           = AddLoaderListEntry (LoaderList, NewLoader);
 
-            NewLoader = AllocateZeroPool (sizeof (struct LOADER_LIST));
-            if (NewLoader != NULL) {
-                NewLoader->FileName  = StrDuplicate (FullName);
-                NewLoader->TimeStamp = DirEntry->ModificationTime;
-                LoaderList           = AddLoaderListEntry (LoaderList, NewLoader);
-
-                if (DuplicatesFallback (Volume, FullName)) {
-                    FoundFallbackDuplicate = TRUE;
+                    if (DuplicatesFallback (Volume, FullName)) {
+                        FoundFallbackDuplicate = TRUE;
+                    }
                 }
             }
 
@@ -2145,8 +2145,8 @@ BOOLEAN FindTool (
                     MsgLog (
                         "Added Tool:- '%s' : %s%s",
                         Description,
-                        StrDuplicate (DirName),
-                        StrDuplicate (FileName)
+                        DirName,
+                        FileName
                     );
 
                 } // if
@@ -2402,6 +2402,8 @@ VOID ScanForTools (VOID) {
                                     'R',
                                     TRUE
                                 );
+
+                                MyFreePool (&Description);
 
                                 LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
                             } // if
