@@ -27,8 +27,8 @@
 #endif
 
 
-#ifdef TAGS_TAG_TO_TOOL_AND_ICON
-    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) case _tag: ToolName = _tool; TheIcon = _icon; break;
+#ifdef TAGS_TAG_TO_TOOL_AND_ICON_AND_SHORTCUT
+    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) case _tag: ToolName = _tool; TheIcon = _icon; TheShortcut = _shortcut; break;
 #endif
 
 

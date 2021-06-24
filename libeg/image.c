@@ -507,12 +507,23 @@ EG_IMAGE * egLoadImage (
     EG_IMAGE        *NewImage;
 
     if (BaseDir == NULL || FileName == NULL) {
+        #if REFIT_DEBUG > 0
+        LOG(4, LOG_LINE_NORMAL, L"In egLoadImage, requirements not met!!");
+        #endif
+
         return NULL;
     }
 
     // load file
     Status = egLoadFile (BaseDir, FileName, &FileData, &FileDataLength);
     if (EFI_ERROR (Status)) {
+        #if REFIT_DEBUG > 0
+        LOG(4, LOG_LINE_NORMAL,
+            L"In egLoadImage, '%r' returned while attempting to load file!!",
+            Status
+        );
+        #endif
+
         return NULL;
     }
 
@@ -570,9 +581,6 @@ EG_IMAGE * egLoadIcon (
         // use scaled image if available
         if (NewImage) {
             egFreeImage (Image);
-
-            LOG(4, LOG_LINE_NORMAL, L"Freed Image in 'egLoadIcon'");
-
             Image = NewImage;
         }
         else {

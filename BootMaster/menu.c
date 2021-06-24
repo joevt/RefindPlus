@@ -2064,32 +2064,34 @@ UINTN WaitForInput (UINTN Timeout) {
 // pressed Esc to terminate the edit.
 static
 BOOLEAN EditOptions (LOADER_ENTRY *MenuEntry) {
-   MsgLog ("[ EditOptions\n");
-   UINTN x_max, y_max;
-   CHAR16 *EditedOptions;
-   BOOLEAN retval = FALSE;
-
-   LOG(2, LOG_LINE_NORMAL, L"EditOptions: %d", ((GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) != 0));
-   if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
-      return FALSE;
-   }
-
-   refit_call4_wrapper(gST->ConOut->QueryMode, gST->ConOut, gST->ConOut->Mode->Mode, &x_max, &y_max);
-
-   if (!GlobalConfig.TextOnly)
-      SwitchToText (TRUE);
-
-   if (line_edit (GetPoolStr (&MenuEntry->LoadOptions), &EditedOptions, x_max)) {
-      AssignPoolStr (&MenuEntry->LoadOptions, EditedOptions);
-      LEAKABLE(EditedOptions, "EditOptions EditedOptions(Many)");
-      retval = TRUE;
-   } // if
-   if (!GlobalConfig.TextOnly) {
-       SwitchToGraphics();
-   }
-
-   MsgLog ("] EditOptions %d\n", retval);
-   return retval;
+    MsgLog ("[ EditOptions\n");
+    UINTN x_max, y_max;
+    CHAR16 *EditedOptions;
+    BOOLEAN retval = FALSE;
+ 
+    LOG(2, LOG_LINE_NORMAL, L"EditOptions: %d", ((GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) != 0));
+    if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
+        return FALSE;
+    }
+ 
+    refit_call4_wrapper(gST->ConOut->QueryMode, gST->ConOut, gST->ConOut->Mode->Mode, &x_max, &y_max);
+ 
+    if (!GlobalConfig.TextOnly)
+        SwitchToText (TRUE);
+ 
+    if (line_edit (GetPoolStr (&MenuEntry->LoadOptions), &EditedOptions, x_max)) {
+        LEAKABLEPATHSET (MenuEntry);
+        AssignPoolStr (&MenuEntry->LoadOptions, EditedOptions);
+        LEAKABLEMENUENTRY ((REFIT_MENU_ENTRY *) MenuEntry);
+        LEAKABLEPATHUNSET ();
+        retval = TRUE;
+    } // if
+    if (!GlobalConfig.TextOnly) {
+        SwitchToGraphics();
+    }
+ 
+    MsgLog ("] EditOptions %d\n", retval);
+    return retval;
 } // VOID EditOptions()
 
 //
@@ -2239,6 +2241,8 @@ VOID SaveHiddenList (
 VOID ManageHiddenTags (
     VOID
 ) {
+    MsgLog ("[ ManageHiddenTags\n");
+
     EFI_STATUS           Status  = EFI_SUCCESS;
     CHAR16              *AllTags = NULL, *OneElement = NULL;
     CHAR16              *HiddenLegacy, *HiddenFirmware, *HiddenTags, *HiddenTools;
@@ -2264,6 +2268,7 @@ VOID ManageHiddenTags (
     
     RestoreItemMenu = CopyMenuScreen (&RestoreItemMenuSrc);
     if (!RestoreItemMenu) {
+        MsgLog ("] ManageHiddenTags (NULL)\n");
         return;
     }
 
@@ -2361,6 +2366,8 @@ VOID ManageHiddenTags (
     MyFreePool (&HiddenTools);
     MyFreePool (&HiddenLegacy);
     MyFreePool (&HiddenFirmware);
+
+    MsgLog ("] ManageHiddenTags\n");
 } // VOID ManageHiddenTags()
 
 CHAR16* ReadHiddenTags (CHAR16 *VarName) {
@@ -2460,7 +2467,7 @@ BOOLEAN HideEfiTag (
         if (FindVolume (&TestVolume, GuidStr) && TestVolume->RootDir) {
             MyFreePool (&FullPath);
             FullPath = NULL;
-            MergeStrings (&FullPath, GuidAsString (&Loader->Volume->PartGuid), L'\0');
+            MergeStrings (&FullPath, GuidStr, L'\0');
             MergeStrings (&FullPath, L":", L'\0');
             MergeStrings (
                 &FullPath,
@@ -2566,6 +2573,7 @@ static
 VOID HideTag (
     REFIT_MENU_ENTRY *ChosenEntry
 ) {
+    MsgLog ("[ HideTag %s\n", GetPoolStr (&ChosenEntry->Title));
     LOADER_ENTRY       *Loader       = (LOADER_ENTRY *) ChosenEntry;
     LEGACY_ENTRY       *LegacyLoader = (LEGACY_ENTRY *) ChosenEntry;
     REFIT_MENU_SCREEN  *HideItemMenu = NULL;
@@ -2576,11 +2584,13 @@ VOID HideTag (
     };
 
     if (ChosenEntry == NULL) {
+        MsgLog ("] HideTag (no menu entry)\n");
         return;
     }
     
     HideItemMenu = CopyMenuScreen (&HideItemMenuSrc);
     if (!HideItemMenu) {
+        MsgLog ("] HideTag (no menu screen)\n");
         return;
     }
 
@@ -2656,6 +2666,7 @@ VOID HideTag (
             break;
     } // switch()
     FreeMenuScreen (&HideItemMenu);
+    MsgLog ("] HideTag\n");
 } // VOID HideTag()
 
 UINTN RunMenu (
@@ -2681,10 +2692,12 @@ UINTN RunMenu (
 }
 
 UINTN RunMainMenu (
-    REFIT_MENU_SCREEN  *Screen,
+    REFIT_MENU_SCREEN **ScreenPtr,
     CHAR16            **DefaultSelection,
     REFIT_MENU_ENTRY  **ChosenEntry
 ) {
+    REFIT_MENU_SCREEN *Screen = ScreenPtr ? *ScreenPtr : NULL;
+
     LOG(2, LOG_LINE_NORMAL, L"[ RunMainMenu '%s'", GetPoolStr (&Screen->Title));
 
     MENU_STYLE_FUNC Style     = TextMenuStyle;
@@ -2722,6 +2735,7 @@ UINTN RunMainMenu (
     LEAKABLE(MenuTitle, "RunMainMenu MenuTitle");
 
     while (!MenuExit) {
+        Screen = ScreenPtr ? *ScreenPtr : NULL;
         MenuExit = RunGenericMenu (Screen, MainStyle, &DefaultEntryIndex, &TempChosenEntry);
 
         LOG(2, LOG_LINE_NORMAL,

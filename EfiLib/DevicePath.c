@@ -12,6 +12,12 @@ THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
 WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 **/
+/*
+ * Modified for RefindPlus
+ * Copyright (c) 2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ *
+ * Modifications distributed under the preceding terms.
+ */
 
 #include "Platform.h"
 #include "lib.h"
@@ -75,7 +81,7 @@ MyCatPrint (
         Str->Len = StringSize - sizeof (UINT16);
     }
 
-    FreePool (AppendStr);
+  MyFreePool (&AppendStr);
     return Str->Str;
 }
 

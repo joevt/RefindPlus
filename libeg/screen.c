@@ -223,7 +223,7 @@ EFI_STATUS daCheckAltGop (
             } // if HandleBuffer[i]
         } // for
 
-        FreePool (HandleBuffer);
+        MyFreePool (&HandleBuffer);
 
         MsgLog ("\n\n");
 
@@ -638,7 +638,7 @@ VOID egInitScreen (
                     break;
                 }
             }
-            FreePool (HandleBuffer);
+            MyFreePool (&HandleBuffer);
         }
     }
 
@@ -726,7 +726,7 @@ VOID egInitScreen (
                     }
                 }
             }
-            FreePool (HandleBuffer);
+            MyFreePool (&HandleBuffer);
         }
     }
 

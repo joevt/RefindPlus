@@ -7,13 +7,13 @@
 ##--------------------------------------------------------------##
 #
 #
-# RefindPlus defaults to scanning volumes for ".VolumeIcon" icns files. If
+# RefindPlus defaults to scanning volumes for ".VolumeIcon" icns files and if
 # found, these are used as display icons for internal volumes. However, most
 # RefindPlus setups do not include these files and most of those that may
 # do, typically Apple Macs, do not require the files as their icons in
 # Refindplus. Hence, scanning for the files typically just slows the
-# RefindPlus boot process down. This setting speeds booting
-# RefindPlus up by skipping scanning for these files.
+# RefindPlus boot process down. When active, this speeds booting
+# RefindPlus up by skipping scanning volumes for these files.
 #
 # Always scans for ".VolumeIcon" icns files when commented out
 #
@@ -26,7 +26,7 @@
 # the "use_nvram" token writes variables to the filesystem instead, limiting this.
 # On some setups however, such as when the "default_selection" token is set, such
 # writes are not required to start with. When the "ignore_previous_boot" setting
-# is active, RefindPlus will not save the "PreviousBoot" variable to the NVRAM.
+# is active, RefindPlus will not store the "PreviousBoot" variable anywhere.
 #
 # Always saves the "PreviousBoot" variable when commented out
 #
@@ -41,7 +41,7 @@
 # Note that this option is forced on whenever text output is required,
 # such as when running EFI Shell or, whenever RefindPlus is changed to
 # text mode as part of its operations (mainly to show error messages).
-# NB: This functionality is only available on TianoCore Builds
+# NB: This functionality is only available on TianoCore Builds.
 #
 # Inactive when commented out (Does not use a custom text renderer)
 #
@@ -49,7 +49,7 @@
 
 # Adds the UGA Protocol to GOP when absent. This option allows the RefindPlus
 # screen when using modern GPUs on units with only EFIBoot capability.
-# NB: This functionality is only available on TianoCore Builds
+# NB: This functionality is only available on TianoCore Builds.
 #
 # Inactive when commented out (Does not add UGA to GOP)
 #
@@ -65,7 +65,7 @@
 # GPUs with system firmware support. This option replaces GOP on the
 # ConsoleOut Handle with one from a GPU Handle on such models when
 # running capable GPUs but without full system firmware support.
-# NB: This functionality is only available on TianoCore Builds
+# NB: This functionality is only available on TianoCore Builds.
 #
 # Inactive when commented out (Does not provide ConsoleOut GOP)
 #
@@ -81,19 +81,19 @@
 # will temporarily amend the device's EFI Revision to UEFI 2.x and attempt
 # reinstalling a copy of the GPU's Option ROM whenever it detects that GOP
 # is not available. The changes are reverted afterwards and allow running
-# modern GPUs on some legacy units when they would otherwise fail to work.
+# modern GPUs on some legacy units where they would usually fail to work.
 #
 # Inactive when commented out (Does not reinstall GOP)
 #
 #reload_gop
 
-# Use a built-in GOP renderer which may provide better performance
-# and fix rendering issues on some GPU/firmware combinations such as
+# Use a built-in GOP renderer which may provide enhanced performance
+# and fix rendering issues on certain specific GPU models including
 # the Radeon VII and some versions of the Radeon 5700 XT. However,
 # this should only be used when there is an obvious benefit as it
 # may result in glitches in the pre-boot configuration screen or
 # slow scrolling response on booting into the operating system.
-# NB: This functionality is only available on TianoCore Builds
+# NB: This functionality is only available on TianoCore Builds.
 #
 # Inactive when commented out (Does not use the built-in GOP)
 #
@@ -151,7 +151,7 @@
 # Mac OS version. This ensures that any changes made to APFS drivers for each specific
 # Mac OS version are accomodated, compared to using one driver no matter which specific
 # Mac OS version is being loaded. This setting only applies to Mac OS and only as needed.
-# NB: This functionality is only available on TianoCore Builds
+# NB: This functionality is only available on TianoCore Builds.
 #
 # Inactive when commented out (Does not supply APFS filesystem capability)
 #
@@ -162,15 +162,15 @@
 # This option only acts on apfs drivers loaded by RefindPlus using "supply_apfs".
 # This option may impact other text output and should be disabled if such
 # negative effects are observed. This setting only applies to Mac OS.
-# NB: This functionality is only available on TianoCore Builds
+# NB: This functionality is only available on TianoCore Builds.
 #
 # Inactive when commented out (Does not suppress verbose APFS text)
 #
 #silence_apfs
 
 # Apple has partially enforced the use of the Pre-Boot Loader stored in the "PreBoot" partitions
-# of APFS volumes by requiring this to run the Mac OS Boot Loader in Mac OS v11.x (Big Sur) when
-# SIP is enabled. Attempts to run the Mac OS 11.x Boot Loader directly with SIP enabled result
+# of APFS volumes by requiring this to run the Mac Boot Loader, starting with Mac OS v11.x, when
+# SIP is enabled. Attempts to run such Mac OS Boot Loaders directly when SIP is enabled result
 # in kernel panics. When this option is activated, RefindPlus will map APFS volumes to their
 # respective "PreBoot" partitions which will be used to boot such Mac OS instances and the
 # associated "PreBoot" partitions will be hidden from view. This option also allows direct
@@ -200,6 +200,17 @@
 #
 #scan_other_esp
 
+# Help with "hidden_tags" setup. RefindPlus always makes the "hidden_tags" tool available
+# by default (even when the tool is not specified in the "showtools" list). This is done
+# to ensure that items hidden (always possible) can also be unhidden (only possible if
+# the "hidden_tags" tool is available). When this option is enabled, this "help" with
+# setup will be inactivated and the ability to unhide items will be solely based on
+# whether the "hidden_tags" tool has been explictly added to the "showtools" list.
+#
+# Inactive when commented out (Does not disable help with hidden_tags)
+#
+#disable_tag_help
+
 # RefindPlus will automatically enlarge icons and text when HiDPI screens are detected.
 # The detection is basic and based on detecting a minimum 1601px vertical resolution.
 # This setting allows overriding the detection as follows:
@@ -224,6 +235,20 @@
 # Inactive when commented out (Takes no action on SIP and SSV)
 #
 #active_csr 1
+
+# As of Mac OS v11.x (Big Sur), the previous default SIP/SSV setttings which had all included
+# the "CSR_ALLOW_APPLE_INTERNAL" bit may leave Macs not able to receive "Over The Air" (OTA)
+# updates from Apple. Mac OS v11.x (and later) remove this bit on boot if detected but the
+# attempted removal may fail when booting into Mac OS via non-standard path ways such as
+# RefindPlus. It is also possible that Apple will remove this remediation feature once
+# Mac models supporting Mac OS v10.15 (Catalina) are deemed by Apple to be obsolete.
+# When this token is set, RefindPlus will remove this bit from the saved CSR bits
+# when booting into Mac OS, OpenCore or Clover similar to the process undertaken
+# in Mac OS v11.x and later. This setting can also be used with older versions.
+#
+# Inactive when commented out (Takes no action on "APPLE_INTERNAL" bit)
+#
+#normalise_csr
 
 # Set arbitrary boot arguments on Mac OS. When this option is active,
 # RefindPlus will change the Mac OS boot arguments to the specified string.
@@ -358,6 +383,43 @@
 #
 #log_level 3
 
+# Set the CSR values for Apple's System Integrity Protection (SIP) and
+# Sealed System Volume (SSV) features that define access levels on Mac OS.
+# Values are hexadecimal numbers that define which specific security features
+# are enabled. Below are the codes for what the values mean. Add them up (in hex)
+# to set new values. Apple's "csrutil enable" and "csrutil disable" commands usually
+# set values of 10 (ON) and 77 (OFF) respectively. Note that 77 is just a default OFF
+# setting and that users can go beyond this, to values such as 87F, 97F - up to FFF.
+# The "csrutil authenticated-root enable" and "csrutil authenticated-root disable"
+# commands, added in Mac OS v11.x (Big Sur), set values of 10 (ON) and 87F (OFF)
+# respectively, when run along with the "csrutil enable / disable" commands.
+#
+# As of Mac OS v11.x (Big Sur), the previous default settting of 10 (ON)
+# may leave Macs not able to receive "Over The Air" (OTA) updates from
+# Apple with the reliable setting being enabling SIP/SSV by clearing
+# the stored CSR value in the NVRAM. RefindPlus will clear the CSR
+# setting when "0" is used in place of "10" for the "OFF" value.
+# This setting is also valid on earlier versions of Mac OS. It
+# is recommended however, to keep the default "OFF" setting
+# of "10" in place, and to use the "normalise_csr" token
+# instead to better achieve the same end (both values).
+#      CSR_ALLOW_UNTRUSTED_KEXTS               0x0001
+#      CSR_ALLOW_UNRESTRICTED_FS               0x0002
+#      CSR_ALLOW_TASK_FOR_PID                  0x0004
+#      CSR_ALLOW_KERNEL_DEBUGGER               0x0008
+#      CSR_ALLOW_APPLE_INTERNAL                0x0010
+#      CSR_ALLOW_UNRESTRICTED_DTRACE           0x0020
+#      CSR_ALLOW_UNRESTRICTED_NVRAM            0x0040
+#      CSR_ALLOW_DEVICE_CONFIGURATION          0x0080
+#      CSR_ALLOW_ANY_RECOVERY_OS               0x0100
+#      CSR_ALLOW_UNAPPROVED_KEXTS              0x0200
+#      CSR_ALLOW_EXECUTABLE_POLICY_OVERRIDE    0x0400
+#      CSR_ALLOW_UNAUTHENTICATED_ROOT          0x0800
+#
+# Inactive when commented out (CSR values for SIP/SSV cannot be set)
+#
+#csr_values 10,77
+
 
 ##--------------------------------------------------------------##
 ##                STANDARD CONFIGURATION ITEMS                  ##
@@ -467,7 +529,7 @@
 #     noscale     - Crop if too big or show with border if too small
 #     fillscreen  - Fill the screen
 #
-# Crops if too big or shows with border if too small when commented out
+# Uses "noscale" when commented out
 #
 #banner_scale fillscreen
 
@@ -491,12 +553,12 @@
 #textonly
 
 # Set the EFI text mode to be used for textual displays. This option
-# takes a single digit that refers to a mode number. Mode 0 is usually
-# 80x25, 1 is sometimes 80x50, and higher numbers are system-specific
-# modes. Mode 1024 is a special code that tells RefindPlus not to
-# set text mode; it uses whatever was in use when the program
-# was launched. If an invalid mode is specified, RefindPlus
-# pauses booting to display information on valid modes.
+# takes a single digit that refers to a mode number. Mode "0" is usually
+# 80x25, "1" is sometimes 80x50, and higher numbers are system-specific
+# modes. Mode "1024" is a special code that sets RefindPlus not to use
+# text mode spcifically but instead use whatever mode was in use when
+# it was launched. If an invalid mode is specified, RefindPlus will
+# pause booting to display information on valid modes instead.
 #
 # CAUTION: On VirtualBox, and perhaps on some real computers, specifying
 # a text mode and uncommenting the "textonly" option without specifying
@@ -512,8 +574,8 @@
 # may not always work. If it does work, an OS or tool can be launched by
 # touching it. In a submenu, touching anywhere launches the current item
 # selected. There is currently no way to select a specific submenu item.
-# This feature is mutually exclusive with the "enable_mouse" feature.
-# If both are active, the most recently read one takes precedence.
+# This option is mutually exclusive with the "enable_mouse" feature. The
+# most recently read one takes precedence when both features are active.
 #
 # Inactive when commented out (Does not enable touch screen support)
 #
@@ -525,7 +587,7 @@
 # not always work. If it does work, an OS or tool can be launched
 # by clicking it with the computer's mouse. Note that this feature
 # is mutually exclusive with "enable_touch" feature and that if both
-# are active, the most recently read one takes precedence.
+# are active, the most recently read one of the two takes precedence.
 #
 # Inactive when commented out (Does not enable mouse support)
 #
@@ -551,8 +613,8 @@
 # overabundance of tools, such as when there are multiple mok_tool
 # entries after installing multiple Linux distributions. A single
 # filename, a full pathname, or a volume identifier (filesystem
-# label, partition name, or partition GUID) and a full pathname
-# can be specified.
+# label, partition name, or partition GUID) along with a full
+# pathname can be specified.
 #
 # Has an empty list (nothing is excluded) when commented out
 #
@@ -811,7 +873,7 @@
 #enable_and_lock_vmx
 
 # Tell a Mac's EFI that Mac OS is about to be launched, even when it is not.
-# This option causes some Macs to initialize their hardware differently than
+# This option causes some Macs to initialise their hardware differently from
 # when a third-party OS is launched normally. In some cases (particularly on
 # Macs with multiple video cards), using this option can cause hardware to
 # work that would not otherwise work. On the other hand, using this option
@@ -825,33 +887,6 @@
 # Inactive when commented out (No Mac OS version spoofing)
 #
 #spoof_osx_version 10.9
-
-# Set the CSR values for Apple's System Integrity Protection (SIP) and
-# Sealed System Volume (SSV) features that define access levels on Mac OS.
-# Values are hexadecimal numbers that define which specific security features
-# are enabled. Below are the codes for what the values mean. Add them up (in hex)
-# to set new values. Apple's "csrutil enable" and "csrutil disable" commands usually
-# set values of 10 (ON) and 77 (OFF) respectively. Note that 77 is just a default "OFF"
-# setting and that users can go beyond this, to values such as 87F, 97F ...up to FFF.
-# The "csrutil authenticated-root enable" and "csrutil authenticated-root disable"
-# commands, added in Mac OS v11.x (Big Sur), set values of 10 (ON) and 87F (OFF)
-# respectively, when run along with the "csrutil enable / disable" commands.
-#   CSR_ALLOW_UNTRUSTED_KEXTS               0x0001
-#   CSR_ALLOW_UNRESTRICTED_FS               0x0002
-#   CSR_ALLOW_TASK_FOR_PID                  0x0004
-#   CSR_ALLOW_KERNEL_DEBUGGER               0x0008
-#   CSR_ALLOW_APPLE_INTERNAL                0x0010
-#   CSR_ALLOW_UNRESTRICTED_DTRACE           0x0020
-#   CSR_ALLOW_UNRESTRICTED_NVRAM            0x0040
-#   CSR_ALLOW_DEVICE_CONFIGURATION          0x0080
-#   CSR_ALLOW_ANY_RECOVERY_OS               0x0100
-#   CSR_ALLOW_UNAPPROVED_KEXTS              0x0200
-#   CSR_ALLOW_EXECUTABLE_POLICY_OVERRIDE    0x0400
-#   CSR_ALLOW_UNAUTHENTICATED_ROOT          0x0800
-#
-# Inactive when commented out (CSR values for SIP cannot be set)
-#
-#csr_values 10,77
 
 # Include a secondary configuration file within this one. This secondary
 # file is loaded as if its options appeared at the point of the "include"
@@ -869,25 +904,29 @@
 # ("{"). Each entry ends with a close curly brace ("}").
 # Common keywords in stanza are:
 #
-#  disabled  - use alone or set to "yes" to disable this entry.
-#  ostype    - OS type code to determine boot options available by
-#              pressing Insert. Valid values are "MacOS", "Linux",
-#              "Windows", and "XOM". Case-sensitive.
-#  graphics  - set to "on" to enable graphics-mode boot (useful
-#              mainly for MacOS) or "off" for text-mode boot.
-#              The default setting is auto-detected from the
-#              loader filename.
-#  volume    - identifies the filesystem from which subsequent files
-#              are loaded. The volume can be specified by filesystem
-#              label, by partition label, or by partition GUID number
-#              (but *NOT* yet by filesystem UUID number).
-#  icon      - specifies a custom boot loader icon
-#  loader    - identifies the boot loader file
-#  initrd    - Specifies an initial RAM disk file
-#  options   - sets options to be passed to the boot loader; use
-#              quotes if more than one option should be passed or
-#              if any options use characters that might be changed
-#              by RefindPlus' parsing procedures (=, /, #, or tab).
+#  disabled    - use alone or set to "yes" to disable this entry.
+#  ostype      - OS type code to determine boot options available by
+#                pressing Insert. Valid values are "MacOS", "Linux",
+#                "Windows", and "XOM". Case-sensitive.
+#  graphics    - set to "on" to enable graphics-mode boot (useful
+#                mainly for MacOS) or "off" for text-mode boot.
+#                The default setting is auto-detected from the
+#                loader filename.
+#  volume      - identifies the filesystem from which subsequent files
+#                are loaded. The volume can be specified by filesystem
+#                label, by partition label, or by partition GUID number
+#                (but *NOT* yet by filesystem UUID number).
+#  icon        - specifies a custom boot loader icon
+#  loader      - identifies the boot loader file
+#  initrd      - Specifies an initial RAM disk file
+#  options     - sets options to be passed to the boot loader; use
+#                quotes if more than one option should be passed or
+#                if any options use characters that might be changed
+#                by RefindPlus' parsing procedures (=, /, #, or tab).
+#
+#  add_options - As "options" above but only applicable when under a
+#                "submenuentry" keyword. It adds the options to those
+#                set for the main "menuentry" keyword.
 #
 # Note that you can use either DOS/Windows/EFI-style backslashes (\)
 # or Unix-style forward slashes (/) as directory separators. Either
@@ -974,7 +1013,7 @@ menuentry "Windows 7" {
 # EFI shells are programs just like boot loaders, and can be
 # launched in the same way. A shell can be passed the name of
 # a script that it is to run on the "options" line. The script
-# could initialize hardware and then launch an OS, or it could
+# could initialise hardware and then launch an OS, or it could
 # do something entirely different.
 #
 menuentry "Windows via shell script" {

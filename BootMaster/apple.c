@@ -33,50 +33,58 @@
 #include "mystrings.h"
 #include "../include/refit_call_wrapper.h"
 
-PoolStr gCsrStatus_PS_ = {NULL, FALSE};
+PoolStr    gCsrStatus_PS_ = {NULL, FALSE};
+/*
+BOOLEAN    MuteLogger     = FALSE;
+*/
+BOOLEAN    MsgNormalised  = FALSE;
 
 // Get CSR (Apple's Configurable Security Restrictions; aka System Integrity
 // Protection [SIP], or "rootless") status information. If the variable is not
 // present and the firmware is Apple, fake it and claim it is enabled, since
 // that's how OS X 10.11 treats a system with the variable absent.
 EFI_STATUS GetCsrStatus (
-    UINT32 *CsrStatus
+    IN OUT UINT32 *CsrStatus
 ) {
+    EFI_STATUS  Status;
     UINTN       CsrLength;
     UINT32     *ReturnValue = NULL;
     EFI_GUID    CsrGuid     = APPLE_GUID;
-    EFI_STATUS  Status      = EFI_INVALID_PARAMETER;
 
-    if (CsrStatus) {
-        Status = EfivarGetRaw (
-            &CsrGuid,
-            L"csr-active-config",
-            (VOID**) &ReturnValue,
-            &CsrLength
-        );
+    Status = EfivarGetRaw (
+        &CsrGuid,
+        L"csr-active-config",
+        (VOID**) &ReturnValue,
+        &CsrLength
+    );
 
-        if (Status == EFI_SUCCESS) {
-            if (CsrLength == 4) {
-                *CsrStatus = *ReturnValue;
-            }
-            else {
-                Status = EFI_BAD_BUFFER_SIZE;
-                AssignCachedPoolStr (&gCsrStatus, L"Unknown SIP/SSV Status");
-                LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
-            }
-
-            MyFreePool (&ReturnValue);
+    if (Status == EFI_SUCCESS) {
+        if (CsrLength == 4) {
+            *CsrStatus = *ReturnValue;
         }
-        else if (Status == EFI_NOT_FOUND &&
-            StriSubCmp (L"Apple", gST->FirmwareVendor)
-        ) {
-            *CsrStatus = SIP_ENABLED;
-            Status = EFI_SUCCESS;
-        } // if (Status == EFI_SUCCESS)
-    } // if (CsrStatus)
+        else {
+            Status = EFI_BAD_BUFFER_SIZE;
+            AssignCachedPoolStr (&gCsrStatus, L"Unknown SIP/SSV Status");
+            LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
+        }
+
+        MyFreePool (&ReturnValue);
+    }
+    else if (Status == EFI_NOT_FOUND) {
+        *CsrStatus = SIP_ENABLED_EX;
+        AssignCachedPoolStr (&gCsrStatus, L"SIP/SSV Enabled (Cleared/Empty)");
+        LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
+
+        // Treat as Success
+        Status = EFI_SUCCESS;
+    }
+    else {
+        AssignCachedPoolStr (&gCsrStatus, L"Error While Getting SIP/SSV Status");
+        LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
+    }
 
     return Status;
-} // INTN GetCsrStatus()
+} // EFI_STATUS GetCsrStatus()
 
 // Store string describing CSR status value in gCsrStatus variable, which appears
 // on the Info page. If DisplayMessage is TRUE, displays the new value of
@@ -85,35 +93,49 @@ VOID RecordgCsrStatus (
     UINT32  CsrStatus,
     BOOLEAN DisplayMessage
 ) {
+    UINTN     WaitSeconds = 3;
+    CHAR16   *MsgStr      = NULL;
     EG_PIXEL BGColor = COLOR_LIGHTBLUE;
 
     switch (CsrStatus) {
+        // SIP "Cleared" Setting
+        case SIP_ENABLED_EX:
+            AssignCachedPoolStr (&gCsrStatus, L"SIP Enabled (Cleared/Empty)");
+            LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
+            break;
+
         // SIP "Enabled" Setting
         case SIP_ENABLED:
             AssignPoolStr (&gCsrStatus, PoolPrint (
-                L"SIP/SSV Enabled (0x%04x)",
+                L"SIP Enabled (0x%04x)",
                 CsrStatus
             ));
-            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
+            LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
             break;
 
         // SIP "Disabled" Settings
         case SIP_DISABLED:
+        case SIP_DISABLED_B:
+        case SIP_DISABLED_EX:
+        case SIP_DISABLED_DBG:
+        case SIP_DISABLED_KEXT:
+        case SIP_DISABLED_EXTRA:
             AssignPoolStr (&gCsrStatus, PoolPrint (
                 L"SIP Disabled (0x%04x)",
                 CsrStatus
             ));
-            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
+            LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
             break;
 
         // SSV "Disabled" Settings
         case SSV_DISABLED:
+        case SSV_DISABLED_B:
         case SSV_DISABLED_EX:
             AssignPoolStr (&gCsrStatus, PoolPrint (
-                L"SIP and SSV Disabled (0x%04x)",
+                L"SIP/SSV Disabled (0x%04x)",
                 CsrStatus
             ));
-            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
+            LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
             break;
 
         // Recognised Custom SIP "Disabled" Settings
@@ -121,20 +143,20 @@ VOID RecordgCsrStatus (
         case SSV_DISABLED_KEXT:
         case SSV_DISABLED_ANY_EX:
             AssignPoolStr (&gCsrStatus, PoolPrint (
-                L"SIP and SSV Disabled (0x%04x - Custom Setting)",
+                L"SIP/SSV Disabled (0x%04x - Custom Setting)",
                 CsrStatus
             ));
-            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
+            LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
             break;
 
         // Wide Open and Max Legal CSR "Disabled" Settings
         case SSV_DISABLED_WIDE_OPEN:
         case CSR_MAX_LEGAL_VALUE:
             AssignPoolStr (&gCsrStatus, PoolPrint (
-                L"SIP and SSV Removed (0x%04x - Caution!)",
+                L"SIP/SSV Removed (0x%04x - Caution!)",
                 CsrStatus
             ));
-            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
+            LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
             break;
 
         // Unknown Custom Setting
@@ -143,15 +165,27 @@ VOID RecordgCsrStatus (
                 L"SIP/SSV Disabled: 0x%04x - Caution: Unknown Custom Setting",
                 CsrStatus
             ));
-            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
+            LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
     } // switch
 
     if (DisplayMessage) {
-        MsgLog ("    * %s\n\n", GetPoolStr (&gCsrStatus));
+        if (MsgNormalised) {
+            WaitSeconds = 4;
+            MsgStr = PoolPrint (L"Normalised CSR:- '%s'", GetPoolStr (&gCsrStatus));
+        }
+        else {
+            MsgStr = PoolPrint (L"%s", GetPoolStr (&gCsrStatus));
+        }
 
-        egDisplayMessage (GetPoolStr (&gCsrStatus), &BGColor, CENTER);
-        PauseSeconds (3);
-    } // if
+        egDisplayMessage (MsgStr, &BGColor, CENTER);
+        PauseSeconds (WaitSeconds);
+
+        #if REFIT_DEBUG > 0
+        MsgLog ("    * %s\n\n", MsgStr);
+        #endif
+
+        MyFreePool (&MsgStr);
+    }
 } // VOID RecordgCsrStatus()
 
 // Find the current CSR status and reset it to the next one in the
@@ -160,8 +194,9 @@ VOID RecordgCsrStatus (
 VOID RotateCsrValue (VOID) {
     EFI_STATUS    Status;
     UINT32        CurrentValue, TargetCsr;
+    UINT32        StorageFlags = APPLE_FLAGS;
+    EFI_GUID      CsrGuid      = APPLE_GUID;
     UINT32_LIST  *ListItem;
-    EFI_GUID      CsrGuid = APPLE_GUID;
 
     LOG(1, LOG_LINE_SEPARATOR, L"Rotating CSR Value");
 
@@ -180,27 +215,52 @@ VOID RotateCsrValue (VOID) {
             TargetCsr = ListItem->Next->Value;
         }
 
-        LOG(1, LOG_LINE_NORMAL,
-            L"CSR value was 0x%04x; setting to 0x%04x",
-            CurrentValue, TargetCsr
-        );
+        #if REFIT_DEBUG > 0
+        if (TargetCsr == 0) {
+            // Set target CSR value to NULL
+            LOG(1, LOG_LINE_NORMAL,
+                L"Clearing CSR to 'NULL' from '0x%04x'",
+                CurrentValue
+            );
+        }
+        else if (CurrentValue == 0) {
+            LOG(1, LOG_LINE_NORMAL,
+                L"Setting CSR to '0x%04x' from 'NULL'",
+                TargetCsr
+            );
+        }
+        else {
+            LOG(1, LOG_LINE_NORMAL,
+                L"Setting CSR to '0x%04x' from '0x%04x'",
+                CurrentValue, TargetCsr
+            );
+        }
+        #endif
 
-        Status = EfivarSetRaw (
-            &CsrGuid,
-            L"csr-active-config",
-            &TargetCsr,
-            4,
-            TRUE
-        );
+        if (TargetCsr != 0) {
+            Status = EfivarSetRaw (
+                &CsrGuid, L"csr-active-config",
+                (CHAR8 *) &TargetCsr, 4, TRUE
+            );
+        }
+        else {
+            Status = refit_call5_wrapper(
+                gRT->SetVariable, L"csr-active-config",
+                &CsrGuid, StorageFlags, 0, NULL
+            );
+        }
 
         if (Status == EFI_SUCCESS) {
             RecordgCsrStatus (TargetCsr, TRUE);
 
-            LOG(2, LOG_LINE_NORMAL, L"Successful setting of CSR value of 0x%04x", TargetCsr);
+            LOG(2, LOG_LINE_NORMAL,
+                L"Successfully Set SIP/SSV:- '0x%04x'",
+                TargetCsr
+            );
         }
         else {
-            AssignCachedPoolStr (&gCsrStatus, L"Error While Setting SIP/SSV Status");
-            LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
+            AssignCachedPoolStr (&gCsrStatus, L"Error While Setting SIP/SSV");
+            LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
 
             LOG(1, LOG_LINE_NORMAL, L"%s", GetPoolStr (&gCsrStatus));
 
@@ -215,7 +275,7 @@ VOID RotateCsrValue (VOID) {
     }
     else {
         AssignCachedPoolStr (&gCsrStatus, L"Could Not Retrieve SIP/SSV Status");
-        LEAKABLEONEPOOLSTR (&gCsrStatus_PS_, "gCsrStatus");
+        LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
 
         LOG(1, LOG_LINE_NORMAL, L"%s", GetPoolStr (&gCsrStatus));
 
@@ -230,13 +290,53 @@ VOID RotateCsrValue (VOID) {
 } // VOID RotateCsrValue()
 
 
+EFI_STATUS NormaliseCSR (VOID) {
+    EFI_STATUS  Status;
+    UINT32      OurCSR;
+
+/*
+    // Mute logging if active
+    MuteLogger = TRUE;
+*/
+
+    // Get csr-active-config value
+    Status = GetCsrStatus (&OurCSR);
+
+    if (Status == EFI_NOT_FOUND) {
+        // csr-active-config not found ... Proceed as 'OK'
+        Status = EFI_ALREADY_STARTED;
+    }
+    else if (Status == EFI_SUCCESS) {
+        if ((OurCSR & CSR_ALLOW_APPLE_INTERNAL) == 0) {
+            // 'CSR_ALLOW_APPLE_INTERNAL' bit not present ... Proceed as 'OK'
+            Status = EFI_ALREADY_STARTED;
+        }
+        else {
+            // 'CSR_ALLOW_APPLE_INTERNAL' bit present ... Clear and Reset
+            OurCSR &= ~CSR_ALLOW_APPLE_INTERNAL;
+
+            MsgNormalised = TRUE;
+            RecordgCsrStatus (OurCSR, TRUE);
+            MsgNormalised = FALSE;
+        }
+    }
+
+/*
+    // Restore logging if previously active
+    MuteLogger = FALSE;
+*/
+
+    return Status;
+} // EFI_STATUS NormaliseCSR()
+
+
 /*
  * The definitions below and the SetAppleOSInfo() function are based on a GRUB patch by Andreas Heider:
  * https://lists.gnu.org/archive/html/grub-devel/2013-12/msg00442.html
  */
 
-#define EFI_APPLE_SET_OS_PROTOCOL_GUID  \
-{ 0xc5c5da95, 0x7d5c, 0x45e6, { 0xb2, 0xf1, 0x3f, 0xd5, 0x2b, 0xb1, 0x00, 0x77 } }
+#define EFI_APPLE_SET_OS_PROTOCOL_GUID  { 0xc5c5da95, 0x7d5c, 0x45e6, \
+    { 0xb2, 0xf1, 0x3f, 0xd5, 0x2b, 0xb1, 0x00, 0x77 } }
 
 typedef struct EfiAppleSetOsInterface {
     UINT64 Version;
@@ -257,8 +357,6 @@ EFI_STATUS SetAppleOSInfo (
     CHAR8                   *AppleOSVersion8    = NULL;
     EfiAppleSetOsInterface  *SetOs              = NULL;
 
-    LOG(1, LOG_LINE_NORMAL, L"Setting Apple OS information, if applicable");
-
     Status = refit_call3_wrapper(
         gBS->LocateProtocol,
         &apple_set_os_guid,
@@ -268,38 +366,57 @@ EFI_STATUS SetAppleOSInfo (
 
     // If not a Mac, ignore the call....
     if ((Status != EFI_SUCCESS) || (!SetOs)) {
-        LOG(2, LOG_LINE_NORMAL, L"Not a Mac; not setting Apple OS information");
+        LOG(2, LOG_LINE_NORMAL,
+            L"Not a Mac ... Not setting Apple OS information"
+        );
 
         Status = EFI_SUCCESS;
     }
-    else {
-        if (SetOs->Version != 0 && GlobalConfig.SpoofOSXVersion) {
-            AppleOSVersion = L"Mac OS";
-            MergeStrings (&AppleOSVersion, GlobalConfig.SpoofOSXVersion, ' ');
+    else if (SetOs->Version != 0 && GlobalConfig.SpoofOSXVersion) {
+        #if REFIT_DEBUG > 0
+        LOG(1, LOG_LINE_NORMAL,
+            L"Setting Apple OS information"
+        );
+        #endif
 
-            if (AppleOSVersion) {
-                LOG(2, LOG_LINE_NORMAL, L"Setting Apple OS information to '%s'", AppleOSVersion);
-
-                AppleOSVersion8 = AllocateZeroPool ((StrLen (AppleOSVersion) + 1) * sizeof (CHAR8));
-                if (AppleOSVersion8) {
-                    UnicodeStrToAsciiStr (AppleOSVersion, AppleOSVersion8);
-                    Status = refit_call1_wrapper(SetOs->SetOsVersion, AppleOSVersion8);
-                    if (!EFI_ERROR (Status)) {
-                        Status = EFI_SUCCESS;
-                    }
-                    MyFreePool (&AppleOSVersion8);
+        AppleOSVersion = L"Mac OS";
+        MergeStrings (&AppleOSVersion, GlobalConfig.SpoofOSXVersion, ' ');
+ 
+        if (AppleOSVersion) {
+            LOG(2, LOG_LINE_NORMAL,
+                L"Setting Apple OS information to '%s'",
+                AppleOSVersion
+            );
+     
+            AppleOSVersion8 = AllocateZeroPool (
+                (StrLen (AppleOSVersion) + 1) * sizeof (CHAR8)
+            );
+            if (!AppleOSVersion8) {
+                LOG(1, LOG_THREE_STAR_SEP,
+                    L"Memory Error!!"
+                );
+     
+                Status = EFI_OUT_OF_RESOURCES;
+            }
+            else {
+                UnicodeStrToAsciiStr (AppleOSVersion, AppleOSVersion8);
+                Status = refit_call1_wrapper(
+                    SetOs->SetOsVersion, AppleOSVersion8
+                );
+                if (!EFI_ERROR (Status)) {
+                    Status = EFI_SUCCESS;
                 }
-                else {
-                    Status = EFI_OUT_OF_RESOURCES;
-                }
-
-                if (Status == EFI_SUCCESS && SetOs->Version >= 2) {
-                    Status = refit_call1_wrapper(SetOs->SetOsVendor, (CHAR8 *) "Apple Inc.");
-                }
-                MyFreePool (&AppleOSVersion);
-            } // if (AppleOSVersion)
-        } // if
-    }
+                MyFreePool (&AppleOSVersion8);
+            }
+     
+            if (Status == EFI_SUCCESS && SetOs->Version >= 2) {
+                Status = refit_call1_wrapper(
+                    SetOs->SetOsVendor, (CHAR8 *) "Apple Inc."
+                );
+            }
+            MyFreePool (&AppleOSVersion);
+        } // if (AppleOSVersion)
+    } // if/else
 
     return Status;
 } // EFI_STATUS SetAppleOSInfo()

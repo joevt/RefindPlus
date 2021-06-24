@@ -266,12 +266,12 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
 
     DetectedDevices = FALSE;
 
-    LOG2(2, LOG_LINE_SEPARATOR, L"", L"...\n", L"%s Device Handles to Controllers%s",
-        ReLoaded ? L"Reconnect" : L"Link",
-        PostConnect ? L" (Post Connect)" : L""
-    );
     MsgLog ("[ BdsLibConnectMostlyAllEfi%s%s\n",
         ReLoaded ? L" (Reconnect)" : L" (Link)",
+        PostConnect ? L" (Post Connect)" : L""
+    );
+    LOG2(2, LOG_LINE_SEPARATOR, L"", L"...\n", L"%s Device Handles to Controllers%s",
+        ReLoaded ? L"Reconnect" : L"Link",
         PostConnect ? L" (Post Connect)" : L""
     );
 

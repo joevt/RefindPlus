@@ -115,7 +115,7 @@ EFI_STATUS RefitReadFile (
         return EFI_LOAD_ERROR;
     }
     ReadSize = FileInfo->FileSize;
-    FreePool (FileInfo);
+    MyFreePool (&FileInfo);
 
     File->BufferSize = (UINTN) ReadSize;
     File->Buffer = AllocatePool (File->BufferSize);
@@ -296,7 +296,7 @@ BOOLEAN KeepReading (
          Temp = StrDuplicate (&p[1]);
          if (Temp != NULL) {
             StrCpy (p, Temp);
-            FreePool (Temp);
+            MyFreePool (&Temp);
          }
          MoreToRead = TRUE;
       }
@@ -362,7 +362,7 @@ UINTN ReadTokenLine (
             AddListElement ((VOID ***)TokenList, &TokenCount, (VOID *)StrDuplicate (Token));
         }
 
-        FreePool (Line);
+        MyFreePool (&Line);
     }
     return (TokenCount);
 } /* ReadTokenLine() */
@@ -416,6 +416,10 @@ VOID HandleStrings (
     IN UINTN TokenCount,
     OUT CHAR16 **Target
 ) {
+   if (!Target) {
+      return;
+   }
+
    UINTN i;
    BOOLEAN AddMode = FALSE;
 
@@ -423,9 +427,8 @@ VOID HandleStrings (
       AddMode = TRUE;
    }
 
-   if ((*Target != NULL) && !AddMode) {
-      FreePool (*Target);
-      *Target = NULL;
+   if (*Target && !AddMode) {
+      MyFreePool (Target);
    } // if
    for (i = 1; i < TokenCount; i++) {
       if ((i != 1) || !AddMode) {
@@ -792,7 +795,6 @@ VOID ReadConfig (
         }
         else if (MyStriCmp (TokenList[0], L"showtools")) {
             SetMem (GlobalConfig.ShowTools, NUM_TOOLS * sizeof (UINTN), 0);
-            GlobalConfig.HiddenTags = FALSE;
             for (i = 1; (i < TokenCount) && (i < NUM_TOOLS); i++) {
                 FlagName = TokenList[i];
                 CHAR16 *OneFlag = PoolPrint (L",%s,", FlagName);
@@ -801,10 +803,6 @@ VOID ReadConfig (
                 #define TAGS_FLAG_TO_TAG
                 #include "tags.include"
                 MyFreePool (&OneFlag);
-                
-                if (TheTag == TAG_HIDDEN) {
-                   GlobalConfig.HiddenTags = TRUE;
-                }
                 
                 if (TheTag == TAG_NONE) {
                     Print (L" unknown showtools flag: '%s'\n", FlagName);
@@ -880,7 +878,7 @@ VOID ReadConfig (
         }
         else if (MyStriCmp (TokenList[0], L"resolution") && ((TokenCount == 2) || (TokenCount == 3))) {
             if (MyStriCmp(TokenList[1], L"max")) {
-                // Set to 0 to ignore 'max' setting
+                // DA_TAG: has been set to 0 so as to ignore the 'max' setting
                 //GlobalConfig.RequestedScreenWidth  = MAX_RES_CODE;
                 //GlobalConfig.RequestedScreenHeight = MAX_RES_CODE;
                 GlobalConfig.RequestedScreenWidth  = 0;
@@ -1021,6 +1019,12 @@ VOID ReadConfig (
         else if (MyStriCmp (TokenList[0], L"scan_other_esp")) {
           GlobalConfig.ScanOtherESP = HandleBoolean (TokenList, TokenCount);
         }
+        else if (MyStriCmp (TokenList[0], L"disable_tag_help")) {
+          GlobalConfig.DisableTagHelp = HandleBoolean (TokenList, TokenCount);
+        }
+        else if (MyStriCmp (TokenList[0], L"normalise_csr")) {
+          GlobalConfig.NormaliseCSR = HandleBoolean (TokenList, TokenCount);
+        }
         else if (MyStriCmp (TokenList[0], L"scale_ui")) {
            HandleInt (TokenList, TokenCount, &(GlobalConfig.ScaleUI));
         }
@@ -1041,6 +1045,16 @@ VOID ReadConfig (
         FreeTokenLine (&TokenList, &TokenCount);
     } // for
     FreeTokenLine (&TokenList, &TokenCount);
+
+    // Check show_tools for hidden_tags tool
+    GlobalConfig.HiddenTags = FALSE;
+    for (i = 0; i < NUM_TOOLS; i++) {
+        if (GlobalConfig.ShowTools[i] == TAG_HIDDEN) {
+            GlobalConfig.HiddenTags = TRUE;
+            break;
+        }
+    }
+
     if ((GlobalConfig.DontScanFiles) && (GlobalConfig.WindowsRecoveryFiles)) {
         MergeStrings (&(GlobalConfig.DontScanFiles), GlobalConfig.WindowsRecoveryFiles, L',');
         LEAKABLE (GlobalConfig.DontScanFiles, "DontScanFiles");
@@ -1065,20 +1079,23 @@ VOID AddSubmenu (
     REFIT_VOLUME *Volume,
     CHAR16 *Title
 ) {
-    REFIT_MENU_SCREEN  *SubScreen;
-    LOADER_ENTRY       *SubEntry;
-    UINTN              TokenCount;
+    REFIT_MENU_SCREEN   *SubScreen;
+    LOADER_ENTRY        *SubEntry;
+    UINTN                TokenCount;
     CHAR16             **TokenList;
-    CHAR16             *TitleMenu = NULL;
+    BOOLEAN              TitleVolume = FALSE;
 
     SubScreen = InitializeSubScreen (Entry);
-    // Set defaults for the new entry; will be modified based on lines read from the config. file....
+
+    // Set defaults for the new entry
+    // Will be modified based on lines read from the config file
     SubEntry = InitializeLoaderEntry (Entry);
 
     if ((SubEntry == NULL) || (SubScreen == NULL)) {
         return;
     }
-    CopyPoolStr (&SubEntry->me.Title, Title);
+
+    SubEntry->Enabled = TRUE;
 
     // input Volume parameter should not be freed if FindVolume below replaces it, so add a Retain
     RetainVolume (Volume);
@@ -1086,65 +1103,76 @@ VOID AddSubmenu (
     while (((TokenCount = ReadTokenLine (File, &TokenList)) > 0) &&
         (StrCmp (TokenList[0], L"}") != 0)
     ) {
-        if (MyStriCmp (TokenList[0], L"loader") && (TokenCount > 1)) {
-            // set the boot loader filename
-            CopyPoolStr (&SubEntry->LoaderPath, TokenList[1]);
-            AssignVolume (&SubEntry->Volume, Volume);
-        }
-        else if (MyStriCmp (TokenList[0], L"volume") && (TokenCount > 1)) {
-            if (FindVolume (&Volume, TokenList[1])) {
-                if ((Volume != NULL) && (Volume->IsReadable) && (Volume->RootDir)) {
-                    TitleMenu = Title;
-                    AssignPoolStr (&SubEntry->me.Title, PoolPrint (
-                        L"Boot %s from %s",
-                        TitleMenu ? TitleMenu : L"Unknown",
-                        GetPoolStr (&Volume->VolName)
-                    ));
-                    CopyFromPoolImage (&SubEntry->me.BadgeImage, &Volume->VolBadgeImage);
-                    AssignVolume (&SubEntry->Volume, Volume);
-                } // if volume is readable
-            } // if match found
-        }
-        else if (MyStriCmp (TokenList[0], L"initrd")) {
-            FreePoolStr (&SubEntry->InitrdPath);
-            if (TokenCount > 1) {
-                CopyPoolStr (&SubEntry->InitrdPath, TokenList[1]);
+        if (SubEntry->Enabled) {
+            if (MyStriCmp (TokenList[0], L"loader") && (TokenCount > 1)) {
+                // set the boot loader filename
+                CopyPoolStr (&SubEntry->LoaderPath, TokenList[1]);
+                AssignVolume (&SubEntry->Volume, Volume);
             }
-        }
-        else if (MyStriCmp (TokenList[0], L"options")) {
-            FreePoolStr (&SubEntry->LoadOptions);
-            if (TokenCount > 1) {
-                CopyPoolStr (&SubEntry->LoadOptions, TokenList[1]);
-            } // if/else
-        }
-        else if (MyStriCmp (TokenList[0], L"add_options") && (TokenCount > 1)) {
-            AssignPoolStr (&SubEntry->LoadOptions, MergeStringsNew (GetPoolStr (&SubEntry->LoadOptions), TokenList[1], L' '));
-        }
-        else if (MyStriCmp (TokenList[0], L"graphics") && (TokenCount > 1)) {
-            SubEntry->UseGraphicsMode = MyStriCmp (TokenList[1], L"on");
-        }
-        else if (MyStriCmp (TokenList[0], L"disabled")) {
-            SubEntry->Enabled = FALSE;
-        } // if/elseif
+            else if (MyStriCmp (TokenList[0], L"volume") && (TokenCount > 1)) {
+                if (FindVolume (&Volume, TokenList[1])) {
+                    if ((Volume != NULL) && (Volume->IsReadable) && (Volume->RootDir)) {
+                        TitleVolume = TRUE;
+                        CopyFromPoolImage (&SubEntry->me.BadgeImage, &Volume->VolBadgeImage);
+                        AssignVolume (&SubEntry->Volume, Volume);
+                    }
+                } // if FindVolume
+            }
+            else if (MyStriCmp (TokenList[0], L"initrd")) {
+                FreePoolStr (&SubEntry->InitrdPath);
+                if (TokenCount > 1) {
+                    CopyPoolStr (&SubEntry->InitrdPath, TokenList[1]);
+                }
+            }
+            else if (MyStriCmp (TokenList[0], L"options")) {
+                FreePoolStr (&SubEntry->LoadOptions);
+                if (TokenCount > 1) {
+                    CopyPoolStr (&SubEntry->LoadOptions, TokenList[1]);
+                }
+            }
+            else if (MyStriCmp (TokenList[0], L"add_options") && (TokenCount > 1)) {
+                AssignPoolStr (&SubEntry->LoadOptions, MergeStringsNew (GetPoolStr (&SubEntry->LoadOptions), TokenList[1], L' '));
+            }
+            else if (MyStriCmp (TokenList[0], L"graphics") && (TokenCount > 1)) {
+                SubEntry->UseGraphicsMode = MyStriCmp (TokenList[1], L"on");
+            }
+            else if (MyStriCmp (TokenList[0], L"disabled")) {
+                SubEntry->Enabled = FALSE;
+            }
+        } // if SubEntry->Enabled
 
         FreeTokenLine (&TokenList, &TokenCount);
-    } // while
+    } // while()
     FreeTokenLine (&TokenList, &TokenCount);
 
     FreeVolume (&Volume); // works whether FindVolume replaced Volume or not
 
-    if (GetPoolStr (&SubEntry->InitrdPath) != NULL) {
-        AssignPoolStr (&SubEntry->LoadOptions, MergeStringsNew (GetPoolStr (&SubEntry->LoadOptions), L"initrd=", L' '));
-        AssignPoolStr (&SubEntry->LoadOptions, MergeStringsNew (GetPoolStr (&SubEntry->LoadOptions), GetPoolStr (&SubEntry->InitrdPath), 0));
-        FreePoolStr (&SubEntry->InitrdPath);
-    } // if
-    if (SubEntry->Enabled) {
-        AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+    if (!SubEntry->Enabled) {
+        FreeMenuEntry ((REFIT_MENU_ENTRY **)&SubEntry);
+        FreeMenuScreen (&SubScreen);
     }
     else {
-        FreeMenuEntry ((REFIT_MENU_ENTRY **)&SubEntry);
+        if (TitleVolume) {
+            AssignPoolStr (&SubEntry->me.Title, PoolPrint (
+                L"Boot %s from %s",
+                (Title != NULL) ? Title : L"Unknown",
+                GetPoolStr (&Volume->VolName)
+            ));
+        }
+        else {
+            CopyPoolStr (&SubEntry->me.Title, Title);
+        }
+
+        if (GetPoolStr (&SubEntry->InitrdPath) != NULL) {
+            AssignPoolStr (&SubEntry->LoadOptions, MergeStringsNew (GetPoolStr (&SubEntry->LoadOptions), L"initrd=", L' '));
+            AssignPoolStr (&SubEntry->LoadOptions, MergeStringsNew (GetPoolStr (&SubEntry->LoadOptions), GetPoolStr (&SubEntry->InitrdPath), 0));
+            FreePoolStr (&SubEntry->InitrdPath);
+        }
+
+        AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+
+        Entry->me.SubScreen = SubScreen;
     }
-    Entry->me.SubScreen = SubScreen;
 } // VOID AddSubmenu()
 
 // Adds the options from a single config.conf stanza to a new loader entry and returns
@@ -1158,8 +1186,11 @@ LOADER_ENTRY * AddStanzaEntries (
 ) {
     MsgLog ("[ AddStanzaEntries %s\n", Title ? Title : L"NULL");
     UINTN           TokenCount;
+    CHAR16         *OurEfiBootNumber  = NULL;
     CHAR16        **TokenList;
+    CHAR16         *LoadOptions       = NULL;
     BOOLEAN         HasPath           = FALSE;
+    BOOLEAN         FirmwareBootNum   = FALSE;
     BOOLEAN         DefaultsSet       = FALSE;
     BOOLEAN         AddedSubmenu      = FALSE;
     REFIT_VOLUME   *CurrentVolume     = NULL;
@@ -1180,11 +1211,6 @@ LOADER_ENTRY * AddStanzaEntries (
     else {
         AssignCachedPoolStr (&Entry->Title, L"Unknown");
     }
-    AssignPoolStr (&Entry->me.Title, PoolPrint (
-        L"Boot %s from %s",
-        (Title != NULL) ? Title : L"Unknown",
-        GetPoolStr (&CurrentVolume->VolName)
-    ));
     AssignVolume (&Entry->Volume, CurrentVolume);
     CopyFromPoolImage (&Entry->me.BadgeImage, &CurrentVolume->VolBadgeImage);
     Entry->DiscoveryType = DISCOVERY_TYPE_MANUAL;
@@ -1215,7 +1241,6 @@ LOADER_ENTRY * AddStanzaEntries (
 
                     // Discard default options, if any
                     FreePoolStr (&Entry->LoadOptions);
-
                     DefaultsSet = TRUE;
                 }
             }
@@ -1231,10 +1256,6 @@ LOADER_ENTRY * AddStanzaEntries (
                         (CurrentVolume->IsReadable) &&
                         (CurrentVolume->RootDir)
                     ) {
-                        AssignPoolStr (&Entry->me.Title, PoolPrint (
-                            L"Boot %s from %s", (Title != NULL) ? Title : L"Unknown",
-                            GetPoolStr (&CurrentVolume->VolName)
-                        ));
                         AssignVolume (&Entry->Volume, CurrentVolume);
                         CopyFromPoolImage (&Entry->me.BadgeImage, &CurrentVolume->VolBadgeImage);
                     }
@@ -1267,7 +1288,9 @@ LOADER_ENTRY * AddStanzaEntries (
             }
             else if (MyStriCmp (TokenList[0], L"options") && (TokenCount > 1)) {
                 LOG(4, LOG_LINE_NORMAL, L"Adding options for '%s'", GetPoolStr (&Entry->Title));
-                CopyPoolStr (&Entry->LoadOptions, TokenList[1]);
+
+                MyFreePool (&LoadOptions);
+                LoadOptions = StrDuplicate (TokenList[1]);
             }
             else if (MyStriCmp (TokenList[0], L"ostype") && (TokenCount > 1)) {
                 if (TokenCount > 1) {
@@ -1286,14 +1309,8 @@ LOADER_ENTRY * AddStanzaEntries (
             else if (MyStriCmp(TokenList[0], L"firmware_bootnum") && (TokenCount > 1)) {
                 LOG(4, LOG_LINE_NORMAL, L"Adding firmware bootnum entry for '%s'", GetPoolStr (&Entry->Title));
 
-                FreePoolStr (&Entry->LoaderPath);
-                MyFreePool (&Entry->EfiLoaderPath);
-                FreePoolStr (&Entry->LoadOptions);
-                FreePoolStr (&Entry->InitrdPath);
-                Entry->EfiBootNum = StrToHex (TokenList[1], 0, 16);
-                CopyFromPoolStr (&Entry->me.Title, &Entry->Title);
-                CopyFromPoolImage_PI_ (&Entry->me.BadgeImage_PI_, BuiltinIcon (BUILTIN_ICON_VOL_EFI));
                 Entry->me.Tag = TAG_FIRMWARE_LOADER;
+                CopyFromPoolImage_PI_ (&Entry->me.BadgeImage_PI_, BuiltinIcon (BUILTIN_ICON_VOL_EFI));
 
                 if (GetPoolImage (&Entry->me.BadgeImage) == NULL) {
                     // Set dummy image if badge was not found
@@ -1301,6 +1318,9 @@ LOADER_ENTRY * AddStanzaEntries (
                 }
 
                 DefaultsSet = TRUE;
+                FirmwareBootNum = TRUE;
+                MyFreePool (&OurEfiBootNumber);
+                OurEfiBootNumber = StrDuplicate (TokenList[1]);
             }
             else if (MyStriCmp (TokenList[0], L"submenuentry") && (TokenCount > 1)) {
                 LOG(4, LOG_LINE_NORMAL, L"Adding submenu entry for '%s'", HasPath ? GetPoolStr (&Entry->LoaderPath) : GetPoolStr (&Entry->Title));
@@ -1312,43 +1332,78 @@ LOADER_ENTRY * AddStanzaEntries (
 
         FreeTokenLine (&TokenList, &TokenCount);
     } // while()
-
     FreeTokenLine (&TokenList, &TokenCount);
 
-    if (!Entry->Enabled) {
-        FreeMenuEntry ((REFIT_MENU_ENTRY **)&Entry);
-        goto Done;
-    }
+    // Disabled entries are returned "as is" as will be discarded later
+    if (Entry->Enabled) {
+        // Set Screen Title
+        if (FirmwareBootNum) {
+            // Clear potentially wrongly set items
+            FreePoolStr (&Entry->LoaderPath);
+            MyFreePool (&Entry->EfiLoaderPath);
+            FreePoolStr (&Entry->LoadOptions);
+            FreePoolStr (&Entry->InitrdPath);
 
-    if (AddedSubmenu) {
-        AddMenuEntryCopy (Entry->me.SubScreen, &TagMenuEntry[TAG_RETURN]);
-    }
+            AssignPoolStr (&Entry->me.Title, PoolPrint (
+                L"Boot %s (Firmware Boot Number)",
+                (Title != NULL) ? Title : L"Unknown"
+            ));
 
-    if (GetPoolStr (&Entry->InitrdPath) && StrLen (GetPoolStr (&Entry->InitrdPath)) > 0) {
-        if (GetPoolStr (&Entry->LoadOptions) && StrLen (GetPoolStr (&Entry->LoadOptions)) > 0) {
-            AssignPoolStr (&Entry->LoadOptions, MergeStringsNew (GetPoolStr (&Entry->LoadOptions), L"initrd=", L' '));
-            AssignPoolStr (&Entry->LoadOptions, MergeStringsNew (GetPoolStr (&Entry->LoadOptions), GetPoolStr (&Entry->InitrdPath), 0));
+            Entry->EfiBootNum = StrToHex (OurEfiBootNumber, 0, 16);
         }
-        else {
-            AssignPoolStr (&Entry->LoadOptions, PoolPrint (
-                L"initrd=%s",
-                GetPoolStr (&Entry->InitrdPath)
+        else if (GetPoolStr (&Entry->Volume->VolName)) {
+            AssignPoolStr (&Entry->me.Title, PoolPrint (
+                L"Boot %s from %s",
+                (Title != NULL) ? Title : L"Unknown",
+                GetPoolStr (&Entry->Volume->VolName)
             ));
         }
-        FreePoolStr (&Entry->InitrdPath);
-    }
+        else {
+            AssignPoolStr (&Entry->me.Title, PoolPrint (
+                L"Boot %s",
+                (Title != NULL)
+                    ? Title
+                    : L"Unknown"
+            ));
+        }
 
-    if (!DefaultsSet) {
-        // No "loader" line ... use bogus one
-        SetLoaderDefaults (Entry, L"\\EFI\\BOOT\\nemo.efi", CurrentVolume);
-    }
+        // Set load options, if any
+        if (LoadOptions && StrLen (LoadOptions) > 0) {
+            AssignPoolStr (&Entry->LoadOptions, LoadOptions);
+        }
 
-    if (GetPoolImage (&Entry->me.Image) == NULL) {
-        // Still no icon ... set dummy image
-        AssignPoolImage (&Entry->me.Image, DummyImage (GlobalConfig.IconSizes[ICON_SIZE_BIG]));
-    }
+        if (AddedSubmenu) {
+            AddMenuEntryCopy (Entry->me.SubScreen, &TagMenuEntry[TAG_RETURN]);
+        }
+    
+        if (GetPoolStr (&Entry->InitrdPath) && StrLen (GetPoolStr (&Entry->InitrdPath)) > 0) {
+            if (GetPoolStr (&Entry->LoadOptions) && StrLen (GetPoolStr (&Entry->LoadOptions)) > 0) {
+                AssignPoolStr (&Entry->LoadOptions, MergeStringsNew (GetPoolStr (&Entry->LoadOptions), L"initrd=", L' '));
+                AssignPoolStr (&Entry->LoadOptions, MergeStringsNew (GetPoolStr (&Entry->LoadOptions), GetPoolStr (&Entry->InitrdPath), 0));
+            }
+            else {
+                AssignPoolStr (&Entry->LoadOptions, PoolPrint (
+                    L"initrd=%s",
+                    GetPoolStr (&Entry->InitrdPath)
+                ));
+            }
+            FreePoolStr (&Entry->InitrdPath);
+        }
+    
+        if (!DefaultsSet) {
+            // No "loader" line ... use bogus one
+            SetLoaderDefaults (Entry, L"\\EFI\\BOOT\\nemo.efi", CurrentVolume);
+        }
+    
+        if (GetPoolImage (&Entry->me.Image) == NULL) {
+            // Still no icon ... set dummy image
+            AssignPoolImage (&Entry->me.Image, DummyImage (GlobalConfig.IconSizes[ICON_SIZE_BIG]));
+        }
+    } // if Entry->Enabled
 
-Done:
+    MyFreePool (&OurEfiBootNumber);
+    MyFreePool (&LoadOptions);
+
     // since these started as NULL, free them if they are not NULL
     FreeVolume (&CurrentVolume);
     FreeVolume (&PreviousVolume);

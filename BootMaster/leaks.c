@@ -1375,7 +1375,7 @@ DumpAllocations (
     }
     
     if (TotalAllocs > 0) {
-        MsgLog ("  %5d:,Total\n", TotalAllocs);
+        MsgLog ("  %5d:, Total\n", TotalAllocs);
     }
     DumpLoadedImages (LoadedImages);
     FreeLoadedImages (LoadedImages);
@@ -1706,6 +1706,55 @@ LEAKABLEPATHSETID (
     }
 }
 
+
+VOID
+LEAKABLEPATHSET (
+    VOID *Buffer
+) {
+    CheckStackPointer ();
+    if (LEAKABLEPATH[0]) {
+        MsgLog ("Allocation Error: LEAKABLEPATH is not empty\n");
+        DumpCallStack (NULL, FALSE);
+    }
+
+    if (Buffer) {
+        LOGPOOL(Buffer);
+        Allocation *a = AllocationsList;
+        while (a) {
+            if (a->Where == Buffer) {
+                if (a->Path) {
+                    UINTN LeakablePathSize = (a->Path[0]+1) * sizeof(a->Path[0]);
+                    CopyMem (LEAKABLEPATH, a->Path, LeakablePathSize);
+                    LEAKABLEROOTOBJECTID = LEAKABLEPATH[1];
+                }
+                else {
+                    MsgLog ("Allocation Error: %p doesn't have a path\n", Buffer);
+                    DumpCallStack (NULL, FALSE);
+                }
+                break;
+            }
+            a = a->Next;
+        }
+        if (!a) {
+           MsgLog ("Allocation Error: %p doesn't have allocation information\n", Buffer);
+        }
+    }
+    else {
+        MsgLog ("Allocation Error: No path for NULL\n");
+        DumpCallStack (NULL, FALSE);
+    }
+}
+
+
+VOID
+LEAKABLEPATHUNSET () {
+    CheckStackPointer ();
+    LEAKABLEPATH[0] = 0;
+    LEAKABLEROOTOBJECTID = 0;
+}
+
+
+
 VOID
 LEAKABLEWITHPATH (
     VOID *object,
@@ -1731,6 +1780,7 @@ LEAKABLEWITHPATH (
         }
     }
 }
+
 
 VOID
 LeakableProc (

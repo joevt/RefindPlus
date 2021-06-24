@@ -141,6 +141,8 @@ REFIT_CONFIG GlobalConfig = {
     /* SyncAPFS = */ FALSE,
     /* ProtectNVRAM = */ FALSE,
     /* ScanOtherESP = */ FALSE,
+    /* DisableTagHelp = */ FALSE,
+    /* NormaliseCSR = */ FALSE,
     /* ShutdownAfterTimeout = */ FALSE,
     /* Install = */ FALSE,
     /* WriteSystemdVars = */ FALSE,
@@ -196,14 +198,18 @@ REFIT_CONFIG GlobalConfig = {
     }
 };
 
-#define BOOTKICKER_FILES L"\\EFI\\tools_x64\\x64_BootKicker.efi,\\EFI\\tools_x64\\BootKicker_x64.efi,\
-\\EFI\\tools_x64\\BootKicker.efi,\\EFI\\tools\\x64_BootKicker.efi,\\EFI\\tools\\BootKicker_x64.efi,\
-\\EFI\\tools\\BootKicker.efi,\\EFI\\x64_BootKicker.efi,\\EFI\\BootKicker_x64.efi,\\EFI\\BootKicker.efi,\
+#define BOOTKICKER_FILES L"\\EFI\\BOOT\\tools_x64\\x64_BootKicker.efi,\\EFI\\BOOT\\tools_x64\\BootKicker_x64.efi,\
+\\EFI\\BOOT\\tools_x64\\BootKicker.efi,\\EFI\\BOOT\\tools\\x64_BootKicker.efi,\\EFI\\BOOT\\tools\\BootKicker_x64.efi,\
+\\EFI\\BOOT\\tools\\BootKicker.efi,\\EFI\\tools\\x64_BootKicker.efi,\\EFI\\tools\\BootKicker_x64.efi,\
+\\EFI\\tools\\BootKicker.efi,\\EFI\\tools_x64\\x64_BootKicker.efi,\\EFI\\tools_x64\\BootKicker_x64.efi,\
+\\EFI\\tools_x64\\BootKicker.efi,\\EFI\\x64_BootKicker.efi,\\EFI\\BootKicker_x64.efi,\\EFI\\BootKicker.efi,\
 \\x64_BootKicker.efi,\\BootKicker_x64.efi,\\BootKicker.efi"
 
-#define NVRAMCLEAN_FILES L"\\EFI\\tools_x64\\x64_CleanNvram.efi,\\EFI\\tools_x64\\CleanNvram_x64.efi,\
-\\EFI\\tools_x64\\CleanNvram.efi,\\EFI\\tools\\x64_CleanNvram.efi,\\EFI\\tools\\CleanNvram_x64.efi,\
-\\EFI\\tools\\CleanNvram.efi,\\EFI\\x64_CleanNvram.efi,\\EFI\\CleanNvram_x64.efi,\\EFI\\CleanNvram.efi,\
+#define NVRAMCLEAN_FILES L"\\EFI\\BOOT\\tools_x64\\x64_CleanNvram.efi,\\EFI\\BOOT\\tools_x64\\CleanNvram_x64.efi,\
+\\EFI\\BOOT\\tools_x64\\CleanNvram.efi,\\EFI\\BOOT\\tools\\x64_CleanNvram.efi,\\EFI\\BOOT\\tools\\CleanNvram_x64.efi,\
+\\EFI\\BOOT\\tools\\CleanNvram.efi,\\EFI\\tools\\x64_CleanNvram.efi,\\EFI\\tools\\CleanNvram_x64.efi,\
+\\EFI\\tools\\CleanNvram.efi,\\EFI\\tools_x64\\x64_CleanNvram.efi,\\EFI\\tools_x64\\CleanNvram_x64.efi,\
+\\EFI\\tools_x64\\CleanNvram.efi,\\EFI\\x64_CleanNvram.efi,\\EFI\\CleanNvram_x64.efi,\\EFI\\CleanNvram.efi,\
 \\x64_CleanNvram.efi,\\CleanNvram_x64.efi,\\CleanNvram.efi"
 
 CHAR16                *VendorInfo           = NULL;
@@ -311,14 +317,30 @@ VOID MapSetVariable (
     RT->SetVariable                            = gRTSetVariableEx;
     gRT->SetVariable                           = gRTSetVariableEx;
     SystemTable->RuntimeServices->SetVariable  = gRTSetVariableEx;
-} // MapSetVariable()
+} // static VOID MapSetVariable()
+
+static
+VOID FilterCSR (VOID) {
+    EFI_STATUS Status;
+
+    if (GlobalConfig.NormaliseCSR) {
+        // Filter out the 'APPLE_INTERNAL' CSR bit if present
+        Status = NormaliseCSR();
+
+        LOG2(3, LOG_THREE_STAR_MID, L"\n    * ", L"",
+            L"Normalise CSR ... %r",
+            Status
+        );
+    }
+} // static VOID FilterCSR()
 
 static
 VOID ActiveCSR (
     VOID
 ) {
     UINT32  CsrStatus;
-    BOOLEAN CsrEnabled;
+    BOOLEAN CsrEnabled = FALSE;
+    BOOLEAN RotateCsr  = FALSE;
 
     // Prime 'Status' for logging
     #if REFIT_DEBUG > 0
@@ -352,27 +374,31 @@ VOID ActiveCSR (
 
                 if (CsrEnabled) {
                     // Switch SIP/SSV off as currently enabled
-                    RotateCsrValue ();
-
-                    // Set 'Status' to 'Success'
-                    #if REFIT_DEBUG > 0
-                    Status = EFI_SUCCESS;
-                    #endif
+                    RotateCsr = TRUE;
                 }
             }
-            else {
+            else if (GlobalConfig.ActiveCSR == 1) {
                 // Seed the log buffer
                 MsgLog ("INFO: Enable SIP/SSV ...");
 
                 if (!CsrEnabled) {
                     // Switch SIP/SSV on as currently disbled
-                    RotateCsrValue ();
-
-                    // Set 'Status' to 'Success'
-                    #if REFIT_DEBUG > 0
-                    Status = EFI_SUCCESS;
-                    #endif
+                    RotateCsr = TRUE;
                 }
+            }
+            else {
+                // Should never get here
+                return;
+            }
+
+            if (RotateCsr) {
+                // Switch SIP/SSV off as currently enabled
+                RotateCsrValue ();
+
+                // Set 'Status' to 'Success'
+                #if REFIT_DEBUG > 0
+                Status = EFI_SUCCESS;
+                #endif
             }
 
             // Finalise and flush the log buffer
@@ -381,7 +407,7 @@ VOID ActiveCSR (
             #endif
         }
     }
-} // VOID ActiveCSR()
+} // static VOID ActiveCSR()
 
 
 static
@@ -479,7 +505,7 @@ VOID SetBootArgs (
         LOG2(3, LOG_LINE_NORMAL, L"\n    * ", L"", L"Disable Compat Check ... %r", Status);
     }
     #endif
-} // VOID SetBootArgs()
+} // static VOID SetBootArgs()
 
 
 VOID DisableAMFI (
@@ -751,9 +777,12 @@ VOID preBootKicker (
     INTN               DefaultEntry   = 1;
     MENU_STYLE_FUNC    Style          = GraphicsMenuStyle;
     REFIT_MENU_ENTRY  *ChosenEntry;
+    CHAR16            *FilePath       = NULL;
+    UINTN              i, k;
+
     static REFIT_MENU_SCREEN *BootKickerMenu = NULL;
     static REFIT_MENU_SCREEN BootKickerMenuSrc = {
-        {L"BootKicker" , TRUE},
+        {L"BootKicker", TRUE},
         {NULL, FALSE},
         0, NULL,
         0, NULL,
@@ -762,13 +791,16 @@ VOID preBootKicker (
         {L"", TRUE}
     };
 
-    if (!BootKickerMenu) {
+    if (BootKickerMenu) {
+        LOG(1, LOG_LINE_NORMAL, L"Displayed previously constructed screen");
+    }
+    else {
         BootKickerMenu = CopyMenuScreen (&BootKickerMenuSrc);
         if (!BootKickerMenu) {
             return;
         }
+
         CopyFromPoolImage_PI_ (&BootKickerMenu->TitleImage_PI_, BuiltinIcon (BUILTIN_ICON_TOOL_BOOTKICKER));
-        AssignCachedPoolStr (&BootKickerMenu->Title, L"BootKicker");
         AddMenuInfoLineCached (BootKickerMenu, L"A tool to kick in the Apple Boot Screen");
         AddMenuInfoLineCached (BootKickerMenu, L"Needs GOP Capable Fully Compatible GPUs on Apple Firmware");
         AddMenuInfoLineCached (BootKickerMenu, L"(Fully Compatible GPUs provide native Apple Boot Screen)");
@@ -776,15 +808,10 @@ VOID preBootKicker (
         AddMenuInfoLineCached (BootKickerMenu, L"");
         AddMenuInfoLineCached (BootKickerMenu, L"BootKicker is from OpenCore and Copyright Acidanthera");
         AddMenuInfoLineCached (BootKickerMenu, L"Requires at least one of the files below:");
-        AddMenuInfoLineCached (BootKickerMenu, L"\\EFI\\tools_x64\\x64_BootKicker.efi");
-        AddMenuInfoLineCached (BootKickerMenu, L"\\EFI\\tools_x64\\BootKicker_x64.efi");
-        AddMenuInfoLineCached (BootKickerMenu, L"\\EFI\\tools_x64\\BootKicker.efi");
-        AddMenuInfoLineCached (BootKickerMenu, L"\\EFI\\tools\\x64_BootKicker.efi");
-        AddMenuInfoLineCached (BootKickerMenu, L"\\EFI\\tools\\BootKicker_x64.efi");
-        AddMenuInfoLineCached (BootKickerMenu, L"\\EFI\\tools\\BootKicker.efi");
-        AddMenuInfoLineCached (BootKickerMenu, L"\\EFI\\x64_BootKicker.efi");
-        AddMenuInfoLineCached (BootKickerMenu, L"\\EFI\\BootKicker_x64.efi");
-        AddMenuInfoLineCached (BootKickerMenu, L"\\EFI\\BootKicker.efi");
+        k = 0;
+        while ((FilePath = FindCommaDelimited (BOOTKICKER_FILES, k++)) != NULL) {
+            AddMenuInfoLinePool (BootKickerMenu, FilePath);
+        }
         AddMenuInfoLineCached (BootKickerMenu, L"");
         AddMenuInfoLineCached (BootKickerMenu, L"The first file found in the order listed will be used");
         AddMenuInfoLineCached (BootKickerMenu, L"You will be returned to the main menu if not found");
@@ -811,37 +838,28 @@ VOID preBootKicker (
     if (ChosenEntry) {
         MsgLog ("User Input Received:\n");
 
-        if (MyStriCmp (GetPoolStr (&ChosenEntry->Title), L"Load BootKicker") &&
-            MenuExit == MENU_EXIT_ENTER
-        ) {
-            UINTN        i = 0;
-            UINTN        k = 0;
-
-            CHAR16       *Names          = BOOTKICKER_FILES;
-            CHAR16       *FilePath       = NULL;
-            BOOLEAN      FoundTool       = FALSE;
+        if (MyStriCmp (GetPoolStr (&ChosenEntry->Title), L"Load BootKicker") && (MenuExit == MENU_EXIT_ENTER)) {
+            BOOLEAN       FoundTool      = FALSE;
             LOADER_ENTRY *ourLoaderEntry = NULL;
 
             // Log Load BootKicker
             MsgLog ("  - Seek BootKicker\n");
 
             k = 0;
-            while ((FilePath = FindCommaDelimited (Names, k++)) != NULL) {
+            while ((FilePath = FindCommaDelimited (BOOTKICKER_FILES, k++)) != NULL) {
                 MsgLog ("    * Seek %s:\n", FilePath);
 
                 for (i = 0; i < VolumesCount; i++) {
-                    if ((Volumes[i]->RootDir != NULL) &&
-                        IsValidTool (Volumes[i], FilePath)
-                    ) {
+                    if ((Volumes[i]->RootDir != NULL) && (IsValidTool (Volumes[i], FilePath))) {
                         ourLoaderEntry = AllocateZeroPool (sizeof (LOADER_ENTRY));
                         CopyFromPoolStr (&ourLoaderEntry->me.Title, &ChosenEntry->Title);
                         ourLoaderEntry->me.Tag = TAG_SHOW_BOOTKICKER;
                         ourLoaderEntry->me.Row = 1;
                         ourLoaderEntry->me.ShortcutLetter = 0;
                         CopyFromPoolImage_PI_ (&ourLoaderEntry->me.Image_PI_, BuiltinIcon (BUILTIN_ICON_TOOL_BOOTKICKER));
-                        AssignPoolStr (&ourLoaderEntry->LoaderPath, FilePath);
+                        CopyPoolStr (&ourLoaderEntry->LoaderPath, FilePath);
                         AssignVolume (&ourLoaderEntry->Volume, Volumes[i]);
-                        ourLoaderEntry->UseGraphicsMode   = TRUE;
+                        ourLoaderEntry->UseGraphicsMode = TRUE;
 
                         FoundTool = TRUE;
                         break;
@@ -851,10 +869,8 @@ VOID preBootKicker (
                 if (FoundTool) {
                     break;
                 }
-                else {
-                    MyFreePool (&FilePath);
-                }
-            } // while Names
+                MyFreePool (&FilePath);
+            } // while FilePath
 
             if (FoundTool) {
                 MsgLog ("    ** Success: Found %s\n", FilePath);
@@ -887,18 +903,24 @@ VOID preCleanNvram (
     INTN               DefaultEntry   = 1;
     MENU_STYLE_FUNC    Style          = GraphicsMenuStyle;
     REFIT_MENU_ENTRY  *ChosenEntry;
+    CHAR16            *FilePath       = NULL;
+    UINTN              i, k;
+
     static REFIT_MENU_SCREEN *CleanNvramMenu = NULL;
     static REFIT_MENU_SCREEN CleanNvramMenuSrc = {
         {L"Clean NVRAM", TRUE},
         {NULL, FALSE},
         0, NULL,
         0, NULL,
-        0, {NULL, TRUE},
+        0, {NULL, FALSE},
         {L"Press 'ESC', 'BackSpace' or 'SpaceBar' to Return to Main Menu", TRUE},
         {L"", TRUE}
     };
 
-    if (!CleanNvramMenu) {
+    if (CleanNvramMenu) {
+        LOG(1, LOG_LINE_NORMAL, L"Displayed previously constructed screen");
+    }
+    else {
         CleanNvramMenu = CopyMenuScreen (&CleanNvramMenuSrc);
         if (!CleanNvramMenu) {
             return;
@@ -910,15 +932,10 @@ VOID preCleanNvram (
         AddMenuInfoLineCached (CleanNvramMenu, L"");
         AddMenuInfoLineCached (CleanNvramMenu, L"CleanNvram is from OpenCore and Copyright Acidanthera");
         AddMenuInfoLineCached (CleanNvramMenu, L"Requires at least one of the files below:");
-        AddMenuInfoLineCached (CleanNvramMenu, L"\\EFI\\tools_x64\\x64_CleanNvram.efi");
-        AddMenuInfoLineCached (CleanNvramMenu, L"\\EFI\\tools_x64\\CleanNvram_x64.efi");
-        AddMenuInfoLineCached (CleanNvramMenu, L"\\EFI\\tools_x64\\CleanNvram.efi");
-        AddMenuInfoLineCached (CleanNvramMenu, L"\\EFI\\tools\\x64_CleanNvram.efi");
-        AddMenuInfoLineCached (CleanNvramMenu, L"\\EFI\\tools\\CleanNvram_x64.efi");
-        AddMenuInfoLineCached (CleanNvramMenu, L"\\EFI\\tools\\CleanNvram.efi");
-        AddMenuInfoLineCached (CleanNvramMenu, L"\\EFI\\x64_CleanNvram.efi");
-        AddMenuInfoLineCached (CleanNvramMenu, L"\\EFI\\CleanNvram_x64.efi");
-        AddMenuInfoLineCached (CleanNvramMenu, L"\\EFI\\CleanNvram.efi");
+        k = 0;
+        while ((FilePath = FindCommaDelimited (NVRAMCLEAN_FILES, k++)) != NULL) {
+            AddMenuInfoLinePool (CleanNvramMenu, FilePath);
+        }
         AddMenuInfoLineCached (CleanNvramMenu, L"");
         AddMenuInfoLineCached (CleanNvramMenu, L"The first file found in the order listed will be used");
         AddMenuInfoLineCached (CleanNvramMenu, L"You will be returned to the main menu if not found");
@@ -946,20 +963,14 @@ VOID preCleanNvram (
         MsgLog ("User Input Received:\n");
 
         if (MyStriCmp (GetPoolStr (&ChosenEntry->Title), L"Load CleanNvram") && (MenuExit == MENU_EXIT_ENTER)) {
-            UINTN        i = 0;
-            UINTN        k = 0;
-
-            CHAR16        *Names           = NVRAMCLEAN_FILES;
-            CHAR16        *FilePath        = NULL;
-            BOOLEAN       FoundTool        = FALSE;
-            LOADER_ENTRY  *ourLoaderEntry  = NULL;
+            BOOLEAN       FoundTool      = FALSE;
+            LOADER_ENTRY *ourLoaderEntry = NULL;
 
             // Log Load CleanNvram
             MsgLog ("  - Seek CleanNvram\n");
 
             k = 0;
-            while ((FilePath = FindCommaDelimited (Names, k++)) != NULL) {
-
+            while ((FilePath = FindCommaDelimited (NVRAMCLEAN_FILES, k++)) != NULL) {
                 MsgLog ("    * Seek %s:\n", FilePath);
 
                 for (i = 0; i < VolumesCount; i++) {
@@ -972,7 +983,7 @@ VOID preCleanNvram (
                         CopyFromPoolImage_PI_ (&ourLoaderEntry->me.Image_PI_, BuiltinIcon (BUILTIN_ICON_TOOL_NVRAMCLEAN));
                         CopyPoolStr (&ourLoaderEntry->LoaderPath, FilePath);
                         AssignVolume (&ourLoaderEntry->Volume, Volumes[i]);
-                        ourLoaderEntry->UseGraphicsMode   = FALSE;
+                        ourLoaderEntry->UseGraphicsMode = FALSE;
 
                         FoundTool = TRUE;
                         break;
@@ -982,20 +993,16 @@ VOID preCleanNvram (
                 if (FoundTool) {
                     break;
                 }
-                else {
-                    MyFreePool (&FilePath);
-                }
-            } // while Names
+                MyFreePool (&FilePath);
+            } // while FilePath
 
             if (FoundTool) {
                 MsgLog ("    ** Success: Found %s\n", FilePath);
                 MsgLog ("  - Load CleanNvram\n\n");
 
-                ranCleanNvram = TRUE;
-
                 // Run CleanNvram
                 StartTool (ourLoaderEntry);
-
+                ranCleanNvram = TRUE;
             }
             else {
                 MsgLog ("  * WARN: Could Not Find CleanNvram ...Return to Main Menu\n\n");
@@ -1019,7 +1026,10 @@ VOID AboutRefindPlus (
 ) {
     LOG(1, LOG_LINE_THIN_SEP, L"Displaying About/Info Screen");
 
-    if (!AboutMenu) {
+    if (AboutMenu) {
+        LOG(1, LOG_LINE_NORMAL, L"Displayed previously constructed screen (Not Updated)");
+    }
+    else {
         AboutMenu = CopyMenuScreen (&AboutMenuSrc);
         if (!AboutMenu) {
             return;
@@ -1926,7 +1936,6 @@ EFI_STATUS EFIAPI efi_main (
         MsgLog ("'Inactive'");
     }
 
-
     // Show TextOnly Status
     MsgLog ("\n");
     MsgLog ("      TextOnly:- ");
@@ -1950,6 +1959,16 @@ EFI_STATUS EFIAPI efi_main (
     else {
         MsgLog ("'Inactive'");
     }
+    }
+
+    // Show NormaliseCSR Status
+    MsgLog ("\n");
+    MsgLog ("      NormaliseCSR:- ");
+    if (GlobalConfig.NormaliseCSR) {
+        MsgLog ("'Active'");
+    }
+    else {
+        MsgLog ("'Inactive'");
     }
 
     // Show ScanOtherESP Status
@@ -2129,7 +2148,7 @@ EFI_STATUS EFIAPI efi_main (
         MsgLog ("IsBoot = FALSE\n");
         IsBoot = FALSE;
 
-        MenuExit = RunMainMenu (MainMenu, &SelectionName, &ChosenEntry);
+        MenuExit = RunMainMenu (&MainMenu, &SelectionName, &ChosenEntry);
 
         // The Escape key triggers a re-scan operation....
         if (MenuExit == MENU_EXIT_ESCAPE) {
@@ -2224,7 +2243,7 @@ EFI_STATUS EFIAPI efi_main (
 
                 TerminateScreen();
 
-                LOG(1, LOG_LINE_SEPARATOR, L"Restarting System");
+                LOG(1, LOG_STAR_SEPARATOR, L"Restarting System");
 
                 refit_call4_wrapper(
                     gRT->ResetSystem,
@@ -2233,14 +2252,14 @@ EFI_STATUS EFIAPI efi_main (
                     0, NULL
                 );
 
-                LOG(1, LOG_THREE_STAR_SEP, L"Restart FAILED!!");
+                LOG(1, LOG_LINE_NORMAL, L"Restart FAILED!!");
 
                 MainLoopRunning = FALSE;   // just in case we get this far
                 break;
 
             case TAG_SHUTDOWN: // Shut Down
                 MsgLog ("User Input Received:\n");
-                LOG2(1, LOG_LINE_SEPARATOR, L"  - ", egIsGraphicsModeEnabled() ? L"\n---------------\n\n" : L"\n\n", L"Shutting System Down");
+                LOG2(1, LOG_STAR_SEPARATOR, L"  - ", egIsGraphicsModeEnabled() ? L"\n---------------\n\n" : L"\n\n", L"Shutting System Down");
 
                 TerminateScreen();
 
@@ -2251,7 +2270,7 @@ EFI_STATUS EFIAPI efi_main (
                     0, NULL
                 );
 
-                LOG(1, LOG_THREE_STAR_SEP, L"Shutdown FAILED!!");
+                LOG(1, LOG_LINE_NORMAL, L"Shutdown FAILED!!");
 
                 MainLoopRunning = FALSE;   // just in case we get this far
                 break;
@@ -2302,6 +2321,9 @@ EFI_STATUS EFIAPI efi_main (
                         GetPoolStr (&ourLoaderEntry->Volume->VolName),
                         GetPoolStr (&ourLoaderEntry->LoaderPath)
                     );
+
+                    // Filter out the 'APPLE_INTERNAL' CSR bit if required
+                    FilterCSR();
                 }
                 else if (MyStrStr (GetPoolStr (&ourLoaderEntry->Title), L"Clover") != NULL) {
                     if (!ourLoaderEntry->UseGraphicsMode) {
@@ -2314,19 +2336,22 @@ EFI_STATUS EFIAPI efi_main (
                         GetPoolStr (&ourLoaderEntry->Volume->VolName),
                         GetPoolStr (&ourLoaderEntry->LoaderPath)
                     );
+                    
+                    // Filter out the 'APPLE_INTERNAL' CSR bit if required
+                    FilterCSR();
                 }
                 else if (MyStrStr (GetPoolStr (&ourLoaderEntry->Title), L"Mac OS") != NULL) {
                     #if REFIT_DEBUG > 0
                     MsgLog ("User Input Received:\n");
                     if (GetPoolStr (&ourLoaderEntry->Volume->VolName)) {
                         LOG2(1, LOG_LINE_THIN_SEP, L"  - ", L"",
-                            L"Booting Mac OS from '%s'",
+                            L"Boot Mac OS from '%s'",
                             GetPoolStr (&ourLoaderEntry->Volume->VolName)
                         );
                     }
                     else {
                         LOG2(1, LOG_LINE_THIN_SEP, L"  - ", L"",
-                            L"Booting Mac OS:- '%s'",
+                            L"Boot Mac OS:- '%s'",
                             GetPoolStr (&ourLoaderEntry->LoaderPath)
                         );
                     }
@@ -2354,6 +2379,9 @@ EFI_STATUS EFIAPI efi_main (
                             DisableCompatCheck();
                         }
                     }
+
+                    // Filter out the 'APPLE_INTERNAL' CSR bit if required
+                    FilterCSR();
 
                     // Re-Map OpenProtocol
                     ReMapOpenProtocol();
@@ -2466,14 +2494,7 @@ EFI_STATUS EFIAPI efi_main (
                 break;
 
             case TAG_HIDDEN:  // Manage hidden tag entries
-                MsgLog ("User Input Received:\n");
-                MsgLog ("  - Manage Hidden Tag Entries\n\n");
-
                 ManageHiddenTags();
-
-                MsgLog ("User Input Received:\n");
-                MsgLog ("  - Exit Hidden Tags Page\n\n");
-
                 break;
 
             case TAG_EXIT:    // Terminate RefindPlus

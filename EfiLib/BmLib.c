@@ -11,6 +11,12 @@ THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
 WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 **/
+/*
+ * Modified for RefindPlus
+ * Copyright (c) 2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ *
+ * Modifications distributed under the preceding terms.
+ */
 
 #ifdef __MAKEWITH_TIANO
 #include "Platform.h"
@@ -202,6 +208,7 @@ EfiReallocatePool (
     if (NewPool != NULL) {
       CopyMem (NewPool, OldPool, OldSize < NewSize ? OldSize : NewSize);
     }
+
     MyFreePool (&OldPool);
   }
 

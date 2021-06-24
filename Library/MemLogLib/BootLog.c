@@ -375,7 +375,6 @@ DeepLoggger (
     IN INTN     type,
     IN CHAR16 **Message
 ) {
-    CHAR8   FormatString[255];
     CHAR16 *FinalMessage = NULL;
 
 #if REFIT_DEBUG < 1
@@ -436,10 +435,22 @@ DeepLoggger (
     if (FinalMessage) {
         // Use Native Logging
         UseMsgLog = TRUE;
-        // Convert Unicode Message String to Ascii
+
+        // Convert Unicode Message String to Ascii ... Control size/len first
+        UINTN   Limit;
+        BOOLEAN CheckLen = LimitStringLength (FinalMessage, 510);
+        if (CheckLen) {
+            Limit = 511;
+        }
+        else {
+            Limit = StrLen (FinalMessage) + 1;
+        }
+        CHAR8 FormatString[Limit];
         MyUnicodeStrToAsciiStr (FinalMessage, FormatString);
+
         // Write the Message String
         DebugLog (DebugMode, (CONST CHAR8 *) FormatString);
+
         // Disable Native Logging
         UseMsgLog = FALSE;
     }
@@ -455,8 +466,6 @@ DebugLog(
     IN INTN DebugMode,
     IN CONST CHAR8 *FormatString, ...
 ) {
-    VA_LIST Marker;
-
     // Make sure the buffer is intact for writing
     if (FormatString == NULL) {
       return;
@@ -468,6 +477,7 @@ DebugLog(
     }
 
     // Print message to log buffer
+    VA_LIST Marker;
     VA_START(Marker, FormatString);
     MemLogVA(TimeStamp, DebugMode, FormatString, Marker);
     VA_END(Marker);

@@ -119,7 +119,7 @@ DeepLoggger (
   IN  CHAR16 **Message
 );
 
-#define DONTLOG(DebugMode, level) (DebugMode < 1 || GlobalConfig.LogLevel < 1 || GlobalConfig.LogLevel < level)
+#define DONTLOG(DebugMode, level) (DebugMode < 1 || GlobalConfig.LogLevel < 1 || GlobalConfig.LogLevel < level /* || MuteLogger */ )
 // NB: logTemp is freed in DeepLoggger
 #define LOG(level, type, ...) \
     do { \

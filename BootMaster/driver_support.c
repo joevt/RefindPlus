@@ -53,18 +53,10 @@
  *
  */
 /*
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Modified for RefindPlus
+ * Copyright (c) 2020-2021 Dayo Akanji (sf.net/u/dakanji/profile)
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Modifications distributed under the preceding terms.
  */
 
 #include "driver_support.h"
@@ -247,8 +239,7 @@ EFI_STATUS LibScanHandleDatabase (
     Status = refit_call5_wrapper(
         gBS->LocateHandleBuffer,
         AllHandles,
-        NULL,
-        NULL,
+        NULL, NULL,
         HandleCount,
         HandleBuffer
     );
@@ -322,8 +313,7 @@ EFI_STATUS LibScanHandleDatabase (
                     gBS->OpenProtocolInformation,
                     (*HandleBuffer)[HandleIndex],
                     ProtocolGuidArray[ProtocolIndex],
-                    &OpenInfo,
-                    &OpenInfoCount
+                    &OpenInfo, &OpenInfoCount
                 );
 
                 if (!EFI_ERROR (Status)) {
@@ -467,8 +457,7 @@ EFI_STATUS ConnectAllDriversToAllControllers(
 
     Status = LibLocateHandle(
         AllHandles,
-        NULL,
-        NULL,
+        NULL, NULL,
         &AllHandleCount,
         &AllHandleBuffer
     );
@@ -479,10 +468,8 @@ EFI_STATUS ConnectAllDriversToAllControllers(
     for (Index = 0; Index < AllHandleCount; Index++) {
         // Scan the handle database
         Status = LibScanHandleDatabase(
-            NULL,
-            NULL,
-            AllHandleBuffer[Index],
-            NULL,
+            NULL, NULL,
+            AllHandleBuffer[Index], NULL,
             &HandleCount,
             &HandleBuffer,
             &HandleType
@@ -514,9 +501,7 @@ EFI_STATUS ConnectAllDriversToAllControllers(
                    Status = refit_call4_wrapper(
                        gBS->ConnectController,
                        AllHandleBuffer[Index],
-                       NULL,
-                       NULL,
-                       TRUE
+                       NULL, NULL, TRUE
                    );
                } // if HandleType[Index]
             } // if !Parent
@@ -642,26 +627,21 @@ VOID ConnectFilesystemDriver(
         for (OpenInfoIndex = 0; OpenInfoIndex < OpenInfoCount; OpenInfoIndex++) {
             if ((OpenInfo[OpenInfoIndex].Attributes & EFI_OPEN_PROTOCOL_BY_DRIVER) == EFI_OPEN_PROTOCOL_BY_DRIVER) {
                 Status = refit_call3_wrapper(
-                    gBS->DisconnectController,
-                    Handles[Index],
-                    OpenInfo[OpenInfoIndex].AgentHandle,
-                    NULL
+                    gBS->DisconnectController, Handles[Index],
+                    OpenInfo[OpenInfoIndex].AgentHandle, NULL
                 );
                 if (!(EFI_ERROR (Status))) {
                     DriverHandleList[0] = DriverHandle;
                     refit_call4_wrapper(
-                        gBS->ConnectController,
-                        Handles[Index],
-                        DriverHandleList,
-                        NULL,
-                        FALSE
+                        gBS->ConnectController, Handles[Index],
+                        DriverHandleList, NULL, FALSE
                     );
                 } // if
             } // if
         } // for
-        FreePool (OpenInfo);
+        MyFreePool (&OpenInfo);
     }
-    FreePool(Handles);
+    MyFreePool (&Handles);
 } // VOID ConnectFilesystemDriver()
 
 // Scan a directory for drivers.
@@ -674,6 +654,7 @@ UINTN ScanDriverDir (
     REFIT_DIR_ITER   DirIter;
     EFI_FILE_INFO   *DirEntry;
     CHAR16          *FileName;
+    CHAR16          *ErrMsg;
     UINTN            NumFound  = 0;
 
     MsgLog ("[ ScanDriverDir '%s' Folder\n", Path);
@@ -694,22 +675,11 @@ UINTN ScanDriverDir (
         FileName = PoolPrint (L"%s\\%s", Path, DirEntry->FileName);
 
         MsgLog ("[ Loading '%s'\n", FileName);
-        if (MyStrStr (FileName, L"OsxAptioFix") != NULL &&
-            MyStrStr (gST->FirmwareVendor, L"Apple") != NULL
-        ) {
-            Status = EFI_UNSUPPORTED;
-        }
-        else {
-            Status = StartEFIImage(
-                SelfVolume,
-                FileName,
-                L"",
-                DirEntry->FileName,
-                0,
-                FALSE,
-                TRUE
-            );
-        }
+        Status = StartEFIImage(
+            SelfVolume, FileName, L"",
+            DirEntry->FileName, 0,
+            FALSE, TRUE
+        );
 
         MyFreePool (&DirEntry);
 
@@ -718,10 +688,10 @@ UINTN ScanDriverDir (
     } // while
 
     Status = DirIterClose(&DirIter);
-    if (Status != EFI_NOT_FOUND && Status != EFI_INVALID_PARAMETER) {
-        FileName = PoolPrint (L"While Scanning the '%s' Directory", Path);
-        CheckError(Status, FileName);
-        MyFreePool (&FileName);
+    if (Status != EFI_NOT_FOUND) {
+        ErrMsg = PoolPrint (L"While Scanning the '%s' Directory", Path);
+        CheckError (Status, ErrMsg);
+        MyFreePool (&ErrMsg);
     }
 
     MsgLog ("] ScanDriverDir Found:%d\n", NumFound);
@@ -744,11 +714,12 @@ BOOLEAN LoadDrivers(
     UINTN    NumFound = 0;
     UINTN    CurFound = 0;
 
+    MsgLog ("[ LoadDrivers\n");
     LOG(1, LOG_LINE_SEPARATOR, L"Loading Drivers");
 
     // load drivers from the subdirectories of RefindPlus' home directory
     // specified in the DRIVER_DIRS constant.
-    MsgLog ("Load EFI Drivers from Default Folder...");
+    MsgLog ("Load EFI Drivers from Default Folder...\n");
     while ((Directory = FindCommaDelimited(DRIVER_DIRS, i++)) != NULL) {
         SelfDirectory = SelfDirPath ? StrDuplicate(SelfDirPath) : NULL;
         CleanUpPathNameSlashes(SelfDirectory);
@@ -761,14 +732,14 @@ BOOLEAN LoadDrivers(
             break;
         }
         else {
-            MsgLog ("  - Not Found or Empty");
+            MsgLog ("  - Not Found or Empty\n");
         }
     }
 
     // Scan additional user-specified driver directories....
     if (GlobalConfig.DriverDirs != NULL) {
-        MsgLog ("\n\n");
-        MsgLog ("Load EFI Drivers from User Defined Folders...");
+        MsgLog ("\n");
+        MsgLog ("Load EFI Drivers from User Defined Folders...\n");
 
         i = 0;
         while ((Directory = FindCommaDelimited(GlobalConfig.DriverDirs, i++)) != NULL) {
@@ -788,18 +759,19 @@ BOOLEAN LoadDrivers(
                     NumFound = NumFound + CurFound;
                 }
                 else {
-                    MsgLog ("  - Not Found or Empty");
+                    MsgLog ("  - Not Found or Empty\n");
                 }
             } // if
             MyFreePool (&Directory);
         } // while
     }
 
-    MsgLog ("\n\n");
+    MsgLog ("\n");
 
     // connect all devices
     // DA-TAG: Always run this
     ConnectAllDriversToAllControllers(TRUE);
 
+    MsgLog ("] LoadDrivers Found:%d\n", NumFound);
     return (NumFound > 0);
 } /* BOOLEAN LoadDrivers() */

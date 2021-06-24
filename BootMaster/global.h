@@ -207,17 +207,14 @@ else
 
 // Directories to search for BootKicker....
 #define BOOTKICKER_LOCATIONS \
-L"\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
-
+L"\\EFI\\BOOT\\tools,\\EFI\\BOOT\\tools_x64,\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
 // Directories to search for CleanNvram....
 #define NVRAMCLEAN_LOCATIONS \
-L"\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
-
+L"\\EFI\\BOOT\\tools,\\EFI\\BOOT\\tools_x64,\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
 // Files that may be Windows recovery files
 #define WINDOWS_RECOVERY_FILES \
 L"EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootx64.efi,\
 Recovery:\\EFI\\BOOT\\bootia32.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
-
 // Files that may be Mac OS recovery files
 #define MACOS_RECOVERY_FILES    L"com.apple.recovery.boot\\boot.efi"
 #define MACOSX_LOADER_DIR       L"System\\Library\\CoreServices"
@@ -438,6 +435,8 @@ typedef struct {
    BOOLEAN           SyncAPFS;
    BOOLEAN           ProtectNVRAM;
    BOOLEAN           ScanOtherESP;
+   BOOLEAN           DisableTagHelp;
+   BOOLEAN           NormaliseCSR;
    BOOLEAN           ShutdownAfterTimeout;
    BOOLEAN           Install;
    BOOLEAN           WriteSystemdVars;
@@ -493,6 +492,9 @@ extern UINTN                PreBootVolumesCount;
 
 extern BOOLEAN              IsBoot;
 extern BOOLEAN              SetSysTab;
+/*
+extern BOOLEAN              MuteLogger;
+*/
 extern BOOLEAN              DetectedDevices;
 extern BOOLEAN              ForceNativeLoggging;
 

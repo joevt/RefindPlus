@@ -70,87 +70,33 @@
 // constants
 
 #if defined (EFIX64)
-    #define SHELL_NAMES \
-        L"\\EFI\\tools_x64\\x64_Shell.efi,\\EFI\\tools_x64\\shell_x64.efi,\\EFI\\tools_x64\\shell.efi,\
-\\EFI\\tools\\x64_Shell.efi,\\EFI\\tools\\shell_x64.efi,\\EFI\\tools\\shell.efi,\
-\\EFI\\x64_Shell.efi,\\EFI\\shell_x64.efi,\\EFI\\shell.efi,\\x64_Shell.efi,\\shell_x64.efi,\\shell.efi"
-    #define GPTSYNC_NAMES \
-        L"\\EFI\\tools_x64\\gptsync.efi,\\EFI\\tools_x64\\gptsync_x64.efi,\\EFI\\tools\\gptsync.efi,\
-\\EFI\\tools\\gptsync_x64.efi,\\EFI\\gptsync.efi,\\EFI\\gptsync_x64.efi,\\gptsync.efi,\\gptsync_x64.efi"
-    #define GDISK_NAMES \
-        L"\\EFI\\tools_x64\\gdisk.efi,\\EFI\\tools_x64\\gdisk_x64.efi,\\EFI\\tools\\gdisk.efi,\
-\\EFI\\tools\\gdisk_x64.efi,\\EFI\\gdisk.efi,\\EFI\\gdisk_x64.efi,\\gdisk.efi,\\gdisk_x64.efi"
-    #define NETBOOT_NAMES \
-        L"\\EFI\\tools_x64\\ipxe.efi,\\EFI\\tools_x64\\ipxe_x64.efi,\\EFI\\tools\\ipxe.efi,\\EFI\\tools\\ipxe_x64.efi,\
-\\EFI\\ipxe.efi,\\EFI\\ipxe_x64.efi,\\ipxe.efi,\\ipxe_x64.efi"
-    #define MEMTEST_NAMES \
-        L"memtest86_x64.efi,memtest_x64.efi,memtest86.efi,memtest.efi"
-    #define BOOTKICKER_NAMES \
-        L"\\EFI\\tools_x64\\x64_BootKicker.efi,\\EFI\\tools_x64\\BootKicker_x64.efi,\\EFI\\tools_x64\\BootKicker.efi,\
-\\EFI\\tools\\x64_BootKicker.efi\\EFI\\tools\\BootKicker_x64.efi,\\EFI\\tools\\BootKicker.efi,\
-\\EFI\\Bx64_BootKicker.efi,\\EFI\\BootKicker_x64.efi,\\EFI\\BootKicker.efi,\\x64_BootKicker.efi,\
-\\BootKicker_x64.efi,\\BootKicker.efi"
-    #define NVRAMCLEAN_NAMES \
-        L"\\EFI\\tools_x64\\x64_CleanNvram.efi,\\EFI\\tools_x64\\CleanNvram_x64.efi,\\EFI\\tools_x64\\CleanNvram.efi,\
-\\EFI\\tools\\x64_CleanNvram.efi,\\EFI\\tools\\CleanNvram_x64.efi,\\EFI\\tools\\CleanNvram.efi,\
-\\EFI\\x64_CleanNvram.efi,\\EFI\\CleanNvram_x64.efi,\\EFI\\CleanNvram.efi,\\x64_CleanNvram.efi,\
-\\CleanNvram_x64.efi,\\CleanNvram.efi"
+    #define SHELL_NAMES L"\\EFI\\BOOT\\tools\\x64_Shell.efi,\\EFI\\BOOT\\tools\\Shell_x64.efi,\\EFI\\BOOT\\tools\\Shell.efi,\\EFI\\BOOT\\tools_x64\\x64_Shell.efi,\\EFI\\BOOT\\tools_x64\\Shell_x64.efi,\\EFI\\BOOT\\tools_x64\\Shell.efi,\\EFI\\tools_x64\\x64_Shell.efi,\\EFI\\tools_x64\\shell_x64.efi,\\EFI\\tools_x64\\shell.efi,\\EFI\\tools\\x64_Shell.efi,\\EFI\\tools\\shell_x64.efi,\\EFI\\tools\\shell.efi,\\EFI\\x64_Shell.efi,\\EFI\\shell_x64.efi,\\EFI\\shell.efi,\\x64_Shell.efi,\\shell_x64.efi,\\shell.efi"
+    #define GPTSYNC_NAMES L"\\EFI\\BOOT\\tools\\x64_gptsync.efi,\\EFI\\BOOT\\tools\\gptsync_x64.efi,\\EFI\\BOOT\\tools\\gptsync.efi,\\EFI\\BOOT\\tools_x64\\x64_gptsync.efi,\\EFI\\BOOT\\tools_x64\\gptsync_x64.efi,\\EFI\\BOOT\\tools_x64\\gptsync.efi,\\EFI\\tools_x64\\gptsync.efi,\\EFI\\tools_x64\\gptsync_x64.efi,\\EFI\\tools\\gptsync.efi,\\EFI\\tools\\gptsync_x64.efi,\\EFI\\gptsync.efi,\\EFI\\gptsync_x64.efi,\\gptsync.efi,\\gptsync_x64.efi"
+    #define GDISK_NAMES L"\\EFI\\BOOT\\tools\\x64_gdisk.efi,\\EFI\\BOOT\\tools\\gdisk_x64.efi,\\EFI\\BOOT\\tools\\gdisk.efi,\\EFI\\BOOT\\tools_x64\\x64_gdisk.efi,\\EFI\\BOOT\\tools_x64\\gdisk_x64.efi,\\EFI\\BOOT\\tools_x64\\gdisk.efi,\\EFI\\tools_x64\\gdisk.efi,\\EFI\\tools_x64\\gdisk_x64.efi,\\EFI\\tools\\gdisk.efi,\\EFI\\tools\\gdisk_x64.efi,\\EFI\\gdisk.efi,\\EFI\\gdisk_x64.efi,\\gdisk.efi,\\gdisk_x64.efi"
+    #define NETBOOT_NAMES L"\\EFI\\BOOT\\tools\\x64_ipxe.efi,\\EFI\\BOOT\\tools\\ipxe_x64.efi,\\EFI\\BOOT\\tools\\ipxe.efi,\\EFI\\BOOT\\tools_x64\\x64_ipxe.efi,\\EFI\\BOOT\\tools_x64\\ipxe_x64.efi,\\EFI\\BOOT\\tools_x64\\ipxe.efi,\\EFI\\tools_x64\\ipxe.efi,\\EFI\\tools_x64\\ipxe_x64.efi,\\EFI\\tools\\ipxe.efi,\\EFI\\tools\\ipxe_x64.efi,\\EFI\\ipxe.efi,\\EFI\\ipxe_x64.efi,\\ipxe.efi,\\ipxe_x64.efi"
+    #define MEMTEST_NAMES L"memtest86_x64.efi,memtest_x64.efi,memtest86.efi,memtest.efi"
+    #define BOOTKICKER_NAMES L"\\EFI\\tools_x64\\x64_BootKicker.efi,\\EFI\\tools_x64\\BootKicker_x64.efi,\\EFI\\tools_x64\\BootKicker.efi,\\EFI\\tools\\x64_BootKicker.efi\\EFI\\tools\\BootKicker_x64.efi,\\EFI\\tools\\BootKicker.efi,\\EFI\\Bx64_BootKicker.efi,\\EFI\\BootKicker_x64.efi,\\EFI\\BootKicker.efi,\\x64_BootKicker.efi,\\BootKicker_x64.efi,\\BootKicker.efi"
+    #define NVRAMCLEAN_NAMES L"\\EFI\\tools_x64\\x64_CleanNvram.efi,\\EFI\\tools_x64\\CleanNvram_x64.efi,\\EFI\\tools_x64\\CleanNvram.efi,\\EFI\\tools\\x64_CleanNvram.efi,\\EFI\\tools\\CleanNvram_x64.efi,\\EFI\\tools\\CleanNvram.efi,\\EFI\\x64_CleanNvram.efi,\\EFI\\CleanNvram_x64.efi,\\EFI\\CleanNvram.efi,\\x64_CleanNvram.efi,\\CleanNvram_x64.efi,\\CleanNvram.efi"
     #define FALLBACK_FULLNAME       L"EFI\\BOOT\\bootx64.efi"
     #define FALLBACK_BASENAME       L"bootx64.efi"
 #elif defined (EFI32)
-    #define SHELL_NAMES \
-        L"\\EFI\\tools_ia32\\ia32_Shell.efi,\\EFI\\tools_ia32\\shell_ia32.efi,\\EFI\\tools_ia32\\shell.efi,\
-\\EFI\\tools\\ia32_Shell.efi,\\EFI\\tools\\shell_ia32.efi,\\EFI\\tools\\shell.efi,\
-\\EFI\\ia32_Shell.efi,\\EFI\\shell_ia32.efi,\\EFI\\shell.efi,\\ia32_Shell.efi,\\shell_ia32.efi,\\shell.efi"
-    #define GPTSYNC_NAMES \
-        L"\\EFI\\tools_ia32\\gptsync.efi,\\EFI\\tools_ia32\\gptsync_ia32.efi,\\EFI\\tools\\gptsync.efi,\
-\\EFI\\tools\\gptsync_ia32.efi,\\EFI\\gptsync.efi,\\EFI\\gptsync_ia32.efi,\\gptsync.efi,\\gptsync_ia32.efi"
-    #define GDISK_NAMES \
-        L"\\EFI\\tools_ia32\\gdisk.efi,\\EFI\\tools_ia32\\gdisk_ia32.efi,\\EFI\\tools\\gdisk.efi,\
-\\EFI\\tools\\gdisk_ia32.efi,\\EFI\\gdisk.efi,\\EFI\\gdisk_ia32.efi,\\gdisk.efi,\\gdisk_ia32.efi"
-    #define NETBOOT_NAMES \
-        L"\\EFI\\tools_ia32\\ipxe.efi,\\EFI\\tools_ia32\\ipxe_ia32.efi,\\EFI\\tools\\ipxe.efi,\
-\\EFI\\tools\\ipxe_ia32.efi,\\EFI\\ipxe.efi,\\EFI\\ipxe_ia32.efi,\\ipxe.efi,\\ipxe_ia32.efi"
-    #define MEMTEST_NAMES \
-        L"memtest86_ia32.efi,memtest_ia32.efi,memtest86.efi,memtest.efi"
-    #define BOOTKICKER_NAMES \
-        L"\\EFI\\tools_ia32\\ia32_BootKicker.efi,\\EFI\\tools_ia32\\BootKicker_ia32.efi,\
-\\EFI\\tools_ia32\\BootKicker.efi,\\EFI\\tools\\ia32_BootKicker.efi\\EFI\\tools\\BootKicker_ia32.efi,\
-\\EFI\\tools\\BootKicker.efi,\\EFI\\Bia32_BootKicker.efi,\\EFI\\BootKicker_ia32.efi,\\EFI\\BootKicker.efi,\
-\\ia32_BootKicker.efi,\\BootKicker_ia32.efi,\\BootKicker.efi"
-    #define NVRAMCLEAN_NAMES \
-        L"\\EFI\\tools_ia32\\ia32_CleanNvram.efi,\\EFI\\tools_ia32\\CleanNvram_ia32.efi,\
-\\EFI\\tools_ia32\\CleanNvram.efi,\\EFI\\tools\\ia32_CleanNvram.efi,\\EFI\\tools\\CleanNvram_ia32.efi,\
-\\EFI\\tools\\CleanNvram.efi,\\EFI\\ia32_CleanNvram.efi,\\EFI\\CleanNvram_ia32.efi,\\EFI\\CleanNvram.efi,\
-\\ia32_CleanNvram.efi,\\CleanNvram_ia32.efi,\\CleanNvram.efi"
+    #define SHELL_NAMES L"\\EFI\\BOOT\\tools\\ia32_Shell.efi,\\EFI\\BOOT\\tools\\Shell_ia32.efi,\\EFI\\BOOT\\tools\\Shell.efi,\\EFI\\BOOT\\tools_ia32\\ia32_Shell.efi,\\EFI\\BOOT\\tools_ia32\\Shell_ia32.efi,\\EFI\\BOOT\\tools_ia32\\Shell.efi,\\EFI\\tools_ia32\\ia32_Shell.efi,\\EFI\\tools_ia32\\shell_ia32.efi,\\EFI\\tools_ia32\\shell.efi,\\EFI\\tools\\ia32_Shell.efi,\\EFI\\tools\\shell_ia32.efi,\\EFI\\tools\\shell.efi,\\EFI\\ia32_Shell.efi,\\EFI\\shell_ia32.efi,\\EFI\\shell.efi,\\ia32_Shell.efi,\\shell_ia32.efi,\\shell.efi"
+    #define GPTSYNC_NAMES L"\\EFI\\BOOT\\tools\\ia32_gptsync.efi,\\EFI\\BOOT\\tools\\gptsync_ia32.efi,\\EFI\\BOOT\\tools\\gptsync.efi,\\EFI\\BOOT\\tools_ia32\\ia32_gptsync.efi,\\EFI\\BOOT\\tools_ia32\\gptsync_ia32.efi,\\EFI\\BOOT\\tools_ia32\\gptsync.efi,\\EFI\\tools_ia32\\gptsync.efi,\\EFI\\tools_ia32\\gptsync_ia32.efi,\\EFI\\tools\\gptsync.efi,\\EFI\\tools\\gptsync_ia32.efi,\\EFI\\gptsync.efi,\\EFI\\gptsync_ia32.efi,\\gptsync.efi,\\gptsync_ia32.efi"
+    #define GDISK_NAMES L"\\EFI\\BOOT\\tools\\ia32_gdisk.efi,\\EFI\\BOOT\\tools\\gdisk_ia32.efi,\\EFI\\BOOT\\tools\\gdisk.efi,\\EFI\\BOOT\\tools_ia32\\ia32_gdisk.efi,\\EFI\\BOOT\\tools_ia32\\gdisk_ia32.efi,\\EFI\\BOOT\\tools_ia32\\gdisk.efi,\\EFI\\tools_ia32\\gdisk.efi,\\EFI\\tools_ia32\\gdisk_ia32.efi,\\EFI\\tools\\gdisk.efi,\\EFI\\tools\\gdisk_ia32.efi,\\EFI\\gdisk.efi,\\EFI\\gdisk_ia32.efi,\\gdisk.efi,\\gdisk_ia32.efi"
+    #define NETBOOT_NAMES L"\\EFI\\BOOT\\tools\\ia32_ipxe.efi,\\EFI\\BOOT\\tools\\ipxe_ia32.efi,\\EFI\\BOOT\\tools\\ipxe.efi,\\EFI\\BOOT\\tools_ia32\\ia32_ipxe.efi,\\EFI\\BOOT\\tools_ia32\\ipxe_ia32.efi,\\EFI\\BOOT\\tools_ia32\\ipxe.efi,\\EFI\\tools_ia32\\ipxe.efi,\\EFI\\tools_ia32\\ipxe_ia32.efi,\\EFI\\tools\\ipxe.efi,\\EFI\\tools\\ipxe_ia32.efi,\\EFI\\ipxe.efi,\\EFI\\ipxe_ia32.efi,\\ipxe.efi,\\ipxe_ia32.efi"
+    #define MEMTEST_NAMES L"memtest86_ia32.efi,memtest_ia32.efi,memtest86.efi,memtest.efi"
+    #define BOOTKICKER_NAMES L"\\EFI\\tools_ia32\\ia32_BootKicker.efi,\\EFI\\tools_ia32\\BootKicker_ia32.efi,\\EFI\\tools_ia32\\BootKicker.efi,\\EFI\\tools\\ia32_BootKicker.efi\\EFI\\tools\\BootKicker_ia32.efi,\\EFI\\tools\\BootKicker.efi,\\EFI\\Bia32_BootKicker.efi,\\EFI\\BootKicker_ia32.efi,\\EFI\\BootKicker.efi,\\ia32_BootKicker.efi,\\BootKicker_ia32.efi,\\BootKicker.efi"
+    #define NVRAMCLEAN_NAMES L"\\EFI\\tools_ia32\\ia32_CleanNvram.efi,\\EFI\\tools_ia32\\CleanNvram_ia32.efi,\\EFI\\tools_ia32\\CleanNvram.efi,\\EFI\\tools\\ia32_CleanNvram.efi,\\EFI\\tools\\CleanNvram_ia32.efi,\\EFI\\tools\\CleanNvram.efi,\\EFI\\ia32_CleanNvram.efi,\\EFI\\CleanNvram_ia32.efi,\\EFI\\CleanNvram.efi,\\ia32_CleanNvram.efi,\\CleanNvram_ia32.efi,\\CleanNvram.efi"
     #define FALLBACK_FULLNAME       L"EFI\\BOOT\\bootia32.efi"
     #define FALLBACK_BASENAME       L"bootia32.efi"
 #elif defined (EFIAARCH64)
-    #define SHELL_NAMES \
-        L"\\EFI\\tools_aa64\\aa64_Shell.efi,\\EFI\\tools_aa64\\shell_aa64.efi,\\EFI\\tools_aa64\\shell.efi,\
-\\EFI\\tools\\aa64_Shell.efi,\\EFI\\tools\\shell_aa64.efi,\\EFI\\tools\\shell.efi,\
-\\EFI\\aa64_Shell.efi,\\EFI\\shell_aa64.efi,\\EFI\\shell.efi,\\aa64_Shell.efi,\\shell_aa64.efi,\\shell.efi"
-    #define GPTSYNC_NAMES \
-        L"\\EFI\\tools_aa64\\gptsync.efi,\\EFI\\tools_aa64\\gptsync_aa64.efi,\\EFI\\tools\\gptsync.efi,\
-\\EFI\\tools\\gptsync_aa64.efi,\\EFI\\gptsync.efi,\\EFI\\gptsync_aa64.efi,\\gptsync.efi,\\gptsync_aa64.efi"
-    #define GDISK_NAMES \
-        L"\\EFI\\tools_aa64\\gdisk.efi,\\EFI\\tools_aa64\\gdisk_aa64.efi,\\EFI\\tools\\gdisk.efi,\
-\\EFI\\tools\\gdisk_aa64.efi,\\EFI\\gdisk.efi,\\EFI\\gdisk_aa64.efi,\\gdisk.efi,\\gdisk_aa64.efi"
-    #define NETBOOT_NAMES \
-        L"\\EFI\\tools_aa64\\ipxe.efi,\\EFI\\tools_aa64\\ipxe_aa64.efi,\\EFI\\tools\\ipxe.efi,\
-\\EFI\\tools\\ipxe_aa64.efi,\\EFI\\ipxe.efi,\\EFI\\ipxe_aa64.efi,\\ipxe.efi,\\ipxe_aa64.efi"
-    #define MEMTEST_NAMES \
-        L"memtest86_aa64.efi,memtest_aa64.efi,memtest86.efi,memtest.efi"
-    #define BOOTKICKER_NAMES \
-        L"\\EFI\\tools_aa64\\aa64_BootKicker.efi,\\EFI\\tools_aa64\\BootKicker_aa64.efi,\
-\\EFI\\tools_aa64\\BootKicker.efi,\\EFI\\tools\\aa64_BootKicker.efi\\EFI\\tools\\BootKicker_aa64.efi,\
-\\EFI\\tools\\BootKicker.efi,\\EFI\\Baa64_BootKicker.efi,\\EFI\\BootKicker_aa64.efi,\\EFI\\BootKicker.efi,\
-\\aa64_BootKicker.efi,\\BootKicker_aa64.efi,\\BootKicker.efi"
-    #define NVRAMCLEAN_NAMES \
-        L"\\EFI\\tools_aa64\\aa64_CleanNvram.efi,\\EFI\\tools_aa64\\CleanNvram_aa64.efi,\
-\\EFI\\tools_aa64\\CleanNvram.efi,\\EFI\\tools\\aa64_CleanNvram.efi,\\EFI\\tools\\CleanNvram_aa64.efi,\
-\\EFI\\tools\\CleanNvram.efi,\\EFI\\aa64_CleanNvram.efi,\\EFI\\CleanNvram_aa64.efi,\\EFI\\CleanNvram.efi,\
-\\aa64_CleanNvram.efi,\\CleanNvram_aa64.efi,\\CleanNvram.efi"
+    #define SHELL_NAMES L"\\EFI\\BOOT\\tools\\aa64_Shell.efi,\\EFI\\BOOT\\tools\\Shell_aa64.efi,\\EFI\\BOOT\\tools\\Shell.efi,\\EFI\\BOOT\\tools_aa64\\aa64_Shell.efi,\\EFI\\BOOT\\tools_aa64\\Shell_aa64.efi,\\EFI\\BOOT\\tools_aa64\\Shell.efi,\\EFI\\tools_aa64\\aa64_Shell.efi,\\EFI\\tools_aa64\\shell_aa64.efi,\\EFI\\tools_aa64\\shell.efi,\\EFI\\tools\\aa64_Shell.efi,\\EFI\\tools\\shell_aa64.efi,\\EFI\\tools\\shell.efi,\\EFI\\aa64_Shell.efi,\\EFI\\shell_aa64.efi,\\EFI\\shell.efi,\\aa64_Shell.efi,\\shell_aa64.efi,\\shell.efi"
+    #define GPTSYNC_NAMES L"\\EFI\\BOOT\\tools\\aa64_gptsync.efi,\\EFI\\BOOT\\tools\\gptsync_aa64.efi,\\EFI\\BOOT\\tools\\gptsync.efi,\\EFI\\BOOT\\tools_aa64\\aa64_gptsync.efi,\\EFI\\BOOT\\tools_aa64\\gptsync_aa64.efi,\\EFI\\BOOT\\tools_aa64\\gptsync.efi,\\EFI\\tools_aa64\\gptsync.efi,\\EFI\\tools_aa64\\gptsync_aa64.efi,\\EFI\\tools\\gptsync.efi,\\EFI\\tools\\gptsync_aa64.efi,\\EFI\\gptsync.efi,\\EFI\\gptsync_aa64.efi,\\gptsync.efi,\\gptsync_aa64.efi"
+    #define GDISK_NAMES L"\\EFI\\BOOT\\tools\\aa64_gdisk.efi,\\EFI\\BOOT\\tools\\gdisk_aa64.efi,\\EFI\\BOOT\\tools\\gdisk.efi,\\EFI\\BOOT\\tools_aa64\\aa64_gdisk.efi,\\EFI\\BOOT\\tools_aa64\\gdisk_aa64.efi,\\EFI\\BOOT\\tools_aa64\\gdisk.efi,\\EFI\\tools_aa64\\gdisk.efi,\\EFI\\tools_aa64\\gdisk_aa64.efi,\\EFI\\tools\\gdisk.efi,\\EFI\\tools\\gdisk_aa64.efi,\\EFI\\gdisk.efi,\\EFI\\gdisk_aa64.efi,\\gdisk.efi,\\gdisk_aa64.efi"
+    #define NETBOOT_NAMES L"\\EFI\\BOOT\\tools\\aa64_ipxe.efi,\\EFI\\BOOT\\tools\\ipxe_aa64.efi,\\EFI\\BOOT\\tools\\ipxe.efi,\\EFI\\BOOT\\tools_aa64\\aa64_ipxe.efi,\\EFI\\BOOT\\tools_aa64\\ipxe_aa64.efi,\\EFI\\BOOT\\tools_aa64\\ipxe.efi,\\EFI\\tools_aa64\\ipxe.efi,\\EFI\\tools_aa64\\ipxe_aa64.efi,\\EFI\\tools\\ipxe.efi,\\EFI\\tools\\ipxe_aa64.efi,\\EFI\\ipxe.efi,\\EFI\\ipxe_aa64.efi,\\ipxe.efi,\\ipxe_aa64.efi"
+    #define MEMTEST_NAMES L"memtest86_aa64.efi,memtest_aa64.efi,memtest86.efi,memtest.efi"
+    #define BOOTKICKER_NAMES L"\\EFI\\tools_aa64\\aa64_BootKicker.efi,\\EFI\\tools_aa64\\BootKicker_aa64.efi,\\EFI\\tools_aa64\\BootKicker.efi,\\EFI\\tools\\aa64_BootKicker.efi\\EFI\\tools\\BootKicker_aa64.efi,\\EFI\\tools\\BootKicker.efi,\\EFI\\Baa64_BootKicker.efi,\\EFI\\BootKicker_aa64.efi,\\EFI\\BootKicker.efi,\\aa64_BootKicker.efi,\\BootKicker_aa64.efi,\\BootKicker.efi"
+    #define NVRAMCLEAN_NAMES L"\\EFI\\tools_aa64\\aa64_CleanNvram.efi,\\EFI\\tools_aa64\\CleanNvram_aa64.efi,\\EFI\\tools_aa64\\CleanNvram.efi,\\EFI\\tools\\aa64_CleanNvram.efi,\\EFI\\tools\\CleanNvram_aa64.efi,\\EFI\\tools\\CleanNvram.efi,\\EFI\\aa64_CleanNvram.efi,\\EFI\\CleanNvram_aa64.efi,\\EFI\\CleanNvram.efi,\\aa64_CleanNvram.efi,\\CleanNvram_aa64.efi,\\CleanNvram.efi"
     #define FALLBACK_FULLNAME       L"EFI\\BOOT\\bootaa64.efi"
     #define FALLBACK_BASENAME       L"bootaa64.efi"
 #else
@@ -202,16 +148,15 @@ LOADER_ENTRY *InitializeLoaderEntry (IN LOADER_ENTRY *Entry) {
         NewEntry->Enabled = TRUE;
 
         if (Entry != NULL) {
-            AssignVolume (&NewEntry->Volume, Entry->Volume);
-            NewEntry->EfiBootNum = Entry->EfiBootNum;
-            NewEntry->UseGraphicsMode = Entry->UseGraphicsMode;
             CopyFromPoolStr (&NewEntry->LoaderPath, &Entry->LoaderPath);
+            AssignVolume (&NewEntry->Volume, Entry->Volume);
+            NewEntry->UseGraphicsMode = Entry->UseGraphicsMode;
             CopyFromPoolStr (&NewEntry->LoadOptions, &Entry->LoadOptions);
             CopyFromPoolStr (&NewEntry->InitrdPath, &Entry->InitrdPath);
             NewEntry->EfiLoaderPath = Entry->EfiLoaderPath ? DuplicateDevicePath (Entry->EfiLoaderPath) : NULL;
-            LOGPOOL (NewEntry->EfiLoaderPath);
+            NewEntry->EfiBootNum = Entry->EfiBootNum;
         }
-    } // if
+    }
 
     return (NewEntry);
 } // LOADER_ENTRY *InitializeLoaderEntry()
@@ -840,7 +785,7 @@ LOADER_ENTRY * AddLoaderEntry (
         GenerateSubScreen (Entry, Volume, SubScreenReturn);
         AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *) Entry);
         DebugOneVolume(Volume, TitleEntry, GetPoolStr (&Entry->LoaderPath));
-        LOG(3, LOG_THREE_STAR_MID, L"Successfully Created Menu Entry for '%s'", GetPoolStr (&Entry->Title));
+        LOG(3, LOG_THREE_STAR_MID, L"Successfully Created Menu Entry for %s", GetPoolStr (&Entry->Title));
     }
     else {
         LOG(1, LOG_THREE_STAR_MID, L"Could not initialise loader entry");
@@ -1726,26 +1671,44 @@ ScanFirmwareDefined (
 
     DontScanFirmware = ReadHiddenTags (L"HiddenFirmware");
 
-    LOG(2, LOG_LINE_NORMAL,
-        L"GlobalConfig.DontScanFirmware = '%s'",
-        GlobalConfig.DontScanFirmware
-    );
-    LOG(2, LOG_LINE_NORMAL,
-        L"Firmware hidden tags = '%s'",
-        DontScanFirmware
-    );
+    #if REFIT_DEBUG > 0
+    if (GlobalConfig.DontScanFirmware != NULL) {
+        LOG(2, LOG_LINE_NORMAL,
+            L"GlobalConfig.DontScanFirmware = '%s'",
+            GlobalConfig.DontScanFirmware
+        );
+    }
+    else {
+        LOG(2, LOG_LINE_NORMAL, L"GlobalConfig.DontScanFirmware is Empty!!");
+    }
+    if (DontScanFirmware != NULL) {
+        LOG(2, LOG_LINE_NORMAL,
+            L"Firmware hidden tags = '%s'",
+            DontScanFirmware
+        );
+    }
+    else {
+        LOG(2, LOG_LINE_NORMAL, L"Firmware hidden tags is Empty!!");
+    }
+    #endif
 
-    MergeStrings (&DontScanFirmware, GlobalConfig.DontScanFirmware, L',');
+    if (GlobalConfig.DontScanFirmware != NULL || DontScanFirmware != NULL) {
+        MergeStrings (&DontScanFirmware, GlobalConfig.DontScanFirmware, L',');
+    }
 
     if (Row == 0) {
         LOG(2, LOG_LINE_NORMAL, L"Also not scanning for shells");
         MergeStrings(&DontScanFirmware, L"shell", L',');
     }
 
-    LOG(3, LOG_LINE_NORMAL,
-        L"Merged firmware dont-scan list is '%s'",
-        DontScanFirmware
-    );
+    #if REFIT_DEBUG > 0
+    if (DontScanFirmware != NULL) {
+        LOG(3, LOG_LINE_NORMAL,
+            L"Merged firmware dont-scan list is '%s'",
+            DontScanFirmware
+        );
+    }
+    #endif
 
     BootEntries  = FindBootOrderEntries();
     CurrentEntry = BootEntries;
@@ -1890,13 +1853,12 @@ VOID ScanForBootloaders (
 
     if (GlobalConfig.HiddenTags) {
     // We temporarily modify GlobalConfig.DontScanFiles and GlobalConfig.DontScanVolumes
-    // to include contents of EFI HiddenTags and HiddenLegacy variables so that we don't
-    // have to re-load these EFI variables in several functions called from this one.
-    // To do this, we must be able to restore the original contents, so back them up
-    // first.
-    // We do *NOT* do this with GlobalConfig.DontScanFirmware and
-    // GlobalConfig.DontScanTools variables because they're used in only one function
-    // each, so it's easier to create a temporary variable for the merged contents
+        // to include contents of EFI HiddenTags and HiddenLegacy variables so that we do not
+        // have to re-load these EFI variables in several functions called from this one. To
+        // do this, we must be able to restore the original contents, so back them up first.
+        // We do *NOT* do this with the GlobalConfig.DontScanFirmware and
+        // GlobalConfig.DontScanTools variables because they are used in only one function
+        // each, so it is easier to create a temporary variable for the merged contents
     // there and not modify the global variable.
     OrigDontScanFiles   = StrDuplicate (GlobalConfig.DontScanFiles);
     OrigDontScanVolumes = StrDuplicate (GlobalConfig.DontScanVolumes);
@@ -1905,7 +1867,7 @@ VOID ScanForBootloaders (
     HiddenTags = ReadHiddenTags (L"HiddenTags");
     if ((HiddenTags) && (StrLen (HiddenTags) > 0)) {
             LOG(2, LOG_LINE_NORMAL,
-                L"Merging to 'Dont Scan Files':- '%s'",
+                L"Merging HiddenTags into 'Dont Scan Files':- '%s'",
                 HiddenTags
             );
 
@@ -1916,14 +1878,15 @@ VOID ScanForBootloaders (
     HiddenLegacy = ReadHiddenTags (L"HiddenLegacy");
     if ((HiddenLegacy) && (StrLen (HiddenLegacy) > 0)) {
             LOG(2, LOG_LINE_NORMAL,
-                L"Merging to 'Dont Scan Volumes':- '%s'",
+                L"Merging HiddenLegacy into 'Dont Scan Volumes':- '%s'",
                 HiddenLegacy
             );
 
         MergeStrings (&GlobalConfig.DontScanVolumes, HiddenLegacy, L',');
     }
+
         MyFreePool (&HiddenLegacy);
-    }
+    } // if GlobalConfig.HiddenTags
 
     // scan for loaders and tools, add them to the menu
     for (i = 0; i < NUM_SCAN_OPTIONS; i++) {
@@ -2009,49 +1972,36 @@ VOID ScanForBootloaders (
 // Returns TRUE if it passes all tests, FALSE otherwise
 static
 BOOLEAN IsValidTool (IN REFIT_VOLUME *BaseVolume, CHAR16 *PathName) {
-    CHAR16 *DontVolName = NULL, *DontPathName = NULL, *DontFileName = NULL, *DontScanThis;
-    CHAR16 *TestVolName = NULL, *TestPathName = NULL, *TestFileName = NULL, *DontScanTools;
+    CHAR16  *TestVolName = NULL, *TestPathName = NULL, *TestFileName = NULL, *DontScanTools = NULL;
     BOOLEAN retval = TRUE;
     UINTN i = 0;
 
     LOG(4, LOG_LINE_NORMAL,
-        L"Checking validity of tool '%s' on '%s' %p(#%d)",
-        PathName,
-        BaseVolume
-            ? (
-                GetPoolStr (&BaseVolume->PartName)
-                    ? GetPoolStr (&BaseVolume->PartName)
-                    : (
-                        GetPoolStr (&BaseVolume->VolName)
-                            ? GetPoolStr (&BaseVolume->VolName)
-                            : L"<no name>"
-                    )
-            )
-            : L"<no volume>",
-        BaseVolume, BaseVolume ? BaseVolume->ReferenceCount : -1
+        L"Checking tool validity:- '%s'",
+        PathName
     );
 
     if (gHiddenTools == NULL) {
-        gHiddenTools = ReadHiddenTags (L"HiddenTools");
-        if (gHiddenTools == NULL) {
-            gHiddenTools = StrDuplicate (L"");
+        DontScanTools = ReadHiddenTags (L"HiddenTools");
+        if (DontScanTools != NULL) {
+            gHiddenTools = StrDuplicate (DontScanTools);
+        }
+        else {
+            gHiddenTools = StrDuplicate (L"NotSet");
         }
         LEAKABLE (gHiddenTools, "gHiddenTools");
     }
-    DontScanTools = StrDuplicate (gHiddenTools);
-
+    else if (!MyStriCmp (gHiddenTools, L"NotSet")) {
+        DontScanTools = StrDuplicate (gHiddenTools);
+    }
     MergeStrings(&DontScanTools, GlobalConfig.DontScanTools, L',');
 
     if (FileExists (BaseVolume->RootDir, PathName) && IsValidLoader (BaseVolume->RootDir, PathName)) {
-        LOGPOOL(TestVolName);
-        LOGPOOL(TestPathName);
-        LOGPOOL(TestFileName);
         SplitPathName (PathName, &TestVolName, &TestPathName, &TestFileName);
 
+        CHAR16 *DontScanThis = NULL;
         while (retval && (DontScanThis = FindCommaDelimited(DontScanTools, i++))) {
-            LOGPOOL(DontVolName);
-            LOGPOOL(DontPathName);
-            LOGPOOL(DontFileName);
+            CHAR16 *DontVolName = NULL, *DontPathName = NULL, *DontFileName = NULL;
             SplitPathName (DontScanThis, &DontVolName, &DontPathName, &DontFileName);
             if (MyStriCmp (TestFileName, DontFileName) &&
                 ((DontPathName == NULL) || (MyStriCmp (TestPathName, DontPathName))) &&
@@ -2063,7 +2013,6 @@ BOOLEAN IsValidTool (IN REFIT_VOLUME *BaseVolume, CHAR16 *PathName) {
             MyFreePool (&DontVolName);
             MyFreePool (&DontPathName);
             MyFreePool (&DontFileName);
-            DontVolName = DontPathName = DontFileName = NULL;
         } // while
     }
     else {
@@ -2073,18 +2022,7 @@ BOOLEAN IsValidTool (IN REFIT_VOLUME *BaseVolume, CHAR16 *PathName) {
     MyFreePool (&TestVolName);
     MyFreePool (&TestPathName);
     MyFreePool (&TestFileName);
-    MyFreePool (&DontVolName);
-    MyFreePool (&DontPathName);
-    MyFreePool (&DontFileName);
     MyFreePool (&DontScanTools);
-
-    /*
-    LOG(4, LOG_LINE_NORMAL,
-        L"Done checking validity of tool '%s' on '%s'",
-        PathName,
-        BaseVolume->PartName ? BaseVolume->PartName : BaseVolume->VolName
-    );
-    */
 
     return retval;
 } // BOOLEAN IsValidTool()
@@ -2144,7 +2082,7 @@ BOOLEAN FindTool (
                     );
 
                     MsgLog (
-                        "Added Tool:- '%s' : %s%s",
+                        "Added Tool:- '%s' : %s%s\n",
                         Description,
                         DirName,
                         FileName
@@ -2164,7 +2102,7 @@ BOOLEAN FindTool (
 
 // Add the second-row tags containing built-in and external tools
 VOID ScanForTools (VOID) {
-    UINTN             i, j;
+    UINTN             i;
     UINTN             VolumeIndex;
     VOID             *ItemBuffer = NULL;
     CHAR16           *FileName   = NULL;
@@ -2184,14 +2122,17 @@ VOID ScanForTools (VOID) {
         BOOLEAN FoundTool = FALSE;
         BOOLEAN Skipped = FALSE;
 
+        UINTN j = 0;
+
         UINTN TheTag = GlobalConfig.ShowTools[i];
 
         CHAR16 *TheTitle = GetPoolStr (&TagMenuEntry[TheTag].Title);
 
         CHAR16 *ToolName = NULL;
         UINTN TheIcon = 0;
+        CHAR8 TheShortcut = 0;
         switch (TheTag) {
-            #define TAGS_TAG_TO_TOOL_AND_ICON
+            #define TAGS_TAG_TO_TOOL_AND_ICON_AND_SHORTCUT
             #include "tags.include"
         }
         if (!ToolName) {
@@ -2209,8 +2150,9 @@ VOID ScanForTools (VOID) {
                 FoundTool = TRUE; \
                 TempMenuEntry = CopyMenuEntry (&TagMenuEntry[TheTag]); \
                 CopyFromPoolImage_PI_ (&TempMenuEntry->Image_PI_, BuiltinIcon (TheIcon)); \
+                TempMenuEntry->ShortcutLetter = TheShortcut; \
                 AddMenuEntry (MainMenu, TempMenuEntry); \
-                LOG2(2, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added Tool:- '%s'", ToolName); \
+                MsgLog("Added Tool:- '%s'\n", ToolName); \
             } while (0)
 
 
@@ -2262,30 +2204,30 @@ VOID ScanForTools (VOID) {
                 break;
 
             case TAG_SHELL:
-                j = 0;
                 while ((FileName = FindCommaDelimited (SHELL_NAMES, j++)) != NULL) {
-                    if (IsValidTool (SelfVolume, FileName)) {
-                        LOG(1, LOG_LINE_NORMAL,
-                            L"Adding Shell tag for '%s' on '%s'",
-                            FileName,
-                            GetPoolStr (&SelfVolume->VolName)
-                        );
+                    if (FileExists (SelfVolume->RootDir, FileName)) {
+                        if (IsValidTool (SelfVolume, FileName)) {
+                            LOG(1, LOG_LINE_NORMAL,
+                                L"Adding Shell tag for '%s' on '%s'",
+                                FileName,
+                                GetPoolStr (&SelfVolume->VolName)
+                            );
 
-                        FoundTool = TRUE;
-                        AddToolEntry (
-                            SelfVolume,
-                            FileName,
-                            TheTitle,
-                            BuiltinIcon (TheIcon),
-                            'S',
-                            FALSE
-                        );
+                            FoundTool = TRUE;
+                            AddToolEntry (
+                                SelfVolume,
+                                FileName,
+                                TheTitle,
+                                BuiltinIcon (TheIcon),
+                                TheShortcut,
+                                FALSE
+                            );
 
-                        LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
-                    } // if
+                            MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
+                        } // if IsValidTool
+                    }
 
                     MyFreePool (&FileName);
-                    FileName = NULL;
                 } // while
 
                 if (ScanFirmwareDefined (1, L"Shell", BuiltinIcon(TheIcon))) {
@@ -2294,61 +2236,61 @@ VOID ScanForTools (VOID) {
                 break;
 
             case TAG_GPTSYNC:
-                j = 0;
                 while ((FileName = FindCommaDelimited (GPTSYNC_NAMES, j++)) != NULL) {
-                    if (IsValidTool (SelfVolume, FileName)) {
-                        LOG(1, LOG_LINE_NORMAL,
-                            L"Adding Hybrid MBR tool tag for '%s' on '%s'",
-                            FileName,
-                            GetPoolStr (&SelfVolume->VolName)
-                        );
+                    if (FileExists (SelfVolume->RootDir, FileName)) {
+                        if (IsValidTool (SelfVolume, FileName)) {
+                            LOG(1, LOG_LINE_NORMAL,
+                                L"Adding Hybrid MBR tool tag for '%s' on '%s'",
+                                FileName,
+                                GetPoolStr (&SelfVolume->VolName)
+                            );
 
-                        FoundTool = TRUE;
-                        AddToolEntry (
-                            SelfVolume,
-                            FileName,
-                            TheTitle,
-                            BuiltinIcon (TheIcon),
-                            'P',
-                            FALSE
-                        );
+                            FoundTool = TRUE;
+                            AddToolEntry (
+                                SelfVolume,
+                                FileName,
+                                TheTitle,
+                                BuiltinIcon (TheIcon),
+                                TheShortcut,
+                                FALSE
+                            );
 
-                        LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
-                    } // if
+                            MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
+                        } // if IsValidTool
+                    } // if FileExists
 
                     MyFreePool (&FileName);
-                    FileName = NULL;
                 } // while
                 break;
 
             case TAG_GDISK:
-                j = 0;
                 while ((FileName = FindCommaDelimited (GDISK_NAMES, j++)) != NULL) {
-                    if (IsValidTool (SelfVolume, FileName)) {
-                        LOG(1, LOG_LINE_NORMAL,
-                            L"Adding GPT fdisk tag for '%s' on '%s'",
-                            FileName,
-                            GetPoolStr (&SelfVolume->VolName)
-                        );
+                    if (FileExists (SelfVolume->RootDir, FileName)) {
+                        if (IsValidTool (SelfVolume, FileName)) {
+                            LOG(1, LOG_LINE_NORMAL,
+                                L"Adding GPT fdisk tag for '%s' on '%s'",
+                                FileName,
+                                GetPoolStr (&SelfVolume->VolName)
+                            );
 
-                        FoundTool = TRUE;
-                        AddToolEntry (
-                            SelfVolume,
-                            FileName,
-                            TheTitle,
-                            BuiltinIcon (TheIcon),
-                            'G',
-                            FALSE
-                        );
+                            FoundTool = TRUE;
+                            AddToolEntry (
+                                SelfVolume,
+                                FileName,
+                                TheTitle,
+                                BuiltinIcon (TheIcon),
+                                TheShortcut,
+                                FALSE
+                            );
 
-                        LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
-                  } // if
+                            MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
+                        } // if IsValidTool
+                    } // if FileExists
                     MyFreePool (&FileName);
                 } // while
                 break;
 
             case TAG_NETBOOT:
-                j = 0;
                 while ((FileName = FindCommaDelimited (NETBOOT_NAMES, j++)) != NULL) {
                     if (IsValidTool (SelfVolume, FileName)) {
                         LOG(1, LOG_LINE_NORMAL,
@@ -2363,12 +2305,12 @@ VOID ScanForTools (VOID) {
                             FileName,
                             TheTitle,
                             BuiltinIcon (TheIcon),
-                            'N',
+                            TheShortcut,
                             FALSE
                         );
 
-                        LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
-                    } // if
+                        MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
+                    } // if IsValidTool
 
                     MyFreePool (&FileName);
                     FileName = NULL;
@@ -2377,45 +2319,41 @@ VOID ScanForTools (VOID) {
 
             case TAG_APPLE_RECOVERY:
                 for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
-                    j = 0;
                     while (
                         (FileName = FindCommaDelimited (GlobalConfig.MacOSRecoveryFiles, j++)) != NULL
                     ) {
-                        if ((Volumes[VolumeIndex]->RootDir != NULL)) {
+                        if ((Volumes[VolumeIndex]->RootDir != NULL) &&
+                            FileExists (Volumes[VolumeIndex]->RootDir, FileName)
+                        ) {
                             if ((IsValidTool (Volumes[VolumeIndex], FileName))) {
                                 LOG(1, LOG_LINE_NORMAL,
                                     L"Adding Apple Recovery tag for '%s' on '%s'",
-                                    FileName,
-                                    GetPoolStr (&Volumes[VolumeIndex]->VolName)
+                                    FileName, GetPoolStr (&Volumes[VolumeIndex]->VolName)
                                 );
 
                                 FoundTool = TRUE;
                                 Description = PoolPrint (
                                     L"%s on %s",
-                                    ToolName,
-                                    GetPoolStr (&Volumes[VolumeIndex]->VolName)
+                                    ToolName, GetPoolStr (&Volumes[VolumeIndex]->VolName)
                                 );
                                 AddToolEntry (
                                     Volumes[VolumeIndex],
-                                    FileName,
-                                    Description,
+                                    FileName, Description,
                                     BuiltinIcon (TheIcon),
-                                    'R',
-                                    TRUE
+                                    TheShortcut, TRUE
                                 );
 
                                 MyFreePool (&Description);
 
-                                LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
-                            } // if
-                        } // if
+                                MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
+                            } // if IsValidTool
+                        } // if Volumes[VolumeIndex]
                         MyFreePool (&FileName);
                     } // while
                 } // for
                 break;
 
             case TAG_WINDOWS_RECOVERY:
-                j = 0;
                 while (
                     (FileName = FindCommaDelimited (GlobalConfig.WindowsRecoveryFiles, j++)) != NULL
                 ) {
@@ -2441,14 +2379,14 @@ VOID ScanForTools (VOID) {
                                 FileName,
                                 Description,
                                 BuiltinIcon (TheIcon),
-                                'R',
+                                TheShortcut,
                                 TRUE
                             );
 
                             MyFreePool (&Description);
 
-                            LOG2(1, LOG_THREE_STAR_END, L"              - ", L"\n", L"Added %s:- '%s'", ToolName, FileName);
-                        } // if
+                            MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
+                        } // if Volumes[VolumeIndex]->RootDir
                     } // for
 
                     MyFreePool (&FileName);
@@ -2467,7 +2405,7 @@ VOID ScanForTools (VOID) {
         }
         else {
             if (!FoundTool) {
-                MsgLog ("* WARN: Could not find '%s'\n", ToolName);
+                MsgLog ("Could Not Find Tool:- '%s'\n", ToolName);
             }
             MsgLog ("] Tool Type %02d ...%s\n", i + 1, ToolName);
         }

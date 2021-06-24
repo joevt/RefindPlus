@@ -530,10 +530,7 @@ EFI_STATUS EfivarGetRaw (
     if (!GlobalConfig.UseNvram &&
         GuidsAreEqual (VendorGUID, &RefindPlusGuid)
     ) {
-        LOG(4, LOG_LINE_NORMAL,
-            L"Getting EFI variable '%s' from Emulated NVRAM",
-            VariableName
-        );
+        MsgLog ("[ EfivarGetRaw '%s' from Emulated NVRAM\n", VariableName);
 
         Status = FindVarsDir();
         if (Status == EFI_SUCCESS) {
@@ -542,46 +539,11 @@ EFI_STATUS EfivarGetRaw (
                 (UINT8**) &TmpBuffer, &BufferSize
             );
         }
-        else if (Status != EFI_NOT_FOUND) {
-            LOG2(4, LOG_THREE_STAR_MID, L"** WARN: ", L"\n",
-                L"Could Not Read '%s' from Emulated NVRAM",
-                VariableName
-            );
-            LOG2(4, LOG_THREE_STAR_MID, "         ", "\n\n",
-                L"Activate the 'use_nvram' option to silence this warning"
-            );
-        }
-
-        LOG(4, LOG_THREE_STAR_MID,
-            L"'%r' When Getting EFI Variable from Emulated NVRAM:- '%s'",
-            Status, VariableName
-        );
-
-        if (!EFI_ERROR (Status)) {
-            *VariableData = TmpBuffer;
-            if (BufferSize) {
-                *VariableSize = BufferSize;
-            }
-            else {
-                *VariableSize = 0;
-            }
-        }
-        else {
-            MyFreePool (&TmpBuffer);
-            *VariableData = NULL;
-            *VariableSize = 0;
-        }
-
-        return Status;
     }
     else {
-        LOG(4, LOG_LINE_NORMAL,
-            L"Getting EFI variable '%s' from Hardware NVRAM",
-            VariableName
-        );
+        MsgLog ("[ EfivarGetRaw '%s' from Hardware NVRAM\n", VariableName);
 
         // Pass in a zero-size buffer to find the required buffer size.
-        BufferSize = 0;
         Status = refit_call5_wrapper(
             gRT->GetVariable, VariableName,
             VendorGUID, NULL,
@@ -607,32 +569,16 @@ EFI_STATUS EfivarGetRaw (
                 );
             }
         }
-
-        if (!EFI_ERROR (Status)) {
-            *VariableData = TmpBuffer;
-            if (BufferSize) {
-                *VariableSize = BufferSize;
-            }
-            else {
-                *VariableSize = 0;
-            }
-        }
-        else {
-            MyFreePool (&TmpBuffer);
-            *VariableData = NULL;
-            *VariableSize = 0;
-        }
-
-        LOG(4, LOG_THREE_STAR_MID,
-            L"'%r' When Getting EFI Variable from Hardware NVRAM:- '%s'",
-            Status, VariableName
-        );
-
-        return Status;
     }
 
-    LOG(1, LOG_THREE_STAR_END, L"Program Coding Error Getting EFI Variable from NVRAM!!");
+    if (EFI_ERROR (Status)) {
+        MyFreePool (&TmpBuffer);
+        BufferSize = 0;
+    }
+    *VariableData = TmpBuffer;
+    *VariableSize = BufferSize;
 
+    MsgLog ("] EfivarGetRaw '%s' ...'%r'\n", VariableName, Status);
     return Status;
 } // EFI_STATUS EfivarGetRaw ()
 
@@ -654,12 +600,20 @@ EFI_STATUS EfivarSetRaw (
     UINTN        OldSize;
     BOOLEAN      SettingMatch;
 
-    if (!MyStriCmp (VariableName, L"HiddenTags") &&
+    if (VariableSize > 0 &&
+        VariableData != NULL &&
+        !MyStriCmp (VariableName, L"HiddenTags") &&
         !MyStriCmp (VariableName, L"HiddenTools") &&
         !MyStriCmp (VariableName, L"HiddenLegacy") &&
         !MyStriCmp (VariableName, L"HiddenFirmware")
     ) {
+/*
+        MuteLogger = TRUE;
+*/
         Status = EfivarGetRaw (VendorGUID, VariableName, &OldBuf, &OldSize);
+/*
+        MuteLogger = FALSE;
+*/
 
         if (!EFI_ERROR (Status)) {
             // First check for setting match (compare mem as per upstream)
@@ -711,8 +665,6 @@ EFI_STATUS EfivarSetRaw (
         #endif
     }
     else {
-        // GlobalConfig.UseNvram || !GuidsAreEqual (VendorGUID, &RefindPlusGuid)
-
         LOG(4, LOG_LINE_NORMAL,
             L"Saving to Hardware NVRAM:- '%s'",
             VariableName
@@ -2816,13 +2768,11 @@ VOID SplitPathName (
     CleanUpPathNameSlashes (*Filename);
 
     if (StrLen (*Path) == 0) {
-        FreePool (*Path);
-        *Path = NULL;
+        MyFreePool (Path);
     }
 
     if (StrLen (*Filename) == 0) {
-        FreePool (*Filename);
-        *Filename = NULL;
+        MyFreePool (Filename);
     }
     MyFreePool (&Temp);
 } // VOID SplitPathName()
@@ -3182,7 +3132,7 @@ LEAKABLEPOOLSTR (
 }
 
 VOID
-LEAKABLEONEPOOLSTR (
+LEAKABLEONEPOOLSTRProc (
     PoolStr *Str,
     CHAR8 *Description
 ) {

@@ -1,6 +1,54 @@
-0.13.2.AE (Pre-Release):
+0.13.2.AG (Pre-Release):
 -----------------------
-- Fixes Fix Default Opaque Setting
+- Adds 'TagHelp' Feature
+  * Ensures HiddenTags can always be unhidden
+  * Active by default but can be disabled with the "disable_tag_help" token
+- Improves Tool Path Definitions
+  * Extends fixes applied in v0.13.2.AF
+- Extends Manual Stanza Handling Fixes
+  * Enhancements to "menuentry" sections applied to "submenuentry" sections
+
+
+0.13.2.AF (10 Jun 2021):
+-----------------------
+- Fixes Tool Path Definitions
+  * Styling had introduced unwanted whitespace into tool paths
+  * This bug was introduced in v0.13.2.AD (Commit 75d8357)
+- Fixes Fix Manual Stanza Handling
+  * Linux and "Firmware Reboot" stanzas were not handled properly
+  * Fix applied to v0.13.2.AE did not fully resolve the issue
+- Fixes BootKicker and CleanNvram Tool Loading
+  * These tools were not loaded when located in some valid directories
+  * This bug was introduced in v0.13.2.AE (Commit af1150d)
+- Reverts HiddenItem Fix for Upstream Consistency
+  * Prioritising consistency for upstream interoperability
+
+
+0.13.2.AE (08 Jun 2021):
+-----------------------
+- Adds 'NormaliseCSR' Feature
+  * Filters out the 'CSR_ALLOW_APPLE_INTERNAL' bit on Macs (for consumer use)
+  * This facilitates "Over The Air" (OTA) updates when running Mac OS v11.x (Big Sur)
+  * This filtering works on earlier versions of Mac OS which function as usual
+- Improves Handling of CSR Policy Toggling
+  * Adds option to clear CSR to facilitate "Over The Air" updates on Mac OS v11.x (Big Sur)
+  * Activated by entering "0" in place of "10" for the option to enable SIP
+  * This setting is also valid when used on earlier versions of Mac OS
+- Improves Upstream Logging Format
+  * Formatted for clarity
+- Improves Handling of Manual Stanza Icons
+  * Optimises search for associated icons to speed loading times up
+  * Only undertakes a second search scan when required
+- Improves Selection Image Handling
+  * Only calls scaling function when required
+- Improves Embedded Image Creation Script
+  * Previously updated for Python 3
+  * Now updated to be run from any directory
+- Updates Default Banner Background Colour
+  * Now set at 191,191,191 RGB to better match the default grey
+- Aligns Driver and Tools Folders with Upstream
+  * Drops '{ARCH}_drivers' and '{ARCH}_tools' folders for upstream consistency
+- Fixes Default Opaque Setting
   * Images meant to default to "opaque" were set to "transparent" instead.
   * This bug was introduced in v0.13.2.AD (Commit 0edf341)
 - Fixes Windows Boot EFI Variable Handling
@@ -10,20 +58,6 @@
   * Linux and "Firmware Reboot" stanzas were not handled properly
 - Fixes HiddenItem Handling
   * Hidden items could not be created or managed
-- Improves Upstream Logging Format
-  * Formatted for clarity
-- Improves Handling of Manual Stanza Icons
-  * Optimises search for associated icons to speed loading times up
-  * Only undertakes a second search scan when required
-- Improves Selection Image Handling
-  * Only calls scaling function when required
-- Updates Default Banner Background Colour
-  * Now set at 191,191,191 RGB to better match the default grey
-- Improves Embedded Image Creation Script
-  * Previously updated for Python 3
-  * Now updated to be run from any directory
-- Aligns Driver and Tools Folders with Upstream
-  * Drops '{ARCH}_drivers' and '{ARCH}_tools' Folders for upstream consistency
 - Changes Token Name for Internal Consistency
   * 'suppress_verbose_apfs' to 'silence_apfs'
 
