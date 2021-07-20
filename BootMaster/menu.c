@@ -2088,7 +2088,7 @@ BOOLEAN EditOptions (REFIT_MENU_ENTRY *MenuEntry) {
         case EntryTypeLegacyEntry: LoadOptions = GetPoolStr (&((LEGACY_ENTRY *)MenuEntry)->LoadOptions); break;
         default: LoadOptions = NULL; break;
     }
- 
+    
     if (line_edit (LoadOptions, &EditedOptions, x_max)) {
         LEAKABLEPATHSET (MenuEntry);
         switch (EntryType) {
@@ -2751,7 +2751,7 @@ UINTN RunMainMenu (
     while (!MenuExit) {
         Screen = ScreenPtr ? *ScreenPtr : NULL;
         MenuExit = RunGenericMenu (Screen, MainStyle, &DefaultEntryIndex, &TempChosenEntry);
-
+        LOGPOOL (TempChosenEntry);
         LOG(2, LOG_LINE_NORMAL,
             L"Returned '%d' from RunGenericMenu call on '%s' in 'RunMainMenu'",
             MenuExit, GetPoolStr (&TempChosenEntry->Title)
@@ -2764,15 +2764,16 @@ UINTN RunMainMenu (
         LEAKABLE(MenuTitle, "RunMainMenu MenuTitle");
         if (MenuExit == MENU_EXIT_DETAILS) {
             if (TempChosenEntry->SubScreen != NULL) {
+                LOGPOOL (TempChosenEntry->SubScreen);
                 MenuExit = RunGenericMenu (
                     TempChosenEntry->SubScreen,
                     Style,
                     &DefaultSubmenuIndex,
                     &TempChosenEntry
                 );
-
+                LOGPOOL (TempChosenEntry);
                 LOG(2, LOG_LINE_NORMAL,
-                    L"Returned '%d' from RunGenericMenu call on '%s' in 'RunMainMenu'",
+                    L"Returned '%d' from RunGenericMenu (SubScreen) call on '%s' in 'RunMainMenu'",
                     MenuExit, GetPoolStr (&TempChosenEntry->SubScreen->Title)
                 );
 
@@ -2781,7 +2782,7 @@ UINTN RunMainMenu (
                }
 
                if (MenuExit == MENU_EXIT_DETAILS) {
-                  if (!EditOptions ((LOADER_ENTRY *) TempChosenEntry)) {
+                  if (!EditOptions (TempChosenEntry)) {
                       MenuExit = 0;
                   }
                }
@@ -2937,12 +2938,13 @@ FreeMenuEntry (
             FreePoolStr (&((LOADER_ENTRY *)(*Entry))->LoaderPath);
             FreePoolStr (&((LOADER_ENTRY *)(*Entry))->LoadOptions);
             FreePoolStr (&((LOADER_ENTRY *)(*Entry))->InitrdPath);
-            MyFreePool (&((LOADER_ENTRY *)(*Entry))->EfiLoaderPath);
-            FreeVolume (&((LOADER_ENTRY *)(*Entry))->Volume);
+            MyFreePool  (&((LOADER_ENTRY *)(*Entry))->EfiLoaderPath);
+            FreeVolume  (&((LOADER_ENTRY *)(*Entry))->Volume);
         }
         else if (EntryType == EntryTypeLegacyEntry) {
-            FreePoolStr (&((LEGACY_ENTRY *)(*Entry))->LoadOptions);
-            FreeVolume (&((LOADER_ENTRY *)(*Entry))->Volume);
+            FreeBdsOption (&((LEGACY_ENTRY *)(*Entry))->BdsOption);
+            FreePoolStr   (&((LEGACY_ENTRY *)(*Entry))->LoadOptions);
+            FreeVolume    (&((LEGACY_ENTRY *)(*Entry))->Volume);
         }
 
         MyFreePool (Entry);
@@ -2955,7 +2957,7 @@ FreeMenuScreen (
     REFIT_MENU_SCREEN **Menu
 ) {
     if (Menu && *Menu) {
-        MsgLog ("[ FreeMenuScreen %s\n", GetPoolStr(&(*Menu)->Title) ? GetPoolStr(&(*Menu)->Title) : L"NULL");
+        MsgLog ("[ FreeMenuScreen %p %s\n", *Menu, GetPoolStr(&(*Menu)->Title) ? GetPoolStr(&(*Menu)->Title) : L"NULL");
 
         FreePoolStr (&(*Menu)->Title);
 
@@ -2989,7 +2991,68 @@ FreeMenuScreen (
 }
 
 
+BDS_COMMON_OPTION *
+CopyBdsOption (
+    BDS_COMMON_OPTION *BdsOption
+) {
+    BDS_COMMON_OPTION *NewBdsOption = NULL;
+    if (BdsOption) {
+        LOGPOOL (BdsOption);
+        NewBdsOption = AllocateCopyPool (sizeof (*BdsOption), BdsOption);
+        MsgLog ("[ CopyBdsOption %p = %p (%d)\n", NewBdsOption, BdsOption, sizeof (*BdsOption));
+        if (NewBdsOption) {
+            if (BdsOption->DevicePath  ) NewBdsOption->DevicePath   = AllocateCopyPool (GetDevicePathSize (BdsOption->DevicePath), BdsOption->DevicePath  );
+            if (BdsOption->OptionName  ) NewBdsOption->OptionName   = AllocateCopyPool (StrSize (BdsOption->OptionName  )        , BdsOption->OptionName  );
+            if (BdsOption->Description ) NewBdsOption->Description  = AllocateCopyPool (StrSize (BdsOption->Description )        , BdsOption->Description );
+            if (BdsOption->LoadOptions ) NewBdsOption->LoadOptions  = AllocateCopyPool (BdsOption->LoadOptionsSize               , BdsOption->LoadOptions );
+            if (BdsOption->StatusString) NewBdsOption->StatusString = AllocateCopyPool (StrSize (BdsOption->StatusString)        , BdsOption->StatusString);
+            MsgLog ("%p DevicePath\n"  , NewBdsOption->DevicePath  );
+            MsgLog ("%p OptionName\n"  , NewBdsOption->OptionName  );
+            MsgLog ("%p Description\n" , NewBdsOption->Description );
+            MsgLog ("%p LoadOptions\n" , NewBdsOption->LoadOptions );
+            MsgLog ("%p StatusString\n", NewBdsOption->StatusString);
+        }
+        MsgLog ("] CopyBdsOption\n");
+    }
+    return NewBdsOption;
+}
+
+
+VOID
+FreeBdsOption (
+    BDS_COMMON_OPTION **BdsOption
+) {
+    if (BdsOption && *BdsOption) {
+        MsgLog ("[ FreeBdsOption %p -> %p Boot%04x - %s\n", BdsOption, *BdsOption, (*BdsOption)->BootCurrent, (*BdsOption)->Description);
+        MyFreePool (&(*BdsOption)->DevicePath);
+        MyFreePool (&(*BdsOption)->OptionName);
+        MyFreePool (&(*BdsOption)->Description);
+        MyFreePool (&(*BdsOption)->LoadOptions);
+        MyFreePool (&(*BdsOption)->StatusString);
+        MyFreePool (BdsOption);
+        MsgLog ("] FreeBdsOption\n");
+    }
+}
+
+
 #if REFIT_DEBUG > 0
+
+VOID
+LEAKABLEBDSOPTION (
+    BDS_COMMON_OPTION *BdsOption
+) {
+    if (BdsOption) {
+        LEAKABLEPATHINC ();
+            LEAKABLEWITHPATH (BdsOption->DevicePath, "DevicePath");
+            LEAKABLEWITHPATH (BdsOption->OptionName, "OptionName");
+            LEAKABLEWITHPATH (BdsOption->Description, "Description");
+            LEAKABLEWITHPATH (BdsOption->LoadOptions, "LoadOptions");
+            LEAKABLEWITHPATH (BdsOption->StatusString, "StatusString");
+        LEAKABLEPATHDEC ();
+    }
+    LEAKABLEWITHPATH (BdsOption, "BdsOption");
+}
+
 
 VOID
 LEAKABLEMENUENTRY (
@@ -3007,8 +3070,9 @@ LEAKABLEMENUENTRY (
             LEAKABLEPOOLSTR  ((EntryType == EntryTypeLoaderEntry) ? &((LOADER_ENTRY *)Entry)->LoaderPath_PS_  : NULL, "Loader Entry Loader Path");
             LEAKABLEPOOLSTR  ((EntryType == EntryTypeLoaderEntry) ? &((LOADER_ENTRY *)Entry)->LoadOptions_PS_ : NULL, "Loader Entry Loader Options");
             LEAKABLEPOOLSTR  ((EntryType == EntryTypeLoaderEntry) ? &((LOADER_ENTRY *)Entry)->InitrdPath_PS_  : NULL, "Loader Entry Initrd Path");
-            LEAKABLEWITHPATH ((EntryType == EntryTypeLoaderEntry) ? ((LOADER_ENTRY *)Entry)->EfiLoaderPath    : NULL, "Loader Efi Loader Path");
+            LEAKABLEWITHPATH ((EntryType == EntryTypeLoaderEntry) ?  ((LOADER_ENTRY *)Entry)->EfiLoaderPath   : NULL, "Loader Efi Loader Path");
 
+            LEAKABLEBDSOPTION((EntryType == EntryTypeLegacyEntry) ?  ((LEGACY_ENTRY *)Entry)->BdsOption       : NULL);
             LEAKABLEPOOLSTR  ((EntryType == EntryTypeLegacyEntry) ? &((LEGACY_ENTRY *)Entry)->LoadOptions_PS_ : NULL, "Legacy Entry Loader Options");
         LEAKABLEPATHDEC ();
     }
