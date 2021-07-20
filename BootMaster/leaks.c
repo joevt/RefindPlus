@@ -40,6 +40,16 @@
 #include "MemLogLib.h"
 #include "BootLog.h"
 
+const CHAR8 * kLeakableWhatGetDebugLogFileCreate = "GetDebugLogFile Create";
+const CHAR8 * kLeakableWhatGetDebugLogFileOpen = "GetDebugLogFile Open";
+const CHAR8 * kLeakableWhatLibOpenRootOpenVolume = "LibOpenRoot OpenVolume";
+const CHAR8 * kLeakableWhatSaveMessageToDebugLogFile = "SaveMessageToDebugLogFile";
+const CHAR8 * kLeakableWhatdaConnectControllerConnectController = "daConnectController ConnectController";
+const CHAR8 * kLeakableWhatConnectControllerExOrigConnectController = "ConnectControllerEx OrigConnectController";
+const CHAR8 * kLeakableWhategLoadFileStart = "egLoadFile Start";
+const CHAR8 * kLeakableWhatFileExistsOpen = "FileExists Open";
+const CHAR8 * kLeakableWhatStartEFIImageStartImage = "StartEFIImage StartImage";
+
 
 UINTN DebugLoopVar = 1;
 
@@ -276,7 +286,7 @@ typedef enum {
 // Some functions we do not override at all, but we can surround calls to them with LEAKABLEEXTERNALSTART and LEAKABLEEXTERNALSTOP to set a flag.
 #define LEAKABLEEXTERNALMAX 20
 UINTN LEAKABLEEXTERNALNEXT = 0;
-static CHAR8* LEAKABLEEXTERNALSTACK[LEAKABLEEXTERNALMAX];
+static const CHAR8* LEAKABLEEXTERNALSTACK[LEAKABLEEXTERNALMAX];
 
 typedef enum {
     kAllocFlagExternal = 1
@@ -290,7 +300,7 @@ struct Allocation {
     UINTN Num;                   // When it was allocated - it is a number that increases with each allocation, not a time stamp (maybe we should use a timestamp)
     AllocationTypeEnum Type;     // What function did the allocation (usually kAllocationTypeAllocatePool).
     UINTN AllocFlags;            // AllocFlags
-    CHAR8 *What;                 // A constant string used for allocations that are allowed to leak once (must be a literal - or we could use another enumeration or a string compare (strings need a destructor if pool allocated))
+    const CHAR8 *What;           // A constant string used for allocations that are allowed to leak once (must be a literal - or we could use another enumeration or a string compare (strings need a destructor if pool allocated))
     UINT16 *Path;                // A path describing multiple objects in a list or tree that is allowed to leak once (for the entire list or tree). See LEAKABLEPATH.
     StackFrame *Stack;           // The callstack when the allocation was created, used to help find the source of leaks.
 };
@@ -393,12 +403,9 @@ AllocationTypeString (
 
 STATIC
 VOID
-RemoveAllocation (
-    Allocation *prev,
+CleanAllocation (
     Allocation *a
 ) {
-    CheckStackPointer ();
-    prev->Next = a->Next;
     if (a->Stack) {
         #if LEAKS_DO_CLEANUP
         FreeCallStack (a->Stack);
@@ -411,9 +418,28 @@ RemoveAllocation (
         #endif
         a->Path = NULL;
     }
+}
 
+
+STATIC
+VOID
+AddFreeAllocation (
+    Allocation *a
+) {
+    CleanAllocation (a);
     a->Next = FreeAllocations;
     FreeAllocations = a;
+}
+
+
+STATIC
+VOID
+RemoveAllocation (
+    Allocation *prev,
+    Allocation *a
+) {
+    CheckStackPointer ();
+    prev->Next = a->Next;
 }
 
 
@@ -911,6 +937,8 @@ AddAllocation(
                 return;
             }
             else {
+                RemoveAllocation (prev, a);
+
                 // if the previous type was not kAllocationTypeAllocatePool but the new type is,
                 // then it probably means we missed a free so don't report it.
                 BOOLEAN reportit = !(Type == kAllocationTypeAllocatePool && a->Type != kAllocationTypeAllocatePool);
@@ -921,7 +949,7 @@ AddAllocation(
                 }
                 StackFrame *PrevousStack = a->Stack;
                 a->Stack = NULL;
-                RemoveAllocation (prev, a);
+                AddFreeAllocation (a);
                 if (reportit) {
                     DumpCallStack (NULL, FALSE);
                     MsgLog ("Previous:\n");
@@ -1242,8 +1270,8 @@ DumpLeakablePath (
 
 
 BOOLEAN LeakablePathsAreEqual (
-    CHAR8 *aWhat,
-    CHAR8 *bWhat,
+    const CHAR8 *aWhat,
+    const CHAR8 *bWhat,
     UINT16 *aPath,
     UINT16 *bPath,
     BOOLEAN noPathIsAnyPath
@@ -1421,14 +1449,17 @@ AllocatePoolEx (
 }
 
 
+static UINTN ReportingFree = 0;
+
 STATIC
 EFI_STATUS
 EFIAPI
 FreePoolEx (
     VOID *Buffer
 ) {
+    BootLogPause ();
+
     CheckStackPointer ();
-    BOOLEAN Found = FALSE;
     BOOLEAN DoDumpCStack = FALSE;
 
     UINTN Type;
@@ -1436,29 +1467,26 @@ FreePoolEx (
     POOL_TAIL1 *tail1;
     INTN size;
     INTN aSize = -1;
+    Allocation *a = NULL;
 
     //MsgLog ("[ FreePoolEx %p\n", Buffer);
     if (Buffer) {
         Allocation *prev = (Allocation *)&AllocationsList;
-        Allocation *a = AllocationsList;
-        while (a) {
-            if (a->Where == Buffer) {
-                RemoveAllocation (prev, a);
-                Found = TRUE;
-                break;
-            }
+        a = AllocationsList;
+        while (a && a->Where != Buffer) {
             prev = a;
             a = a->Next;
         }
 
-        if (Found) {
+        if (a) {
+            RemoveAllocation (prev, a);
             aSize = a->Size;
         }
-        
+
         size = LogPoolProc(Buffer, &Buffer, "Buffer", &Type, (VOID **)&head1, (VOID **)&tail1, __FILE__, __LINE__, FALSE, FALSE);
 
         if (size >= 0) {
-            if (Found) {
+            if (a) {
                 // it's normal for the pool size to be greater than the amount needed for
                 // the allocation as the pool blocks get reused without moving the tail
                 if (size < ((a->Size + 7) & ~7)) {
@@ -1466,23 +1494,48 @@ FreePoolEx (
                     DoDumpCStack = TRUE;
                 }
             }
-            if (size > 0) {
-                #if LEAKS_FILL_FREED
+            #if LEAKS_FILL_FREED
+                if (size > 0) {
                     VOID *e = Buffer + size;
                     UINTN *p = Buffer;
                     while ((VOID *)p < e) *p++ = 0x0000006700660065; // "efg"
                     UINT8 *q = (VOID *)p;
                     while ((VOID *)q < e) *q++ = 0x65;
-                #endif
-            }
+                }
+            #endif
             if (tail1->Signature != POOL_TAIL_SIGNATURE) {
-                MsgLog ("Allocation Error: tail mismatch %p (pool:%d allocated:%d tail:%X)\n", Buffer, size, a->Size, tail1->Signature);
+                MsgLog ("Allocation Error: tail mismatch %p (pool:%d allocated:%d tail:%X)\n", Buffer, size, aSize, tail1->Signature);
                 DoDumpCStack = TRUE;
             }
         }
         else {
             MsgLog ("Allocation Error: not a pool object %p (%d)\n", Buffer, size);
             DoDumpCStack = TRUE;
+        }
+
+        if (a) {
+            if (a->What && !(a->AllocFlags & kAllocFlagExternal)) {
+                ReportingFree++;
+                if (ReportingFree == 1) {
+                    if (
+                           a->What != kLeakableWhatGetDebugLogFileCreate
+                        && a->What != kLeakableWhatGetDebugLogFileOpen
+                        && a->What != kLeakableWhatLibOpenRootOpenVolume
+                        && a->What != kLeakableWhatSaveMessageToDebugLogFile
+                        && a->What != kLeakableWhatdaConnectControllerConnectController
+                        && a->What != kLeakableWhatConnectControllerExOrigConnectController
+                        && a->What != kLeakableWhategLoadFileStart
+                        && a->What != kLeakableWhatFileExistsOpen
+                        && a->What != kLeakableWhatStartEFIImageStartImage
+                    ) {
+                        MsgLog ("Freeing: %p (%d) %a", a->Where, a->Size, a->What);
+                        DumpLeakablePath (a->Path);
+                        MsgLog ("\n");
+                    }
+                }
+                ReportingFree--;
+            }
+            AddFreeAllocation (a);
         }
     }
     
@@ -1504,7 +1557,7 @@ FreePoolEx (
             MsgLog ("Allocation Error: cannot free %p %r\n", Buffer, Status);
             DoDumpCStack = TRUE;
         }
-        else if (!Found) {
+        else if (!a) {
             if (!LEAKABLEEXTERNALNEXT && !DoingAlloc) {
                 #if 1
                 MsgLog ("Allocation Error: attempt to free unallocated %p\n", Buffer);
@@ -1519,6 +1572,7 @@ FreePoolEx (
         DumpCallStack (NULL, FALSE);
     }
 
+    BootLogResume ();
     return Status;
 }
 
@@ -1597,7 +1651,7 @@ ConnectControllerEx (
 
     // Probably shouldn't log to disk while connecting controllers
     BootLogPause ();
-        LEAKABLEEXTERNALSTART ("ConnectControllerEx OrigConnectController");
+        LEAKABLEEXTERNALSTART (kLeakableWhatConnectControllerExOrigConnectController);
             EFI_STATUS Status = OrigConnectController (ControllerHandle, DriverImageHandle, RemainingDevicePath, Recursive);
         LEAKABLEEXTERNALSTOP ();
     BootLogResume ();
@@ -1754,7 +1808,6 @@ LEAKABLEPATHUNSET () {
 }
 
 
-
 VOID
 LEAKABLEWITHPATH (
     VOID *object,
@@ -1829,7 +1882,7 @@ LeakableProc (
 
 VOID
 LEAKABLEEXTERNALSTART (
-    CHAR8 *description
+    const CHAR8 *description
 ) {
     CheckStackPointer ();
     if (LEAKABLEEXTERNALNEXT >= LEAKABLEEXTERNALMAX) {

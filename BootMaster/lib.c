@@ -2233,7 +2233,7 @@ BOOLEAN FileExists (
     EFI_FILE_HANDLE TestFile;
 
     if (BaseDir != NULL) {
-        LEAKABLEEXTERNALSTART ("FileExists Open");
+        LEAKABLEEXTERNALSTART (kLeakableWhatFileExistsOpen);
         Status = refit_call5_wrapper(
             BaseDir->Open, BaseDir,
             &TestFile,

@@ -90,7 +90,7 @@ EfiLibOpenRoot (
   // Open the root directory of the volume
   //
   if (!EFI_ERROR (Status)) {
-    LEAKABLEEXTERNALSTART ("LibOpenRoot OpenVolume");
+    LEAKABLEEXTERNALSTART (kLeakableWhatLibOpenRootOpenVolume);
     Status = Volume->OpenVolume (
                       Volume,
                       &File

@@ -371,7 +371,7 @@ EFI_STATUS StartEFIImage (
     UninitRefitLib();
 
     MsgLog("[ StartImage '%s'\n", ImageTitle);
-    LEAKABLEEXTERNALSTART ("StartEFIImage StartImage");
+    LEAKABLEEXTERNALSTART (kLeakableWhatStartEFIImageStartImage);
     Status = refit_call3_wrapper(gBS->StartImage, ChildImageHandle, NULL, NULL);
     LEAKABLEEXTERNALSTOP ();
     ReturnStatus = Status;

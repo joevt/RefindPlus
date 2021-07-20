@@ -222,7 +222,7 @@ EFI_FILE_PROTOCOL * GetDebugLogFile (
   );
 
   // Open log file from current root
-  LEAKABLEEXTERNALSTART ("GetDebugLogFile Open");
+  LEAKABLEEXTERNALSTART (kLeakableWhatGetDebugLogFileOpen);
   Status = RootDir->Open(
       RootDir,
       &LogFile,
@@ -234,7 +234,7 @@ EFI_FILE_PROTOCOL * GetDebugLogFile (
 
   // If the log file is not found try to create it
   if (Status == EFI_NOT_FOUND) {
-    LEAKABLEEXTERNALSTART ("GetDebugLogFile Create");
+    LEAKABLEEXTERNALSTART (kLeakableWhatGetDebugLogFileCreate);
     Status = RootDir->Open(
         RootDir,
         &LogFile,
@@ -294,7 +294,7 @@ UINTN SaveMessageToDebugLogFile (IN CHAR8 *LastMessage) {
 
   EFI_FILE_HANDLE LogFile = GetDebugLogFile();
 
-  LEAKABLEEXTERNALSTART ("SaveMessageToDebugLogFile");
+  LEAKABLEEXTERNALSTART (kLeakableWhatSaveMessageToDebugLogFile);
   // Write to the log file
   if (LogFile != NULL) {
     // Advance to the EOF so we append

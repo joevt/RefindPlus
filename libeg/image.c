@@ -306,7 +306,7 @@ EFI_STATUS egLoadFile (
         return EFI_INVALID_PARAMETER;
     }
 
-    LEAKABLEEXTERNALSTART ("egLoadFile Start");
+    LEAKABLEEXTERNALSTART (kLeakableWhategLoadFileStart);
     Status = refit_call5_wrapper(BaseDir->Open, BaseDir, &FileHandle, FileName, EFI_FILE_MODE_READ, 0);
     LEAKABLEEXTERNALSTOP ();
     if (EFI_ERROR (Status)) {

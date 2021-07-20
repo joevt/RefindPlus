@@ -40,6 +40,16 @@
 #include "globalExtra.h"
 #include <Protocol/LoadedImage.h>
 
+extern const CHAR8 * kLeakableWhatGetDebugLogFileCreate;
+extern const CHAR8 * kLeakableWhatGetDebugLogFileOpen;
+extern const CHAR8 * kLeakableWhatLibOpenRootOpenVolume;
+extern const CHAR8 * kLeakableWhatSaveMessageToDebugLogFile;
+extern const CHAR8 * kLeakableWhatdaConnectControllerConnectController;
+extern const CHAR8 * kLeakableWhatConnectControllerExOrigConnectController;
+extern const CHAR8 * kLeakableWhategLoadFileStart;
+extern const CHAR8 * kLeakableWhatFileExistsOpen;
+extern const CHAR8 * kLeakableWhatStartEFIImageStartImage;
+
 
 typedef struct {
     UINTN StackAddress;
@@ -97,7 +107,7 @@ VOID LEAKABLEPATHSET (VOID *Buffer);
 VOID LEAKABLEPATHUNSET ();
 VOID LEAKABLEWITHPATH (VOID *object, CHAR8 *description);
 #define LEAKABLE(object,discription) LeakableProc(object,discription, FALSE)
-VOID LEAKABLEEXTERNALSTART (CHAR8 *description);
+VOID LEAKABLEEXTERNALSTART (const CHAR8 *description);
 VOID LEAKABLEEXTERNALSTOP ();
 
 INTN PoolVersion (VOID *Pointer);

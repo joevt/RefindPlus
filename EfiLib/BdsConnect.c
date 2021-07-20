@@ -64,7 +64,7 @@ EFI_STATUS EFIAPI daConnectController (
     }
     //MyFreePool(&DevicePath); // DevicePath is not always a pool allocated ptr
 
-    LEAKABLEEXTERNALSTART ("daConnectController ConnectController");
+    LEAKABLEEXTERNALSTART (kLeakableWhatdaConnectControllerConnectController);
     Status = gBS->ConnectController (
         ControllerHandle,
         DriverImageHandle,
