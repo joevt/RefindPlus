@@ -2063,8 +2063,9 @@ UINTN WaitForInput (UINTN Timeout) {
 // Returns TRUE if the user exited with edited options; FALSE if the user
 // pressed Esc to terminate the edit.
 static
-BOOLEAN EditOptions (LOADER_ENTRY *MenuEntry) {
-    MsgLog ("[ EditOptions\n");
+BOOLEAN EditOptions (REFIT_MENU_ENTRY *MenuEntry) {
+    MsgLog ("[ EditOptions MenuEntry:%p\n", MenuEntry);
+
     UINTN x_max, y_max;
     CHAR16 *EditedOptions;
     BOOLEAN retval = FALSE;
@@ -2074,14 +2075,27 @@ BOOLEAN EditOptions (LOADER_ENTRY *MenuEntry) {
         return FALSE;
     }
  
+    if (!GlobalConfig.TextOnly) {
+        SwitchToText (TRUE);
+    }
+
     refit_call4_wrapper(gST->ConOut->QueryMode, gST->ConOut, gST->ConOut->Mode->Mode, &x_max, &y_max);
  
-    if (!GlobalConfig.TextOnly)
-        SwitchToText (TRUE);
+    ENTRY_TYPE EntryType = GetMenuEntryType (MenuEntry);
+    CHAR16 *LoadOptions;
+    switch (EntryType) {
+        case EntryTypeLoaderEntry: LoadOptions = GetPoolStr (&((LOADER_ENTRY *)MenuEntry)->LoadOptions); break;
+        case EntryTypeLegacyEntry: LoadOptions = GetPoolStr (&((LEGACY_ENTRY *)MenuEntry)->LoadOptions); break;
+        default: LoadOptions = NULL; break;
+    }
  
-    if (line_edit (GetPoolStr (&MenuEntry->LoadOptions), &EditedOptions, x_max)) {
+    if (line_edit (LoadOptions, &EditedOptions, x_max)) {
         LEAKABLEPATHSET (MenuEntry);
-        AssignPoolStr (&MenuEntry->LoadOptions, EditedOptions);
+        switch (EntryType) {
+            case EntryTypeLoaderEntry: AssignPoolStr (&((LOADER_ENTRY *)MenuEntry)->LoadOptions, EditedOptions); break;
+            case EntryTypeLegacyEntry: AssignPoolStr (&((LEGACY_ENTRY *)MenuEntry)->LoadOptions, EditedOptions); break;
+            default: break;
+        }
         LEAKABLEMENUENTRY ((REFIT_MENU_ENTRY *) MenuEntry);
         LEAKABLEPATHUNSET ();
         retval = TRUE;
