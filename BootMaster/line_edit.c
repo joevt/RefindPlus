@@ -59,6 +59,7 @@ VOID cursor_right (UINTN *cursor, UINTN *first, UINTN x_max, UINTN len) {
 }
 
 BOOLEAN line_edit (CHAR16 *line_in, CHAR16 **line_out, UINTN x_max) {
+    MsgLog ("[ line_edit (%d) %p:'%s'\n", x_max, line_in, line_in);
     CHAR16  *line;
     UINTN    size;
     UINTN    len;
@@ -252,5 +253,7 @@ BOOLEAN line_edit (CHAR16 *line_in, CHAR16 **line_out, UINTN x_max) {
     );
     MyFreePool (&print);
     MyFreePool (&line);
+    
+    MsgLog ("] line_edit %p:'%s'\n", *line_out, *line_out);
     return enter;
 } // BOOLEAN line_edit()
