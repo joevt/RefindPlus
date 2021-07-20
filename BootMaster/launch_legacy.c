@@ -662,7 +662,7 @@ LEGACY_ENTRY * AddLegacyEntry (
         }
     }
     if (GetPoolStr (&Volume->VolName) != NULL) {
-        VolDesc = StrDuplicate (GetPoolStr (&Volume->VolName));
+        VolDesc = GetPoolStr (&Volume->VolName);
     }
     else {
         VolDesc = (Volume->DiskKind == DISK_KIND_OPTICAL) ? L"CD" : L"HD";
