@@ -3031,7 +3031,17 @@ CopyVolume (
             CopyFromPoolStr(&Volume->PartName, &Volume->PartName);
             CopyFromPoolStr(&Volume->FsName, &Volume->FsName);
             CopyFromPoolStr(&Volume->VolName, &Volume->VolName);
+            CopyFromPoolImage(&Volume->VolIconImage, &Volume->VolIconImage);
+            CopyFromPoolImage(&Volume->VolBadgeImage, &Volume->VolBadgeImage);
+            CopyFromPoolStr(&Volume->OSIconName, &Volume->OSIconName);
+            CopyFromPoolStr(&Volume->OSName, &Volume->OSName);
             Volume->WholeDiskDevicePath = DuplicateDevicePath (Volume->WholeDiskDevicePath);
+            if (Volume->MbrPartitionTable) {
+                Volume->MbrPartitionTable = AllocateCopyPool (4 * 16, Volume->MbrPartitionTable);
+            }
+            if (Volume->RootDir) {
+                Volume->RootDir = Volume->DeviceHandle ? LibOpenRoot (Volume->DeviceHandle) : NULL;
+            }
         }
     }
     MsgLog ("] CopyVolume %p\n", Volume);
