@@ -2319,13 +2319,17 @@ VOID ScanForTools (VOID) {
 
             case TAG_APPLE_RECOVERY:
                 for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
+                    //MsgLog ("[ Scanning for Apple Recovery\n");
+                    j = 0;
                     while (
                         (FileName = FindCommaDelimited (GlobalConfig.MacOSRecoveryFiles, j++)) != NULL
                     ) {
+                        //MsgLog ("[ Looking for '%s'\n", FileName);
                         if ((Volumes[VolumeIndex]->RootDir != NULL) &&
                             FileExists (Volumes[VolumeIndex]->RootDir, FileName)
                         ) {
-                            if ((IsValidTool (Volumes[VolumeIndex], FileName))) {
+                            //MsgLog ("Found '%s'\n", FileName);
+                            if (IsValidTool (Volumes[VolumeIndex], FileName)) {
                                 LOG(1, LOG_LINE_NORMAL,
                                     L"Adding Apple Recovery tag for '%s' on '%s'",
                                     FileName, GetPoolStr (&Volumes[VolumeIndex]->VolName)
@@ -2348,8 +2352,10 @@ VOID ScanForTools (VOID) {
                                 MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
                             } // if IsValidTool
                         } // if Volumes[VolumeIndex]
+                        //MsgLog ("] Looking for '%s'\n", FileName);
                         MyFreePool (&FileName);
                     } // while
+                    //MsgLog ("] Scanning for Apple Recovery\n");
                 } // for
                 break;
 
