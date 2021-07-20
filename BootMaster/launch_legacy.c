@@ -607,6 +607,7 @@ VOID StartLegacyUEFI (
     LEGACY_ENTRY *Entry,
     CHAR16 *SelectionName
 ) {
+    MsgLog ("[ StartLegacyUEFI '%s'\n", SelectionName);
     LOG(1, LOG_LINE_NORMAL,
         L"Launching UEFI-style BIOS/CSM/Legacy OS '%s'",
         SelectionName
@@ -619,8 +620,12 @@ VOID StartLegacyUEFI (
     StoreLoaderName (SelectionName);
 
     UninitRefitLib();
+    MsgLog ("[ BdsLibConnectDevicePath\n");
     BdsLibConnectDevicePath (Entry->BdsOption->DevicePath);
+    MsgLog ("] BdsLibConnectDevicePath\n");
+    MsgLog ("[ BdsLibDoLegacyBoot\n");
     BdsLibDoLegacyBoot (Entry->BdsOption);
+    MsgLog ("] BdsLibDoLegacyBoot\n");
 
     // If we get here, it means that there was a failure....
     ReinitRefitLib();
@@ -630,6 +635,7 @@ VOID StartLegacyUEFI (
     Print(L"Failure booting legacy (BIOS) OS.");
     PauseForKey();
     FinishExternalScreen();
+    MsgLog ("] StartLegacyUEFI\n");
 } // static VOID StartLegacyUEFI()
 
 static
