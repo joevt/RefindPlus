@@ -63,11 +63,11 @@ EFI_STATUS BdsLibConnectDevicePath (
     return EFI_SUCCESS;
   }
 
-  DevicePath        = DuplicateDevicePath (DevicePathToConnect);
+  DevicePath = DuplicateDevicePath (DevicePathToConnect);
   if (DevicePath == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
-  CopyOfDevicePath  = DevicePath;
+  CopyOfDevicePath = DevicePath;
 
   do {
     //
