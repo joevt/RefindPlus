@@ -2464,7 +2464,7 @@ EFI_STATUS EFIAPI efi_main (
                 MsgLog ("User Input Received:\n");
                 LOG2(1, LOG_LINE_THIN_SEP, L"  - ", egIsGraphicsModeEnabled() ? L"\n---------------\n\n" : L"\n\n",
                     L"Boot Legacy UEFI:- '%s'",
-                    GetPoolStr (&ourLegacyEntry->Volume->OSName)
+                    ourLegacyEntry->Volume ? GetPoolStr (&ourLegacyEntry->Volume->OSName) : L"NULL Volume"
                 );
 
                 StartLegacyUEFI (ourLegacyEntry, SelectionName);
