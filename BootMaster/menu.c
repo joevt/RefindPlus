@@ -155,7 +155,7 @@ VOID InitSelection (
         SelectionImages[1] = egCopyImage (TempSmallImage);
     }
     LEAKABLEONEIMAGE(SelectionImages[1], "SelectionImages 1");
-    
+
     // load big selection image
     if (GlobalConfig.SelectionBigFileName != NULL) {
         MsgLog ("TempSmallImage = egLoadImage SelectionSmallFileName\n");
@@ -186,7 +186,7 @@ VOID InitSelection (
         SelectionImages[0] = egCopyImage (TempBigImage);
     }
     LEAKABLEONEIMAGE(SelectionImages[0], "SelectionImages 0");
-    
+
     if (TempSmallImage) {
         egFreeImage (TempSmallImage);
     }
@@ -730,18 +730,18 @@ UINTN RunGenericMenu (
         if (HaveTimeout) {
             CurrentTime = (TimeoutCountdown + 5) / 10;
             if (CurrentTime != PreviousTime) {
-               TimeoutMessage = PoolPrint (
-                   L"%s in %d seconds",
-                   GetPoolStr (&Screen->TimeoutText),
-                   CurrentTime
-               );
+                TimeoutMessage = PoolPrint (
+                    L"%s in %d seconds",
+                    GetPoolStr (&Screen->TimeoutText),
+                    CurrentTime
+                );
 
-               if (GlobalConfig.ScreensaverTime != -1) {
-                   StyleFunc (Screen, &State, MENU_FUNCTION_PAINT_TIMEOUT, TimeoutMessage);
-               }
-               MyFreePool (&TimeoutMessage);
+                if (GlobalConfig.ScreensaverTime != -1) {
+                    StyleFunc (Screen, &State, MENU_FUNCTION_PAINT_TIMEOUT, TimeoutMessage);
+                }
+                MyFreePool (&TimeoutMessage);
 
-               PreviousTime = CurrentTime;
+                PreviousTime = CurrentTime;
             }
         }
 
@@ -811,10 +811,10 @@ UINTN RunGenericMenu (
             StyleFunc (Screen, &State, MENU_FUNCTION_PAINT_TIMEOUT, L"");
             HaveTimeout = FALSE;
             if (GlobalConfig.ScreensaverTime == -1) { // cancel start-with-blank-screen coding
-               GlobalConfig.ScreensaverTime = 0;
-               if (!GlobalConfig.TextOnly) {
-                   BltClearScreen (TRUE);
-               }
+                GlobalConfig.ScreensaverTime = 0;
+                if (!GlobalConfig.TextOnly) {
+                    BltClearScreen (TRUE);
+                }
             }
         }
 
@@ -825,7 +825,7 @@ UINTN RunGenericMenu (
                 key.ScanCode,
                 key.UnicodeChar
             );
-            
+
             switch (key.ScanCode) {
                 case SCAN_UP:
                     UpdateScroll (&State, SCROLL_LINE_UP);
@@ -1111,14 +1111,14 @@ VOID TextMenuStyle (
                 refit_call2_wrapper(gST->ConOut->OutputString, gST->ConOut, L" ");
             }
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
-               if (GetPoolStr (&Screen->Hint1) != NULL) {
-                   refit_call3_wrapper(gST->ConOut->SetCursorPosition, gST->ConOut, 0, ConHeight - 2);
-                   refit_call2_wrapper(gST->ConOut->OutputString, gST->ConOut, GetPoolStr (&Screen->Hint1));
-               }
-               if (GetPoolStr (&Screen->Hint2) != NULL) {
-                   refit_call3_wrapper(gST->ConOut->SetCursorPosition, gST->ConOut, 0, ConHeight - 1);
-                   refit_call2_wrapper(gST->ConOut->OutputString, gST->ConOut, GetPoolStr (&Screen->Hint2));
-               }
+                if (GetPoolStr (&Screen->Hint1) != NULL) {
+                    refit_call3_wrapper(gST->ConOut->SetCursorPosition, gST->ConOut, 0, ConHeight - 2);
+                    refit_call2_wrapper(gST->ConOut->OutputString, gST->ConOut, GetPoolStr (&Screen->Hint1));
+                }
+                if (GetPoolStr (&Screen->Hint2) != NULL) {
+                    refit_call3_wrapper(gST->ConOut->SetCursorPosition, gST->ConOut, 0, ConHeight - 1);
+                    refit_call2_wrapper(gST->ConOut->OutputString, gST->ConOut, GetPoolStr (&Screen->Hint2));
+                }
             }
             break;
 
@@ -1285,8 +1285,8 @@ VOID DrawTextWithTransparency (
 
     egMeasureText (Text, &TextWidth, NULL);
     if (TextWidth == 0) {
-       TextWidth = ScreenW;
-       XPos      = 0;
+        TextWidth = ScreenW;
+        XPos = 0;
     }
 
     TextBuffer = egCropImage (
@@ -1448,15 +1448,15 @@ VOID GraphicsMenuStyle (
                 TitlePosX = EntriesPosX + (MenuWidth - ItemWidth) / 2 - CharWidth;
             }
             else {
-               TitlePosX = EntriesPosX;
-               if (CharWidth > 0) {
-                  i = MenuWidth / CharWidth - 2;
-                  if (i > 0) {
-                      CHAR16 *ScreenTitleNew = StrDuplicate(GetPoolStr(&Screen->Title));
-                      ScreenTitleNew[i] = 0;
-                      AssignPoolStr(&Screen->Title, ScreenTitleNew);
-                  }
-               } // if
+                TitlePosX = EntriesPosX;
+                if (CharWidth > 0) {
+                    i = MenuWidth / CharWidth - 2;
+                    if (i > 0) {
+                        CHAR16 *ScreenTitleNew = StrDuplicate(GetPoolStr(&Screen->Title));
+                        ScreenTitleNew[i] = 0;
+                        AssignPoolStr(&Screen->Title, ScreenTitleNew);
+                    }
+                } // if
             } // if/else
             break;
 
@@ -1736,6 +1736,20 @@ VOID PaintSelection (
     }
 } // static VOID MoveSelection (VOID)
 
+static
+EG_IMAGE *
+GetIcon (
+    IN EG_EMBEDDED_IMAGE *BuiltInIcon,
+    IN CHAR16 *ExternalFilename
+) {
+    EG_IMAGE *Icon = NULL;
+    Icon = egFindIcon (ExternalFilename, GlobalConfig.IconSizes[ICON_SIZE_SMALL]);
+    if (Icon == NULL) {
+        Icon = egPrepareEmbeddedImage (BuiltInIcon, TRUE);
+    }
+    return Icon;
+}
+
 // Display a 48x48 icon at the specified location. Uses the image specified by
 // ExternalFilename if it's available, or BuiltInImage if it's not. The
 // Y position is specified as the center value, and so is adjusted by half
@@ -1744,19 +1758,11 @@ VOID PaintSelection (
 // Alignment == ALIGN_RIGHT
 static
 VOID PaintIcon (
-    IN EG_EMBEDDED_IMAGE *BuiltInIcon,
-    IN CHAR16 *ExternalFilename,
+    IN EG_IMAGE *Icon,
     UINTN PosX,
     UINTN PosY,
     UINTN Alignment
 ) {
-    EG_IMAGE *Icon = NULL;
-
-    Icon = egFindIcon (ExternalFilename, GlobalConfig.IconSizes[ICON_SIZE_SMALL]);
-    if (Icon == NULL) {
-        Icon = egPrepareEmbeddedImage (BuiltInIcon, TRUE);
-    }
-
     if (Icon != NULL) {
         if (Alignment == ALIGN_RIGHT) {
             PosX -= Icon->Width;
@@ -1769,7 +1775,6 @@ VOID PaintIcon (
             Icon->Width,
             Icon->Height
         );
-        egFreeImage (Icon);
     }
 } // static VOID()
 
@@ -1788,39 +1793,46 @@ VOID PaintArrows (
     UINTN PosY,
     UINTN row0Loaders
 ) {
-    EG_IMAGE *TempImage;
-    UINTN Width, Height, RightX, AdjPosY;
+    static EG_IMAGE *LeftArrow = NULL;
+    static EG_IMAGE *RightArrow = NULL;
+    static EG_IMAGE *LeftBackground = NULL;
+    static EG_IMAGE *RightBackground = NULL;
+    static BOOLEAN LoadedArrows = FALSE;
 
-    // NOTE: Assume that left and right arrows are of the same size...
-     Width   = egemb_arrow_left.Width;
-     Height  = egemb_arrow_left.Height;
-     RightX  = (ScreenW + (TileSizes[0] + TILE_XSPACING) * State->MaxVisible) / 2 + TILE_XSPACING;
-     AdjPosY = PosY - (Height / 2);
+    UINTN RightX  = (ScreenW + (TileSizes[0] + TILE_XSPACING) * State->MaxVisible) / 2 + TILE_XSPACING;
 
-     // For PaintIcon() calls, the starting Y position is moved to the midpoint
-     // of the surrounding row; PaintIcon() adjusts this back up by half the
-     // icon's height to properly center it.
-     if ((State->FirstVisible > 0) &&
-        (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_ARROWS))
-    ) {
-        PaintIcon (&egemb_arrow_left, L"arrow_left", PosX, PosY, ALIGN_RIGHT);
+    if (!LoadedArrows && !(GlobalConfig.HideUIFlags & HIDEUI_FLAG_ARROWS)) {
+         LeftArrow = GetIcon (&egemb_arrow_left , L"arrow_left" );
+        RightArrow = GetIcon (&egemb_arrow_right, L"arrow_right");
+        if ( LeftArrow)  LeftBackground = egCropImage (GlobalConfig.ScreenBackground, PosX - LeftArrow->Width, PosY - ( LeftArrow->Height / 2),  LeftArrow->Width,  LeftArrow->Height);
+        if (RightArrow) RightBackground = egCropImage (GlobalConfig.ScreenBackground, RightX                 , PosY - (RightArrow->Height / 2), RightArrow->Width, RightArrow->Height);
+        LEAKABLEONEIMAGE ( LeftArrow,  "Left Arrow");
+        LEAKABLEONEIMAGE (RightArrow, "Right Arrow");
+        LEAKABLEONEIMAGE ( LeftBackground,  "Left Background");
+        LEAKABLEONEIMAGE (RightBackground, "Right Background");
+        LoadedArrows = TRUE;
     }
-    else {
-        TempImage = egCropImage (GlobalConfig.ScreenBackground, PosX - Width, AdjPosY, Width, Height);
-        BltImage (TempImage, PosX - Width, AdjPosY);
-        egFreeImage (TempImage);
-    } // if/else
 
-    if ((State->LastVisible < (row0Loaders - 1)) &&
-        (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_ARROWS))
-    ) {
-        PaintIcon (&egemb_arrow_right, L"arrow_right", RightX, PosY, ALIGN_LEFT);
+    // For PaintIcon() calls, the starting Y position is moved to the midpoint
+    // of the surrounding row; PaintIcon() adjusts this back up by half the
+    // icon's height to properly center it.
+    if (LeftArrow && LeftBackground) {
+        if (State->FirstVisible > 0) {
+            PaintIcon (LeftArrow, PosX, PosY, ALIGN_RIGHT);
+        }
+        else {
+            BltImage (LeftBackground, PosX - LeftArrow->Width, PosY - (LeftArrow->Height / 2));
+        }
     }
-    else {
-        TempImage = egCropImage (GlobalConfig.ScreenBackground, RightX, AdjPosY, Width, Height);
-        BltImage (TempImage, RightX, AdjPosY);
-        egFreeImage (TempImage);
-    } // if/else
+
+    if (RightArrow && RightBackground) {
+        if (State->LastVisible < row0Loaders - 1) {
+            PaintIcon (RightArrow, RightX, PosY, ALIGN_LEFT);
+        }
+        else {
+            BltImage (RightBackground, RightX, PosY - (RightArrow->Height / 2));
+        }
+    }
 } // VOID PaintArrows()
 
 // Display main menu in graphics mode
@@ -1904,12 +1916,12 @@ VOID MainMenuStyle (
 
         case MENU_FUNCTION_PAINT_TIMEOUT:
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_LABEL)) {
-               DrawTextWithTransparency (L"", 0, textPosY + TextLineHeight());
-               DrawTextWithTransparency (
-                   ParamText,
-                   (ScreenW - egComputeTextWidth (ParamText)) >> 1,
-                   textPosY + TextLineHeight()
-               );
+                DrawTextWithTransparency (L"", 0, textPosY + TextLineHeight());
+                DrawTextWithTransparency (
+                    ParamText,
+                    (ScreenW - egComputeTextWidth (ParamText)) >> 1,
+                    textPosY + TextLineHeight()
+                );
             }
             break;
     }
@@ -2069,18 +2081,18 @@ BOOLEAN EditOptions (REFIT_MENU_ENTRY *MenuEntry) {
     UINTN x_max, y_max;
     CHAR16 *EditedOptions;
     BOOLEAN retval = FALSE;
- 
+
     LOG(2, LOG_LINE_NORMAL, L"EditOptions: %d", ((GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) != 0));
     if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
         return FALSE;
     }
- 
+
     if (!GlobalConfig.TextOnly) {
         SwitchToText (TRUE);
     }
 
     refit_call4_wrapper(gST->ConOut->QueryMode, gST->ConOut, gST->ConOut->Mode->Mode, &x_max, &y_max);
- 
+
     ENTRY_TYPE EntryType = GetMenuEntryType (MenuEntry);
     CHAR16 *LoadOptions;
     switch (EntryType) {
@@ -2088,7 +2100,7 @@ BOOLEAN EditOptions (REFIT_MENU_ENTRY *MenuEntry) {
         case EntryTypeLegacyEntry: LoadOptions = GetPoolStr (&((LEGACY_ENTRY *)MenuEntry)->LoadOptions); break;
         default: LoadOptions = NULL; break;
     }
-    
+
     if (line_edit (LoadOptions, &EditedOptions, x_max)) {
         LEAKABLEPATHSET (MenuEntry);
         switch (EntryType) {
@@ -2103,7 +2115,7 @@ BOOLEAN EditOptions (REFIT_MENU_ENTRY *MenuEntry) {
     if (!GlobalConfig.TextOnly) {
         SwitchToGraphics();
     }
- 
+
     MsgLog ("] EditOptions %d\n", retval);
     return retval;
 } // VOID EditOptions()
@@ -2137,7 +2149,7 @@ VOID DisplaySimpleMessage (
     if (AllowGraphicsMode) {
         Style = GraphicsMenuStyle;
     }
-    
+
     SimpleMessageMenu = CopyMenuScreen (&SimpleMessageMenuSrc);
     if (!SimpleMessageMenu) {
         MsgLog ("] DisplaySimpleMessage : Copy Menu Fail!!\n");
@@ -2279,7 +2291,7 @@ VOID ManageHiddenTags (
     };
 
     LOG(1, LOG_LINE_SEPARATOR, L"Managing hidden tags");
-    
+
     RestoreItemMenu = CopyMenuScreen (&RestoreItemMenuSrc);
     if (!RestoreItemMenu) {
         MsgLog ("] ManageHiddenTags (NULL)\n");
@@ -2332,7 +2344,7 @@ VOID ManageHiddenTags (
             L"Returned '%d' from RunGenericMenu call on '%s' in 'ManageHiddenTags'",
             MenuExit, GetPoolStr (&ChosenOption->Title)
         );
-        
+
         if (MenuExit == MENU_EXIT_ENTER) {
             SaveTags     |= DeleteItemFromCsvList (GetPoolStr (&ChosenOption->Title), HiddenTags);
             SaveTools    |= DeleteItemFromCsvList (GetPoolStr (&ChosenOption->Title), HiddenTools);
@@ -2574,7 +2586,7 @@ BOOLEAN HideLegacyTag (
         L"Returned '%d' from RunGenericMenu call on '%s' in 'HideLegacyTag'",
         MenuExit, GetPoolStr (&ChosenOption->Title)
     );
-    
+
     if (MyStriCmp (GetPoolStr (&ChosenOption->Title), L"Yes") && (MenuExit == MENU_EXIT_ENTER)) {
         AddToHiddenTags (L"HiddenLegacy", Name);
         TagHidden = TRUE;
@@ -2601,7 +2613,7 @@ VOID HideTag (
         MsgLog ("] HideTag (no menu entry)\n");
         return;
     }
-    
+
     HideItemMenu = CopyMenuScreen (&HideItemMenuSrc);
     if (!HideItemMenu) {
         MsgLog ("] HideTag (no menu screen)\n");
@@ -2777,19 +2789,19 @@ UINTN RunMainMenu (
                     MenuExit, GetPoolStr (&TempChosenEntry->SubScreen->Title)
                 );
 
-               if (MenuExit == MENU_EXIT_ESCAPE || TempChosenEntry->Tag == TAG_RETURN) {
-                   MenuExit = 0;
-               }
+                if (MenuExit == MENU_EXIT_ESCAPE || TempChosenEntry->Tag == TAG_RETURN) {
+                    MenuExit = 0;
+                }
 
-               if (MenuExit == MENU_EXIT_DETAILS) {
-                  if (!EditOptions (TempChosenEntry)) {
-                      MenuExit = 0;
-                  }
-               }
+                if (MenuExit == MENU_EXIT_DETAILS) {
+                    if (!EditOptions (TempChosenEntry)) {
+                        MenuExit = 0;
+                    }
+                }
             }
             else {
                 // no sub-screen; ignore keypress
-               MenuExit = 0;
+                MenuExit = 0;
             }
         } // Enter sub-screen
 
@@ -2823,12 +2835,12 @@ CopyMenuScreen (
     REFIT_MENU_SCREEN *Entry
 ) {
     REFIT_MENU_SCREEN *NewEntry = NULL;
-    
+
     if (Entry) {
         NewEntry = AllocateZeroPool (sizeof (REFIT_MENU_SCREEN));
         if (NewEntry) {
             UINTN i;
-        
+
             CopyFromPoolStr (&NewEntry->Title, &Entry->Title);
             CopyFromPoolImage (&NewEntry->TitleImage, &Entry->TitleImage);
 
@@ -2962,7 +2974,7 @@ FreeMenuScreen (
         FreePoolStr (&(*Menu)->Title);
 
         FreePoolImage (&(*Menu)->TitleImage);
-        
+
         if ((*Menu)->InfoLines) {
             UINTN i;
             for (i = 0; i < (*Menu)->InfoLineCount; i++) {
@@ -2971,7 +2983,7 @@ FreeMenuScreen (
             MyFreePool (&(*Menu)->InfoLines);
             (*Menu)->InfoLineCount = 0;
         }
-    
+
         if ((*Menu)->Entries) {
             UINTN i;
             for (i = 0; i < (*Menu)->EntryCount; i++) {
@@ -2980,7 +2992,7 @@ FreeMenuScreen (
             MyFreePool (&(*Menu)->Entries);
             (*Menu)->EntryCount = 0;
         }
-        
+
         FreePoolStr (&(*Menu)->TimeoutText);
         FreePoolStr (&(*Menu)->Hint1);
         FreePoolStr (&(*Menu)->Hint2);
@@ -3023,7 +3035,7 @@ FreeBdsOption (
     BDS_COMMON_OPTION **BdsOption
 ) {
     if (BdsOption && *BdsOption) {
-        MsgLog ("[ FreeBdsOption %p -> %p Boot%04x - %s\n", BdsOption, *BdsOption, (*BdsOption)->BootCurrent, (*BdsOption)->Description);
+        MsgLog ("[ FreeBdsOption %p -> %p Boot%04x - '%s'\n", BdsOption, *BdsOption, (*BdsOption)->BootCurrent, (*BdsOption)->Description);
         MyFreePool (&(*BdsOption)->DevicePath);
         MyFreePool (&(*BdsOption)->OptionName);
         MyFreePool (&(*BdsOption)->Description);
@@ -3099,7 +3111,7 @@ LEAKABLEMENU (
                 LEAKABLEPATHDEC ();
             }
             LEAKABLEWITHPATH (Menu->InfoLines, "Menu Info Lines");
-    
+
             if (Menu->Entries) {
                 UINTN i;
                 LEAKABLEPATHINC ();
