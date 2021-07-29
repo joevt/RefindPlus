@@ -1462,7 +1462,7 @@ VOID SetConfigFilename (EFI_HANDLE ImageHandle) {
         (VOID **) &Info
     );
     if ((Status == EFI_SUCCESS) && (Info->LoadOptionsSize > 0)) {
-        MsgLog ("Set Config Filename from Command Line Option:\n");
+        MsgLog ("[ SetConfigFilename: (%d) [0]=%d '%s'\n", Info->LoadOptionsSize, Info->LoadOptions ? ((CHAR16 *)(Info->LoadOptions))[0] : -1, Info->LoadOptions);
 
         Options = (CHAR16 *) Info->LoadOptions;
         SubString = MyStrStr (Options, L" -c ");
@@ -1499,6 +1499,7 @@ VOID SetConfigFilename (EFI_HANDLE ImageHandle) {
 
             HaltForKey();
         }
+        MsgLog ("] SetConfigFilename\n");
     } // if
 } // VOID SetConfigFilename()
 
