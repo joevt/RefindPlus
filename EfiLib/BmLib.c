@@ -100,6 +100,9 @@ EfiLibOpenRoot (
   //
   // Done
   //
+  if (EFI_ERROR (Status)) {
+    MsgLog ("[] EfiLibOpenRoot %r\n", Status);
+  }
   return EFI_ERROR (Status) ? NULL : File;
 }
 
