@@ -114,3 +114,7 @@
 [PcdsFixedAtBuild]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x1D
   gEfiMdePkgTokenSpaceGuid.PcdDebugClearMemoryValue|0x00
+
+[BuildOptions.X64]
+  XCODE:*_*_*_CC_FLAGS = -save-temps -DREFIT_DEBUG=1
+  GCC:*_*_*_CC_FLAGS   = -save-temps -DREFIT_DEBUG=1

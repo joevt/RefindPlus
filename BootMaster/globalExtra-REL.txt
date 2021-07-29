@@ -1,3 +1,4 @@
+#undef REFIT_DEBUG
 #define REFIT_DEBUG (0)
 
 #if 0

@@ -1,3 +1,4 @@
+#undef REFIT_DEBUG
 #define REFIT_DEBUG (1)
 
 #define LOG_STAR_HEAD_SEP  0
