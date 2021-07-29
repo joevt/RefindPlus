@@ -42,8 +42,8 @@ typedef struct _esp_list {
  ***********************/
 
 // Delete the linked-list ESP_LIST data structure passed as an argument.
- static
- VOID DeleteESPList (ESP_LIST *AllESPs) {
+static
+VOID DeleteESPList (ESP_LIST *AllESPs) {
     ESP_LIST *Temp;
 
     LOG(3, LOG_LINE_NORMAL, L"Deleting list of ESPs");
@@ -97,8 +97,8 @@ static ESP_LIST * FindAllESPs (VOID) {
 // REFIT_VOLUME, so if these values are not unique (as, for instance,
 // after some types of disk cloning operations), the returned value may
 // not be accurate.
- static
- REFIT_VOLUME * PickOneESP (ESP_LIST *AllESPs) {
+static
+REFIT_VOLUME * PickOneESP (ESP_LIST *AllESPs) {
     ESP_LIST            *CurrentESP;
     REFIT_VOLUME        *ChosenVolume = NULL;
     CHAR16              *Temp         = NULL, *GuidStr, *PartName, *FsName, *VolName;
@@ -176,7 +176,7 @@ static ESP_LIST * FindAllESPs (VOID) {
                 } // while
             } // if
             FreeMenuScreen (&InstallMenu);
-       } // if InstallMenu
+        } // if InstallMenu
     } // if AllESPs
     else {
         DisplaySimpleMessage (L"Information", L"No eligible ESPs found");
@@ -193,8 +193,8 @@ static ESP_LIST * FindAllESPs (VOID) {
  *
  ***********************/
 
- static
- EFI_STATUS RenameFile (IN EFI_FILE *BaseDir, CHAR16 *OldName, CHAR16 *NewName) {
+static
+EFI_STATUS RenameFile (IN EFI_FILE *BaseDir, CHAR16 *OldName, CHAR16 *NewName) {
     EFI_STATUS    Status;
     EFI_FILE      *FilePtr;
     EFI_FILE_INFO *NewInfo, *Buffer = NULL;
@@ -236,8 +236,8 @@ static ESP_LIST * FindAllESPs (VOID) {
 // Rename *FileName to add a "-old" extension, but only if that file doesn't
 // already exist. Called on the icons directory to preserve it in case the
 // user wants icons stored there that have been supplanted by new icons.
- static
- EFI_STATUS BackupOldFile (IN EFI_FILE *BaseDir, CHAR16 *FileName) {
+static
+EFI_STATUS BackupOldFile (IN EFI_FILE *BaseDir, CHAR16 *FileName) {
     EFI_STATUS          Status = EFI_SUCCESS;
     CHAR16              *NewName;
 
@@ -250,14 +250,14 @@ static ESP_LIST * FindAllESPs (VOID) {
     if (!FileExists (BaseDir, NewName)) {
         Status = RenameFile (BaseDir, FileName, NewName);
     }
-     MyFreePool (&NewName);
+    MyFreePool (&NewName);
 
     return (Status);
 } // EFI_STATUS BackupOldFile()
 
 // Create directories in which RefindPlus will reside....
- static
- EFI_STATUS CreateDirectories (IN EFI_FILE *BaseDir) {
+static
+EFI_STATUS CreateDirectories (IN EFI_FILE *BaseDir) {
     CHAR16   *FileName = NULL;
     UINTN    i = 0, Status = EFI_SUCCESS;
     EFI_FILE *TheDir = NULL;
@@ -272,8 +272,8 @@ static ESP_LIST * FindAllESPs (VOID) {
             EFI_FILE_DIRECTORY
         );
         Status = refit_call1_wrapper(TheDir->Close, TheDir);
-         MyFreePool (&FileName);
-         MyFreePool (&TheDir);
+        MyFreePool (&FileName);
+        MyFreePool (&TheDir);
     } // while()
     return (Status);
 } // CreateDirectories()
@@ -299,7 +299,7 @@ EFI_STATUS CopyOneFile (
             return EFI_NO_RESPONSE;
         }
         FileSize = FileInfo->FileSize;
-         MyFreePool (&FileInfo);
+        MyFreePool (&FileInfo);
     } // if
     if (Status == EFI_SUCCESS) {
         Buffer = AllocateZeroPool (FileSize);
@@ -322,9 +322,9 @@ EFI_STATUS CopyOneFile (
     if (Status == EFI_SUCCESS)
         Status = refit_call1_wrapper(DestFile->Close, DestFile);
 
-     MyFreePool (&SourceFile);
-     MyFreePool (&DestFile);
-     MyFreePool (&Buffer);
+    MyFreePool (&SourceFile);
+    MyFreePool (&DestFile);
+    MyFreePool (&Buffer);
 
     #if REFIT_DEBUG > 0
     if (EFI_ERROR(Status)) {
@@ -356,9 +356,9 @@ EFI_STATUS CopyDirectory (
         SourceFileName = PoolPrint (L"%s\\%s", SourceDirName, DirEntry->FileName);
         DestFileName = PoolPrint (L"%s\\%s", DestDirName, DirEntry->FileName);
         Status = CopyOneFile (SourceDirPtr, SourceFileName, DestDirPtr, DestFileName);
-         MyFreePool (&DestFileName);
-         MyFreePool (&SourceFileName);
-         MyFreePool (&DirEntry);
+        MyFreePool (&DestFileName);
+        MyFreePool (&SourceFileName);
+        MyFreePool (&DirEntry);
     } // while
     return (Status);
 } // EFI_STATUS CopyDirectory()
@@ -456,8 +456,8 @@ EFI_STATUS CopyDrivers (
             if (EFI_ERROR (Status)) {
                 WorstStatus = Status;
             }
-             MyFreePool (&SourceFileName);
-             MyFreePool (&DestFileName);
+            MyFreePool (&SourceFileName);
+            MyFreePool (&DestFileName);
         } // if
     } // for
 
@@ -479,8 +479,8 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
     // Begin by copying RefindPlus itself....
     RefindPlusName = PoolPrint (L"EFI\\refindplus\\%s", INST_REFINDPLUS_NAME);
     Status         = CopyOneFile (SourceVolume->RootDir, SourceFile, TargetDir, RefindPlusName);
-     MyFreePool (&SourceFile);
-     MyFreePool (&RefindPlusName);
+    MyFreePool (&SourceFile);
+    MyFreePool (&RefindPlusName);
     if (EFI_ERROR (Status)) {
         LOG(1, LOG_LINE_NORMAL, L"Error copying RefindPlus binary; installation has failed");
 
@@ -499,7 +499,7 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
         } else {
             SourceFile = PoolPrint (L"%s\\config.conf", SourceDir);
         }
-         MyFreePool (&ConfFile);
+        MyFreePool (&ConfFile);
         // Note: CopyOneFile() logs errors if they occur
         if (FileExists (TargetDir, L"\\EFI\\refindplus\\config.conf")) {
             Status = CopyOneFile (
@@ -518,7 +518,7 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
         }
         if (EFI_ERROR (Status))
             WorstStatus = Status;
-         MyFreePool (&SourceFile);
+        MyFreePool (&SourceFile);
 
         // Now copy icons....
         SourceFile = PoolPrint (L"%s\\icons", SourceDir);
@@ -533,7 +533,7 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
 
             WorstStatus = Status;
         }
-         MyFreePool (&SourceFile);
+        MyFreePool (&SourceFile);
 
         // Now copy drivers....
         SourceDriversDir = PoolPrint (L"%s\\%s", SourceDir, INST_DRIVERS_SUBDIR);
@@ -548,8 +548,8 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
         if (EFI_ERROR (Status)) {
             WorstStatus = Status;
         }
-         MyFreePool (&SourceDriversDir);
-         MyFreePool (&TargetDriversDir);
+        MyFreePool (&SourceDriversDir);
+        MyFreePool (&TargetDriversDir);
     }
     MyFreePool (&SourceDir);
     // since SourceVolume started as NULL, free it if it is not NULL
@@ -559,8 +559,8 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
 
 // Create the BOOT.CSV file used by the fallback.efi/fbx86.efi program.
 // Success isn't critical, so we don't return a Status value.
- static
- VOID CreateFallbackCSV (IN EFI_FILE *TargetDir) {
+static
+VOID CreateFallbackCSV (IN EFI_FILE *TargetDir) {
     CHAR16   *Contents = NULL;
     UINTN    FileSize, Status;
     EFI_FILE *FilePtr;
@@ -579,9 +579,9 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
             Status = refit_call3_wrapper(FilePtr->Write, FilePtr, &FileSize, Contents);
             if (Status == EFI_SUCCESS)
                 refit_call1_wrapper(FilePtr->Close, FilePtr);
-             MyFreePool (&FilePtr);
+            MyFreePool (&FilePtr);
         } // if
-         MyFreePool (&Contents);
+        MyFreePool (&Contents);
     } // if
 
     #if REFIT_DEBUG > 0
@@ -591,8 +591,8 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
     #endif
 } // VOID CreateFallbackCSV()
 
- static
- BOOLEAN CopyRefindFiles (IN EFI_FILE *TargetDir) {
+static
+BOOLEAN CopyRefindFiles (IN EFI_FILE *TargetDir) {
     EFI_STATUS Status = EFI_SUCCESS, Status2;
 
     if (FileExists (TargetDir, L"\\EFI\\refindplus\\icons")) {
@@ -668,8 +668,8 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
 // device path structure. In this case, the function will skip the equivalent-
 // but-not-identical entry and the boot list will end up with two (or more)
 // functionally equivalent entries.
- static
- UINTN FindBootNum (EFI_DEVICE_PATH *Entry, UINTN Size, BOOLEAN *AlreadyExists) {
+static
+UINTN FindBootNum (EFI_DEVICE_PATH *Entry, UINTN Size, BOOLEAN *AlreadyExists) {
     UINTN   i = 0, VarSize, Status;
     CHAR16  *VarName;
     VOID    *Contents;
@@ -681,7 +681,7 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
         if ((Status == EFI_SUCCESS) && (VarSize == Size) && (CompareMem (Contents, Entry, VarSize) == 0)) {
             *AlreadyExists = TRUE;
         }
-         MyFreePool (&VarName);
+        MyFreePool (&VarName);
     } while ((Status == EFI_SUCCESS) && (*AlreadyExists == FALSE));
     if (i > 0x10000) // Somehow ALL boot entries are occupied! VERY unlikely!
         i = 0x10000; // In desperation, the program will overwrite the last one.
@@ -727,15 +727,15 @@ EFI_STATUS ConstructBootEntry (
     } else {
         Status = EFI_OUT_OF_RESOURCES;
     } // if/else
-     MyFreePool (&DevicePath);
+    MyFreePool (&DevicePath);
     return Status;
 } // EFI_STATUS ConstructBootEntry()
 
 // Set BootNum as first in the boot order. This function also eliminates any
 // duplicates of BootNum in the boot order list (but NOT duplicates among
 // the Boot#### variables).
- static
- EFI_STATUS SetBootDefault (UINTN BootNum) {
+static
+EFI_STATUS SetBootDefault (UINTN BootNum) {
     UINTN    Status, VarSize, ListSize, i, j;
     UINT16   *BootOrder, *NewBootOrder;
     BOOLEAN  IsAlreadyFirst = FALSE;
@@ -761,7 +761,7 @@ EFI_STATUS ConstructBootEntry (
             Status = EfivarSetRaw (&GlobalGuid, L"BootOrder", NewBootOrder, j * sizeof (UINT16), TRUE);
             MyFreePool (&NewBootOrder);
         } // if
-         MyFreePool (&BootOrder);
+        MyFreePool (&BootOrder);
     } // if
 
     return Status;
@@ -771,8 +771,8 @@ EFI_STATUS ConstructBootEntry (
 // (If an entry that's identical to the one this function would create already
 // exists, it may be used instead; see the comments before the FindBootNum()
 // function for details and caveats.)
- static
- EFI_STATUS CreateNvramEntry (EFI_HANDLE DeviceHandle) {
+static
+EFI_STATUS CreateNvramEntry (EFI_HANDLE DeviceHandle) {
     CHAR16           *VarName = NULL, *ProgName;
     UINTN            Status, Size, BootNum = 0;
     VOID             *Entry;
@@ -881,7 +881,7 @@ BOOT_ENTRY_LIST * FindBootOrderEntries (VOID) {
         MyFreePool (&Contents);
     } // for
 
-     MyFreePool (&BootOrder);
+    MyFreePool (&BootOrder);
 
     return ListStart;
 } // BOOT_ENTRY_LIST * FindBootOrderEntries()
@@ -969,7 +969,7 @@ UINTN PickOneBootOption (IN BOOT_ENTRY_LIST *Entries, IN OUT UINTN *BootOrderNum
                 AddMenuEntry (PickOneMenu, MenuEntryItem);
                 Entries = Entries->NextBootEntry;
             } // while
- 
+
             MenuExit = RunGenericMenu (PickOneMenu, Style, &DefaultEntry, &ChosenOption);
             LOG(2, LOG_LINE_NORMAL,
                 L"Returned '%d' from RunGenericMenu call on '%s' in 'PickOneBootOption'",
@@ -990,7 +990,7 @@ UINTN PickOneBootOption (IN BOOT_ENTRY_LIST *Entries, IN OUT UINTN *BootOrderNum
     else {
         DisplaySimpleMessage (L"Information", L"EFI boot order list is unavailable");
     } // if
- 
+
     return Operation;
 } // REFIT_VOLUME *PickOneBootOption()
 
