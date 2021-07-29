@@ -995,6 +995,7 @@ VOID ScanVolumeBootcode (
         return;
     }
 
+    LEAKABLEEXTERNALSTART ("ScanVolumeBootcode ReadBlocks");
     // look at the boot sector (this is used for both hard disks and El Torito images!)
     Status = refit_call5_wrapper(
         Volume->BlockIO->ReadBlocks,
@@ -1004,6 +1005,7 @@ VOID ScanVolumeBootcode (
         SAMPLE_SIZE,
         Buffer
     );
+    LEAKABLEEXTERNALSTOP ();
 
     if (!EFI_ERROR (Status)) {
         SetFilesystemData (Buffer, SAMPLE_SIZE, Volume);
