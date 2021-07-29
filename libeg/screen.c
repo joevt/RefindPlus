@@ -814,6 +814,7 @@ VOID egInitScreen (
                                     Info->VerticalResolution
                                 );
                             }
+                            MyFreePool (&Info);
                         }
                     }
                 }
