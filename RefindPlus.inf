@@ -143,6 +143,7 @@
   #gEfiHiiConfigRoutingProtocolGuid
   gEfiImageSecurityDatabaseGuid
   gEfiDebugImageInfoTableGuid
+  gEfiSystemResourceTableGuid
 
 
 [Ppis]

@@ -1591,6 +1591,7 @@ LogTableInfo (
     else if (CompareGuid (&gEfiDebugImageInfoTableGuid      , &t->VendorGuid)) guidName = L"Debug Image Info Table"   ;
     else if (CompareGuid (&gAppleDiagVaultProtocolGuid      , &t->VendorGuid)) guidName = L"Apple Diagnostic Vault"   ;
     else if (CompareGuid (&gAppleMysteryGuid                , &t->VendorGuid)) guidName = L"Apple ???"                ;
+    else if (CompareGuid (&gEfiSystemResourceTableGuid      , &t->VendorGuid)) guidName = L"EFI System Resource Table";
     MsgLog ("%g :- %s\n", t->VendorGuid, guidName);
 }
 
