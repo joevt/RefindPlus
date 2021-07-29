@@ -1835,6 +1835,7 @@ EFI_STATUS EFIAPI efi_main (
     }
     LEAKABLE (VendorInfo, "VendorInfo");
 
+    FindLegacyBootType();
     //MyPrint("InitBooterLog\n");
     #if REFIT_DEBUG > 0
     InitBooterLog();
@@ -1874,7 +1875,6 @@ EFI_STATUS EFIAPI efi_main (
 
     // read configuration
     CopyMem (GlobalConfig.ScanFor, "ieom       ", NUM_SCAN_OPTIONS);
-    FindLegacyBootType();
     if (GlobalConfig.LegacyType == LEGACY_TYPE_MAC) {
         CopyMem (GlobalConfig.ScanFor, "ihebocm    ", NUM_SCAN_OPTIONS);
     }
