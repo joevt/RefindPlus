@@ -336,6 +336,7 @@ typedef struct {
 typedef struct {
    EFI_DEVICE_PATH     *DevicePath;
    EFI_HANDLE           DeviceHandle;
+   EFI_HANDLE           OldDeviceHandle;
    EFI_FILE            *RootDir;
    PoolStr              PartName_PS_;
    PoolStr              FsName_PS_;   // Filesystem name

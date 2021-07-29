@@ -237,6 +237,11 @@ EFI_STATUS FinishInitRefitLib (
     MsgLog ("[ FinishInitRefitLib\n");
     EFI_STATUS Status = EFI_SUCCESS;
 
+    if (SelfVolume && SelfVolume->DeviceHandle != SelfLoadedImage->DeviceHandle) {
+        MsgLog ("Self device handle changed %p -> %p\n", SelfLoadedImage->DeviceHandle, SelfVolume->DeviceHandle);
+        SelfLoadedImage->DeviceHandle = SelfVolume->DeviceHandle;
+    }
+    
     if (SelfRootDir == NULL) {
         SelfRootDir = LibOpenRoot (SelfLoadedImage->DeviceHandle);
         if (SelfRootDir == NULL) {
@@ -314,6 +319,7 @@ VOID UninitVolumes (
             Volume->RootDir = NULL;
         }
 
+        Volume->OldDeviceHandle = Volume->DeviceHandle;
         Volume->DeviceHandle = NULL;
         Volume->BlockIO = NULL;
         Volume->WholeDiskBlockIO = NULL;
@@ -348,11 +354,13 @@ VOID ReinitVolumes (
             );
 
             if (!EFI_ERROR (Status)) {
+                if (DeviceHandle != Volume->OldDeviceHandle) {
+                    MsgLog ("Volume '%s' device handle changed %p -> %p\n", GetPoolStr (&Volume->VolName), Volume->OldDeviceHandle, DeviceHandle);
+                }
                 Volume->DeviceHandle = DeviceHandle;
 
                 // get the root directory
                 Volume->RootDir = LibOpenRoot (Volume->DeviceHandle);
-
             }
             else {
                 CheckError (Status, L"from LocateDevicePath");
@@ -392,6 +400,13 @@ VOID ReinitVolumes (
     MsgLog ("] ReinitVolumes\n");
 } // ReinitVolumes
 
+VOID CloseDir (EFI_FILE **theDir) {
+    if (theDir && *theDir) {
+        refit_call1_wrapper((*theDir)->Close, *theDir);
+        *theDir = NULL;
+    }
+}
+
 // called before running external programs to close open file handles
 VOID UninitRefitLib (
     VOID
@@ -401,20 +416,15 @@ VOID UninitRefitLib (
     // See the comment on it there.
     if (SelfRootDir == SelfVolume->RootDir) {
         MsgLog ("SelfRootDir == SelfVolume->RootDir\n");
-        SelfRootDir=0;
+        SelfRootDir = NULL;
     }
 
     UninitVolumes();
 
-    if (SelfDir != NULL) {
-        refit_call1_wrapper(SelfDir->Close, SelfDir);
-        SelfDir = NULL;
-    }
-
-    if (SelfRootDir != NULL) {
-       refit_call1_wrapper(SelfRootDir->Close, SelfRootDir);
-       SelfRootDir = NULL;
-    }
+    CloseDir (&SelfDir);
+    CloseDir (&SelfRootDir);
+    CloseDir (&gVarsDir);
+    
     MsgLog ("] UninitRefitLib\n");
 } // VOID UninitRefitLib()
 
@@ -425,28 +435,7 @@ EFI_STATUS ReinitRefitLib (
     MsgLog ("[ ReinitRefitLib\n");
     EFI_STATUS Status;
 
-    ReinitVolumes();
-
-   LOGPOOL(SelfVolume);
-   
-    if ((gST->Hdr.Revision >> 16) == 1) {
-       // Below two lines were in rEFIt, but seem to cause system crashes or
-       // reboots when launching OSes after returning from programs on most
-       // systems. OTOH, my Mac Mini produces errors about "(re)opening our
-       // installation volume" (see the next function) when returning from
-       // programs when these two lines are removed, and it often crashes
-       // when returning from a program or when launching a second program
-       // with these lines removed. Therefore, the preceding if() statement
-       // executes these lines only on EFIs with a major version number of 1
-       // (which Macs have) and not with 2 (which UEFI PCs have). My selection
-       // of hardware on which to test is limited, though, so this may be the
-       // wrong test, or there may be a better way to fix this problem.
-       // TODO: Figure out cause of above weirdness and fix it more
-       // reliably!
-       if (SelfVolume != NULL && SelfVolume->RootDir != NULL) {
-           SelfRootDir = SelfVolume->RootDir;
-       }
-    } // if
+    ReinitVolumes(); // do this first in case SelfVolume->DeviceHandle changed.
 
     Status = FinishInitRefitLib();
 

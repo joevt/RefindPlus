@@ -60,6 +60,7 @@
 #include "../EfiLib/BdsHelper.h"
 #include "../EfiLib/legacy.h"
 #include "../include/Handle.h"
+#include "BootLog.h"
 
 extern REFIT_MENU_SCREEN *MainMenu;
 
@@ -476,6 +477,7 @@ EFI_STATUS StartLegacyImageList (
     LOG(1, LOG_LINE_NORMAL, L"Launching Mac-style BIOS/CSM/Legacy Loader");
 
     UninitRefitLib();
+    BootLogPause();
 
     Status = refit_call3_wrapper(
         gBS->StartImage,
@@ -495,6 +497,7 @@ EFI_STATUS StartLegacyImageList (
 
     // re-open file handles
     ReinitRefitLib();
+    BootLogResume();
 
 bailout_unload:
     // unload the image, we don't care if it works or not...
@@ -624,11 +627,13 @@ VOID StartLegacyUEFI (
     BdsLibConnectDevicePath (Entry->BdsOption->DevicePath);
     MsgLog ("] BdsLibConnectDevicePath\n");
     MsgLog ("[ BdsLibDoLegacyBoot\n");
+    BootLogPause();
     BdsLibDoLegacyBoot (Entry->BdsOption);
     MsgLog ("] BdsLibDoLegacyBoot\n");
 
     // If we get here, it means that there was a failure....
     ReinitRefitLib();
+    BootLogResume();
 
     LOG(1, LOG_LINE_NORMAL, L"Failure booting legacy (BIOS) OS.");
 

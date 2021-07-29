@@ -56,6 +56,8 @@
 #include "../include/refit_call_wrapper.h"
 #include "launch_efi.h"
 #include "scan.h"
+#include "BootLog.h"
+
 
 //
 // constants
@@ -371,6 +373,7 @@ EFI_STATUS StartEFIImage (
     UninitRefitLib();
 
     MsgLog("[ StartImage '%s'\n", ImageTitle);
+    BootLogPause();
     LEAKABLEEXTERNALSTART (kLeakableWhatStartEFIImageStartImage);
     Status = refit_call3_wrapper(gBS->StartImage, ChildImageHandle, NULL, NULL);
     LEAKABLEEXTERNALSTOP ();
@@ -389,6 +392,7 @@ EFI_STATUS StartEFIImage (
 
     // re-open file handles
     ReinitRefitLib();
+    BootLogResume();
 
 bailout_unload:
     // unload the image, we do not care if it works or not
@@ -444,6 +448,7 @@ EFI_STATUS RebootIntoFirmware (VOID) {
     LOG(1, LOG_LINE_SEPARATOR, L"Rebooting into the computer's firmware");
 
     UninitRefitLib();
+    BootLogPause();
 
     refit_call4_wrapper(
         gRT->ResetSystem,
@@ -454,6 +459,7 @@ EFI_STATUS RebootIntoFirmware (VOID) {
     );
 
     ReinitRefitLib();
+    BootLogResume();
 
     MsgStr = PoolPrint (L"Error calling ResetSystem ... %r", err);
 
