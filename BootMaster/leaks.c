@@ -586,7 +586,7 @@ FindLoadedImageFileName (
         }
     }
     else {
-        Buffer = ConvertDevicePathToText (LoadedImage->FilePath, TRUE, TRUE);
+        Buffer = ConvertDevicePathToText (LoadedImage->FilePath, FALSE, TRUE);
         if (!Buffer) {
             Buffer = PoolPrint (L"Handle%p", LoadedImage->DeviceHandle);
         }
@@ -762,9 +762,9 @@ GetCallStack (
                         CurrentFramePointerAddress >= StackMax 
                     )
                 )
-                || (BootLogIsPaused () && FrameCount > 200)
+                || (BootLogIsPaused () && FrameCount > 300)
             ) {
-                if (BootLogIsPaused () && FrameCount > 200) {
+                if (BootLogIsPaused () && FrameCount > 300) {
                     dumpit = TRUE;
                 }
                 CurrentIpAddress = 0;
@@ -1528,7 +1528,7 @@ FreePoolEx (
                         && a->What != kLeakableWhatFileExistsOpen
                         && a->What != kLeakableWhatStartEFIImageStartImage
                     ) {
-                        MsgLog ("Freeing: %p (%d) %a", a->Where, a->Size, a->What);
+                        MsgLog ("Freeing: %p (%d) %a ", a->Where, a->Size, a->What);
                         DumpLeakablePath (a->Path);
                         MsgLog ("\n");
                     }
@@ -1554,8 +1554,10 @@ FreePoolEx (
 
     {
         if (EFI_ERROR(Status)) {
-            MsgLog ("Allocation Error: cannot free %p %r\n", Buffer, Status);
-            DoDumpCStack = TRUE;
+            if (!LEAKABLEEXTERNALNEXT && !DoingAlloc) {
+                MsgLog ("Allocation Error: cannot free %p %r\n", Buffer, Status);
+                DoDumpCStack = TRUE;
+            }
         }
         else if (!a) {
             if (!LEAKABLEEXTERNALNEXT && !DoingAlloc) {
