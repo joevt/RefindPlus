@@ -820,7 +820,6 @@ VOID InstallRefindPlus (VOID) {
         Status = CopyRefindFiles (SelectedESP->RootDir);
         if (Status == EFI_SUCCESS)
             Status = CreateNvramEntry (SelectedESP->DeviceHandle);
-        DeleteESPList (AllESPs);
         if (Status == EFI_SUCCESS) {
             DisplaySimpleMessage (L"Information", L"RefindPlus successfully installed");
         } else {
@@ -829,6 +828,7 @@ VOID InstallRefindPlus (VOID) {
         // since SelectedESP started as NULL, free it if it is not NULL
         FreeVolume (&SelectedESP);
     } // if
+    DeleteESPList (AllESPs);
 } // VOID InstallRefindPlus()
 
 /***********************
