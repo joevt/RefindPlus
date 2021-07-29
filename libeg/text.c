@@ -78,21 +78,21 @@ VOID egPrepareFont() {
 } // VOID egPrepareFont();
 
 UINTN egGetFontHeight(VOID) {
-   egPrepareFont();
-   return BaseFontImage->Height;
+    egPrepareFont();
+    return BaseFontImage->Height;
 } // UINTN egGetFontHeight()
 
 UINTN egGetFontCellWidth(VOID) {
-   return FontCellWidth;
+    return FontCellWidth;
 }
 
 UINTN egComputeTextWidth(IN CHAR16 *Text) {
-   UINTN Width = 0;
+    UINTN Width = 0;
 
-   egPrepareFont();
-   if (Text != NULL)
-      Width = FontCellWidth * StrLen(Text);
-   return Width;
+    egPrepareFont();
+    if (Text != NULL)
+        Width = FontCellWidth * StrLen(Text);
+    return Width;
 } // UINTN egComputeTextWidth()
 
 VOID egMeasureText(IN CHAR16 *Text, OUT UINTN *Width, OUT UINTN *Height) {
@@ -133,33 +133,33 @@ VOID egRenderText (
     }
 
     if (BGBrightness < 128) {
-       if (LightFontImage == NULL) {
-          LightFontImage = egCopyImage(BaseFontImage);
-          if (LightFontImage == NULL) {
-              return;
-          }
+        if (LightFontImage == NULL) {
+            LightFontImage = egCopyImage(BaseFontImage);
+            if (LightFontImage == NULL) {
+                return;
+            }
 
-          LEAKABLEONEIMAGE (LightFontImage, "LightFontImage");
+            LEAKABLEONEIMAGE (LightFontImage, "LightFontImage");
 
-          for (i = 0; i < (LightFontImage->Width * LightFontImage->Height); i++) {
-             LightFontImage->PixelData[i].r = 255 - LightFontImage->PixelData[i].r;
-             LightFontImage->PixelData[i].g = 255 - LightFontImage->PixelData[i].g;
-             LightFontImage->PixelData[i].b = 255 - LightFontImage->PixelData[i].b;
-          } // for
+            for (i = 0; i < (LightFontImage->Width * LightFontImage->Height); i++) {
+                LightFontImage->PixelData[i].r = 255 - LightFontImage->PixelData[i].r;
+                LightFontImage->PixelData[i].g = 255 - LightFontImage->PixelData[i].g;
+                LightFontImage->PixelData[i].b = 255 - LightFontImage->PixelData[i].b;
+            } // for
 
-       } // if
-       FontImage = LightFontImage;
+        } // if
+        FontImage = LightFontImage;
     }
     else {
-       if (DarkFontImage == NULL) {
-           DarkFontImage = egCopyImage(BaseFontImage);
-           if (DarkFontImage == NULL) {
-               return;
-           }
+        if (DarkFontImage == NULL) {
+            DarkFontImage = egCopyImage(BaseFontImage);
+            if (DarkFontImage == NULL) {
+                return;
+            }
 
-           LEAKABLEONEIMAGE (DarkFontImage, "DarkFontImage");
-       }
-       FontImage = DarkFontImage;
+            LEAKABLEONEIMAGE (DarkFontImage, "DarkFontImage");
+        }
+        FontImage = DarkFontImage;
     } // if/else
 
     // render it
@@ -178,21 +178,25 @@ VOID egRenderText (
             c -= 32;
         }
 
-        egRawCompose(BufferPtr, FontPixelData + c * FontCellWidth,
-                     FontCellWidth, FontImage->Height,
-                     BufferLineOffset, FontLineOffset);
+        egRawCompose(
+            BufferPtr, FontPixelData + c * FontCellWidth,
+            FontCellWidth, FontImage->Height,
+            BufferLineOffset, FontLineOffset
+        );
         BufferPtr += FontCellWidth;
     }
 }
 
 // Load a font bitmap from the specified file
 VOID egLoadFont(IN CHAR16 *Filename) {
-   if (BaseFontImage)
-      egFreeImage(BaseFontImage);
+    if (BaseFontImage)
+        egFreeImage(BaseFontImage);
 
-   BaseFontImage = egLoadImage(SelfDir, Filename, TRUE);
-   if (BaseFontImage == NULL)
-      Print(L"Note: Font image file %s is invalid! Using default font!\n");
+    BaseFontImage = egLoadImage(SelfDir, Filename, TRUE);
+    LEAKABLEONEIMAGE(BaseFontImage, "BaseFontImage");
+
+    if (BaseFontImage == NULL)
+        Print(L"Note: Font image file %s is invalid! Using default font!\n");
     egPrepareFont();
 } // BOOLEAN egLoadFont()
 
