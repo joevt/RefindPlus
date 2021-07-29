@@ -62,7 +62,7 @@ ONETAG(TAG_ABOUT               , L"about"             , L"About RefindPlus"   , 
 ONETAG(TAG_HIDDEN              , L"hidden_tags"       , L"Hidden Tags"        , L"Manage Hidden Tags"      , EntryTypeRefitMenuEntry   , 1      , 0      , BUILTIN_ICON_FUNC_HIDDEN         ) // TagAddMenuEntry
 ONETAG(TAG_SHUTDOWN            , L"shutdown"          , L"Shut Computer Down" , L"System Shutdown"         , EntryTypeRefitMenuEntry   , 1      , 'U'    , BUILTIN_ICON_FUNC_SHUTDOWN       ) // TagAddMenuEntry
 ONETAG(TAG_REBOOT              , L"reboot"            , L"Restart Computer"   , L"System Restart"          , EntryTypeRefitMenuEntry   , 1      , 'R'    , BUILTIN_ICON_FUNC_RESET          ) // TagAddMenuEntry
-ONETAG(TAG_FIRMWARE            , L"firmware"          , L"Reboot to Firmware" , L"Boot into Firmaware"     , EntryTypeRefitMenuEntry   , 1      , 0      , BUILTIN_ICON_FUNC_FIRMWARE       ) // TagAddMenuEntry
+ONETAG(TAG_FIRMWARE            , L"firmware"          , L"Reboot to Firmware" , L"Boot into Firmware"      , EntryTypeRefitMenuEntry   , 1      , 0      , BUILTIN_ICON_FUNC_FIRMWARE       ) // TagAddMenuEntry
 ONETAG(TAG_FWUPDATE_TOOL       , L"fwupdate"          , L"Firmware Update"    , L"Firmware Update Utility" , EntryTypeRefitMenuEntry   , 1      , 0      , BUILTIN_ICON_TOOL_FWUPDATE       ) // FindTool
 ONETAG(TAG_EXIT                , L"exit"              , L"Exit RefindPlus"    , L"Exit RefindPlus"         , EntryTypeRefitMenuEntry   , 0      , 0      , BUILTIN_ICON_FUNC_EXIT           ) // TagAddMenuEntry
 ONETAG(TAG_GPTSYNC             , L"gptsync"           , L"GPT Sync"           , L"Hybrid MBR tool"         , EntryTypeRefitMenuEntry   , 0      , 'P'    , BUILTIN_ICON_TOOL_PART           ) // AddToolEntry
