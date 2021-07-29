@@ -60,8 +60,8 @@ BOOLEAN secure_mode (
     EFI_STATUS status;
     EFI_GUID global_var = EFI_GLOBAL_VARIABLE;
     UINTN charsize;
-    UINT8 *sb;
-    UINT8 *setupmode;
+    UINT8 *sb = NULL;
+    UINT8 *setupmode = NULL;
 
     static BOOLEAN DoneOnce   = FALSE;
     static BOOLEAN SecureMode = FALSE;
@@ -102,6 +102,9 @@ BOOLEAN secure_mode (
             SecureMode = TRUE;
         }
     }
+
+    MyFreePool (&sb);
+    MyFreePool (&setupmode);
 
     DoneOnce = TRUE;
 
