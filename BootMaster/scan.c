@@ -1973,8 +1973,8 @@ BOOLEAN IsValidTool (IN REFIT_VOLUME *BaseVolume, CHAR16 *PathName) {
     UINTN i = 0;
 
     LOG(4, LOG_LINE_NORMAL,
-        L"Checking tool validity:- '%s'",
-        PathName
+        L"Checking tool validity:- '%s' on '%s'",
+        PathName, GetPoolStr (&BaseVolume->VolName)
     );
 
     if (gHiddenTools == NULL) {
