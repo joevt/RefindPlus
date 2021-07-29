@@ -1990,7 +1990,7 @@ EFI_STATUS EFIAPI efi_main (
     else {
         MsgLog ("'Inactive'");
     }
-
+    MsgLog ("\n");
     #endif
 
     #ifdef __MAKEWITH_TIANO
@@ -1999,7 +1999,7 @@ EFI_STATUS EFIAPI efi_main (
         Status = RpApfsConnectDevices();
 
         #if REFIT_DEBUG > 0
-        MsgLog ("\n\n");
+        MsgLog ("\n");
         MsgLog ("INFO: Supply APFS ... %r", Status);
         #endif
     }
@@ -2316,7 +2316,7 @@ EFI_STATUS EFIAPI efi_main (
                     }
 
                     MsgLog ("User Input Received:\n");
-                    LOG2(1, LOG_LINE_THIN_SEP, L"  - ", L"",
+                    LOG2(1, LOG_LINE_THIN_SEP, L"  - ", L"\n",
                         L"Loading OpenCore Instance:- '%s%s'",
                         GetPoolStr (&ourLoaderEntry->Volume->VolName),
                         GetPoolStr (&ourLoaderEntry->LoaderPath)
