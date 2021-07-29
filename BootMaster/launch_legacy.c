@@ -887,7 +887,21 @@ VOID ScanLegacyUEFI (
         InitializeListHead (&TempList); // we are not building a list of boot options so init the head each time
         BdsOption = BdsLibVariableToOption (&TempList, BootOption);
         if (BdsOption != NULL) {
-            MsgLog ("BdsOption %p -> %p Boot%04x - %s\n", &BdsOption, BdsOption, BdsOption->BootCurrent, BdsOption->Description);
+            CHAR16 *DevicePathText1 = DevicePathToStr(BdsOption->DevicePath);
+            MsgLog ("BdsOption %p -> %p Boot%04x - '%s' = %s", &BdsOption, BdsOption, BdsOption->BootCurrent, BdsOption->Description, DevicePathText1);
+            CHAR16 *DevicePathText2 = ConvertDevicePathToText(BdsOption->DevicePath, FALSE, TRUE);
+            CHAR16 *DevicePathText3 = ConvertDevicePathToText(BdsOption->DevicePath, FALSE, FALSE);
+            if (StrCmp (DevicePathText2, DevicePathText1)) {
+                MsgLog (" = %s", DevicePathText2);
+            }
+            if (StrCmp (DevicePathText3, DevicePathText2) && StrCmp (DevicePathText3, DevicePathText1)) {
+                MsgLog (" = %s", DevicePathText3);
+            }
+            MyFreePool (&DevicePathText1);
+            MyFreePool (&DevicePathText2);
+            MyFreePool (&DevicePathText3);
+            MsgLog ("\n");
+
             BbsDevicePath = (BBS_BBS_DEVICE_PATH *)BdsOption->DevicePath;
             // Only add the entry if it is of a requested type (e.g. USB, HD)
             // Two checks necessary because some systems return EFI boot loaders
