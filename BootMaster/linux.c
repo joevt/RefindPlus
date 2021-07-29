@@ -118,6 +118,7 @@ CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
         }
 
         MyFreePool (&InitrdVersion);
+        MyFreePool (&DirEntry);
     } // while
 
     if (InitrdNames) {

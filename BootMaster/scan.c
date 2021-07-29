@@ -1176,9 +1176,9 @@ BOOLEAN ScanLoaderDir (
                     }
                 }
             }
-
             MyFreePool (&Extension);
             MyFreePool (&FullName);
+            MyFreePool (&DirEntry);
         } // while
 
         if (LoaderList != NULL) {
@@ -1422,9 +1422,9 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
                     MergeStrings (&GlobalConfig.MacOSRecoveryFiles, FileName, L',');
                     LEAKABLE (GlobalConfig.MacOSRecoveryFiles, "MacOSRecoveryFiles");
                 }
-
                 MyFreePool (&FileName);
             } // if
+            MyFreePool (&EfiDirEntry);
         } // while
         DirIterClose (&EfiDirIter);
 
@@ -1502,20 +1502,16 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
     // scan subdirectories of the EFI directory (as per the standard)
     DirIterOpen (Volume->RootDir, L"EFI", &EfiDirIter);
     while (DirIterNext (&EfiDirIter, 1, NULL, &EfiDirEntry)) {
-
-        if (MyStriCmp (EfiDirEntry->FileName, L"tools") ||
-            EfiDirEntry->FileName[0] == '.'
+        if (!MyStriCmp (EfiDirEntry->FileName, L"tools") &&
+            EfiDirEntry->FileName[0] != '.'
         ) {
-            // skip this, doesn't contain boot loaders or is scanned later
-            continue;
+            FileName = PoolPrint (L"EFI\\%s", EfiDirEntry->FileName);
+            if (ScanLoaderDir (Volume, FileName, MatchPatterns)) {
+                ScanFallbackLoader = FALSE;
+            }
+            MyFreePool (&FileName);
         }
-
-        FileName = PoolPrint (L"EFI\\%s", EfiDirEntry->FileName);
-        if (ScanLoaderDir (Volume, FileName, MatchPatterns)) {
-            ScanFallbackLoader = FALSE;
-        }
-
-        MyFreePool (&FileName);
+        MyFreePool (&EfiDirEntry);
     } // while()
 
     Status = DirIterClose (&EfiDirIter);

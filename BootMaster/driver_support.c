@@ -681,10 +681,9 @@ UINTN ScanDriverDir (
             FALSE, TRUE
         );
 
-        MyFreePool (&DirEntry);
-
         MsgLog ("] Loading '%s' Result:%r\n", FileName, Status);
         MyFreePool (&FileName);
+        MyFreePool (&DirEntry);
     } // while
 
     Status = DirIterClose(&DirIter);

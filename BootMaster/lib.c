@@ -2239,21 +2239,20 @@ BOOLEAN FileExists (
     return FALSE;
 }
 
+static
 EFI_STATUS DirNextEntry (
     IN EFI_FILE *Directory,
-    IN OUT EFI_FILE_INFO **DirEntry,
+    OUT EFI_FILE_INFO **DirEntry,
     IN UINTN FilterMode
 ) {
-    EFI_STATUS Status = EFI_BAD_BUFFER_SIZE;
     VOID       *Buffer;
     UINTN      LastBufferSize;
     UINTN      BufferSize;
     INTN       IterCount;
 
+    EFI_STATUS Status = EFI_BAD_BUFFER_SIZE;
+    *DirEntry = NULL;
     for (;;) {
-        // free pointer from last call
-        MyFreePool (DirEntry);
-
         // read next directory entry
         LastBufferSize = BufferSize = 256;
         Buffer = AllocatePool (BufferSize);
@@ -2330,7 +2329,8 @@ EFI_STATUS DirNextEntry (
             // no filter or unknown filter -> return everything
             break;
         }
-    }
+        MyFreePool (DirEntry);
+    } // for
 
     return Status;
 }
@@ -2355,7 +2355,6 @@ VOID DirIterOpen (
         LEAKABLEEXTERNALSTOP ();
         DirIter->CloseDirHandle = EFI_ERROR (DirIter->LastStatus) ? FALSE : TRUE;
     }
-    DirIter->LastFileInfo = NULL;
 }
 
 #ifndef __MAKEWITH_GNUEFI
@@ -2418,58 +2417,47 @@ BOOLEAN DirIterNext (
     IN CHAR16 *FilePattern OPTIONAL,
     OUT EFI_FILE_INFO **DirEntry
 ) {
-    BOOLEAN KeepGoing = TRUE;
-    UINTN   i;
-    CHAR16  *OnePattern;
-
-    MyFreePool (&DirIter->LastFileInfo);
+    CHAR16 *OnePattern;
+    EFI_FILE_INFO *LastFileInfo;
 
     if (EFI_ERROR (DirIter->LastStatus)) {
         // stop iteration
         return FALSE;
     }
 
-    do {
+    for (;;) {
         DirIter->LastStatus = DirNextEntry (
             DirIter->DirHandle,
-            &(DirIter->LastFileInfo),
+            &LastFileInfo,
             FilterMode
         );
-        if (EFI_ERROR (DirIter->LastStatus)) {
+        if (EFI_ERROR (DirIter->LastStatus) || LastFileInfo == NULL) {
             return FALSE;
         }
-        if (DirIter->LastFileInfo == NULL)  {
-            // end of listing
-            return FALSE;
-        }
-        if (FilePattern != NULL) {
-            if ((DirIter->LastFileInfo->Attribute & EFI_FILE_DIRECTORY)) {
-                KeepGoing = FALSE;
-            }
-
-            i = 0;
-            while (KeepGoing && (OnePattern = FindCommaDelimited (FilePattern, i++)) != NULL) {
-               if (MetaiMatch (DirIter->LastFileInfo->FileName, OnePattern)) {
-                   KeepGoing = FALSE;
-               }
-               MyFreePool (&OnePattern);
-            } // while
-            // else continue loop
-        }
-        else {
+        if (FilePattern == NULL || LastFileInfo->Attribute & EFI_FILE_DIRECTORY) {
             break;
         }
-   } while (KeepGoing && FilePattern);
+        BOOLEAN Found = FALSE;
+        UINTN i = 0;
+        while (!Found && (OnePattern = FindCommaDelimited (FilePattern, i++)) != NULL) {
+           if (MetaiMatch (LastFileInfo->FileName, OnePattern)) {
+               Found = TRUE;
+           }
+           MyFreePool (&OnePattern);
+        } // while
+        if (Found) {
+            break;
+        }
+        MyFreePool (&LastFileInfo);
+   } // for
 
-    *DirEntry = DirIter->LastFileInfo;
+    *DirEntry = LastFileInfo;
     return TRUE;
 }
 
 EFI_STATUS DirIterClose (
     IN OUT REFIT_DIR_ITER *DirIter
 ) {
-    MyFreePool (&DirIter->LastFileInfo);
-    DirIter->LastFileInfo = NULL;
     if ((DirIter->CloseDirHandle) && (DirIter->DirHandle->Close)) {
         refit_call1_wrapper(DirIter->DirHandle->Close, DirIter->DirHandle);
     }
