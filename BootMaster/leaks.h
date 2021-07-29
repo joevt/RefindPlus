@@ -65,7 +65,9 @@ enum {
     kLeakableMenuMain = 5000,
     kLeakableMenuAbout,
     kLeakableMenuCleanNvram,
-    kLeakableMenuBootKicker
+    kLeakableMenuBootKicker,
+    kLeakableCsrValues = 6000,
+    kLeakableApfsPrivateData = 7000,
 };
 
 typedef enum {

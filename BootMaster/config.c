@@ -438,6 +438,24 @@ VOID HandleStrings (
    } // for
 } // static VOID HandleStrings()
 
+#if REFIT_DEBUG > 0
+VOID
+LEAKABLECSRVALUES (
+    UINT32_LIST *CsrValues
+) {
+    MsgLog ("[ LEAKABLECSRVALUES\n");
+    LEAKABLEPATHINIT (kLeakableCsrValues);
+        LEAKABLEPATHINC (); // space for Csr Index
+            UINT32_LIST *CsrValue = CsrValues;
+            for (CsrValue = CsrValues; CsrValue; CsrValue = CsrValue->Next) {
+                LEAKABLEWITHPATH (CsrValue, "Csr Value");
+            }
+        LEAKABLEPATHDEC ();
+    LEAKABLEPATHDONE ();
+    MsgLog ("] LEAKABLECSRVALUES\n");
+}
+#endif
+
 // Handle a parameter with a series of hexadecimal arguments, to replace or be added to a
 // linked list of UINT32 values. Any item with a non-hexadecimal value is discarded, as is
 // any value that exceeds MaxValue. If the first non-keyword token is "+", the new list is
@@ -730,9 +748,11 @@ VOID ReadConfig (
         }
         else if (MyStriCmp (TokenList[0], L"icons_dir")) {
            HandleString (TokenList, TokenCount, &(GlobalConfig.IconsDir));
+            LEAKABLE(GlobalConfig.IconsDir, "IconsDir");
         }
         else if (MyStriCmp (TokenList[0], L"set_boot_args")) {
            HandleString (TokenList, TokenCount, &(GlobalConfig.SetBootArgs));
+            LEAKABLE(GlobalConfig.SetBootArgs, "SetBootArgs");
         }
         else if (MyStriCmp (TokenList[0], L"scanfor")) {
            for (i = 0; i < NUM_SCAN_OPTIONS; i++) {
@@ -948,6 +968,9 @@ VOID ReadConfig (
         }
         else if (MyStriCmp (TokenList[0], L"csr_values")) {
             HandleHexes (TokenList, TokenCount, CSR_MAX_LEGAL_VALUE, &(GlobalConfig.CsrValues));
+            #if REFIT_DEBUG > 0
+            LEAKABLECSRVALUES(GlobalConfig.CsrValues);
+            #endif
         }
         else if (MyStriCmp (TokenList[0], L"include") && (TokenCount == 2) && MyStriCmp (FileName, GlobalConfig.ConfigFilename)) {
            if (!MyStriCmp (TokenList[1], FileName)) {

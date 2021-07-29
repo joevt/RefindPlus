@@ -32,11 +32,33 @@
 #include <Protocol/SimpleFileSystem.h>
 
 #include "../../include/refit_call_wrapper.h"
+#include "../../BootMaster/leaks.h"
 
 extern BOOLEAN SilenceAPFS;
 
 LIST_ENTRY               mApfsPrivateDataList = INITIALIZE_LIST_HEAD_VARIABLE (mApfsPrivateDataList);
 static EFI_SYSTEM_TABLE  *mNullSystemTable;
+
+#if REFIT_DEBUG > 0
+static
+void
+LEAKABLEAPFSPRIVATEDATA(
+    LIST_ENTRY *list
+)
+{
+    MsgLog ("[ LEAKABLEAPFSPRIVATEDATA\n");
+    LEAKABLEPATHINIT (kLeakableApfsPrivateData);
+        LEAKABLEPATHINC (); // space for Apfs Private Data Index
+            LIST_ENTRY *Entry;
+            for (Entry = GetFirstNode(list); !IsNull (list, Entry); Entry = GetNextNode (list, Entry)){
+                APFS_PRIVATE_DATA *Sibling = CR (Entry, APFS_PRIVATE_DATA, Link, APFS_PRIVATE_DATA_SIGNATURE);
+                LEAKABLEWITHPATH (Sibling, "APFS Private Data");
+            }
+        LEAKABLEPATHDEC ();
+    LEAKABLEPATHDONE ();
+    MsgLog ("] LEAKABLEAPFSPRIVATEDATA\n");
+}
+#endif
 
 static
 EFI_STATUS
@@ -82,6 +104,9 @@ ApfsRegisterPartition (
 
     // Save into the list and return.
     InsertTailList (&mApfsPrivateDataList, &PrivateData->Link);
+    #if REFIT_DEBUG > 0
+    LEAKABLEAPFSPRIVATEDATA(&mApfsPrivateDataList);
+    #endif
     *PrivateDataPointer = PrivateData;
 
     return EFI_SUCCESS;

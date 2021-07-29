@@ -314,6 +314,7 @@ VOID SetupScreen (
 
 
 BOOLEAN HaveOverriden = FALSE;
+extern EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION *mCharacterBuffer;
 
 VOID SwitchToText (
     IN BOOLEAN CursorEnabled
@@ -325,6 +326,8 @@ VOID SwitchToText (
     if (!GlobalConfig.TextRenderer && !HaveOverriden && !IsBoot) {
         // Override Text Renderer Setting
         Status = OcUseBuiltinTextOutput (EfiConsoleControlScreenText);
+        LEAKABLE (mCharacterBuffer, "mCharacterBuffer");
+
         HaveOverriden = TRUE;
 
         if (!EFI_ERROR (Status)) {
