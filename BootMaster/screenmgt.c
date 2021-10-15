@@ -322,7 +322,7 @@ VOID SwitchToText (
     MsgLog ("[ SwitchToText CursorEnabled:%d\n", CursorEnabled);
     EFI_STATUS     Status;
 
-    MsgLog ("HaveOverriden:%d IsBoot:%d\n", HaveOverriden, IsBoot);
+    MsgLog ("TextRenderer:%d HaveOverriden:%d IsBoot:%d\n", GlobalConfig.TextRenderer, HaveOverriden, IsBoot);
     if (!GlobalConfig.TextRenderer && !HaveOverriden && !IsBoot) {
         // Override Text Renderer Setting
         Status = OcUseBuiltinTextOutput (EfiConsoleControlScreenText);
