@@ -1844,7 +1844,7 @@ VOID SetPrebootVolumes (
                 }
 
                 if (SwapName) {
-                    LOG2(2, LOG_LINE_NORMAL, L"\n  - %s", L"", L"Mapped Volume:- '%s'", GetPoolStr (&Volumes[i]->VolName));
+                    LOG2(2, LOG_LINE_NORMAL, L"\n  - ", L"", L"Mapped Volume:- '%s'", GetPoolStr (&Volumes[i]->VolName));
 
                     AssignPoolStr (&Volumes[i]->VolName, PoolPrint (L"Cloaked_SkipThis_%03d", i));
                 }
