@@ -2937,7 +2937,7 @@ FreeMenuEntry (
     REFIT_MENU_ENTRY **Entry
 ) {
     if (Entry && *Entry) {
-        MsgLog ("[ FreeMenuEntry %p %s\n", (*Entry), GetPoolStr (&(*Entry)->Title));
+        MsgLog ("[ FreeMenuEntry %p %s\n", (*Entry), GetPoolStr (&(*Entry)->Title) ? GetPoolStr (&(*Entry)->Title) : L"NULL");
         //LOGPOOLALWAYS ((*Entry));
         FreePoolStr (&(*Entry)->Title);
         FreePoolImage (&(*Entry)->BadgeImage);
