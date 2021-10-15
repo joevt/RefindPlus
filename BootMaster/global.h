@@ -211,10 +211,14 @@ L"\\EFI\\BOOT\\tools,\\EFI\\BOOT\\tools_x64,\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
 // Directories to search for CleanNvram....
 #define NVRAMCLEAN_LOCATIONS \
 L"\\EFI\\BOOT\\tools,\\EFI\\BOOT\\tools_x64,\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
+
 // Files that may be Windows recovery files
-#define WINDOWS_RECOVERY_FILES \
-L"EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootx64.efi,\
-Recovery:\\EFI\\BOOT\\bootia32.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
+#if defined (EFI32)
+#define WINDOWS_RECOVERY_FILES L"EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootia32.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
+#else
+#define WINDOWS_RECOVERY_FILES L"EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootx64.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
+#endif
+
 // Files that may be Mac OS recovery files
 #define MACOS_RECOVERY_FILES    L"com.apple.recovery.boot\\boot.efi"
 #define MACOSX_LOADER_DIR       L"System\\Library\\CoreServices"
