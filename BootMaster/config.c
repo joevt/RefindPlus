@@ -1081,6 +1081,10 @@ VOID ReadConfig (
             DeclineSetting = HandleBoolean (TokenList, TokenCount);
             GlobalConfig.ReloadGOP = DeclineSetting ? FALSE : TRUE;
         }
+        else if (MyStriCmp (TokenList[0], L"decline_nvmeload")) {
+            DeclineSetting = HandleBoolean (TokenList, TokenCount);
+            GlobalConfig.SupplyNVME = DeclineSetting ? FALSE : TRUE;
+        }
         else if (MyStriCmp (TokenList[0], L"decline_apfsload")) {
             DeclineSetting = HandleBoolean (TokenList, TokenCount);
             GlobalConfig.SupplyAPFS = DeclineSetting ? FALSE : TRUE;

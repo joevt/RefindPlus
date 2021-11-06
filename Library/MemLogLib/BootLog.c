@@ -8,16 +8,17 @@
  */
 
 #include "BootLog.h"
-#include "../Library/MemLogLib/MemLogLib.h"
+#include "../../include/tiano_includes.h"
+#include "MemLogLib.h"
 #include <Protocol/SimpleFileSystem.h>
 #include <Protocol/LoadedImage.h>
 #include <Guid/FileInfo.h>
 #include <Library/UefiBootServicesTableLib.h>
-#include "../BootMaster/global.h"
-#include "../BootMaster/lib.h"
-#include "../BootMaster/mystrings.h"
-#include "../include/refit_call_wrapper.h"
-#include "../BootMaster/leaks.h"
+#include "../../BootMaster/global.h"
+#include "../../BootMaster/lib.h"
+#include "../../BootMaster/mystrings.h"
+#include "../../include/refit_call_wrapper.h"
+#include "../../BootMaster/leaks.h"
 
 extern  EFI_GUID  gEfiMiscSubClassGuid;
 

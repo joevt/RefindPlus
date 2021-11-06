@@ -79,7 +79,7 @@ INTN EFIAPI SetMemLogCallback (
  **/
 UINT64 EFIAPI GetMemLogTscTicksPerSecond (VOID);
 
-UINT64 GetCurrentSecond (VOID);
+UINT64 GetCurrentMS (VOID);
 
 
 /**

@@ -123,7 +123,7 @@ STATIC UINTN MinAllocation = 0;
 #endif
 
 
-extern UINT64 GetCurrentSecond (VOID);
+extern UINT64 GetCurrentMS (VOID);
 
 //
 // Graphics helper functions
@@ -1094,12 +1094,12 @@ UINTN RunGenericMenu (
     // Primed Keystroke Buffer appears to only affect UEFI PC
     if (MenuExit == MENU_EXIT_ENTER &&
         !ClearedBuffer && !FlushFailReset &&
-        MyStriCmp (GetPoolStr (&Screen->Title), L"Main Menu") &&
-        MyStrStr (gST->FirmwareVendor, L"Apple") == NULL
+        MyStriCmp (GetPoolStr (&Screen->Title), L"Main Menu")
     ) {
-        UINT64 MenuExitTime = GetCurrentSecond();
+        UINT64 MenuExitTime = GetCurrentMS();
+        UINT64 MenuExitDiff = MenuExitTime - MainMenuLoad;
 
-        if ((MenuExitTime - MainMenuLoad) < 2) {
+        if (MenuExitDiff < 250) {
             #if REFIT_DEBUG > 0
             MsgLog ("INFO: Invalid Post-Load MenuExit Interval ... Ignoring MenuExit");
             MsgLog ("\n");
@@ -3082,7 +3082,7 @@ UINTN RunMainMenu (
     LEAKABLE(MenuTitle, "RunMainMenu MenuTitle");
 
     // Save seconds elaspsed from start until just before entering the Main Menu MenuExit loop
-    MainMenuLoad = GetCurrentSecond();
+    MainMenuLoad = GetCurrentMS();
 
     while (MenuExit == 0) {
         Screen = ScreenPtr ? *ScreenPtr : NULL;

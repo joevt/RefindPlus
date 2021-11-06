@@ -416,6 +416,7 @@ typedef struct {
    BOOLEAN           ForceTRIM;
    BOOLEAN           DisableCompatCheck;
    BOOLEAN           DisableAMFI;
+   BOOLEAN           SupplyNVME;
    BOOLEAN           SupplyAPFS;
    BOOLEAN           SilenceAPFS;
    BOOLEAN           SyncAPFS;

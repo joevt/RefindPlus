@@ -137,6 +137,7 @@ REFIT_CONFIG GlobalConfig = {
     /* ForceTRIM = */ FALSE,
     /* DisableCompatCheck = */ FALSE,
     /* DisableAMFI = */ FALSE,
+    /* SupplyNVME = */ TRUE,
     /* SupplyAPFS = */ TRUE,
     /* SilenceAPFS = */ TRUE,
     /* SyncAPFS = */ TRUE,
@@ -263,9 +264,12 @@ UINTN  AppleFramebuffers = 0;
 
 extern VOID   InitBooterLog (VOID);
 
-extern UINT64 GetCurrentSecond (VOID);
+extern EFI_STATUS        RP_ApfsConnectDevices (VOID);
+extern EFI_STATUS EFIAPI NvmExpressLoad (
+    IN EFI_HANDLE        ImageHandle,
+    IN EFI_SYSTEM_TABLE  *SystemTable
+);
 
-extern EFI_STATUS RP_ApfsConnectDevices (VOID);
 
 // Link to Cert GUIDs in mok/guid.c
 extern EFI_GUID X509_GUID;
@@ -303,7 +307,6 @@ EFI_STATUS EFIAPI gRTSetVariableEx (
 
     #if REFIT_DEBUG > 0
     EFI_STATUS  LogStatus;
-    CHAR16     *MsgStr = NULL;
     #endif
 
     BOOLEAN BlockCert = (
@@ -349,11 +352,6 @@ EFI_STATUS EFIAPI gRTSetVariableEx (
 
 
     #if REFIT_DEBUG > 0
-    MsgStr = PoolPrint (L"Filter  Write to NVRAM:- '%s'", VariableName);
-    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
-    MsgLog ("INFO: %s ... %r", MsgStr, LogStatus);
-    MyFreePool (&MsgStr);
-
     if (BlockCert) {
         LOG(4, LOG_THREE_STAR_MID,
             L"In Hardware NVRAM ... '%r' When Saving Secure Boot Certificate!!",
@@ -361,8 +359,8 @@ EFI_STATUS EFIAPI gRTSetVariableEx (
         );
         MsgLog ("\n");
         MsgLog ("      * Successful Write May Result in BootROM Damage");
+        MsgLog ("\n\n");
     }
-    MsgLog ("\n\n");
     #endif
 
     return Status;
@@ -2096,10 +2094,8 @@ EFI_STATUS EFIAPI efi_main (
     MsgLog ("      NormaliseCSR:- %s",       GlobalConfig.NormaliseCSR       ? L"'Active'" : L"'Inactive'");
     MsgLog ("\n");
     MsgLog ("      IgnorePreviousBoot:- %s", GlobalConfig.IgnorePreviousBoot ? L"'Active'" : L"'Inactive'");
-    #endif
 
-
-    #if REFIT_DEBUG > 0
+    // Prime Status for SupplyAPFS
     Status = EFI_NOT_STARTED;
     #endif
 
@@ -2112,7 +2108,23 @@ EFI_STATUS EFIAPI efi_main (
 
     #if REFIT_DEBUG > 0
     MsgLog ("\n\n");
-    MsgLog ("INFO: Supply APFS ... %r", Status);
+    MsgLog ("INFO: Supply APFS Support ... %r", Status);
+    MsgLog ("\n");
+
+    // Prime Status for SupplNVME
+    Status = EFI_NOT_STARTED;
+    #endif
+
+    #ifdef __MAKEWITH_TIANO
+    // DA-TAG: Limit to TianoCore
+    if (GlobalConfig.SupplyNVME) {
+        Status = NvmExpressLoad (ImageHandle, SystemTable);
+    }
+    #endif
+
+    #if REFIT_DEBUG > 0
+    MsgLog ("      ");
+    MsgLog ("Supply NVMe Support ... %r", Status);
     MsgLog ("\n\n");
     #endif
 
@@ -2434,10 +2446,19 @@ EFI_STATUS EFIAPI efi_main (
         LEAKABLE(SelectionName, "efi_main SelectionName DefaultSelection");
     }
 
+    BOOLEAN ProtectNVRAM = FALSE;
     while (MainLoopRunning) {
         // Set to false as may not be booting
         MsgLog ("IsBoot = FALSE\n");
         IsBoot = FALSE;
+
+        // Reset NVRAM Protection
+        if (ProtectNVRAM) {
+            ProtectNVRAM                               = FALSE;
+            RT->SetVariable                            = gRT->SetVariable;
+            gRT->SetVariable                           = gRT->SetVariable;
+            SystemTable->RuntimeServices->SetVariable  = gRT->SetVariable;
+        }
 
         MenuExit = RunMainMenu (&MainMenu, &SelectionName, &ChosenEntry);
 
@@ -2843,6 +2864,7 @@ EFI_STATUS EFIAPI efi_main (
                 else if (MyStrStrIns (GetPoolStr (&ourLoaderEntry->Title), L"Windows")) {
                     if (GlobalConfig.ProtectNVRAM) {
                         // Protect Mac NVRAM from UEFI Windows
+                        ProtectNVRAM                               = TRUE;
                         AltSetVariable                             = gRT->SetVariable;
                         RT->SetVariable                            = gRTSetVariableEx;
                         gRT->SetVariable                           = gRTSetVariableEx;
