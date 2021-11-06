@@ -63,7 +63,7 @@
 
 #include "global.h"
 
-#include "libeg.h"
+#include "../libeg/libeg.h"
 
 //
 // lib module
