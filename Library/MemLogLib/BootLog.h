@@ -13,27 +13,6 @@
 
 #include "../include/tiano_includes.h"
 
-CHAR16 * GetAltMonth (
-    VOID
-);
-
-
-CHAR16 * GetAltHour (
-    VOID
-);
-
-CHAR16 * GetDateString (
-    VOID
-);
-
-
-EFI_FILE_PROTOCOL * GetDebugLogFile (
-    VOID
-);
-
-
-UINTN SaveMessageToDebugLogFile (IN CHAR8 *LastMessage);
-
 
 BOOLEAN
 BootLogIsPaused (
@@ -50,8 +29,6 @@ BootLogResume (
 );
 
 
-#if REFIT_DEBUG > 0
-
 VOID
 EFIAPI
 DeepLoggger (
@@ -64,12 +41,11 @@ DeepLoggger (
 
 VOID
 EFIAPI
-DebugLog(
+DebugLog (
     IN INTN DebugMode,
     IN CONST CHAR8 *FormatString, ...
 );
 
-#endif
 
 VOID InitBooterLog(
     VOID

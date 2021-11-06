@@ -17,6 +17,12 @@
 /*
  * THIS FILE SHOULD NOT BE INCLUDED WHEN COMPILING UNDER TIANOCORE'S TOOLKIT!
  */
+/**
+ * Modified for RefindPlus
+ * Copyright (c) 2020-2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ *
+ * Modifications distributed under the preceding terms.
+**/
 
 #ifndef __EFILIB_GNUEFI_H
 #define __EFILIB_GNUEFI_H
@@ -30,7 +36,7 @@
 #ifndef CONST
 #define CONST
 #endif
-#define ASSERT_EFI_ERROR (Status)  ASSERT(!EFI_ERROR (Status))
+#define ASSERT_EFI_ERROR(Status)  ASSERT(!EFI_ERROR(Status))
 
 CHAR8 *
 UnicodeStrToAsciiStr (
@@ -40,13 +46,13 @@ UnicodeStrToAsciiStr (
 
 UINTN
 AsciiStrLen (
-   IN      CONST CHAR8               *String
+   IN      const CHAR8               *String
 );
 
 UINTN
 EFIAPI
 GetDevicePathSize (
-   IN CONST EFI_DEVICE_PATH_PROTOCOL  *DevicePath
+   IN const EFI_DEVICE_PATH_PROTOCOL  *DevicePath
 );
 
 EFI_DEVICE_PATH_PROTOCOL *

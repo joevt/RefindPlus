@@ -118,7 +118,7 @@ struct ext2_group_desc
 /* Reserved for compression usage... */
 #define EXT2_DIRTY_FL                   0x00000100
 #define EXT2_COMPRBLK_FL                0x00000200 /* One or more compressed clusters */
-#define EXT2_NOCOMP_FL                  0x00000400 /* Don't compress */
+#define EXT2_NOCOMP_FL                  0x00000400 /* Do not compress */
 #define EXT2_ECOMPR_FL                  0x00000800 /* Compression error */
 /* End compression flags --- maybe not all used */      
 #define EXT2_BTREE_FL                   0x00001000 /* btree format dir */
@@ -226,13 +226,13 @@ struct ext2_super_block {
      *
      * Note: the difference between the compatible feature set and
      * the incompatible feature set is that if there is a bit set
-     * in the incompatible feature set that the kernel doesn't
+     * in the incompatible feature set that the kernel does not
      * know about, it should refuse to mount the filesystem.
      * 
-     * e2fsck's requirements are more strict; if it doesn't know
+     * e2fsck's requirements are more strict; if it does not know
      * about a feature in either the compatible or incompatible
      * feature set, it must abort and not try to meddle with
-     * things it doesn't understand...
+     * things it does not understand...
      */
     __le32  s_first_ino;            /* First non-reserved inode */
     __le16  s_inode_size;           /* size of inode structure */

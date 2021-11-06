@@ -14,11 +14,11 @@
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
-#include "RpApfsInternal.h"
+#include "RP_ApfsInternal.h"
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
-#include "RpApfsLib.h"
+#include "RP_ApfsLib.h"
 #include <Library/OcBootManagementLib.h>
 #include <Library/OcConsoleLib.h>
 #include <Library/OcDriverConnectionLib.h>
@@ -35,6 +35,7 @@
 #include "../../BootMaster/leaks.h"
 
 extern BOOLEAN SilenceAPFS;
+extern CHAR16 * MyStrStr (IN CHAR16 *String, IN CHAR16 *StrCharSet);
 
 LIST_ENTRY               mApfsPrivateDataList = INITIALIZE_LIST_HEAD_VARIABLE (mApfsPrivateDataList);
 static EFI_SYSTEM_TABLE  *mNullSystemTable;
@@ -61,8 +62,7 @@ LEAKABLEAPFSPRIVATEDATA(
 #endif
 
 static
-EFI_STATUS
-ApfsRegisterPartition (
+EFI_STATUS ApfsRegisterPartition (
     IN  EFI_HANDLE             Handle,
     IN  EFI_BLOCK_IO_PROTOCOL  *BlockIo,
     IN  APFS_NX_SUPERBLOCK     *SuperBlock,
@@ -89,7 +89,7 @@ ApfsRegisterPartition (
 
     // Install boot record information.
     // Guaranties we never register twice.
-    Status = refit_call4_wrapper(
+    Status = REFIT_CALL_4_WRAPPER(
         gBS->InstallMultipleProtocolInterfaces,
         &PrivateData->LocationInfo.ControllerHandle,
         &gApfsEfiBootRecordInfoProtocolGuid,
@@ -97,7 +97,7 @@ ApfsRegisterPartition (
         NULL
     );
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         FreePool (PrivateData);
         return Status;
     }
@@ -113,8 +113,7 @@ ApfsRegisterPartition (
 }
 
 static
-EFI_STATUS
-ApfsStartDriver (
+EFI_STATUS ApfsStartDriver (
     IN APFS_PRIVATE_DATA  *PrivateData,
     IN VOID               *DriverBuffer,
     IN UINTN              DriverSize
@@ -124,19 +123,19 @@ ApfsStartDriver (
     EFI_HANDLE                 ImageHandle;
     EFI_LOADED_IMAGE_PROTOCOL  *LoadedImage;
 
-    Status = refit_call3_wrapper(
+    Status = REFIT_CALL_3_WRAPPER(
         gBS->HandleProtocol,
         PrivateData->LocationInfo.ControllerHandle,
         &gEfiDevicePathProtocolGuid,
         (VOID **) &DevicePath
     );
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         DevicePath = NULL;
     }
 
     ImageHandle = NULL;
-    Status = refit_call6_wrapper(
+    Status = REFIT_CALL_6_WRAPPER(
         gBS->LoadImage,
         FALSE,
         gImageHandle,
@@ -146,20 +145,20 @@ ApfsStartDriver (
         &ImageHandle
     );
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return Status;
     }
 
     // Disable APFS verbose mode.
     if (SilenceAPFS) {
-        Status = refit_call3_wrapper(
+        Status = REFIT_CALL_3_WRAPPER(
             gBS->HandleProtocol,
             ImageHandle,
             &gEfiLoadedImageProtocolGuid,
             (VOID *) &LoadedImage
         );
 
-        if (!EFI_ERROR (Status)) {
+        if (!EFI_ERROR(Status)) {
             if (mNullSystemTable == NULL) {
                 mNullSystemTable = AllocateNullTextOutSystemTable (gST);
             }
@@ -169,14 +168,14 @@ ApfsStartDriver (
         }
     }
 
-    Status = refit_call3_wrapper(
+    Status = REFIT_CALL_3_WRAPPER(
         gBS->StartImage,
         ImageHandle,
         NULL,
         NULL
     );
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         gBS->UnloadImage (ImageHandle);
 
         return Status;
@@ -188,23 +187,29 @@ ApfsStartDriver (
     // REF: https://github.com/acidanthera/bugtracker/issues/1128
     OcDisconnectDriversOnHandle (PrivateData->LocationInfo.ControllerHandle);
 
-    // Recursively connect controller to get apfs.efi loaded.
-    // We cannot use apfs.efi handle as it apparently creates new handles.
-    // This follows ApfsJumpStart driver implementation.
-    refit_call4_wrapper(
-        gBS->ConnectController,
-        PrivateData->LocationInfo.ControllerHandle,
-        NULL,
-        NULL,
-        TRUE
-    );
+    if (MyStrStr (gST->FirmwareVendor, L"Apple") == NULL) {
+        // Connect all devices on Non-Apple Firmware.
+        // REF: https://github.com/acidanthera/bugtracker/issues/960
+        OcConnectDrivers();
+    }
+    else {
+        // Recursively connect controller to get apfs.efi loaded.
+        // We cannot use apfs.efi handle as it apparently creates new handles.
+        // This follows ApfsJumpStart driver implementation.
+        REFIT_CALL_4_WRAPPER(
+            gBS->ConnectController,
+            PrivateData->LocationInfo.ControllerHandle,
+            NULL,
+            NULL,
+            TRUE
+        );
+    }
 
     return EFI_SUCCESS;
 }
 
 static
-EFI_STATUS
-ApfsConnectDevice (
+EFI_STATUS ApfsConnectDevice (
     IN EFI_HANDLE             Handle,
     IN EFI_BLOCK_IO_PROTOCOL  *BlockIo
 ) {
@@ -216,14 +221,14 @@ ApfsConnectDevice (
 
     // This may yet not be APFS but some other file system ... verify
     Status = InternalApfsReadSuperBlock (BlockIo, &SuperBlock);
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return Status;
     }
 
     // We no longer need super block once we register ourselves.
     Status = ApfsRegisterPartition (Handle, BlockIo, SuperBlock, &PrivateData);
     FreePool (SuperBlock);
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return Status;
     }
 
@@ -234,7 +239,7 @@ ApfsConnectDevice (
     }
 
     Status = InternalApfsReadDriver (PrivateData, &DriverSize, &DriverBuffer);
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return Status;
     }
 
@@ -244,8 +249,7 @@ ApfsConnectDevice (
     return Status;
 }
 
-EFI_STATUS
-RpApfsConnectHandle (
+EFI_STATUS RP_ApfsConnectHandle (
     IN EFI_HANDLE  Handle
 ) {
     EFI_STATUS             Status;
@@ -254,27 +258,27 @@ RpApfsConnectHandle (
 
     // We have a filesystem driver afer successful APFS or other connection.
     // Skip if the device is already connected.
-    Status = refit_call3_wrapper(
+    Status = REFIT_CALL_3_WRAPPER(
         gBS->HandleProtocol,
         Handle,
         &gEfiSimpleFileSystemProtocolGuid,
         &TempProtocol
     );
 
-    if (!EFI_ERROR (Status)) {
+    if (!EFI_ERROR(Status)) {
         return EFI_ALREADY_STARTED;
     }
 
     // Obtain Block I/O.
     // Ignore the 2nd revision as apfs.efi does not use it.
-    Status = refit_call3_wrapper(
+    Status = REFIT_CALL_3_WRAPPER(
         gBS->HandleProtocol,
         Handle,
         &gEfiBlockIoProtocolGuid,
         (VOID **) &BlockIo
     );
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return EFI_UNSUPPORTED;
     }
 
@@ -294,27 +298,27 @@ RpApfsConnectHandle (
 
     // If the handle is marked as unsupported, we should respect this.
     // TODO: Install this protocol on failure (not in ApfsJumpStart)?
-    Status = refit_call3_wrapper(
+    Status = REFIT_CALL_3_WRAPPER(
         gBS->HandleProtocol,
         Handle,
         &gApfsUnsupportedBdsProtocolGuid,
         &TempProtocol
     );
 
-    if (!EFI_ERROR (Status)) {
+    if (!EFI_ERROR(Status)) {
         return EFI_UNSUPPORTED;
     }
 
     // If we installed APFS EFI boot record, then this handle is already
     // handled, though potentially not connected.
-    Status = refit_call3_wrapper(
+    Status = REFIT_CALL_3_WRAPPER(
         gBS->HandleProtocol,
         Handle,
         &gApfsEfiBootRecordInfoProtocolGuid,
         &TempProtocol
     );
 
-    if (!EFI_ERROR (Status)) {
+    if (!EFI_ERROR(Status)) {
         return EFI_UNSUPPORTED;
     }
 

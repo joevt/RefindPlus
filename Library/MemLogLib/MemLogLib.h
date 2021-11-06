@@ -19,21 +19,19 @@ typedef UINTN (EFIAPI *MEM_LOG_CALLBACK) (IN INTN DebugMode, IN CHAR8 *LastMessa
 
 /**
   Prints a log message to memory buffer.
- 
+
   @param  Timing      TRUE to prepend timing to log.
   @param  DebugMode   DebugMode will be passed to Callback function if it is set.
   @param  Format      The format string for the debug message to print.
   @param  Marker      VA_LIST with variable arguments for Format.
- 
+
 **/
-VOID
-EFIAPI
-MemLogVA (
-  IN  CONST BOOLEAN Timing,
-  IN  CONST INTN    DebugMode,
-  IN  CONST CHAR8   *Format,
+VOID EFIAPI MemLogVA (
+  IN  const BOOLEAN Timing,
+  IN  const INTN    DebugMode,
+  IN  const CHAR8   *Format,
   IN  VA_LIST       Marker
-  );
+);
 
 /**
   Prints a log message to memory buffer.
@@ -43,56 +41,51 @@ MemLogVA (
   @param  Timing      TRUE to prepend timing to log.
   @param  DebugMode   DebugMode will be passed to Callback function if it is set.
   @param  Format      The format string for the debug message to print.
-  @param  ...         The variable argument list whose contents are accessed 
+  @param  ...         The variable argument list whose contents are accessed
                       based on the format string specified by Format.
 
 **/
-VOID
-EFIAPI
-MemLog (
-  IN  CONST BOOLEAN Timing,
-  IN  CONST INTN    DebugMode,
-  IN  CONST CHAR8   *Format,
+VOID EFIAPI MemLog (
+  IN  const BOOLEAN Timing,
+  IN  const INTN    DebugMode,
+  IN  const CHAR8   *Format,
   ...
-  );
+);
 
 
 /**
   Returns pointer to MemLog buffer.
 **/
-CHAR8*
-EFIAPI
-GetMemLogBuffer (
-  VOID
-  );
+CHAR8 * EFIAPI GetMemLogBuffer (VOID);
 
 
 /**
   Returns the length of log (number of chars written) in mem buffer.
  **/
-UINTN
-EFIAPI
-GetMemLogLen (
-  VOID
-  );
+UINTN EFIAPI GetMemLogLen (VOID);
 
 
 /**
   Sets callback that will be called when message is added to mem log.
   Returns a callback index.
  **/
-INTN
-EFIAPI
-SetMemLogCallback (
+INTN EFIAPI SetMemLogCallback (
   MEM_LOG_CALLBACK  Callback
-  );
+);
+
+
+/**
+  Returns TSC ticks per second.
+ **/
+UINT64 EFIAPI GetMemLogTscTicksPerSecond (VOID);
+
+UINT64 GetCurrentSecond (VOID);
 
 
 /**
   Check if a callback is paused.
  **/
-BOOLEAN
-MemLogCallbackIsPaused (
+BOOLEAN MemLogCallbackIsPaused (
   INTN CallbackIndex
 );
 
@@ -100,8 +93,7 @@ MemLogCallbackIsPaused (
 /**
   Pauses a callback - messages are still added to the mem log.
  **/
-INTN
-PauseMemLogCallback (
+INTN PauseMemLogCallback (
   INTN CallbackIndex
 );
 
@@ -109,18 +101,9 @@ PauseMemLogCallback (
 /**
   Resumes a callback - messages that were added to the mem log will be output after the next message is added.
  **/
-VOID
-ResumeMemLogCallback (
+VOID ResumeMemLogCallback (
   INTN CallbackIndex
 );
-
-
-/**
-  Returns TSC ticks per second.
- **/
-UINT64
-EFIAPI
-GetMemLogTscTicksPerSecond (VOID);
 
 
 #endif // __MEMLOG_LIB_H__

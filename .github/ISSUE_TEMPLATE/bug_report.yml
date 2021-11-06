@@ -1,0 +1,86 @@
+name: Bug Report
+description: Report a problem with RefindPlus
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a problem with RefindPlus.
+        If you just wish to raise a query instead, please kindly use the [Discussions](https://github.com/dakanji/RefindPlus/discussions) feature.
+  - type: dropdown
+    id: version
+    attributes:
+      label: RefindPlus Version
+      description: Which version of RefindPlus is affected?
+      options:
+        - 'v0.13.2.AJ Release'
+        - 'Another Released Version'
+        - 'Build of Current Unreleased Code'
+    validations:
+      required: true
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: Device Type
+      description: What type of device is RefindPlus being run on?
+      options:
+        - 'UEFI PC'
+        - 'Apple Mac'
+        - 'Chromebook'
+        - 'Other'
+    validations:
+      required: true
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: Problem Description
+      description: |
+        Please provide a clear and concise description of the problem.
+        Additionally, outline how to reproduce the problem.
+    validations:
+      required: true
+  - type: dropdown
+    id: problem-point
+    attributes:
+      label: Problem Point
+      description: Where does the problem manifest itself?
+      options:
+        - 'Between starting device and RefindPlus display'
+        - 'RefindPlus (Before starting loader/tool)'
+        - 'RefindPlus (After starting loader/tool)'
+        - 'Between starting loader/tool and loader/tool display'
+        - 'After/During loader/tool display'
+        - 'Other'
+    validations:
+      required: true
+  - type: dropdown
+    id: os-type
+    attributes:
+      label: Affected Items
+      description: You can make more than one selection
+      multiple: true
+      options:
+        - 'One or More Tools (Second Row Items)'
+        - 'All OS Loaders (First Row Items)'
+        - 'Mac OS Loader'
+        - 'Win OS Loader'
+        - 'Lin OS Loader'
+        - 'OpenCore Loader'
+        - 'Clover Loader'
+        - 'Other Loader'
+        - 'Other Item'
+    validations:
+      required: true
+  - type: textarea
+    id: log-file
+    attributes:
+      label: Debug Log and (Optional) Screenshots
+      description: |
+        Run the DEBUG Build file and add a debug log file (Log Level 0 or 4). Kindly attach the log file and do not paste the contents directly.
+        If applicable, add screenshots to help explain the problem. You can save RefindPlus screenshots by pressing the F10 key.
+    validations:
+      required: true
+  - type: textarea
+    id: extra-info
+    attributes:
+      label: Additional Context
+      description: Add any additional context that may facilitate understanding and resolving the problem

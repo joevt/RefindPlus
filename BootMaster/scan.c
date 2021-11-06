@@ -74,9 +74,7 @@
     #define GPTSYNC_NAMES L"\\EFI\\BOOT\\tools\\x64_gptsync.efi,\\EFI\\BOOT\\tools\\gptsync_x64.efi,\\EFI\\BOOT\\tools\\gptsync.efi,\\EFI\\BOOT\\tools_x64\\x64_gptsync.efi,\\EFI\\BOOT\\tools_x64\\gptsync_x64.efi,\\EFI\\BOOT\\tools_x64\\gptsync.efi,\\EFI\\tools_x64\\gptsync.efi,\\EFI\\tools_x64\\gptsync_x64.efi,\\EFI\\tools\\gptsync.efi,\\EFI\\tools\\gptsync_x64.efi,\\EFI\\gptsync.efi,\\EFI\\gptsync_x64.efi,\\gptsync.efi,\\gptsync_x64.efi"
     #define GDISK_NAMES L"\\EFI\\BOOT\\tools\\x64_gdisk.efi,\\EFI\\BOOT\\tools\\gdisk_x64.efi,\\EFI\\BOOT\\tools\\gdisk.efi,\\EFI\\BOOT\\tools_x64\\x64_gdisk.efi,\\EFI\\BOOT\\tools_x64\\gdisk_x64.efi,\\EFI\\BOOT\\tools_x64\\gdisk.efi,\\EFI\\tools_x64\\gdisk.efi,\\EFI\\tools_x64\\gdisk_x64.efi,\\EFI\\tools\\gdisk.efi,\\EFI\\tools\\gdisk_x64.efi,\\EFI\\gdisk.efi,\\EFI\\gdisk_x64.efi,\\gdisk.efi,\\gdisk_x64.efi"
     #define NETBOOT_NAMES L"\\EFI\\BOOT\\tools\\x64_ipxe.efi,\\EFI\\BOOT\\tools\\ipxe_x64.efi,\\EFI\\BOOT\\tools\\ipxe.efi,\\EFI\\BOOT\\tools_x64\\x64_ipxe.efi,\\EFI\\BOOT\\tools_x64\\ipxe_x64.efi,\\EFI\\BOOT\\tools_x64\\ipxe.efi,\\EFI\\tools_x64\\ipxe.efi,\\EFI\\tools_x64\\ipxe_x64.efi,\\EFI\\tools\\ipxe.efi,\\EFI\\tools\\ipxe_x64.efi,\\EFI\\ipxe.efi,\\EFI\\ipxe_x64.efi,\\ipxe.efi,\\ipxe_x64.efi"
-    #define MEMTEST_NAMES L"memtest86_x64.efi,memtest_x64.efi,memtest86.efi,memtest.efi"
-    #define BOOTKICKER_NAMES L"\\EFI\\tools_x64\\x64_BootKicker.efi,\\EFI\\tools_x64\\BootKicker_x64.efi,\\EFI\\tools_x64\\BootKicker.efi,\\EFI\\tools\\x64_BootKicker.efi\\EFI\\tools\\BootKicker_x64.efi,\\EFI\\tools\\BootKicker.efi,\\EFI\\Bx64_BootKicker.efi,\\EFI\\BootKicker_x64.efi,\\EFI\\BootKicker.efi,\\x64_BootKicker.efi,\\BootKicker_x64.efi,\\BootKicker.efi"
-    #define NVRAMCLEAN_NAMES L"\\EFI\\tools_x64\\x64_CleanNvram.efi,\\EFI\\tools_x64\\CleanNvram_x64.efi,\\EFI\\tools_x64\\CleanNvram.efi,\\EFI\\tools\\x64_CleanNvram.efi,\\EFI\\tools\\CleanNvram_x64.efi,\\EFI\\tools\\CleanNvram.efi,\\EFI\\x64_CleanNvram.efi,\\EFI\\CleanNvram_x64.efi,\\EFI\\CleanNvram.efi,\\x64_CleanNvram.efi,\\CleanNvram_x64.efi,\\CleanNvram.efi"
+    #define MEMTEST_NAMES L"x64_memtest.efi,memtest.efi,memtest_x64.efi,x64_memtest86.efi,memtest86.efi,memtest86_x64.efi"
     #define FALLBACK_FULLNAME       L"EFI\\BOOT\\bootx64.efi"
     #define FALLBACK_BASENAME       L"bootx64.efi"
 #elif defined (EFI32)
@@ -84,9 +82,7 @@
     #define GPTSYNC_NAMES L"\\EFI\\BOOT\\tools\\ia32_gptsync.efi,\\EFI\\BOOT\\tools\\gptsync_ia32.efi,\\EFI\\BOOT\\tools\\gptsync.efi,\\EFI\\BOOT\\tools_ia32\\ia32_gptsync.efi,\\EFI\\BOOT\\tools_ia32\\gptsync_ia32.efi,\\EFI\\BOOT\\tools_ia32\\gptsync.efi,\\EFI\\tools_ia32\\gptsync.efi,\\EFI\\tools_ia32\\gptsync_ia32.efi,\\EFI\\tools\\gptsync.efi,\\EFI\\tools\\gptsync_ia32.efi,\\EFI\\gptsync.efi,\\EFI\\gptsync_ia32.efi,\\gptsync.efi,\\gptsync_ia32.efi"
     #define GDISK_NAMES L"\\EFI\\BOOT\\tools\\ia32_gdisk.efi,\\EFI\\BOOT\\tools\\gdisk_ia32.efi,\\EFI\\BOOT\\tools\\gdisk.efi,\\EFI\\BOOT\\tools_ia32\\ia32_gdisk.efi,\\EFI\\BOOT\\tools_ia32\\gdisk_ia32.efi,\\EFI\\BOOT\\tools_ia32\\gdisk.efi,\\EFI\\tools_ia32\\gdisk.efi,\\EFI\\tools_ia32\\gdisk_ia32.efi,\\EFI\\tools\\gdisk.efi,\\EFI\\tools\\gdisk_ia32.efi,\\EFI\\gdisk.efi,\\EFI\\gdisk_ia32.efi,\\gdisk.efi,\\gdisk_ia32.efi"
     #define NETBOOT_NAMES L"\\EFI\\BOOT\\tools\\ia32_ipxe.efi,\\EFI\\BOOT\\tools\\ipxe_ia32.efi,\\EFI\\BOOT\\tools\\ipxe.efi,\\EFI\\BOOT\\tools_ia32\\ia32_ipxe.efi,\\EFI\\BOOT\\tools_ia32\\ipxe_ia32.efi,\\EFI\\BOOT\\tools_ia32\\ipxe.efi,\\EFI\\tools_ia32\\ipxe.efi,\\EFI\\tools_ia32\\ipxe_ia32.efi,\\EFI\\tools\\ipxe.efi,\\EFI\\tools\\ipxe_ia32.efi,\\EFI\\ipxe.efi,\\EFI\\ipxe_ia32.efi,\\ipxe.efi,\\ipxe_ia32.efi"
-    #define MEMTEST_NAMES L"memtest86_ia32.efi,memtest_ia32.efi,memtest86.efi,memtest.efi"
-    #define BOOTKICKER_NAMES L"\\EFI\\tools_ia32\\ia32_BootKicker.efi,\\EFI\\tools_ia32\\BootKicker_ia32.efi,\\EFI\\tools_ia32\\BootKicker.efi,\\EFI\\tools\\ia32_BootKicker.efi\\EFI\\tools\\BootKicker_ia32.efi,\\EFI\\tools\\BootKicker.efi,\\EFI\\Bia32_BootKicker.efi,\\EFI\\BootKicker_ia32.efi,\\EFI\\BootKicker.efi,\\ia32_BootKicker.efi,\\BootKicker_ia32.efi,\\BootKicker.efi"
-    #define NVRAMCLEAN_NAMES L"\\EFI\\tools_ia32\\ia32_CleanNvram.efi,\\EFI\\tools_ia32\\CleanNvram_ia32.efi,\\EFI\\tools_ia32\\CleanNvram.efi,\\EFI\\tools\\ia32_CleanNvram.efi,\\EFI\\tools\\CleanNvram_ia32.efi,\\EFI\\tools\\CleanNvram.efi,\\EFI\\ia32_CleanNvram.efi,\\EFI\\CleanNvram_ia32.efi,\\EFI\\CleanNvram.efi,\\ia32_CleanNvram.efi,\\CleanNvram_ia32.efi,\\CleanNvram.efi"
+    #define MEMTEST_NAMES L"ia32_memtest.efi,memtest.efi,memtest_ia32.efi,ia32_memtest86.efi,memtest86.efi,memtest86_ia32.efi"
     #define FALLBACK_FULLNAME       L"EFI\\BOOT\\bootia32.efi"
     #define FALLBACK_BASENAME       L"bootia32.efi"
 #elif defined (EFIAARCH64)
@@ -94,9 +90,7 @@
     #define GPTSYNC_NAMES L"\\EFI\\BOOT\\tools\\aa64_gptsync.efi,\\EFI\\BOOT\\tools\\gptsync_aa64.efi,\\EFI\\BOOT\\tools\\gptsync.efi,\\EFI\\BOOT\\tools_aa64\\aa64_gptsync.efi,\\EFI\\BOOT\\tools_aa64\\gptsync_aa64.efi,\\EFI\\BOOT\\tools_aa64\\gptsync.efi,\\EFI\\tools_aa64\\gptsync.efi,\\EFI\\tools_aa64\\gptsync_aa64.efi,\\EFI\\tools\\gptsync.efi,\\EFI\\tools\\gptsync_aa64.efi,\\EFI\\gptsync.efi,\\EFI\\gptsync_aa64.efi,\\gptsync.efi,\\gptsync_aa64.efi"
     #define GDISK_NAMES L"\\EFI\\BOOT\\tools\\aa64_gdisk.efi,\\EFI\\BOOT\\tools\\gdisk_aa64.efi,\\EFI\\BOOT\\tools\\gdisk.efi,\\EFI\\BOOT\\tools_aa64\\aa64_gdisk.efi,\\EFI\\BOOT\\tools_aa64\\gdisk_aa64.efi,\\EFI\\BOOT\\tools_aa64\\gdisk.efi,\\EFI\\tools_aa64\\gdisk.efi,\\EFI\\tools_aa64\\gdisk_aa64.efi,\\EFI\\tools\\gdisk.efi,\\EFI\\tools\\gdisk_aa64.efi,\\EFI\\gdisk.efi,\\EFI\\gdisk_aa64.efi,\\gdisk.efi,\\gdisk_aa64.efi"
     #define NETBOOT_NAMES L"\\EFI\\BOOT\\tools\\aa64_ipxe.efi,\\EFI\\BOOT\\tools\\ipxe_aa64.efi,\\EFI\\BOOT\\tools\\ipxe.efi,\\EFI\\BOOT\\tools_aa64\\aa64_ipxe.efi,\\EFI\\BOOT\\tools_aa64\\ipxe_aa64.efi,\\EFI\\BOOT\\tools_aa64\\ipxe.efi,\\EFI\\tools_aa64\\ipxe.efi,\\EFI\\tools_aa64\\ipxe_aa64.efi,\\EFI\\tools\\ipxe.efi,\\EFI\\tools\\ipxe_aa64.efi,\\EFI\\ipxe.efi,\\EFI\\ipxe_aa64.efi,\\ipxe.efi,\\ipxe_aa64.efi"
-    #define MEMTEST_NAMES L"memtest86_aa64.efi,memtest_aa64.efi,memtest86.efi,memtest.efi"
-    #define BOOTKICKER_NAMES L"\\EFI\\tools_aa64\\aa64_BootKicker.efi,\\EFI\\tools_aa64\\BootKicker_aa64.efi,\\EFI\\tools_aa64\\BootKicker.efi,\\EFI\\tools\\aa64_BootKicker.efi\\EFI\\tools\\BootKicker_aa64.efi,\\EFI\\tools\\BootKicker.efi,\\EFI\\Baa64_BootKicker.efi,\\EFI\\BootKicker_aa64.efi,\\EFI\\BootKicker.efi,\\aa64_BootKicker.efi,\\BootKicker_aa64.efi,\\BootKicker.efi"
-    #define NVRAMCLEAN_NAMES L"\\EFI\\tools_aa64\\aa64_CleanNvram.efi,\\EFI\\tools_aa64\\CleanNvram_aa64.efi,\\EFI\\tools_aa64\\CleanNvram.efi,\\EFI\\tools\\aa64_CleanNvram.efi,\\EFI\\tools\\CleanNvram_aa64.efi,\\EFI\\tools\\CleanNvram.efi,\\EFI\\aa64_CleanNvram.efi,\\EFI\\CleanNvram_aa64.efi,\\EFI\\CleanNvram.efi,\\aa64_CleanNvram.efi,\\CleanNvram_aa64.efi,\\CleanNvram.efi"
+    #define MEMTEST_NAMES L"aa64_memtest.efi,memtest.efi,memtest_aa64.efi,aa64_memtest86.efi,memtest86.efi,memtest86_aa64.efi"
     #define FALLBACK_FULLNAME       L"EFI\\BOOT\\bootaa64.efi"
     #define FALLBACK_BASENAME       L"bootaa64.efi"
 #else
@@ -104,9 +98,7 @@
     #define GPTSYNC_NAMES           L"\\EFI\\tools\\gptsync.efi"
     #define GDISK_NAMES             L"\\EFI\\tools\\gdisk.efi"
     #define NETBOOT_NAMES           L"\\EFI\\tools\\ipxe.efi"
-    #define MEMTEST_NAMES           L"memtest.efi,memtest86.efi"
-    #define BOOTKICKER_NAMES        L"\\BootKicker.efi"
-    #define NVRAMCLEAN_NAMES        L"\\CleanNvram.efi"
+    #define MEMTEST_NAMES           L"\\memtest.efi,\\memtest86.efi"
     #define DRIVER_DIRS             L"drivers"
     #define FALLBACK_FULLNAME       L"EFI\\BOOT\\boot.efi" // Not really correct
     #define FALLBACK_BASENAME       L"boot.efi"            // Not really correct
@@ -121,16 +113,20 @@
 #define LINUX_MATCH_PATTERNS    L"vmlinuz*,bzImage*,kernel*"
 
 EFI_GUID GlobalGuid      = EFI_GLOBAL_VARIABLE;
+extern EFI_GUID GuidAPFS;
+
+#if REFIT_DEBUG > 0
+BOOLEAN  LogNewLine      = FALSE;
+#endif
 
 BOOLEAN  ScanningLoaders = FALSE;
 BOOLEAN  FirstLoaderScan = FALSE;
-
 
 // Structure used to hold boot loader filenames and time stamps in
 // a linked list; used to sort entries within a directory.
 struct LOADER_LIST {
     CHAR16              *FileName;
-    EFI_TIME            TimeStamp;
+    EFI_TIME             TimeStamp;
     struct LOADER_LIST  *NextEntry;
 };
 
@@ -139,22 +135,28 @@ struct LOADER_LIST {
 // is unspecified (NULL).
 // Returns a pointer to the new data structure, or NULL if it
 // couldn't be allocated
-LOADER_ENTRY *InitializeLoaderEntry (IN LOADER_ENTRY *Entry) {
+LOADER_ENTRY * InitializeLoaderEntry (
+    IN LOADER_ENTRY *Entry
+) {
     LOADER_ENTRY *NewEntry = NULL;
 
     NewEntry = AllocateZeroPool (sizeof (LOADER_ENTRY));
     if (NewEntry != NULL) {
-        NewEntry->me.Tag = TAG_LOADER;
-        NewEntry->Enabled = TRUE;
-
+        NewEntry->Enabled         = TRUE;
+//      NewEntry->UseGraphicsMode = FALSE;
+//      NewEntry->EfiLoaderPath   = NULL;
+//      NewEntry->me.Title        = NULL;
+        NewEntry->me.Tag          = TAG_LOADER;
+//      NewEntry->OSType          = 0;
+//      NewEntry->EfiBootNum      = 0;
         if (Entry != NULL) {
-            CopyFromPoolStr (&NewEntry->LoaderPath, &Entry->LoaderPath);
             AssignVolume (&NewEntry->Volume, Entry->Volume);
+            NewEntry->EfiBootNum = Entry->EfiBootNum;
             NewEntry->UseGraphicsMode = Entry->UseGraphicsMode;
+            CopyFromPoolStr (&NewEntry->LoaderPath, &Entry->LoaderPath);
             CopyFromPoolStr (&NewEntry->LoadOptions, &Entry->LoadOptions);
             CopyFromPoolStr (&NewEntry->InitrdPath, &Entry->InitrdPath);
-            NewEntry->EfiLoaderPath = Entry->EfiLoaderPath ? DuplicateDevicePath (Entry->EfiLoaderPath) : NULL;
-            NewEntry->EfiBootNum = Entry->EfiBootNum;
+            NewEntry->EfiLoaderPath = (Entry->EfiLoaderPath) ? DuplicateDevicePath (Entry->EfiLoaderPath) : NULL;
         }
     }
 
@@ -164,50 +166,85 @@ LOADER_ENTRY *InitializeLoaderEntry (IN LOADER_ENTRY *Entry) {
 // Prepare a REFIT_MENU_SCREEN data structure for a subscreen entry. This sets up
 // the default entry that launches the boot loader using the same options as the
 // main Entry does. Subsequent options can be added by the calling function.
-// If a subscreen already exists in the Entry that's passed to this function,
-// it's left unchanged and a pointer to it is returned.
+// If a subscreen already exists in the Entry that is passed to this function,
+// it is left unchanged and a pointer to it is returned.
 // Returns a pointer to the new subscreen data structure, or NULL if there
 // were problems allocating memory.
-REFIT_MENU_SCREEN *InitializeSubScreen (IN LOADER_ENTRY *Entry) {
+REFIT_MENU_SCREEN * InitializeSubScreen (
+    IN LOADER_ENTRY *Entry
+) {
     MsgLog ("[ InitializeSubScreen\n");
-
     CHAR16              *FileName;
-    REFIT_MENU_SCREEN   *SubScreen = NULL;
+    REFIT_MENU_SCREEN   *SubScreen   = NULL;
     LOADER_ENTRY        *SubEntry;
 
     FileName = Basename (GetPoolStr (&Entry->LoaderPath));
-    if (Entry->me.SubScreen == NULL) {
+    if (Entry->me.SubScreen) {
+        // existing subscreen ... less initialization and just add new entry later.
+        SubScreen = Entry->me.SubScreen;
+    }
+    else {
         // No subscreen yet; initialize default entry
         SubScreen = AllocateZeroPool (sizeof (REFIT_MENU_SCREEN));
-        if (SubScreen != NULL) {
+        if (SubScreen) {
+            CHAR16 *DisplayName = NULL;
+
+            if (GlobalConfig.SyncAPFS) {
+                EFI_GUID               VolumeGuid;
+                EFI_GUID            ContainerGuid;
+                APPLE_APFS_VOLUME_ROLE VolumeRole;
+
+                EFI_STATUS Status = RP_GetApfsVolumeInfo (
+                    Entry->Volume->DeviceHandle,
+                    &ContainerGuid,
+                    &VolumeGuid,
+                    &VolumeRole
+                );
+
+                if (!EFI_ERROR(Status)) {
+                    if ((VolumeRole & APPLE_APFS_VOLUME_ROLE_PREBOOT) != 0) {
+                        DisplayName = GetVolumeGroupName (GetPoolStr (&Entry->LoaderPath), Entry->Volume);
+                    }
+                }
+            } // if GlobalConfig.SyncAFPS
+
             AssignPoolStr (&SubScreen->Title, PoolPrint (
                 L"Boot Options for %s on %s",
-                GetPoolStr (&Entry->Title) ? GetPoolStr (&Entry->Title) : FileName, GetPoolStr (&Entry->Volume->VolName)
+                (GetPoolStr (&Entry->Title) != NULL) ? GetPoolStr (&Entry->Title)  : FileName,
+                (DisplayName) ? DisplayName : GetPoolStr (&Entry->Volume->VolName)
             ));
 
-            LOG(3, LOG_LINE_NORMAL, L"Creating subscreen '%s'", GetPoolStr (&SubScreen->Title));
+            MyFreePool (&DisplayName);
+
+            #if REFIT_DEBUG > 0
+            LOG(4, LOG_THREE_STAR_MID, L"Build Subscreen:- '%s'", GetPoolStr (&SubScreen->Title));
+            #endif
 
             CopyFromPoolImage (&SubScreen->TitleImage, &Entry->me.Image);
+
             // default entry
             SubEntry = InitializeLoaderEntry (Entry);
+
             if (SubEntry != NULL) {
+                #if REFIT_DEBUG > 0
                 LOG(3, LOG_LINE_NORMAL, L"Setting Entries for '%s'", GetPoolStr (&SubScreen->Title));
-                AssignCachedPoolStr (&SubEntry->me.Title, L"Boot using default options");
+                #endif
+
+                AssignCachedPoolStr (&SubEntry->me.Title, L"Boot With Default Options");
                 AssignPoolStr (&SubEntry->LoadOptions, AddInitrdToOptions (GetPoolStr (&SubEntry->LoadOptions), GetPoolStr (&SubEntry->InitrdPath)));
                 AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
-            } // if (SubEntry != NULL)
+            }
+
             AssignCachedPoolStr (&SubScreen->Hint1, SUBSCREEN_HINT1);
+
             if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_EDITOR) {
                 AssignCachedPoolStr (&SubScreen->Hint2, SUBSCREEN_HINT2_NO_EDITOR);
             }
             else {
                 AssignCachedPoolStr (&SubScreen->Hint2, SUBSCREEN_HINT2);
-            } // if/else
-        } // if (SubScreen != NULL)
-    }
-    else { // existing subscreen; less initialization, and just add new entry later....
-        SubScreen = Entry->me.SubScreen;
-    } // if/else
+            }
+        }
+    } // if Entry->me.SubScreen
 
     MyFreePool (&FileName);
 
@@ -215,14 +252,20 @@ REFIT_MENU_SCREEN *InitializeSubScreen (IN LOADER_ENTRY *Entry) {
     return SubScreen;
 } // REFIT_MENU_SCREEN *InitializeSubScreen()
 
-VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN GenerateReturn) {
+VOID GenerateSubScreen (
+    IN OUT LOADER_ENTRY *Entry,
+    IN     REFIT_VOLUME *Volume,
+    IN     BOOLEAN       GenerateReturn
+) {
     REFIT_MENU_SCREEN  *SubScreen;
     LOADER_ENTRY       *SubEntry;
-    CHAR16             *InitrdName, *KernelVersion = NULL;
-    CHAR16             DiagsFileName[256];
+    CHAR16             *InitrdName;
+    CHAR16             *KernelVersion = NULL;
+    CHAR16            **TokenList;
+    CHAR16              DiagsFileName[256];
+    UINTN               TokenCount;
     REFIT_FILE         *File;
-    UINTN              TokenCount;
-    CHAR16             **TokenList;
+    LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen ... A - START MAIN");
     
     MsgLog ("[ GenerateSubScreen\n");
 
@@ -241,65 +284,65 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
 #if defined (EFIX64)
             SubEntry = InitializeLoaderEntry (Entry);
             if (SubEntry != NULL) {
-                AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS with a 64-bit kernel");
+                AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS with a 64-bit Kernel");
                 AssignCachedPoolStr (&SubEntry->LoadOptions, L"arch=x86_64");
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_OSX;
-                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
-            } // if
+                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
+            }
 
             SubEntry = InitializeLoaderEntry (Entry);
             if (SubEntry != NULL) {
-                AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS with a 32-bit kernel");
+                AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS with a 32-bit Kernel");
                 AssignCachedPoolStr (&SubEntry->LoadOptions, L"arch=i386");
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_OSX;
-                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
-            } // if
+                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
+            }
 #endif
 
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_SINGLEUSER)) {
                 SubEntry = InitializeLoaderEntry (Entry);
                 if (SubEntry != NULL) {
-                    AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS in verbose mode");
+                    AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS in Verbose Mode");
                     SubEntry->UseGraphicsMode = FALSE;
                     AssignCachedPoolStr (&SubEntry->LoadOptions, L"-v");
-                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
-                } // if
+                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
+                }
 
 #if defined (EFIX64)
                 SubEntry = InitializeLoaderEntry (Entry);
                 if (SubEntry != NULL) {
-                    AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS in verbose mode (64-bit)");
+                    AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS in Verbose Mode (64-bit)");
                     SubEntry->UseGraphicsMode = FALSE;
                     AssignCachedPoolStr (&SubEntry->LoadOptions, L"-v arch=x86_64");
-                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
                 }
 
                 SubEntry = InitializeLoaderEntry (Entry);
                 if (SubEntry != NULL) {
-                    AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS in verbose mode (32-bit)");
+                    AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS in Verbose Mode (32-bit)");
                     SubEntry->UseGraphicsMode = FALSE;
                     AssignCachedPoolStr (&SubEntry->LoadOptions, L"-v arch=i386");
-                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
                 }
 #endif
 
                 SubEntry = InitializeLoaderEntry (Entry);
                 if (SubEntry != NULL) {
-                    AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS in single user mode");
+                    AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS in Single User Mode");
                     SubEntry->UseGraphicsMode = FALSE;
                     AssignCachedPoolStr (&SubEntry->LoadOptions, L"-v -s");
-                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
-                } // if
+                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
+                }
             } // single-user mode allowed
 
             if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_SAFEMODE)) {
                 SubEntry = InitializeLoaderEntry (Entry);
                 if (SubEntry != NULL) {
-                    AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS in safe mode");
+                    AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Mac OS in Safe Mode");
                     SubEntry->UseGraphicsMode = FALSE;
                     AssignCachedPoolStr (&SubEntry->LoadOptions, L"-v -x");
-                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
-                } // if
+                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
+                }
             } // safe mode allowed
 
             // check for Apple hardware diagnostics
@@ -313,54 +356,95 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
                     CopyPoolStr (&SubEntry->LoaderPath, DiagsFileName);
                     AssignVolume (&SubEntry->Volume, Volume);
                     SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_OSX;
-                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
-                } // if
-            } // if diagnostics entry found
-
+                    AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
+                }
+            }
         }
         else if (Entry->OSType == 'L') {   // entries for Linux kernels with EFI stub loaders
+            LOG(5, LOG_BLANK_LINE_SEP, L"X");
+            LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 1 - START for OSType L");
             File = ReadLinuxOptionsFile (GetPoolStr (&Entry->LoaderPath), Volume);
-            if (File != NULL) {
+
+            LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2");
+            if (File) {
+                LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 1");
                 InitrdName    = FindInitrd (GetPoolStr (&Entry->LoaderPath), Volume);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 2");
                 TokenCount    = ReadTokenLine (File, &TokenList);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 3");
                 KernelVersion = FindNumbers (GetPoolStr (&Entry->LoaderPath));
+
+                LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 4");
                 ReplaceSubstring (&(TokenList[1]), KERNEL_VERSION, KernelVersion);
 
+                LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 5");
                 // first entry requires special processing, since it was initially set
                 // up with a default title but correct options by InitializeSubScreen(),
-                // earlier....
+                // earlier.
                 if ((TokenCount > 1) && (SubScreen->Entries != NULL) && (SubScreen->Entries[0] != NULL)) {
+                    LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 5a 1");
                     if (TokenList[0]) {
                         CopyPoolStr (&SubScreen->Entries[0]->Title, TokenList[0]);
                     }
                     else {
                         AssignCachedPoolStr (&SubScreen->Entries[0]->Title, L"Boot Linux");
                     }
-                } // if
 
+                    LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 5a 2");
+                }
+
+                LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 6");
                 FreeTokenLine (&TokenList, &TokenCount);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7");
                 while ((TokenCount = ReadTokenLine (File, &TokenList)) > 1) {
+                    LOG(5, LOG_BLANK_LINE_SEP, L"X");
+                    LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7a 1 START WHILE LOOP");
                     ReplaceSubstring (&(TokenList[1]), KERNEL_VERSION, KernelVersion);
+
+                    LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7a 2");
                     SubEntry = InitializeLoaderEntry (Entry);
+
+                    LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7a 3");
                     if (SubEntry != NULL) {
+                        LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7a 3a 1");
                         if (TokenList[0]) {
                             CopyPoolStr (&SubEntry->me.Title, TokenList[0]);
                         }
                         else {
                             AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Linux");
                         }
+
+                        LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7a 3a 2");
+
+                        LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7a 3a 3");
                         AssignPoolStr (&SubEntry->LoadOptions, AddInitrdToOptions (TokenList[1], InitrdName));
+
+                        LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7a 3a 4");
                         SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_LINUX;
-                        AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
-                    } // if
+
+                        LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7a 3a 5");
+                        AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
+                    }
+
+                    LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7a 4");
                     FreeTokenLine (&TokenList, &TokenCount);
+
+                    LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 7a 5 END WHILE LOOP");
+                    LOG(5, LOG_BLANK_LINE_SEP, L"X");
                 } // while
                 FreeTokenLine (&TokenList, &TokenCount);
 
+                LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 8");
                 MyFreePool (&KernelVersion);
                 MyFreePool (&InitrdName);
                 MyFreePool (&File);
-            } // if
+
+                LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 9");
+            } // if File
+            LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 3 END for OSType L");
         }
         else if (Entry->OSType == 'E') {   // entries for ELILO
             SubEntry = InitializeLoaderEntry (Entry);
@@ -368,7 +452,7 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
                 AssignCachedPoolStr (&SubEntry->me.Title, L"Run ELILO in interactive mode");
                 AssignCachedPoolStr (&SubEntry->LoadOptions, L"-p");
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_ELILO;
-                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
             }
 
             SubEntry = InitializeLoaderEntry (Entry);
@@ -376,7 +460,7 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
                 AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Linux for a 17\" iMac or a 15\" MacBook Pro (*)");
                 AssignCachedPoolStr (&SubEntry->LoadOptions, L"-d 0 i17");
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_ELILO;
-                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
             }
 
             SubEntry = InitializeLoaderEntry (Entry);
@@ -384,7 +468,7 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
                 AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Linux for a 20\" iMac (*)");
                 AssignCachedPoolStr (&SubEntry->LoadOptions, L"-d 0 i20");
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_ELILO;
-                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
             }
 
             SubEntry = InitializeLoaderEntry (Entry);
@@ -392,7 +476,7 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
                 AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Linux for a Mac Mini (*)");
                 AssignCachedPoolStr (&SubEntry->LoadOptions, L"-d 0 mini");
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_ELILO;
-                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
             }
 
             AddMenuInfoLineCached (SubScreen, L"NOTE: This is an example. Entries");
@@ -408,7 +492,7 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
                 AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Windows from Hard Disk");
                 AssignCachedPoolStr (&SubEntry->LoadOptions, L"-s -h");
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_WINDOWS;
-                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
             }
 
             SubEntry = InitializeLoaderEntry (Entry);
@@ -416,7 +500,7 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
                 AssignCachedPoolStr (&SubEntry->me.Title, L"Boot Windows from CD-ROM");
                 AssignCachedPoolStr (&SubEntry->LoadOptions, L"-s -c");
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_WINDOWS;
-                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
             }
 
             SubEntry = InitializeLoaderEntry (Entry);
@@ -424,13 +508,22 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
                 AssignCachedPoolStr (&SubEntry->me.Title, L"Run XOM in text mode");
                 AssignCachedPoolStr (&SubEntry->LoadOptions, L"-v");
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_WINDOWS;
-                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *) SubEntry);
             }
         } // entries for xom.efi
+
+        LOG(5, LOG_BLANK_LINE_SEP, L"X");
+        LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen ... Z 1 - START");
         if (GenerateReturn) {
+            LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen ... Z 1a 1");
             AddMenuEntryCopy (SubScreen, &TagMenuEntry[TAG_RETURN]);
+
+            LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen ... Z 1a 2");
         }
         Entry->me.SubScreen = SubScreen;
+
+        LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen ... Z 2 END MAIN - VOID");
+        LOG(5, LOG_BLANK_LINE_SEP, L"X");
     }
 
     MsgLog ("] GenerateSubScreen\n");
@@ -440,225 +533,501 @@ VOID GenerateSubScreen (LOADER_ENTRY *Entry, IN REFIT_VOLUME *Volume, IN BOOLEAN
 // code and shortcut letter. For Linux EFI stub loaders, also sets kernel options
 // that will (with luck) work fairly automatically.
 VOID SetLoaderDefaults (
-    LOADER_ENTRY *Entry, CHAR16 *LoaderPath, REFIT_VOLUME *Volume
+    LOADER_ENTRY *Entry,
+    CHAR16       *LoaderPath,
+    REFIT_VOLUME *Volume
 ) {
     MsgLog ("[ SetLoaderDefaults for '%s'\n", GetPoolStr (&Entry->me.Title));
 
-    CHAR16 *NameClues;
-    CHAR16 *PathOnly;
-    CHAR16 *OSIconName = NULL;
-    CHAR16 ShortcutLetter = 0;
+    CHAR16  *PathOnly;
+    CHAR16  *NameClues;
+    CHAR16  *OSIconName     = NULL;
+    CHAR16   ShortcutLetter = 0;
+    BOOLEAN  MergeFsName    = FALSE;
 
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL,
+        L"Getting Default Settings for Loader:- '%s'",
+        GetPoolStr (&Entry->me.Title) ? GetPoolStr (&Entry->me.Title) : GetPoolStr (&Entry->Title)
+    );
+    #endif
+
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
+    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 1 - START");
     NameClues = Basename (LoaderPath);
-    PathOnly = FindPath (LoaderPath);
 
-    if (Volume->DiskKind == DISK_KIND_NET) {
-        MergeStrings (&NameClues, GetPoolStr (&Entry->me.Title), L' ');
+    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 2");
+    PathOnly  = FindPath (LoaderPath);
+
+    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3");
+    if (!AllowGraphicsMode) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3a 1");
+        #if REFIT_DEBUG > 0
+        LOG(4, LOG_THREE_STAR_MID,
+            L"In SetLoaderDefaults ... Skipped Loading Icon in Text Screen Mode"
+        );
+        #endif
     }
     else {
-        if (GetPoolImage (&Entry->me.Image) == NULL) {
-            CHAR16 *NoExtension = StripEfiExtension (NameClues);
-            if (NoExtension != NULL) {
-                // locate a custom icon for the loader
-                // Anything found here takes precedence over the "hints" in the OSIconName variable
-                LOG(4, LOG_LINE_NORMAL, L"Trying to load icon from boot loader's directory");
-
-                if (!GetPoolImage (&Entry->me.Image)) {
-                    AssignPoolImage (&Entry->me.Image, egLoadIconAnyType (
-                        Volume->RootDir,
-                        PathOnly,
-                        NoExtension,
-                        GlobalConfig.IconSizes[ICON_SIZE_BIG]
-                    ));
-                }
-                if (!GetPoolImage (&Entry->me.Image)) {
-                    CopyFromPoolImage (&Entry->me.Image, &Volume->VolIconImage);
-                }
-                MyFreePool (&NoExtension);
-            }
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1");
+        if (Volume->DiskKind == DISK_KIND_NET) {
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 1");
+            MergeStrings (&NameClues, GetPoolStr (&Entry->me.Title), L' ');
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2");
         }
+        else {
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 1");
+            if (!GetPoolImage (&Entry->me.Image) && !GlobalConfig.IgnoreHiddenIcons && GlobalConfig.PreferHiddenIcons) {
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 1a 1");
+                #if REFIT_DEBUG > 0
+                LOG(3, LOG_LINE_NORMAL, L"Trying to Display '.VolumeIcon' Image");
+                #endif
 
-        // Begin creating icon "hints" by using last part of directory path leading
-        // to the loader
-        #if REFIT_DEBUG > 0
-        if (GetPoolImage (&Entry->me.Image) == NULL) {
-            LOG(4, LOG_LINE_NORMAL, L"Creating Icon Hint from Loader Path: '%s'", LoaderPath);
-        }
-        #endif
-
-        CHAR16 *Temp = FindLastDirName (LoaderPath);
-        MergeStrings (&OSIconName, Temp, L',');
-        MyFreePool (&Temp);
-        if (OSIconName != NULL) {
-            ShortcutLetter = OSIconName[0];
-        }
-
-        // Add every "word" in the filesystem and partition names, delimited by
-        // spaces, dashes (-), underscores (_), or colons (:), to the list of
-        // hints to be used in searching for OS icons.
-        if (GetPoolStr (&Volume->FsName) && (GetPoolStr (&Volume->FsName)[0] != L'\0')) {
-            BOOLEAN MergeFsName = TRUE;
-
-            if (MyStrStr (GetPoolStr (&Volume->FsName), L"PreBoot") != NULL &&
-                GlobalConfig.SyncAPFS
-            ) {
-                MergeFsName = FALSE;
+                // use a ".VolumeIcon" image icon for the loader
+                // Takes precedence all over options
+                CopyFromPoolImage (&Entry->me.Image, &Volume->VolIconImage);
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 1a 2");
             }
 
-            if (MergeFsName) {
-                if (GetPoolImage (&Entry->me.Image) == NULL) {
-                    LOG(4, LOG_LINE_NORMAL, L"Merging hints based on filesystem name ('%s')", GetPoolStr (&Volume->FsName));
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2");
+            if (!GetPoolImage (&Entry->me.Image)) {
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 1");
+                #if REFIT_DEBUG > 0
+                if (!GlobalConfig.IgnoreHiddenIcons && GlobalConfig.PreferHiddenIcons) {
+                    LOG(3, LOG_LINE_NORMAL, L"Could Not Display '.VolumeIcon' Image!!");
+                }
+                #endif
+
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 2");
+                BOOLEAN MacFlag = FALSE;
+                if (LoaderPath && MyStrStrIns (LoaderPath, L"System\\Library\\CoreServices")) {
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 2a 1");
+                    MacFlag = TRUE;
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 2a 2");
                 }
 
-                MergeWords(&OSIconName, GetPoolStr (&Volume->FsName), L',');
-            }
-            else {
-                if (GetPoolStr (&Volume->VolName) && (GetPoolStr (&Volume->VolName)[0] != L'\0')) {
-                    #if REFIT_DEBUG > 0
-                    if (GetPoolImage (&Entry->me.Image) == NULL) {
-                        LOG(4, LOG_LINE_NORMAL, L"Merging hints based on volume name ('%s')", GetPoolStr (&Volume->VolName));
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3");
+                if (!GlobalConfig.SyncAPFS || !MacFlag) {
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3a 1");
+                    CHAR16 *NoExtension = StripEfiExtension (NameClues);
+                    if (NoExtension != NULL) {
+                        // locate a custom icon for the loader
+                        // Anything found here takes precedence over the "hints" in the OSIconName variable
+                        #if REFIT_DEBUG > 0
+                        LOG(3, LOG_LINE_NORMAL, L"Search for Icon in Bootloader Directory");
+                        #endif
+
+                        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3a 1a 1");
+                        if (!GetPoolImage (&Entry->me.Image)) {
+                            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3a 1a 1a 1");
+                            AssignPoolImage (&Entry->me.Image, egLoadIconAnyType (
+                                Volume->RootDir,
+                                PathOnly,
+                                NoExtension,
+                                GlobalConfig.IconSizes[ICON_SIZE_BIG]
+                            ));
+                            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3a 1a 1a 2");
+                        }
+
+                        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3a 1a 2");
+                        if (!GetPoolImage (&Entry->me.Image) && !GlobalConfig.IgnoreHiddenIcons) {
+                            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3a 1a 2a 1");
+                            CopyFromPoolImage (&Entry->me.Image, &Volume->VolIconImage);
+                            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3a 1a 2a 2");
+                        }
+
+                        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3a 1a 3");
+                        MyFreePool (&NoExtension);
+                        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3a 1a 4");
                     }
-                    #endif
-
-                    MergeWords(&OSIconName, GetPoolStr (&Volume->VolName), L',');
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 3a 2");
                 }
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 2a 4");
             }
-        }
-        if (GetPoolStr (&Volume->PartName) && (GetPoolStr (&Volume->PartName)[0] != L'\0')) {
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 3");
+            // Begin creating icon "hints" by using last part of directory path leading
+            // to the loader
             #if REFIT_DEBUG > 0
             if (GetPoolImage (&Entry->me.Image) == NULL) {
-                LOG(4, LOG_LINE_NORMAL, L"Merging hints based on partition name ('%s')", GetPoolStr (&Volume->PartName));
+                LOG(4, LOG_THREE_STAR_MID,
+                    L"Creating Icon Hint from Loader Path:- '%s'",
+                    LoaderPath
+                );
             }
             #endif
 
-            MergeWords(&OSIconName, GetPoolStr (&Volume->PartName), L',');
-        }
-    } // if/else network boot
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 4");
+            CHAR16 *Temp = FindLastDirName (LoaderPath);
 
-    #if REFIT_DEBUG > 0
-    if (GetPoolImage (&Entry->me.Image) == NULL) {
-        LOG(4, LOG_LINE_NORMAL, L"Adding hints based on specific loaders");
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 5");
+            MergeStrings (&OSIconName, Temp, L',');
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 6");
+            MyFreePool (&Temp);
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 7");
+            if (OSIconName != NULL) {
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 7a 1");
+                ShortcutLetter = OSIconName[0];
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 7a 2");
+            }
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8");
+            // Add every "word" in the filesystem and partition names, delimited by
+            // spaces, dashes (-), underscores (_), or colons (:), to the list of
+            // hints to be used in searching for OS icons.
+            if (GetPoolStr (&Volume->FsName) && (GetPoolStr (&Volume->FsName)[0] != L'\0')) {
+                MergeFsName = TRUE;
+
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 1");
+                if (MyStrStrIns (GetPoolStr (&Volume->FsName), L"PreBoot") && GlobalConfig.SyncAPFS) {
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 1a 1");
+                    MergeFsName = FALSE;
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 1a 2");
+                }
+
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 2");
+                if (MergeFsName) {
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 2a 1");
+                    #if REFIT_DEBUG > 0
+                    if (GetPoolImage (&Entry->me.Image) == NULL) {
+                        LOG(3, LOG_LINE_NORMAL,
+                            L"Merge Hints Based on Filesystem Name:- '%s'",
+                            GetPoolStr (&Volume->FsName)
+                        );
+                    }
+                    #endif
+
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 2a 2");
+                    MergeUniqueWords (&OSIconName, GetPoolStr (&Volume->FsName), L',');
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 2a 3");
+                }
+                else {
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 2b 1");
+                    if (GetPoolStr (&Volume->VolName) && (GetPoolStr (&Volume->VolName)[0] != L'\0')) {
+                        CHAR16 *DisplayName = NULL;
+
+                        if (GlobalConfig.SyncAPFS) {
+                            EFI_GUID               VolumeGuid;
+                            EFI_GUID            ContainerGuid;
+                            APPLE_APFS_VOLUME_ROLE VolumeRole;
+
+                            EFI_STATUS Status = RP_GetApfsVolumeInfo (
+                                Volume->DeviceHandle,
+                                &ContainerGuid,
+                                &VolumeGuid,
+                                &VolumeRole
+                            );
+
+                            if (!EFI_ERROR(Status)) {
+                                if ((VolumeRole & APPLE_APFS_VOLUME_ROLE_PREBOOT) != 0) {
+                                    DisplayName = GetVolumeGroupName (GetPoolStr (&Entry->LoaderPath), Volume);
+                                }
+                            }
+                        } // if GlobalConfig.SyncAFPS
+
+                        // Do not free TargetName
+                        CHAR16 *TargetName = DisplayName
+                            ? DisplayName
+                            : GetPoolStr (&Volume->VolName);
+
+                        #if REFIT_DEBUG > 0
+                        if (GetPoolImage (&Entry->me.Image) == NULL) {
+                            LOG(3, LOG_LINE_NORMAL,
+                                L"Merge Hints Based on Volume Name:- '%s'",
+                                TargetName
+                            );
+                        }
+                        #endif
+
+                        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 2b 1a 1");
+                        MergeUniqueWords (&OSIconName, TargetName, L',');
+                        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 2b 1a 2");
+
+                        MyFreePool (&DisplayName);
+                    }
+                    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 2b 2");
+                }
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 8a 3");
+            }
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 9");
+            if (GetPoolStr (&Volume->PartName) && (GetPoolStr (&Volume->PartName)[0] != L'\0')) {
+                #if REFIT_DEBUG > 0
+                if (GetPoolImage (&Entry->me.Image) == NULL) {
+                    LOG(3, LOG_LINE_NORMAL,
+                        L"Merge Hints Based on Partition Name:- '%s'",
+                        GetPoolStr (&Volume->PartName)
+                    );
+                }
+                #endif
+
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 9a 1");
+                MergeUniqueWords (&OSIconName, GetPoolStr (&Volume->PartName), L',');
+                LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 2a 9a 2");
+            }
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 1a 3");
+        } // if/else Volume->DiskKind == DISK_KIND_NET
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 3b 2");
     }
-    #endif
+
+    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 4");
+    if (!AllowGraphicsMode) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 4a 1");
+
+        #if REFIT_DEBUG > 0
+        if (GetPoolImage (&Entry->me.Image) == NULL) {
+            LOG(3, LOG_LINE_NORMAL, L"Add Hints Based on Specific Loaders");
+        }
+        #endif
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 4a 2");
+    }
 
     // detect specific loaders
+    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5");
     if (StriSubCmp (L"bzImage", NameClues) ||
         StriSubCmp (L"vmlinuz", NameClues) ||
-        StriSubCmp (L"kernel", NameClues)
+        StriSubCmp (L"kernel",  NameClues)
     ) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5a 1");
         if (Volume->DiskKind != DISK_KIND_NET) {
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5a 1a 1");
             GuessLinuxDistribution (&OSIconName, Volume, LoaderPath);
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5a 1a 2");
             AssignPoolStr (&Entry->LoadOptions, GetMainLinuxOptions (LoaderPath, Volume));
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5a 1a 3");
         }
-        MsgLog ("Linux distribution guesses: %s\n", OSIconName);
-        //DebugLoop ();
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5a 2");
         MergeStrings (&OSIconName, L"linux", L',');
         Entry->OSType = 'L';
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5a 3");
         if (ShortcutLetter == 0) {
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5a 3a 1");
             ShortcutLetter = 'L';
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5a 3a 2");
         }
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5a 4");
         Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_LINUX;
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5a 5");
     }
     else if (StriSubCmp (L"refit", LoaderPath)) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5b 1");
         MergeStrings (&OSIconName, L"refit", L',');
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5b 2");
         Entry->OSType = 'R';
         ShortcutLetter = 'R';
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5b 3");
     }
     else if (StriSubCmp (L"refind", LoaderPath)) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5c 1");
         MergeStrings (&OSIconName, L"refind", L',');
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5c 2");
         Entry->OSType = 'R';
         ShortcutLetter = 'R';
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5c 3");
     }
     else if (StriSubCmp (MACOSX_LOADER_PATH, LoaderPath)) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5d 1");
         if (FileExists (Volume->RootDir, L"EFI\\refind\\config.conf") ||
             FileExists (Volume->RootDir, L"EFI\\refind\\refind.conf")
         ) {
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5d 1a 1");
             MergeStrings (&OSIconName, L"refind", L',');
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5d 1a 2");
             Entry->OSType = 'R';
             ShortcutLetter = 'R';
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5d 1a 3");
         }
         else {
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5d 1b 1");
             MergeStrings (&OSIconName, L"mac", L',');
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5d 1b 2");
             Entry->OSType = 'M';
             ShortcutLetter = 'M';
             Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_OSX;
+
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5d 1b 3");
         }
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5d 2");
     }
     else if (MyStriCmp (NameClues, L"diags.efi")) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5e 1");
         MergeStrings (&OSIconName, L"hwtest", L',');
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5e 2");
     }
     else if (MyStriCmp (NameClues, L"e.efi") ||
         MyStriCmp (NameClues, L"elilo.efi")  ||
         StriSubCmp (L"elilo", NameClues)
     ) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5f 1");
         MergeStrings (&OSIconName, L"elilo,linux", L',');
         Entry->OSType = 'E';
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5f 2");
         if (ShortcutLetter == 0) {
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5f 2a 1");
             ShortcutLetter = 'L';
+            LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5f 2a 2");
         }
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5f 3");
         Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_ELILO;
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5f 4");
     }
     else if (StriSubCmp (L"grub", NameClues)) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5g 1");
         MergeStrings (&OSIconName, L"grub,linux", L',');
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5g 2");
         Entry->OSType = 'G';
         ShortcutLetter = 'G';
         Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_GRUB;
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5g 3");
     }
     else if (MyStriCmp (NameClues, L"cdboot.efi") ||
-               MyStriCmp (NameClues, L"bootmgr.efi") ||
-               MyStriCmp (NameClues, L"bootmgfw.efi") ||
+        MyStriCmp (NameClues, L"bootmgr.efi")  ||
+        MyStriCmp (NameClues, L"bootmgfw.efi") ||
         MyStriCmp (NameClues, L"bkpbootmgfw.efi")
     ) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5h 1");
         MergeStrings (&OSIconName, L"win8", L',');
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5h 2");
         Entry->OSType = 'W';
         ShortcutLetter = 'W';
         Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_WINDOWS;
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5h 3");
     }
     else if (MyStriCmp (NameClues, L"xom.efi")) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5i 1");
         MergeStrings (&OSIconName, L"xom,win,win8", L',');
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5i 2");
         Entry->OSType = 'X';
         ShortcutLetter = 'W';
         Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_WINDOWS;
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5i 3");
     }
     else if (MyStriCmp (NameClues, L"opencore")) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5j 1");
         MergeStrings (&OSIconName, L"opencore", L',');
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5j 2");
         Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_OPENCORE;
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5j 3");
     }
     else if (MyStriCmp (NameClues, L"clover")) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5k 1");
         MergeStrings (&OSIconName, L"clover", L',');
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5k 2");
         Entry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_CLOVER;
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5k 3");
     }
     else if (StriSubCmp (L"ipxe", NameClues)) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5l 1");
+        MergeStrings (&OSIconName, L"network", L',');
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5l 2");
         Entry->OSType = 'N';
         ShortcutLetter = 'N';
-        MergeStrings (&OSIconName, L"network", L',');
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 5l 3");
     }
 
+    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 6");
     if ((ShortcutLetter >= 'a') && (ShortcutLetter <= 'z')) {
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 6a 1");
         ShortcutLetter = ShortcutLetter - 'a' + 'A'; // convert lowercase to uppercase
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 6a 2");
     }
 
+    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 7");
     Entry->me.ShortcutLetter = ShortcutLetter;
-    if (!GetPoolImage (&Entry->me.Image)) {
-        LOG(4, LOG_LINE_NORMAL, L"Trying to locate an icon based on hints '%s'", OSIconName);
 
+    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 8");
+    if (AllowGraphicsMode && GetPoolImage (&Entry->me.Image) == NULL) {
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL,
+            L"Trying to Locate an Icon Based on Hints:- '%s'",
+            OSIconName
+        );
+        #endif
+
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 8a 1");
         AssignPoolImage (&Entry->me.Image, LoadOSIcon (OSIconName, L"unknown", FALSE));
+        LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 8a 2");
     }
 
+    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 9");
     MyFreePool (&PathOnly);
     MyFreePool (&OSIconName);
     MyFreePool (&NameClues);
+
+    LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 10 - END:- VOID");
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
     MsgLog ("] SetLoaderDefaults\n");
 } // VOID SetLoaderDefaults()
+
+CHAR16 * GetVolumeGroupName (
+    IN CHAR16       *LoaderPath,
+    IN REFIT_VOLUME *Volume
+) {
+    UINTN   i;
+    CHAR16 *VolumeGroupName = NULL;
+
+    for (i = 0; i < SystemVolumesCount; i++) {
+        if (
+            MyStrStrIns (
+                LoaderPath,
+                GuidAsString (&(SystemVolumes[i]->VolUuid))
+            )
+        ) {
+            VolumeGroupName = StrDuplicate (GetPoolStr (&SystemVolumes[i]->VolName));
+            break;
+        }
+    } // for
+
+    if (!VolumeGroupName) {
+        for (i = 0; i < DataVolumesCount; i++) {
+            if (
+                MyStrStrIns (
+                    LoaderPath,
+                    GuidAsString (&(DataVolumes[i]->VolUuid))
+                )
+            ) {
+                VolumeGroupName = StrDuplicate (GetPoolStr (&DataVolumes[i]->VolName));
+                break;
+            }
+        } // for
+    }
+
+    return VolumeGroupName;
+} // CHAR16 * GetVolumeGroupName()
 
 // Add an NVRAM-based EFI boot loader entry to the menu.
 static
 LOADER_ENTRY * AddEfiLoaderEntry (
     IN EFI_DEVICE_PATH *EfiLoaderPath,
-    IN CHAR16 *LoaderTitle,
-    IN UINT16 EfiBootNum,
-    IN UINTN Row,
-    PoolImage *Icon_PI_
+    IN CHAR16          *LoaderTitle,
+    IN UINT16           EfiBootNum,
+    IN UINTN            Row,
+    IN PoolImage       *Icon_PI_
 ) {
     CHAR16        *TempStr;
     CHAR16        *FullTitle  = NULL;
@@ -672,34 +1041,35 @@ LOADER_ENTRY * AddEfiLoaderEntry (
         if (LoaderTitle) {
             FullTitle = PoolPrint (L"Reboot to %s", LoaderTitle);
         }
+
+        Entry->me.Row        = Row;
+        Entry->me.Tag        = TAG_FIRMWARE_LOADER;
         if (FullTitle) {
             AssignPoolStr (&Entry->me.Title, FullTitle);
         }
         else {
             AssignCachedPoolStr (&Entry->me.Title, L"Unknown");
         }
-        Entry->me.Row = Row;
-        Entry->me.Tag = TAG_FIRMWARE_LOADER;
         if (LoaderTitle) {
             // without "Reboot to"
-            CopyPoolStr (&Entry->Title, LoaderTitle); 
+            CopyPoolStr (&Entry->Title, LoaderTitle);
         }
         else {
             AssignCachedPoolStr (&Entry->Title, L"Unknown");
         }
-        
         Entry->EfiLoaderPath = DuplicateDevicePath (EfiLoaderPath);
+        TempStr              = DevicePathToStr (EfiLoaderPath);
 
-        TempStr = DevicePathToStr (EfiLoaderPath);
-
-        LOG(2, LOG_LINE_NORMAL, L"EFI Loader Path:- '%s'", TempStr);
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL, L"UEFI Loader Path:- '%s'", TempStr);
+        #endif
 
         MyFreePool (&TempStr);
 
         Entry->EfiBootNum = EfiBootNum;
 
-        MergeWords (&OSIconName, GetPoolStr (&Entry->me.Title), L',');
-        MergeStrings (&OSIconName, L"unknown", L',');
+        MergeUniqueWords (&OSIconName, GetPoolStr (&Entry->me.Title), L',');
+        MergeUniqueStrings (&OSIconName, L"Unknown", L',');
 
         if (GetPoolImage (Icon)) {
             CopyFromPoolImage (&Entry->me.Image, Icon);
@@ -714,10 +1084,17 @@ LOADER_ENTRY * AddEfiLoaderEntry (
 
         MyFreePool (&OSIconName);
 
+/*      // these are allready FALSE/NULL/0
+        Entry->Volume      = NULL;
+        Entry->LoaderPath  = NULL;
+        Entry->LoadOptions = NULL;
+        Entry->InitrdPath  = NULL;
+*/
         Entry->Enabled     = TRUE;
 
         AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *) Entry);
-    } // if (Entry)
+    } // if Entry
+
 
     return Entry;
 } // LOADER_ENTRY * AddEfiLoaderEntry()
@@ -730,69 +1107,107 @@ LOADER_ENTRY * AddLoaderEntry (
     IN CHAR16       *LoaderPath,
     IN CHAR16       *LoaderTitle,
     IN REFIT_VOLUME *Volume,
-    IN BOOLEAN      SubScreenReturn
+    IN BOOLEAN       SubScreenReturn
 ) {
     MsgLog ("[ AddLoaderEntry\n");
+    EFI_STATUS     Status;
     LOADER_ENTRY  *Entry;
-    CHAR16        *TitleEntry = NULL;
+    CHAR16        *TitleEntry  = NULL;
+    CHAR16        *DisplayName = NULL;
 
     CleanUpPathNameSlashes (LoaderPath);
     Entry = InitializeLoaderEntry (NULL);
-    if (Entry != NULL) {
-        Entry->DiscoveryType = DISCOVERY_TYPE_AUTO;
-        if (LoaderTitle == NULL) {
-            TitleEntry = LoaderPath;
-        }
-        else {
-            TitleEntry = LoaderTitle;
-        }
 
-        CopyPoolStr (&Entry->Title, LoaderTitle ? TitleEntry : LoaderPath);
+    if (Entry == NULL) {
+        return NULL;
+        MsgLog ("] AddLoaderEntry %p\n", Entry);
+    }
 
-        LOG(1, LOG_LINE_NORMAL, L"Adding loader entry for '%s'", GetPoolStr (&Entry->Title));
-        LOG(2, LOG_LINE_NORMAL, L"Loader path is '%s'", LoaderPath);
+    if (GlobalConfig.SyncAPFS && Volume->FSType == FS_TYPE_APFS) {
+        EFI_GUID               VolumeGuid;
+        EFI_GUID            ContainerGuid;
+        APPLE_APFS_VOLUME_ROLE VolumeRole;
 
-        // Extra space at end of Entry->me.Title enables searching on Volume->VolName even if another volume
-        // name is identical except for something added to the end (e.g., VolB1 vs. VolB12).
-        // Note: Volume->VolName will be NULL for network boot programs.
-        if ((GetPoolStr (&Volume->VolName)) && (!MyStriCmp (GetPoolStr (&Volume->VolName), L"Recovery HD"))) {
-            AssignPoolStr (&Entry->me.Title, PoolPrint (
-                L"Boot %s from %s",
-                LoaderTitle ? TitleEntry : LoaderPath,
-                GetPoolStr (&Volume->VolName)
-            ));
+        Status = RP_GetApfsVolumeInfo (
+            Volume->DeviceHandle,
+            &ContainerGuid,
+            &VolumeGuid,
+            &VolumeRole
+        );
+
+        if (!EFI_ERROR(Status)) {
+            if ((VolumeRole & APPLE_APFS_VOLUME_ROLE_PREBOOT) != 0) {
+                DisplayName = GetVolumeGroupName (LoaderPath, Volume);
+
+                if (!DisplayName) {
+                    // Do not display this PreBoot Volume Menu Entry
+                    MsgLog ("] AddLoaderEntry %p\n", Entry);
+                    return NULL;
+                }
+            }
         }
-        else {
-            AssignPoolStr (&Entry->me.Title, PoolPrint (
-                L"Boot %s ",
-                LoaderTitle ? TitleEntry : LoaderPath
-            ));
-        }
+    } // if GlobalConfig.SyncAFPS
 
-        Entry->me.Row = 0;
-        CopyFromPoolImage (&Entry->me.BadgeImage, &Volume->VolBadgeImage);
+    Entry->DiscoveryType = DISCOVERY_TYPE_AUTO;
+    TitleEntry   = (LoaderTitle) ? LoaderTitle : LoaderPath;
+    CopyPoolStr (&Entry->Title, TitleEntry);
 
-        if ((LoaderPath != NULL) && (LoaderPath[0] != L'\\')) {
-            AssignCachedPoolStr (&Entry->LoaderPath, L"\\");
-        }
-        else {
-            FreePoolStr (&Entry->LoaderPath);
-        }
+    #if REFIT_DEBUG > 0
+    if (DisplayName) {
+        LOG(3, LOG_THREE_STAR_MID, L"Synced PreBoot:- '%s'", DisplayName);
+    }
+    LOG(3, LOG_LINE_NORMAL, L"Add Loader Entry:- '%s'", GetPoolStr (&Entry->Title));
+    LOG(3, LOG_LINE_NORMAL, L"UEFI Loader File:- '%s'", LoaderPath);
+    #endif
 
-        AssignPoolStr (&Entry->LoaderPath, MergeStringsNew (GetPoolStr (&Entry->LoaderPath), LoaderPath, 0));
-        AssignVolume (&Entry->Volume, Volume);
-        SetLoaderDefaults (Entry, LoaderPath, Volume);
-        GenerateSubScreen (Entry, Volume, SubScreenReturn);
-        AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *) Entry);
-        DebugOneVolume(Volume, TitleEntry, GetPoolStr (&Entry->LoaderPath));
-        LOG(3, LOG_THREE_STAR_MID, L"Successfully Created Menu Entry for %s", GetPoolStr (&Entry->Title));
+    if (DisplayName || GetPoolStr (&Volume->VolName)) {
+        AssignPoolStr (&Entry->me.Title, PoolPrint (
+            L"Boot %s from %s",
+            (LoaderTitle) ? LoaderTitle : LoaderPath,
+            DisplayName   ? DisplayName : GetPoolStr (&Volume->VolName)
+        ));
     }
     else {
-        LOG(1, LOG_THREE_STAR_MID, L"Could not initialise loader entry");
+        AssignPoolStr (&Entry->me.Title, PoolPrint (
+            L"Boot %s",
+            (LoaderTitle) ? LoaderTitle : LoaderPath
+        ));
     }
 
+    Entry->me.Row = 0;
+    CopyFromPoolImage (&Entry->me.BadgeImage, &Volume->VolBadgeImage);
+
+    if ((LoaderPath != NULL) && (LoaderPath[0] != L'\\')) {
+        AssignCachedPoolStr (&Entry->LoaderPath, L"\\");
+    }
+    else {
+        FreePoolStr (&Entry->LoaderPath);
+    }
+
+    AssignPoolStr (&Entry->LoaderPath, MergeStringsNew (GetPoolStr (&Entry->LoaderPath), LoaderPath, 0));
+    AssignVolume (&Entry->Volume, Volume);
+    SetLoaderDefaults (Entry, LoaderPath, Volume);
+    GenerateSubScreen (Entry, Volume, SubScreenReturn);
+    AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *) Entry);
+
+    #if REFIT_DEBUG > 0
+    MsgLog ("\n");
+    MsgLog (
+        "  - Found '%s' on '%s'",
+        TitleEntry,
+        DisplayName
+            ? DisplayName
+            : GetPoolStr (&Volume->VolName)
+                ? GetPoolStr (&Volume->VolName)
+                : GetPoolStr (&Entry->LoaderPath)
+    );
+
+    LOG(2, LOG_THREE_STAR_END, L"Successfully Created Menu Entry for %s", GetPoolStr (&Entry->Title));
+    #endif
+
+    MyFreePool (&DisplayName);
     MsgLog ("] AddLoaderEntry %p\n", Entry);
-    return (Entry);
+    return Entry;
 } // LOADER_ENTRY * AddLoaderEntry()
 
 // Returns -1 if (Time1 < Time2), +1 if (Time1 > Time2), or 0 if
@@ -800,7 +1215,10 @@ LOADER_ENTRY * AddLoaderEntry (
 // this is used for sorting boot loader entries, differences smaller
 // than this are likely to be meaningless (and unlikely!).
 static
-INTN TimeComp (IN EFI_TIME *Time1, IN EFI_TIME *Time2) {
+INTN TimeComp (
+    IN EFI_TIME *Time1,
+    IN EFI_TIME *Time2
+) {
     INT64 Time1InSeconds, Time2InSeconds;
 
     // Following values are overestimates; I'm assuming 31 days in every month.
@@ -862,20 +1280,23 @@ LOADER_LIST * AddLoaderListEntry (
         } // while
 
         NewEntry->NextEntry = CurrentEntry;
+
         if (PrevEntry == NULL) {
             LatestEntry = NewEntry;
         }
         else {
             PrevEntry->NextEntry = NewEntry;
         }
-    } // if/else
+    }
 
     return (LatestEntry);
 } // static VOID AddLoaderListEntry()
 
 // Delete the LOADER_LIST linked list
 static
-VOID CleanUpLoaderList (struct LOADER_LIST *LoaderList) {
+VOID CleanUpLoaderList (
+    struct LOADER_LIST *LoaderList
+) {
     struct LOADER_LIST *Temp;
 
     while (LoaderList != NULL) {
@@ -892,59 +1313,92 @@ VOID CleanUpLoaderList (struct LOADER_LIST *LoaderList) {
 // Returns TRUE if none of these conditions is met -- that is, if the path is
 // eligible for scanning.
 static
-BOOLEAN ShouldScan (REFIT_VOLUME *Volume, CHAR16 *Path) {
+BOOLEAN ShouldScan (
+    REFIT_VOLUME *Volume,
+    CHAR16       *Path
+) {
     UINTN    i            = 0;
-    CHAR16   *VolName     = NULL;
-    CHAR16   *VolGuid     = NULL;
-    CHAR16   *PathCopy    = NULL;
-    CHAR16   *DontScanDir = NULL;
+    CHAR16  *VolName      = NULL;
+    CHAR16  *VolGuid      = NULL;
+    CHAR16  *PathCopy     = NULL;
+    CHAR16  *DontScanDir  = NULL;
     BOOLEAN  ScanIt       = TRUE;
-    BOOLEAN  FilerScan    = TRUE;
 
-    // Skip initial scan filter for 'PreBoot' volumes when 'SyncAPFS' is active
-    // DA-TAG: Review Requirement
-    if ((MyStriCmp (L"PreBoot", GetPoolStr (&Volume->VolName)) || MyStriCmp (L"PreBoot", GetPoolStr (&Volume->PartName))) &&
-        (GlobalConfig.SyncAPFS)
+    if (MyStriCmp (Path, SelfDirPath)
+        && (Volume->DeviceHandle == SelfVolume->DeviceHandle)
     ) {
-        FilerScan = FALSE;
-    }
-
-    if (FilerScan) {
-        VolGuid = GuidAsString (&(Volume->PartGuid));
-        if ((IsIn (GetPoolStr (&Volume->FsName), GlobalConfig.DontScanVolumes)) ||
-            (IsIn (GetPoolStr (&Volume->PartName), GlobalConfig.DontScanVolumes)) ||
-            (IsIn (VolGuid, GlobalConfig.DontScanVolumes))
-        ) {
-            MyFreePool (&VolGuid);
-
-            return FALSE;
-        }
-        MyFreePool (&VolGuid);
-    }
-
-    if (MyStriCmp (Path, SelfDirPath) && (Volume->DeviceHandle == SelfVolume->DeviceHandle)) {
         return FALSE;
     }
 
-    // See if Path includes an explicit volume declaration that's NOT Volume....
+    if (GlobalConfig.SyncAPFS && Volume->FSType == FS_TYPE_APFS) {
+        EFI_STATUS                 Status;
+        CHAR16       *TmpVolNameA  = NULL;
+        CHAR16       *TmpVolNameB  = NULL;
+        EFI_GUID               VolumeGuid;
+        EFI_GUID            ContainerGuid;
+        APPLE_APFS_VOLUME_ROLE VolumeRole;
+
+        Status = RP_GetApfsVolumeInfo (
+            Volume->DeviceHandle,
+            &ContainerGuid,
+            &VolumeGuid,
+            &VolumeRole
+        );
+
+        if (!EFI_ERROR(Status)) {
+            TmpVolNameB = PoolPrint (L"%s - DATA", GetPoolStr (&Volume->VolName));
+            if (IsIn (TmpVolNameB, GlobalConfig.DontScanVolumes)) {
+                ScanIt = FALSE;
+            }
+            MyFreePool (&TmpVolNameB);
+            if (!ScanIt) return FALSE;
+
+            TmpVolNameA = SanitiseString (GetPoolStr (&Volume->VolName));
+            TmpVolNameB = PoolPrint (L"%s - DATA", TmpVolNameA);
+            if (IsIn (TmpVolNameB, GlobalConfig.DontScanVolumes)) {
+                ScanIt = FALSE;
+            }
+            MyFreePool (&TmpVolNameA);
+            MyFreePool (&TmpVolNameB);
+            if (!ScanIt) return FALSE;
+        }
+    } // if GlobalConfig.SyncAFPS
+
+    VolGuid = GuidAsString (&(Volume->PartGuid));
+    if (IsIn (VolGuid, GlobalConfig.DontScanVolumes)
+        || IsIn (GetPoolStr (&Volume->FsName), GlobalConfig.DontScanVolumes)
+        || IsIn (GetPoolStr (&Volume->VolName), GlobalConfig.DontScanVolumes)
+        || IsIn (GetPoolStr (&Volume->PartName), GlobalConfig.DontScanVolumes)
+    ) {
+        ScanIt = FALSE;
+    }
+    MyFreePool (&VolGuid);
+    if (!ScanIt) return FALSE;
+
+    // See if Path includes an explicit volume declaration that is NOT Volume.
     PathCopy = StrDuplicate (Path);
     if (SplitVolumeAndFilename (&PathCopy, &VolName)) {
-        if (VolName && (!MyStriCmp (VolName, GetPoolStr (&Volume->FsName)) ||
-            !MyStriCmp(VolName, GetPoolStr (&Volume->PartName)))
-        ) {
+        if (VolName) {
+            if (!MyStriCmp (VolName, GetPoolStr (&Volume->FsName))
+                || !MyStriCmp(VolName, GetPoolStr (&Volume->PartName))
+            ) {
                 ScanIt = FALSE;
-        } // if
-    } // if Path includes volume specification
+            }
+        }
+    }
     MyFreePool (&PathCopy);
     MyFreePool (&VolName);
-    VolName = NULL;
 
-    // See if Volume is in GlobalConfig.DontScanDirs....
-    while (ScanIt && (DontScanDir = FindCommaDelimited (GlobalConfig.DontScanDirs, i++))) {
+    // See if Volume is in GlobalConfig.DontScanDirs.
+    while (ScanIt &&
+        (DontScanDir = FindCommaDelimited (GlobalConfig.DontScanDirs, i++))
+    ) {
         SplitVolumeAndFilename (&DontScanDir, &VolName);
         CleanUpPathNameSlashes (DontScanDir);
         if (VolName != NULL) {
-            if (VolumeMatchesDescription (Volume, VolName) && MyStriCmp (DontScanDir, Path)) {
+            if (VolumeMatchesDescription (Volume, VolName)
+                && MyStriCmp (DontScanDir, Path)
+            ) {
                 ScanIt = FALSE;
             }
         }
@@ -953,11 +1407,10 @@ BOOLEAN ShouldScan (REFIT_VOLUME *Volume, CHAR16 *Path) {
                 ScanIt = FALSE;
             }
         }
+
         MyFreePool (&DontScanDir);
         MyFreePool (&VolName);
-        DontScanDir = NULL;
-        VolName = NULL;
-    } // while()
+    } // while
 
     return ScanIt;
 } // BOOLEAN ShouldScan()
@@ -966,15 +1419,22 @@ BOOLEAN ShouldScan (REFIT_VOLUME *Volume, CHAR16 *Path) {
 // on the volume AND if the file is not itself the fallback file; returns
 // FALSE if the file is not identical to the fallback file OR if the file
 // IS the fallback file. Intended for use in excluding the fallback boot
-// loader when it's a duplicate of another boot loader.
+// loader when it is a duplicate of another boot loader.
 static
-BOOLEAN DuplicatesFallback (IN REFIT_VOLUME *Volume, IN CHAR16 *FileName) {
-    CHAR8           *FileContents, *FallbackContents;
-    EFI_FILE_HANDLE FileHandle, FallbackHandle;
-    EFI_FILE_INFO   *FileInfo, *FallbackInfo;
-    UINTN           FileSize = 0, FallbackSize = 0;
-    EFI_STATUS      Status;
-    BOOLEAN         AreIdentical = FALSE;
+BOOLEAN DuplicatesFallback (
+    IN REFIT_VOLUME *Volume,
+    IN CHAR16       *FileName
+) {
+    EFI_STATUS       Status;
+    EFI_FILE_HANDLE  FileHandle;
+    EFI_FILE_HANDLE  FallbackHandle;
+    EFI_FILE_INFO   *FileInfo;
+    EFI_FILE_INFO   *FallbackInfo;
+    CHAR8           *FileContents;
+    CHAR8           *FallbackContents;
+    UINTN            FileSize     = 0;
+    UINTN            FallbackSize = 0;
+    BOOLEAN          AreIdentical = FALSE;
 
     if (!FileExists (Volume->RootDir, FileName) ||
         !FileExists (Volume->RootDir, FALLBACK_FULLNAME)
@@ -989,7 +1449,7 @@ BOOLEAN DuplicatesFallback (IN REFIT_VOLUME *Volume, IN CHAR16 *FileName) {
         return FALSE;
     }
 
-    Status = refit_call5_wrapper(
+    Status = REFIT_CALL_5_WRAPPER(
         Volume->RootDir->Open,
         Volume->RootDir,
         &FileHandle,
@@ -997,6 +1457,7 @@ BOOLEAN DuplicatesFallback (IN REFIT_VOLUME *Volume, IN CHAR16 *FileName) {
         EFI_FILE_MODE_READ,
         0
     );
+
     if (Status == EFI_SUCCESS) {
         FileInfo = LibFileInfo (FileHandle);
         FileSize = FileInfo->FileSize;
@@ -1004,9 +1465,10 @@ BOOLEAN DuplicatesFallback (IN REFIT_VOLUME *Volume, IN CHAR16 *FileName) {
     else {
         return FALSE;
     }
+
     MyFreePool (&FileInfo);
 
-    Status = refit_call5_wrapper(
+    Status = REFIT_CALL_5_WRAPPER(
         Volume->RootDir->Open,
         Volume->RootDir,
         &FallbackHandle,
@@ -1014,28 +1476,30 @@ BOOLEAN DuplicatesFallback (IN REFIT_VOLUME *Volume, IN CHAR16 *FileName) {
         EFI_FILE_MODE_READ,
         0
     );
+
     if (Status == EFI_SUCCESS) {
         FallbackInfo = LibFileInfo (FallbackHandle);
         FallbackSize = FallbackInfo->FileSize;
     }
     else {
-        refit_call1_wrapper(FileHandle->Close, FileHandle);
+        REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
         return FALSE;
     }
+
     MyFreePool (&FallbackInfo);
 
-    if (FallbackSize == FileSize) { // could be identical; do full check....
+    if (FallbackSize == FileSize) { // could be identical; do full check.
         FileContents = AllocatePool (FileSize);
         FallbackContents = AllocatePool (FallbackSize);
         if (FileContents && FallbackContents) {
-            Status = refit_call3_wrapper(
+            Status = REFIT_CALL_3_WRAPPER(
                 FileHandle->Read,
                 FileHandle,
                 &FileSize,
                 FileContents
             );
             if (Status == EFI_SUCCESS) {
-                Status = refit_call3_wrapper
+                Status = REFIT_CALL_3_WRAPPER
                 (FallbackHandle->Read,
                     FallbackHandle,
                     &FallbackSize,
@@ -1043,24 +1507,30 @@ BOOLEAN DuplicatesFallback (IN REFIT_VOLUME *Volume, IN CHAR16 *FileName) {
                 );
             }
             if (Status == EFI_SUCCESS) {
-                AreIdentical = (CompareMem (FileContents, FallbackContents, FileSize) == 0);
-            } // if
-        } // if
+                AreIdentical = (CompareMem (
+                    FileContents,
+                    FallbackContents,
+                    FileSize
+                ) == 0);
+            }
+        }
+
         MyFreePool (&FileContents);
         MyFreePool (&FallbackContents);
-    } // if/else
+    }
 
     // BUG ALERT: Some systems (e.g., DUET, some Macs with large displays) crash if the
-    // following two calls are reversed. Go figure....
-    refit_call1_wrapper(FileHandle->Close, FallbackHandle);
-    refit_call1_wrapper(FileHandle->Close, FileHandle);
+    // following two calls are reversed.
+    REFIT_CALL_1_WRAPPER(FileHandle->Close, FallbackHandle);
+    REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
+
     return AreIdentical;
 } // BOOLEAN DuplicatesFallback()
 
 // Returns FALSE if two measures of file size are identical for a single file,
 // TRUE if not or if the file can't be opened and the other measure is non-0.
-// Despite the function's name, this isn't really a direct test of symbolic
-// link status, since EFI doesn't officially support symlinks. It does seem
+// Despite the function's name, this is not really a direct test of symbolic
+// link status, since EFI does not officially support symlinks. It does seem
 // to be a reliable indicator, though. (OTOH, some disk errors might cause a
 // file to fail to open, which would return a false positive -- but as I use
 // this function to exclude symbolic links from the list of boot loaders,
@@ -1072,13 +1542,13 @@ BOOLEAN IsSymbolicLink (
     CHAR16        *FullName,
     EFI_FILE_INFO *DirEntry
 ) {
-    EFI_FILE_HANDLE FileHandle;
+    EFI_FILE_HANDLE  FileHandle;
     EFI_FILE_INFO   *FileInfo = NULL;
-    EFI_STATUS      Status;
-    UINTN           FileSize2 = 0;
+    EFI_STATUS       Status;
+    UINTN            FileSize2 = 0;
 
     LEAKABLEEXTERNALSTART ("IsSymbolicLink Open");
-    Status = refit_call5_wrapper(
+    Status = REFIT_CALL_5_WRAPPER(
         Volume->RootDir->Open,
         Volume->RootDir,
         &FileHandle,
@@ -1087,6 +1557,7 @@ BOOLEAN IsSymbolicLink (
         0
     );
     LEAKABLEEXTERNALSTOP ();
+
     if (Status == EFI_SUCCESS) {
         FileInfo = LibFileInfo (FileHandle);
         if (FileInfo != NULL) {
@@ -1124,17 +1595,21 @@ BOOLEAN ScanLoaderDir (
 
     #if REFIT_DEBUG > 0
     CHAR16 *PathStr;
+
     if (MyStriCmp (Path, L"\\")) {
         PathStr = StrDuplicate (L"\\");
     }
     else {
         PathStr = PoolPrint (L"%s", Path);
     }
+
     LOG(3, LOG_LINE_NORMAL, L"Scanning for '%s' in '%s'", Pattern, PathStr);
+
     MyFreePool (&PathStr);
     #endif
 
     InSelfPath = MyStriCmp (Path, SelfDirPath);
+
     if ((!SelfDirPath || !Path ||
         (InSelfPath && (Volume->DeviceHandle != SelfVolume->DeviceHandle)) ||
         (!InSelfPath)) && (ShouldScan (Volume, Path))
@@ -1165,6 +1640,7 @@ BOOLEAN ScanLoaderDir (
                 // skip this
             }
             else {
+
                 NewLoader = AllocateZeroPool (sizeof (struct LOADER_LIST));
                 if (NewLoader != NULL) {
                     NewLoader->FileName  = StrDuplicate (FullName);
@@ -1176,6 +1652,7 @@ BOOLEAN ScanLoaderDir (
                     }
                 }
             }
+
             MyFreePool (&Extension);
             MyFreePool (&FullName);
             MyFreePool (&DirEntry);
@@ -1205,11 +1682,15 @@ BOOLEAN ScanLoaderDir (
                         FirstKernel = LatestEntry;
                     }
                 }
+
                 NewLoader = NewLoader->NextEntry;
             } // while
 
             if (FirstKernel != NULL && IsLinux && GlobalConfig.FoldLinuxKernels) {
-                LOG(4, LOG_LINE_NORMAL, L"Adding 'Return' entry to folded Linux kernels");
+                #if REFIT_DEBUG > 0
+                LOG(3, LOG_LINE_NORMAL, L"Adding 'Return' entry to folded Linux kernels");
+                #endif
+
                 AddMenuEntryCopy (FirstKernel->me.SubScreen, &TagMenuEntry[TAG_RETURN]);
             }
 
@@ -1225,8 +1706,7 @@ BOOLEAN ScanLoaderDir (
             if (Path) {
                 Message = PoolPrint (
                     L"While Scanning the '%s' Directory on '%s'",
-                    Path,
-                    GetPoolStr (&Volume->VolName)
+                    Path, GetPoolStr (&Volume->VolName)
                 );
             }
             else {
@@ -1238,37 +1718,36 @@ BOOLEAN ScanLoaderDir (
 
             CheckError (Status, Message);
             MyFreePool (&Message);
-        } // if Status != EFI_NOT_FOUND
-    } // if not scanning a blacklisted directory
+        }
+    } // if !SelfDirPath
 
     return FoundFallbackDuplicate;
-} /* static VOID ScanLoaderDir() */
+} // static VOID ScanLoaderDir()
 
 // Run the IPXE_DISCOVER_NAME program, which obtains the IP address of the boot
 // server and the name of the boot file it delivers.
 static
-CHAR16 * RuniPXEDiscover (EFI_HANDLE Volume) {
-    EFI_STATUS       Status;
+CHAR16 * RuniPXEDiscover (
+    EFI_HANDLE Volume
+) {
+    EFI_STATUS        Status;
     EFI_DEVICE_PATH  *FilePath;
-    EFI_HANDLE       iPXEHandle;
+    EFI_HANDLE        iPXEHandle;
     CHAR16           *boot_info = NULL;
-    UINTN            boot_info_size = 0;
+    UINTN             boot_info_size = 0;
 
     FilePath = FileDevicePath (Volume, IPXE_DISCOVER_NAME);
-    Status = refit_call6_wrapper(
-        gBS->LoadImage,
-        FALSE,
-        SelfImageHandle,
-        FilePath,
-        NULL,
-        0,
+    Status = REFIT_CALL_6_WRAPPER(
+        gBS->LoadImage, FALSE,
+        SelfImageHandle, FilePath,
+        NULL, 0,
         &iPXEHandle
     );
     if (Status != 0) {
         return NULL;
     }
 
-    refit_call3_wrapper(
+    REFIT_CALL_3_WRAPPER(
         gBS->StartImage,
         iPXEHandle,
         &boot_info_size,
@@ -1280,34 +1759,47 @@ CHAR16 * RuniPXEDiscover (EFI_HANDLE Volume) {
 
 // Scan for network (PXE) boot servers. This function relies on the presence
 // of the IPXE_DISCOVER_NAME and IPXE_NAME program files on the volume from
-// which RefindPlus launched. As of December 6, 2014, these tools aren't entirely
-// reliable. See BUILDING.txt for information on building them.
+// which RefindPlus launched. As of December 6, 2014, these tools are not
+// entirely reliable. See BUILDING.txt for information on building them.
 static
-VOID ScanNetboot() {
+VOID ScanNetboot (VOID) {
     CHAR16        *iPXEFileName = IPXE_NAME;
     CHAR16        *Location;
     REFIT_VOLUME  *NetVolume;
 
-    LOG(1, LOG_LINE_NORMAL, L"Scanning for iPXE boot options");
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL, L"Scanning for iPXE boot options");
+    #endif
 
-    if (FileExists (SelfVolume->RootDir, IPXE_DISCOVER_NAME) &&
-        FileExists (SelfVolume->RootDir, IPXE_NAME) &&
+    if (FileExists (SelfVolume->RootDir, IPXE_NAME) &&
+        FileExists (SelfVolume->RootDir, IPXE_DISCOVER_NAME) &&
         IsValidLoader (SelfVolume->RootDir, IPXE_DISCOVER_NAME) &&
         IsValidLoader (SelfVolume->RootDir, IPXE_NAME)
     ) {
-            Location = RuniPXEDiscover (SelfVolume->DeviceHandle);
-            if (Location != NULL && FileExists (SelfVolume->RootDir, iPXEFileName)) {
-                NetVolume = CopyVolume (SelfVolume);
-                if (NetVolume) {
-                    NetVolume->DiskKind = DISK_KIND_NET;
-                    CopyFromPoolImage_PI_ (&NetVolume->VolBadgeImage_PI_, BuiltinIcon (BUILTIN_ICON_VOL_NET));
-                    FreePoolStr (&NetVolume->PartName);
-                    FreePoolStr (&NetVolume->VolName);
-                    FreePoolStr (&NetVolume->FsName);
-                    AddLoaderEntry (iPXEFileName, Location, NetVolume, TRUE);
-                    FreeVolume (&NetVolume); // reference counted
-                }
-            } // if support files exist and are valid
+        Location = RuniPXEDiscover (SelfVolume->DeviceHandle);
+        if (Location != NULL && FileExists (SelfVolume->RootDir, iPXEFileName)) {
+            NetVolume = CopyVolume (SelfVolume);
+            if (!NetVolume) {
+                #if REFIT_DEBUG > 0
+                LOG(2, LOG_THREE_STAR_SEP,
+                    L"In ScanNetboot ... Out of Resources While Allocating 'NetVolume'!!"
+                );
+                #endif
+            }
+            else {
+                NetVolume->DiskKind = DISK_KIND_NET;
+
+                CopyFromPoolImage_PI_ (&NetVolume->VolBadgeImage_PI_, BuiltinIcon (BUILTIN_ICON_VOL_NET));
+
+                FreePoolStr (&NetVolume->PartName);
+                FreePoolStr (&NetVolume->VolName);
+                FreePoolStr (&NetVolume->FsName);
+
+                AddLoaderEntry (iPXEFileName, Location, NetVolume, TRUE);
+
+                FreeVolume (&NetVolume);
+            }
+        }
     }
 } // VOID ScanNetboot()
 
@@ -1320,11 +1812,12 @@ BOOLEAN ScanMacOsLoader (
     REFIT_VOLUME *Volume,
     CHAR16       *FullFileName
 ) {
-    BOOLEAN  AddThisEntry       = TRUE;
-    BOOLEAN  ScanFallbackLoader = TRUE;
-    CHAR16   *VolName           = NULL;
-    CHAR16   *PathName          = NULL;
-    CHAR16   *FileName          = NULL;
+    BOOLEAN   AddThisEntry       = TRUE;
+    BOOLEAN   ScanFallbackLoader = TRUE;
+    CHAR16   *VolName            = NULL;
+    CHAR16   *PathName           = NULL;
+    CHAR16   *FileName           = NULL;
+    UINTN     i;
 
     SplitPathName (FullFileName, &VolName, &PathName, &FileName);
     if (FileExists (Volume->RootDir, FullFileName) &&
@@ -1336,10 +1829,13 @@ BOOLEAN ScanMacOsLoader (
             AddLoaderEntry (FullFileName, L"RefindPlus", Volume, TRUE);
         }
         else {
-            if (MyStrStr (GetPoolStr (&Volume->VolName), L"Cloaked_SkipThis_") != NULL &&
-                GlobalConfig.SyncAPFS
-            ) {
-                AddThisEntry = FALSE;
+            if (GlobalConfig.SyncAPFS && Volume->FSType == FS_TYPE_APFS) {
+                for (i = 0; i < SystemVolumesCount; i++) {
+                    if (GuidsAreEqual (&(SystemVolumes[i]->VolUuid), &(Volume->VolUuid))) {
+                        AddThisEntry = FALSE;
+                        break;
+                    }
+                }
             }
 
             if (AddThisEntry) {
@@ -1350,7 +1846,8 @@ BOOLEAN ScanMacOsLoader (
         if (DuplicatesFallback (Volume, FullFileName)) {
             ScanFallbackLoader = FALSE;
         }
-    } // if
+    }
+
     MyFreePool (&VolName);
     MyFreePool (&PathName);
     MyFreePool (&FileName);
@@ -1359,7 +1856,9 @@ BOOLEAN ScanMacOsLoader (
 } // VOID ScanMacOsLoader()
 
 static
-VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
+VOID ScanEfiFiles (
+    REFIT_VOLUME *Volume
+) {
     EFI_STATUS        Status;
     REFIT_DIR_ITER    EfiDirIter;
     EFI_FILE_INFO    *EfiDirEntry;
@@ -1373,29 +1872,65 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
     BOOLEAN           ScanFallbackLoader = TRUE;
     BOOLEAN           FoundBRBackup      = FALSE;
 
-    if (!Volume) {
-        return;
-    }
+    #if REFIT_DEBUG > 0
+    UINTN    LogLineType;
+    #endif
 
-    if (GlobalConfig.SyncAPFS &&
-        MyStrStr (GetPoolStr (&Volume->VolName), L"Cloaked_SkipThis_") != NULL
+    if (!Volume ||
+        !Volume->RootDir ||
+        !GetPoolStr (&Volume->VolName) ||
+        !Volume->IsReadable
     ) {
-        // Early Return on Cloaked Volume
-        return;
-    }
-
-    if (!Volume->IsReadable ||
-        Volume->RootDir == NULL ||
-        GetPoolStr (&Volume->VolName) == NULL
-        ) {
         // Early Return on Invalid Volume
         return;
     }
 
-    LOG(1, FirstLoaderScan ? LOG_THREE_STAR_MID : LOG_THREE_STAR_SEP,
-        L"Scanning Volume '%s' for EFI Loaders",
-        GetPoolStr (&Volume->VolName)
+    if (Volume->FSType == FS_TYPE_APFS) {
+        EFI_GUID               VolumeGuid;
+        EFI_GUID            ContainerGuid;
+        APPLE_APFS_VOLUME_ROLE VolumeRole = 0;
+
+        Status = RP_GetApfsVolumeInfo (
+            Volume->DeviceHandle,
+            &ContainerGuid,
+            &VolumeGuid,
+            &VolumeRole
+        );
+
+        if (!EFI_ERROR(Status)) {
+            if (VolumeRole != APPLE_APFS_VOLUME_ROLE_PREBOOT &&
+                VolumeRole != APPLE_APFS_VOLUME_ROLE_SYSTEM &&
+                VolumeRole != APPLE_APFS_VOLUME_ROLE_UNDEFINED
+            ) {
+                // Early Return on APFS Support Volume
+                return;
+            }
+        }
+
+        if (GlobalConfig.SyncAPFS) {
+            for (i = 0; i < SystemVolumesCount; i++) {
+                if (GuidsAreEqual (&(SystemVolumes[i]->VolUuid), &(Volume->VolUuid))) {
+                    // Early Return on ReMapped Volume
+                    return;
+                }
+            }
+        }
+    }
+
+    #if REFIT_DEBUG > 0
+    if (FirstLoaderScan) {
+        LogLineType = LOG_THREE_STAR_MID;
+    }
+    else {
+        LogLineType = LOG_THREE_STAR_SEP;
+    }
+
+    /* Exception for LOG_THREE_STAR_SEP */
+    LOG(3, LogLineType,
+        L"Scanning Volume '%s' for UEFI Loaders",
+        GetPoolStr (&Volume->VolName) ? GetPoolStr (&Volume->VolName) : L"** No Name **"
     );
+    #endif
 
     FirstLoaderScan = FALSE;
 
@@ -1422,8 +1957,9 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
                     MergeStrings (&GlobalConfig.MacOSRecoveryFiles, FileName, L',');
                     LEAKABLE (GlobalConfig.MacOSRecoveryFiles, "MacOSRecoveryFiles");
                 }
+
                 MyFreePool (&FileName);
-            } // if
+            }
             MyFreePool (&EfiDirEntry);
         } // while
         DirIterClose (&EfiDirIter);
@@ -1438,8 +1974,9 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
                 ScanFallbackLoader = FALSE;
             }
         }
+
         MyFreePool (&FileName);
-    } // if should scan Mac directory
+    } // if ShouldScan
 
     // check for Microsoft boot loader/menu
     if (ShouldScan (Volume, L"EFI\\Microsoft\\Boot")) {
@@ -1452,12 +1989,14 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
                 GlobalConfig.DontScanFiles
             )
         ) {
-            AddLoaderEntry (FileName, L"Windows (UEFI - Boot Repair Backup)", Volume, TRUE);
+            // Boot Repair Backup
+            AddLoaderEntry (FileName, L"UEFI Windows (BRBackup)", Volume, TRUE);
             FoundBRBackup = TRUE;
             if (DuplicatesFallback (Volume, FileName)) {
                 ScanFallbackLoader = FALSE;
             }
         }
+
         MyFreePool (&FileName);
 
         FileName = StrDuplicate (L"EFI\\Microsoft\\Boot\\bootmgfw.efi");
@@ -1472,27 +2011,25 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
             if (FoundBRBackup) {
                 AddLoaderEntry (
                     FileName,
-                    L"Assumed Windows (UEFI - Probably GRUB)",
-                    Volume,
-                    TRUE
+                    L"Assumed UEFI Windows (Potentially GRUB)",
+                    Volume, TRUE
                 );
             }
             else {
                 AddLoaderEntry (
                     FileName,
                     L"Windows (UEFI)",
-                    Volume,
-                    TRUE
+                    Volume, TRUE
                 );
             }
 
             if (DuplicatesFallback (Volume, FileName)) {
                 ScanFallbackLoader = FALSE;
             }
-        } // if FileExists Volume->RootDir
+        }
 
         MyFreePool (&FileName);
-    } // if ShouldScan Windows directory
+    } // if ShouldScan
 
     // scan the root directory for EFI executables
     if (ScanLoaderDir (Volume, L"\\", MatchPatterns)) {
@@ -1502,26 +2039,36 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
     // scan subdirectories of the EFI directory (as per the standard)
     DirIterOpen (Volume->RootDir, L"EFI", &EfiDirIter);
     while (DirIterNext (&EfiDirIter, 1, NULL, &EfiDirEntry)) {
-        if (!MyStriCmp (EfiDirEntry->FileName, L"tools") &&
-            EfiDirEntry->FileName[0] != '.'
+
+        if (MyStriCmp (EfiDirEntry->FileName, L"tools") ||
+            EfiDirEntry->FileName[0] == '.'
         ) {
+            // skip this, does not contain boot loaders or is scanned later
+        }
+        else {
+
             FileName = PoolPrint (L"EFI\\%s", EfiDirEntry->FileName);
             if (ScanLoaderDir (Volume, FileName, MatchPatterns)) {
                 ScanFallbackLoader = FALSE;
             }
+
             MyFreePool (&FileName);
         }
+
         MyFreePool (&EfiDirEntry);
-    } // while()
+    } // while
 
     Status = DirIterClose (&EfiDirIter);
     if ((Status != EFI_NOT_FOUND) && (Status != EFI_INVALID_PARAMETER)) {
-        Temp = PoolPrint (L"While Scanning the EFI System Partition on '%s'", GetPoolStr (&Volume->VolName));
+        Temp = PoolPrint (
+            L"While Scanning the EFI System Partition on '%s'",
+            GetPoolStr (&Volume->VolName)
+        );
         CheckError (Status, Temp);
         MyFreePool (&Temp);
-    } // if
+    }
 
-    // Scan user-specified (or additional default) directories....
+    // Scan user-specified (or additional default) directories.
     i = 0;
     while ((Directory = FindCommaDelimited (GlobalConfig.AlsoScan, i++)) != NULL) {
         if (ShouldScan (Volume, Directory)) {
@@ -1534,12 +2081,12 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
             }
 
             MyFreePool (&VolName);
-        } // if should scan dir
+        }
 
         MyFreePool (&Directory);
     } // while
 
-    // Don't scan the fallback loader if it's on the same volume and a duplicate of RefindPlus itself....
+    // Do not scan the fallback loader if it is on the same volume and a duplicate of RefindPlus itself.
     SelfPath = DevicePathToStr (SelfLoadedImage->FilePath);
     CleanUpPathNameSlashes (SelfPath);
 
@@ -1550,7 +2097,7 @@ VOID ScanEfiFiles (REFIT_VOLUME *Volume) {
     }
     MyFreePool (&SelfPath);
 
-    // If not a duplicate & if it exists & if it's not us, create an entry
+    // If not a duplicate & if it exists & if it is not us, create an entry
     // for the fallback boot loader
     if (ScanFallbackLoader &&
         FileExists (Volume->RootDir, FALLBACK_FULLNAME) &&
@@ -1568,18 +2115,18 @@ static VOID
 ScanUserConfigured0 (
     CHAR16 *FileName
 ) {
-    LOG(1, LOG_LINE_THIN_SEP, L"Scanning for User Configured Boot Stanzas");
+    LOG(1, LOG_LINE_THIN_SEP, L"Process User Configured Stanzas");
     ScanUserConfigured (FileName);
 }
 
-// Scan internal disks for valid EFI boot loaders....
+// Scan internal disks for valid EFI boot loaders.
 static
-VOID ScanInternal (
-    VOID
-) {
+VOID ScanInternal (VOID) {
     UINTN VolumeIndex;
 
-    LOG(1, LOG_LINE_THIN_SEP, L"Scanning Internal Disk Volumes with Mode:- 'EFI'");
+    #if REFIT_DEBUG > 0
+    LOG(1, LOG_LINE_THIN_SEP, L"Scan for Internal Disk Volumes with Mode:- 'UEFI'");
+    #endif
 
     FirstLoaderScan = TRUE;
     for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
@@ -1587,18 +2134,18 @@ VOID ScanInternal (
             ScanEfiFiles (Volumes[VolumeIndex]);
         }
     } // for
-    FirstLoaderScan = FALSE;
 
+    FirstLoaderScan = FALSE;
 } // static VOID ScanInternal()
 
-// Scan external disks for valid EFI boot loaders....
+// Scan external disks for valid EFI boot loaders.
 static
-VOID ScanExternal (
-    VOID
-) {
+VOID ScanExternal (VOID) {
     UINTN VolumeIndex;
 
-    LOG(1, LOG_LINE_THIN_SEP, L"Scanning External Disk Volumes with Mode:- 'EFI'");
+    #if REFIT_DEBUG > 0
+    LOG(1, LOG_LINE_THIN_SEP, L"Scan for External Disk Volumes with Mode:- 'UEFI'");
+    #endif
 
     FirstLoaderScan = TRUE;
     for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
@@ -1606,18 +2153,19 @@ VOID ScanExternal (
             ScanEfiFiles (Volumes[VolumeIndex]);
         }
     } // for
+
     FirstLoaderScan = FALSE;
 
 } // static VOID ScanExternal()
 
-// Scan internal disks for valid EFI boot loaders....
+// Scan internal disks for valid EFI boot loaders.
 static
-VOID ScanOptical (
-    VOID
-) {
+VOID ScanOptical (VOID) {
     UINTN VolumeIndex;
 
-    LOG(1, LOG_LINE_THIN_SEP, L"Scanning Optical Discs with Mode:- 'EFI'");
+    #if REFIT_DEBUG > 0
+    LOG(1, LOG_LINE_THIN_SEP, L"Scan for Optical Discs with Mode:- 'UEFI'");
+    #endif
 
     FirstLoaderScan = TRUE;
     for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
@@ -1629,38 +2177,37 @@ VOID ScanOptical (
 
 } // static VOID ScanOptical()
 
-// Scan options stored in EFI firmware's boot list. Adds discovered and allowed
+// Scan options stored in UEFI firmware's boot list. Adds discovered and allowed
 // items to the specified Row.
 // If MatchThis != NULL, only adds items with labels containing any element of
 // the MatchThis comma-delimited string; otherwise, searches for anything that
-// doesn't match GlobalConfig.DontScanFirmware or the contents of the
-// HiddenFirmware EFI variable.
+// does not match GlobalConfig.DontScanFirmware or the contents of the
+// HiddenFirmware UEFI variable.
 // If Icon != NULL, uses the specified icon; otherwise tries to find one to
 // match the label.
-STATIC
-BOOLEAN
-ScanFirmwareDefined (
-    IN UINTN Row,
-    IN CHAR16 *MatchThis,
+static
+BOOLEAN ScanFirmwareDefined (
+    IN UINTN     Row,
+    IN CHAR16   *MatchThis,
     IN PoolImage *Icon_PI_
 ) {
     BOOT_ENTRY_LIST *BootEntries;
     BOOT_ENTRY_LIST *CurrentEntry;
-    BOOLEAN         ScanIt;
-    CHAR16          *OneElement = NULL;
+    BOOLEAN          ScanIt;
+    CHAR16          *OneElement  = NULL;
     CHAR16          *DontScanFirmware;
-    UINTN           i;
-    BOOLEAN         result = FALSE;
+    UINTN            i;
+    BOOLEAN          result = FALSE;
 
     #if REFIT_DEBUG > 0
     if (Row == 0) {
         LOG(1, LOG_LINE_THIN_SEP,
-            L"Scanning for EFI Firmware-Defined Boot Options"
+            L"Scanning for UEFI Firmware Defined Boot Options"
         );
     }
     else {
         LOG(1, LOG_LINE_THIN_SEP,
-            L"Scanning for EFI firmware-defined boot options '%s'", MatchThis ? MatchThis : L"NULL"
+            L"Scanning for UEFI firmware-defined boot options '%s'", MatchThis ? MatchThis : L"NULL"
         );
     }
     #endif
@@ -1669,22 +2216,16 @@ ScanFirmwareDefined (
 
     #if REFIT_DEBUG > 0
     if (GlobalConfig.DontScanFirmware != NULL) {
-        LOG(2, LOG_LINE_NORMAL,
-            L"GlobalConfig.DontScanFirmware = '%s'",
+        LOG(3, LOG_LINE_NORMAL,
+            L"GlobalConfig.DontScanFirmware:- '%s'",
             GlobalConfig.DontScanFirmware
         );
     }
-    else {
-        LOG(2, LOG_LINE_NORMAL, L"GlobalConfig.DontScanFirmware is Empty!!");
-    }
     if (DontScanFirmware != NULL) {
-        LOG(2, LOG_LINE_NORMAL,
-            L"Firmware hidden tags = '%s'",
+        LOG(3, LOG_LINE_NORMAL,
+            L"Firmware Hidden Tags:- '%s'",
             DontScanFirmware
         );
-    }
-    else {
-        LOG(2, LOG_LINE_NORMAL, L"Firmware hidden tags is Empty!!");
     }
     #endif
 
@@ -1693,14 +2234,17 @@ ScanFirmwareDefined (
     }
 
     if (Row == 0) {
-        LOG(2, LOG_LINE_NORMAL, L"Also not scanning for shells");
+        #if REFIT_DEBUG > 0
+        LOG(4, LOG_THREE_STAR_MID, L"NB: Excluding UEFI Shell from Scan");
+        #endif
+
         MergeStrings(&DontScanFirmware, L"shell", L',');
     }
 
     #if REFIT_DEBUG > 0
     if (DontScanFirmware != NULL) {
         LOG(3, LOG_LINE_NORMAL,
-            L"Merged firmware dont-scan list is '%s'",
+            L"Merged Firmware Scan Exclusion List:- '%s'",
             DontScanFirmware
         );
     }
@@ -1721,17 +2265,19 @@ ScanFirmwareDefined (
                     ScanIt = TRUE;
                 }
                 MyFreePool (&OneElement);
-            } // while()
+            } // while
         }
         else {
             ScanIt = TRUE;
         }
 
         if (ScanIt) {
-            LOG(1, LOG_LINE_NORMAL,
-                L"Adding EFI Loader Entry for '%s'",
+            #if REFIT_DEBUG > 0
+            LOG(3, LOG_LINE_NORMAL,
+                L"Adding UEFI Loader Entry for '%s'",
                 CurrentEntry->BootEntry.Label
             );
+            #endif
 
             AddEfiLoaderEntry (
                 CurrentEntry->BootEntry.DevPath,
@@ -1740,36 +2286,41 @@ ScanFirmwareDefined (
                 Row,
                 Icon_PI_
             );
-            
             result = TRUE;
         }
 
         CurrentEntry = CurrentEntry->NextBootEntry;
-    } // while()
+    } // while
 
     MyFreePool (&DontScanFirmware);
     DeleteBootOrderEntries (BootEntries);
+
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL, L"Processed UEFI Firmware Defined Boot Options");
+    #endif
     return result;
-} // ScanFirmwareDefined
+} // static VOID ScanFirmwareDefined()
 
 // default volume badge icon based on disk kind
 PoolImage * GetDiskBadge (IN UINTN DiskType) {
     PoolImage * Badge = NULL;
 
+    if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_BADGES) {
+        #if REFIT_DEBUG > 0
+        LOG(4, LOG_THREE_STAR_MID, L"Skipped ... 3onfig Setting is Active:- 'HideUI Badges'");
+        #endif
+
+        return NULL;
+    }
+
     switch (DiskType) {
-        case BBS_HARDDISK:
-            Badge = BuiltinIcon (BUILTIN_ICON_VOL_INTERNAL);
-            break;
-        case BBS_USB:
-            Badge = BuiltinIcon (BUILTIN_ICON_VOL_EXTERNAL);
-            break;
-        case BBS_CDROM:
-            Badge = BuiltinIcon (BUILTIN_ICON_VOL_OPTICAL);
-            break;
-    } // switch()
+        case BBS_HARDDISK: Badge = BuiltinIcon (BUILTIN_ICON_VOL_INTERNAL); break;
+        case BBS_USB:      Badge = BuiltinIcon (BUILTIN_ICON_VOL_EXTERNAL); break;
+        case BBS_CDROM:    Badge = BuiltinIcon (BUILTIN_ICON_VOL_OPTICAL);  break;
+    } // switch
 
     return Badge;
-} // GetDiskBadge
+} // EG_IMAGE * GetDiskBadge()
 
 //
 // pre-boot tool functions
@@ -1778,50 +2329,63 @@ PoolImage * GetDiskBadge (IN UINTN DiskType) {
 static
 LOADER_ENTRY * AddToolEntry (
     IN REFIT_VOLUME *Volume,
-    IN CHAR16 *LoaderPath,
-    IN CHAR16 *LoaderTitle,
-    IN PoolImage *Image_PI_,
-    IN CHAR16 ShortcutLetter,
-    IN BOOLEAN UseGraphicsMode
+    IN CHAR16       *LoaderPath,
+    IN CHAR16       *LoaderTitle,
+    IN PoolImage    *Image_PI_,
+    IN CHAR16        ShortcutLetter,
+    IN BOOLEAN       UseGraphicsMode
 ) {
     LOADER_ENTRY *Entry;
 
     Entry = AllocateZeroPool (sizeof (LOADER_ENTRY));
-    AssignPoolStr (&Entry->me.Title, PoolPrint (L"Load %s", LoaderTitle)); // if you change this, then change ./launch_efi.c:572
-    Entry->me.Tag = TAG_TOOL;
-    Entry->me.Row = 1;
+    if (LoaderTitle) {
+        CopyPoolStr (&Entry->me.Title, LoaderTitle);
+    }
+    else {
+        AssignCachedPoolStr (&Entry->me.Title, L"Unknown Tool");
+    }
+    Entry->me.Tag            = TAG_TOOL;
+    Entry->me.Row            = 1;
     Entry->me.ShortcutLetter = ShortcutLetter;
     CopyFromPoolImage (&Entry->me.Image, Image);
     CopyPoolStr (&Entry->LoaderPath, LoaderPath);
     AssignVolume (&Entry->Volume, Volume);
-    Entry->UseGraphicsMode = UseGraphicsMode;
+    Entry->UseGraphicsMode   = UseGraphicsMode;
 
     AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *)Entry);
 
     return Entry;
-} // AddToolEntry
+} // static LOADER_ENTRY * AddToolEntry()
 
 // Locates boot loaders.
 // NOTE: This assumes that GlobalConfig.LegacyType is correctly set.
 VOID ScanForBootloaders (
     BOOLEAN ShowMessage
 ) {
-    #if REFIT_DEBUG > 0
-    UINTN    k;
-    #endif
-
-    UINTN    i;
-    CHAR8    ScanOption;
-    BOOLEAN  ScanForLegacy = FALSE;
-    EG_PIXEL BGColor       = COLOR_LIGHTBLUE;
+    UINTN     i;
+    BOOLEAN   ScanForLegacy   = FALSE;
+    BOOLEAN   DeleteItem      = FALSE;
+    BOOLEAN   AmendedDontScan = FALSE;
+    EG_PIXEL  BGColor         = COLOR_LIGHTBLUE;
+    CHAR16   *DontScanItem    = NULL;
     CHAR16   *HiddenTags, *HiddenLegacy;
+    CHAR16   *OrigDontScanDirs;
     CHAR16   *OrigDontScanFiles;
     CHAR16   *OrigDontScanVolumes;
-    CHAR16   ShortCutKey;
+    CHAR16    ShortCutKey;
+
+    #if REFIT_DEBUG > 0
+    CHAR16  *MsgStr = NULL;
+    #endif
 
     ScanningLoaders = TRUE;
 
-    LOG2(1, LOG_LINE_SEPARATOR, L"", L"...\n", L"Seek Boot Loaders");
+    #if REFIT_DEBUG > 0
+    MsgStr = StrDuplicate (L"Seek Boot Loaders");
+    LOG(1, LOG_LINE_SEPARATOR, L"%s", MsgStr);
+    MsgLog ("%s...\n", MsgStr);
+    MyFreePool (&MsgStr);
+    #endif
 
     if (ShowMessage){
         egDisplayMessage (L"Seeking Boot Loaders. Please Wait...", &BGColor, CENTER);
@@ -1829,71 +2393,176 @@ VOID ScanForBootloaders (
 
     // Determine up-front if we will be scanning for legacy loaders
     for (i = 0; i < NUM_SCAN_OPTIONS; i++) {
-        ScanOption = GlobalConfig.ScanFor[i];
-        if (ScanOption == 'c' || ScanOption == 'C' ||
-            ScanOption == 'h' || ScanOption == 'H' ||
-            ScanOption == 'b' || ScanOption == 'B'
+        if (GlobalConfig.ScanFor[i] == 'c' || GlobalConfig.ScanFor[i] == 'C' ||
+            GlobalConfig.ScanFor[i] == 'h' || GlobalConfig.ScanFor[i] == 'H' ||
+            GlobalConfig.ScanFor[i] == 'b' || GlobalConfig.ScanFor[i] == 'B'
         ) {
             ScanForLegacy = TRUE;
+            break;
         }
     } // for
 
     // If UEFI & scanning for legacy loaders & deep legacy scan, update NVRAM boot manager list
     if ((GlobalConfig.LegacyType == LEGACY_TYPE_UEFI) &&
-        ScanForLegacy &&
-        GlobalConfig.DeepLegacyScan
+        ScanForLegacy && GlobalConfig.DeepLegacyScan
     ) {
         BdsDeleteAllInvalidLegacyBootOptions();
         BdsAddNonExistingLegacyBootOptions();
-    } // if
+    }
 
     if (GlobalConfig.HiddenTags) {
-    // We temporarily modify GlobalConfig.DontScanFiles and GlobalConfig.DontScanVolumes
+        // We temporarily modify GlobalConfig.DontScanFiles and GlobalConfig.DontScanVolumes
         // to include contents of EFI HiddenTags and HiddenLegacy variables so that we do not
-        // have to re-load these EFI variables in several functions called from this one. To
+        // have to re-load these UEFI variables in several functions called from this one. To
         // do this, we must be able to restore the original contents, so back them up first.
         // We do *NOT* do this with the GlobalConfig.DontScanFirmware and
         // GlobalConfig.DontScanTools variables because they are used in only one function
         // each, so it is easier to create a temporary variable for the merged contents
-    // there and not modify the global variable.
-    OrigDontScanFiles   = StrDuplicate (GlobalConfig.DontScanFiles);
-    OrigDontScanVolumes = StrDuplicate (GlobalConfig.DontScanVolumes);
+        // there and not modify the global variable.
+        OrigDontScanFiles   = StrDuplicate (GlobalConfig.DontScanFiles);
+        OrigDontScanVolumes = StrDuplicate (GlobalConfig.DontScanVolumes);
 
-    // Add hidden tags to two GlobalConfig.DontScan* variables....
-    HiddenTags = ReadHiddenTags (L"HiddenTags");
-    if ((HiddenTags) && (StrLen (HiddenTags) > 0)) {
-            LOG(2, LOG_LINE_NORMAL,
+        // Add hidden tags to two GlobalConfig.DontScan* variables.
+        HiddenTags = ReadHiddenTags (L"HiddenTags");
+        if ((HiddenTags) && (StrLen (HiddenTags) > 0)) {
+            #if REFIT_DEBUG > 0
+            LOG(3, LOG_LINE_NORMAL,
                 L"Merging HiddenTags into 'Dont Scan Files':- '%s'",
                 HiddenTags
             );
+            LOG(3, LOG_BLANK_LINE_SEP, L"X");
+            #endif
 
-        MergeStrings (&GlobalConfig.DontScanFiles, HiddenTags, L',');
-    }
+            MergeStrings (&GlobalConfig.DontScanFiles, HiddenTags, L',');
+        }
         MyFreePool (&HiddenTags);
 
-    HiddenLegacy = ReadHiddenTags (L"HiddenLegacy");
-    if ((HiddenLegacy) && (StrLen (HiddenLegacy) > 0)) {
-            LOG(2, LOG_LINE_NORMAL,
+        HiddenLegacy = ReadHiddenTags (L"HiddenLegacy");
+        if ((HiddenLegacy) && (StrLen (HiddenLegacy) > 0)) {
+            #if REFIT_DEBUG > 0
+            LOG(3, LOG_LINE_NORMAL,
                 L"Merging HiddenLegacy into 'Dont Scan Volumes':- '%s'",
                 HiddenLegacy
             );
+            LOG(3, LOG_BLANK_LINE_SEP, L"X");
+            #endif
 
-        MergeStrings (&GlobalConfig.DontScanVolumes, HiddenLegacy, L',');
-    }
+            MergeStrings (&GlobalConfig.DontScanVolumes, HiddenLegacy, L',');
+        }
 
         MyFreePool (&HiddenLegacy);
     } // if GlobalConfig.HiddenTags
+
+    // DA-TAG: Override Hidden/Disabled PreBoot Volumes if SyncAPFS is Active
+    if (GlobalConfig.SyncAPFS) {
+        OrigDontScanDirs = StrDuplicate (GlobalConfig.DontScanDirs);
+
+        if (GlobalConfig.DontScanFiles) {
+            while ((DontScanItem = FindCommaDelimited (GlobalConfig.DontScanFiles, i)) != NULL) {
+                DeleteItem = (MyStrStrIns (DontScanItem, L"Preboot:"))
+                    ? TRUE
+                    : (MyStriCmp (DontScanItem, L"Preboot"))
+                        ? TRUE
+                        : FALSE;
+
+                if (DeleteItem) {
+                    DeleteItemFromCsvList (DontScanItem, GlobalConfig.DontScanFiles);
+                    AmendedDontScan = TRUE;
+                }
+                else {
+                    i++;
+                }
+
+                MyFreePool (&DontScanItem);
+            } // while
+        } // if GlobalConfig
+
+        if (GlobalConfig.DontScanDirs) {
+            while ((DontScanItem = FindCommaDelimited (GlobalConfig.DontScanDirs, i)) != NULL) {
+                DeleteItem = (MyStrStrIns (DontScanItem, L"Preboot:"))
+                    ? TRUE
+                    : (MyStriCmp (DontScanItem, L"Preboot"))
+                        ? TRUE
+                        : FALSE;
+
+                if (DeleteItem) {
+                    DeleteItemFromCsvList (DontScanItem, GlobalConfig.DontScanDirs);
+                    AmendedDontScan = TRUE;
+                }
+                else {
+                    i++;
+                }
+
+                MyFreePool (&DontScanItem);
+            } // while
+        } // if GlobalConfig
+
+        if (GlobalConfig.DontScanVolumes) {
+            while ((DontScanItem = FindCommaDelimited (GlobalConfig.DontScanVolumes, i)) != NULL) {
+                DeleteItem = (MyStrStrIns (DontScanItem, L"Preboot:"))
+                    ? TRUE
+                    : (MyStriCmp (DontScanItem, L"Preboot"))
+                        ? TRUE
+                        : FALSE;
+
+                if (DeleteItem) {
+                    DeleteItemFromCsvList (DontScanItem, GlobalConfig.DontScanVolumes);
+                    AmendedDontScan = TRUE;
+                }
+                else {
+                    i++;
+                }
+
+                MyFreePool (&DontScanItem);
+            } // while
+        } // if GlobalConfig
+
+        #if REFIT_DEBUG > 0
+        if (AmendedDontScan) {
+            LOG(3, LOG_STAR_SEPARATOR, L"Amended 'Dont Scan' Items ... SyncAPFS is Active");
+        }
+        #endif
+    } // if GlobalConfig.SyncAPFS
+
+/*
+    // get count of options set to be scanned
+    UINTN SetOptions = 0;
+    for (i = 0; i < NUM_SCAN_OPTIONS; i++) {
+        switch (GlobalConfig.ScanFor[i]) {
+            case 'm': case 'M':
+            case 'i': case 'I':
+            case 'h': case 'H':
+            case 'e': case 'E':
+            case 'b': case 'B':
+            case 'o': case 'O':
+            case 'c': case 'C':
+            case 'n': case 'N':
+            case 'f': case 'F':
+            SetOptions = SetOptions + 1;
+        } // switch
+    } // for
+*/
 
     // scan for loaders and tools, add them to the menu
     for (i = 0; i < NUM_SCAN_OPTIONS; i++) {
         switch (GlobalConfig.ScanFor[i]) {
 
+           #if REFIT_DEBUG > 0
+                #define LOGNEWLINE(x) \
+                    if (LogNewLine) MsgLog ("\n"); \
+                    LogNewLine = TRUE; \
+                    MsgLog (x);
+            #else
+                #define LOGNEWLINE(x)
+            #endif
+
             #define DOONEMENUKEY(letter, msg, what) \
-            case letter : case letter - 32: \
-                MsgLog ("[ " msg "\n"); \
-                what ; \
-                MsgLog ("] " msg "\n"); \
-                break;
+                case letter : case letter - 32: \
+                    MsgLog ("[ " msg "\n"); \
+                    LOGNEWLINE(msg ":"); \
+                    what ; \
+                    MsgLog ("] " msg "\n"); \
+                    break;
 
             DOONEMENUKEY('m', "Scan Manual"            , ScanUserConfigured0 (GlobalConfig.ConfigFilename));
             DOONEMENUKEY('i', "Scan Internal"          , ScanInternal());
@@ -1904,30 +2573,54 @@ VOID ScanForBootloaders (
             DOONEMENUKEY('c', "Scan Optical (Legacy)"  , ScanLegacyDisc());
             DOONEMENUKEY('n', "Scan Net Boot"          , ScanNetboot());
             DOONEMENUKEY('f', "Scan Firmware"          , ScanFirmwareDefined(0, NULL, NULL));
-        } // switch()
+        } // switch
     } // for
 
     if (GlobalConfig.HiddenTags) {
-    // Restore the backed-up GlobalConfig.DontScan* variables
+        // Restore the backed-up GlobalConfig.DontScan* variables
         MyFreePool (&GlobalConfig.DontScanFiles);
         MyFreePool (&GlobalConfig.DontScanVolumes);
-        GlobalConfig.DontScanFiles = OrigDontScanFiles;
+        GlobalConfig.DontScanFiles   = OrigDontScanFiles;
         GlobalConfig.DontScanVolumes = OrigDontScanVolumes;
         LEAKABLE (GlobalConfig.DontScanFiles, "DontScanFiles");
         LEAKABLE (GlobalConfig.DontScanVolumes, "DontScanVolumes");
     }
 
+    if (OrigDontScanDirs) {
+        if (GlobalConfig.SyncAPFS && AmendedDontScan) {
+            MyFreePool (&GlobalConfig.DontScanDirs);
+            GlobalConfig.DontScanDirs = OrigDontScanDirs;
+
+        }
+        else {
+            MyFreePool (&OrigDontScanDirs);
+        }
+    }
+
     if (MainMenu->EntryCount < 1) {
-        LOG2(1, LOG_THREE_STAR_MID, L"* WARN: ", L"\n\n", L"Could Not Find Boot Loaders");
+        #if REFIT_DEBUG > 0
+        MsgStr = StrDuplicate (L"Could Not Find Boot Loaders");
+        LOG(4, LOG_THREE_STAR_MID, L"%s", MsgStr);
+        MsgLog ("* WARN: %s\n\n", MsgStr);
+        MyFreePool (&MsgStr);
+        #endif
     }
     else {
         // assign shortcut keys
-        LOG2(1, LOG_LINE_SEPARATOR, L"\n\n", L":\n", L"Assigning Boot Shortcut Keys");
+        #if REFIT_DEBUG > 0
+        MsgStr = StrDuplicate (L"Assign Shortcut Keys");
+        LOG(1, LOG_LINE_SEPARATOR, L"%s", MsgStr);
+        MsgLog ("\n\n");
+        MsgLog ("%s:\n", MsgStr);
+        MyFreePool (&MsgStr);
+
+        UINTN KeyNum = 0;
+        #endif
 
         for (i = 0; i < MainMenu->EntryCount && MainMenu->Entries[i]->Row == 0; i++) {
             if (i < 9) {
                 #if REFIT_DEBUG > 0
-                k = i + 1;
+                KeyNum = i + 1;
                 #endif
 
                 ShortCutKey = (CHAR16) ('1' + i);
@@ -1936,7 +2629,7 @@ VOID ScanForBootloaders (
                 ShortCutKey = (CHAR16) ('9' - i);
 
                 #if REFIT_DEBUG > 0
-                k = 0;
+                KeyNum = 0;
                 #endif
             }
             else {
@@ -1945,37 +2638,60 @@ VOID ScanForBootloaders (
             MainMenu->Entries[i]->ShortcutDigit = ShortCutKey;
 
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"  - ", (k < MainMenu->EntryCount && MainMenu->Entries[i]->Row == 0 && k != 0) ? L"\n" : L"\n\n",
+            MsgStr = PoolPrint (
                 L"Set Key '%d' to %s",
-                k, GetPoolStr (&MainMenu->Entries[i]->Title)
+                KeyNum, GetPoolStr (&MainMenu->Entries[i]->Title)
             );
+            LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+            MsgLog ("  - %s", MsgStr);
+            MyFreePool (&MsgStr);
+
+            if (KeyNum < MainMenu->EntryCount &&
+                MainMenu->Entries[i]->Row == 0 &&
+                KeyNum != 0
+            ) {
+                MsgLog ("\n");
+            }
+            else {
+                MsgLog ("\n\n");
+            }
             #endif
         }  // for
 
-        LOG2(4, LOG_THREE_STAR_SEP, L"INFO: ", L"\n\n",
+        #if REFIT_DEBUG > 0
+        MsgStr = PoolPrint (
             L"Assigned Shortcut Key%s to %d of %d Loader%s",
-            i == 1 ? L"" : L"s", i,
-            MainMenu->EntryCount,
-            MainMenu->EntryCount == 1 ? L"" : L"s"
+            (i == 1) ? L"" : L"s",
+            i, MainMenu->EntryCount,
+            (MainMenu->EntryCount == 1) ? L"" : L"s"
         );
+        LOG(2, LOG_THREE_STAR_SEP, L"%s", MsgStr);
+        MsgLog ("INFO: %s\n\n", MsgStr);
+        MyFreePool (&MsgStr);
+        #endif
     }
 
     // wait for user ACK when there were errors
     FinishTextScreen (FALSE);
+
+    ScanningLoaders = FALSE;
 } // VOID ScanForBootloaders()
 
 // Checks to see if a specified file seems to be a valid tool.
 // Returns TRUE if it passes all tests, FALSE otherwise
 static
-BOOLEAN IsValidTool (IN REFIT_VOLUME *BaseVolume, CHAR16 *PathName) {
+BOOLEAN IsValidTool (
+    REFIT_VOLUME *BaseVolume,
+    CHAR16       *PathName
+) {
     CHAR16  *TestVolName = NULL, *TestPathName = NULL, *TestFileName = NULL, *DontScanTools = NULL;
-    BOOLEAN retval = TRUE;
-    UINTN i = 0;
+    BOOLEAN  retval = TRUE;
+    UINTN    i      = 0;
 
-    LOG(4, LOG_LINE_NORMAL,
-        L"Checking tool validity:- '%s' on '%s'",
-        PathName, GetPoolStr (&BaseVolume->VolName)
-    );
+    if (!FileExists (BaseVolume->RootDir, PathName)) {
+        // Early return if file does not exist
+        return FALSE;
+    }
 
     if (gHiddenTools == NULL) {
         DontScanTools = ReadHiddenTags (L"HiddenTools");
@@ -1990,9 +2706,21 @@ BOOLEAN IsValidTool (IN REFIT_VOLUME *BaseVolume, CHAR16 *PathName) {
     else if (!MyStriCmp (gHiddenTools, L"NotSet")) {
         DontScanTools = StrDuplicate (gHiddenTools);
     }
-    MergeStrings(&DontScanTools, GlobalConfig.DontScanTools, L',');
 
-    if (FileExists (BaseVolume->RootDir, PathName) && IsValidLoader (BaseVolume->RootDir, PathName)) {
+    if (!MyStriCmp (gHiddenTools, L"NotSet")) {
+        MergeStrings (&DontScanTools, GlobalConfig.DontScanTools, L',');
+    }
+
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL,
+        L"Check File is Valid:- '%s'",
+        PathName
+    );
+    #endif
+
+    if (FileExists (BaseVolume->RootDir, PathName) &&
+        IsValidLoader (BaseVolume->RootDir, PathName)
+    ) {
         SplitPathName (PathName, &TestVolName, &TestPathName, &TestFileName);
 
         CHAR16 *DontScanThis = NULL;
@@ -2004,7 +2732,8 @@ BOOLEAN IsValidTool (IN REFIT_VOLUME *BaseVolume, CHAR16 *PathName) {
                 ((DontVolName == NULL) || (VolumeMatchesDescription (BaseVolume, DontVolName)))
             ) {
                 retval = FALSE;
-            } // if
+            }
+
             MyFreePool (&DontScanThis);
             MyFreePool (&DontVolName);
             MyFreePool (&DontPathName);
@@ -2013,7 +2742,7 @@ BOOLEAN IsValidTool (IN REFIT_VOLUME *BaseVolume, CHAR16 *PathName) {
     }
     else {
         retval = FALSE;
-    } // if
+    }
 
     MyFreePool (&TestVolName);
     MyFreePool (&TestPathName);
@@ -2030,15 +2759,15 @@ BOOLEAN FindTool (
     CHAR16 *Locations,
     CHAR16 *Names,
     CHAR16 *Description,
-    UINTN  Icon
+    UINTN   Icon
 ) {
-    UINTN   j = 0;
-    UINTN   k;
-    UINTN   VolumeIndex;
+    UINTN    j = 0;
+    UINTN    k = 0;
+    UINTN    VolumeIndex;
     CHAR16  *DirName;
     CHAR16  *FileName;
     CHAR16  *PathName;
-    BOOLEAN FoundTool = FALSE;
+    BOOLEAN  FoundTool = FALSE;
 
 //DA-TAG: Commented Out
 //    CHAR16 FullDescription;
@@ -2049,14 +2778,15 @@ BOOLEAN FindTool (
             PathName = StrDuplicate (DirName);
             MergeStrings (&PathName, FileName, MyStriCmp (PathName, L"\\") ? 0 : L'\\');
             for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
-                if ((Volumes[VolumeIndex]->RootDir != NULL)
-                    && (IsValidTool (Volumes[VolumeIndex], PathName))
+                if (Volumes[VolumeIndex]->RootDir != NULL &&
+                    IsValidTool (Volumes[VolumeIndex], PathName)
                 ) {
-                    LOG(1, LOG_LINE_NORMAL,
+                    #if REFIT_DEBUG > 0
+                    LOG(3, LOG_LINE_NORMAL,
                         L"Adding tag for '%s' on '%s'",
-                        FileName,
-                        GetPoolStr (&Volumes[VolumeIndex]->VolName)
+                        FileName, GetPoolStr (&Volumes[VolumeIndex]->VolName)
                     );
+                    #endif
 
                     FoundTool = TRUE;
 //DA-TAG: Commented Out
@@ -2070,22 +2800,21 @@ BOOLEAN FindTool (
 //DA-TAG: Changed "FullDescription" to "Description" below
                     AddToolEntry (
                         Volumes[VolumeIndex],
-                        PathName,
-                        Description,
+                        PathName, Description,
                         BuiltinIcon (Icon),
-                        0,
-                        FALSE
+                        0, FALSE
                     );
 
+                    #if REFIT_DEBUG > 0
                     MsgLog (
-                        "Added Tool:- '%s' : %s%s\n",
-                        Description,
-                        DirName,
-                        FileName
+                        "Added Tool:- '%s' : %s%s",
+                        Description, DirName, FileName
                     );
+                    #endif
 
-                } // if
+                } // if Volumes[VolumeIndex]->RootDir
             } // for
+
             MyFreePool (&PathName);
             MyFreePool (&FileName);
         } // while Names
@@ -2098,18 +2827,30 @@ BOOLEAN FindTool (
 
 // Add the second-row tags containing built-in and external tools
 VOID ScanForTools (VOID) {
-    UINTN             i;
+    UINTN             i, k;
     UINTN             VolumeIndex;
-    VOID             *ItemBuffer = NULL;
+    VOID             *ItemBuffer = 0;
+    CHAR16           *TmpStr     = NULL;
     CHAR16           *FileName   = NULL;
-    CHAR16           *VolName    = NULL;
+    CHAR16           *VolumeTag  = NULL;
+    CHAR16           *RecoverVol = NULL;
     CHAR16           *MokLocations;
     CHAR16           *Description;
     UINT64            osind;
     UINT32            CsrValue;
 
     MsgLog ("[ ScanForTools\n");
-    //LOG2(1, LOG_LINE_SEPARATOR, L"", L"...\n", L"Scan for Builtin/External Tools");
+
+    #if REFIT_DEBUG > 0
+    CHAR16 *ToolStr   = NULL;
+    UINTN   ToolTotal = 0;
+    #endif
+
+
+    #if REFIT_DEBUG > 0
+    LOG(1, LOG_LINE_SEPARATOR, L"Scan for UEFI Tools");
+    MsgLog ("Scan for UEFI Tools...");
+    #endif
 
     MokLocations = MergeStringsNew (MOK_LOCATIONS, SelfDirPath, L',');
 
@@ -2119,6 +2860,7 @@ VOID ScanForTools (VOID) {
         BOOLEAN Skipped = FALSE;
 
         UINTN j = 0;
+        BOOLEAN OtherFind = FALSE;
 
         UINTN TheTag = GlobalConfig.ShowTools[i];
 
@@ -2140,6 +2882,16 @@ VOID ScanForTools (VOID) {
             MsgLog ("[ Tool Type %02d ...%s\n", i + 1, ToolName);
         }
 
+        #if REFIT_DEBUG > 0
+        #define TAGLOG() \
+        ToolStr = PoolPrint (L"Added Tool:- '%s'", ToolName); \
+        LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr); \
+        MsgLog ("%s", ToolStr); \
+        MyFreePool (&ToolStr);
+        #else
+        #define TAGLOG()
+        #endif
+
         #define TagAddMenuEntry() \
             do { \
                 REFIT_MENU_ENTRY *TempMenuEntry; \
@@ -2148,7 +2900,7 @@ VOID ScanForTools (VOID) {
                 CopyFromPoolImage_PI_ (&TempMenuEntry->Image_PI_, BuiltinIcon (TheIcon)); \
                 TempMenuEntry->ShortcutLetter = TheShortcut; \
                 AddMenuEntry (MainMenu, TempMenuEntry); \
-                MsgLog("Added Tool:- '%s'\n", ToolName); \
+                TAGLOG(); \
             } while (0)
 
 
@@ -2189,71 +2941,98 @@ VOID ScanForTools (VOID) {
                     osind = *(UINT64*) ItemBuffer;
                     if (osind & EFI_OS_INDICATIONS_BOOT_TO_FW_UI) {
                         TagAddMenuEntry();
-                    } // if
+                    }
                     MyFreePool (&ItemBuffer);
                 }
                 else {
-                    LOG(1, LOG_LINE_NORMAL,
-                        L"Showtools includes firmware, but 'OsIndicationsSupported' is missing"
+                    #if REFIT_DEBUG > 0
+                    LOG(3, LOG_LINE_NORMAL,
+                        L"'Showtools' Includes Firmware Tool but 'OsIndicationsSupported' Variable is Missing!!"
                     );
+                    #endif
                 }
                 break;
 
             case TAG_SHELL:
                 while ((FileName = FindCommaDelimited (SHELL_NAMES, j++)) != NULL) {
-                    if (FileExists (SelfVolume->RootDir, FileName)) {
-                        if (IsValidTool (SelfVolume, FileName)) {
-                            LOG(1, LOG_LINE_NORMAL,
-                                L"Adding Shell tag for '%s' on '%s'",
-                                FileName,
-                                GetPoolStr (&SelfVolume->VolName)
-                            );
+                    if (IsValidTool (SelfVolume, FileName)) {
+                        #if REFIT_DEBUG > 0
+                        LOG(3, LOG_LINE_NORMAL,
+                            L"Adding Shell Tag:- '%s' on '%s'",
+                            FileName,
+                            GetPoolStr (&SelfVolume->VolName)
+                        );
+                        #endif
 
-                            FoundTool = TRUE;
-                            AddToolEntry (
-                                SelfVolume,
-                                FileName,
-                                TheTitle,
-                                BuiltinIcon (TheIcon),
-                                TheShortcut,
-                                FALSE
-                            );
+                        FoundTool = TRUE;
+                        AddToolEntry (
+                            SelfVolume, FileName,
+                            TheTitle,
+                            BuiltinIcon (TheIcon),
+                            TheShortcut, FALSE
+                        );
 
-                            MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
-                        } // if IsValidTool
+                        #if REFIT_DEBUG > 0
+                        ToolStr = PoolPrint (L"Added Tool:- '%s' ... %s", ToolName, FileName);
+                        LOG(3, LOG_THREE_STAR_MID, L"%s", ToolStr);
+                        if (OtherFind) {
+                            MsgLog ("\n                               ");
+                        }
+                        MsgLog ("%s", ToolStr);
+                        MyFreePool (&ToolStr);
+                        #endif
+
+                        OtherFind = TRUE;
                     }
 
                     MyFreePool (&FileName);
                 } // while
 
-                if (ScanFirmwareDefined (1, L"Shell", BuiltinIcon(TheIcon))) {
-                    FoundTool = TRUE;
+                // joevt - look for Shell from firmware even if we added Shells from disk
+                {
+                    #if REFIT_DEBUG > 0
+                    LOG(3, LOG_BLANK_LINE_SEP, L"X");
+                    #endif
+                
+                    if (ScanFirmwareDefined (1, L"Shell", BuiltinIcon(TheIcon))) {
+                        FoundTool = TRUE;
+                    }
+                
+                    #if REFIT_DEBUG > 0
+                    LOG(3, LOG_BLANK_LINE_SEP, L"X");
+                    #endif
                 }
+
                 break;
 
             case TAG_GPTSYNC:
                 while ((FileName = FindCommaDelimited (GPTSYNC_NAMES, j++)) != NULL) {
-                    if (FileExists (SelfVolume->RootDir, FileName)) {
-                        if (IsValidTool (SelfVolume, FileName)) {
-                            LOG(1, LOG_LINE_NORMAL,
-                                L"Adding Hybrid MBR tool tag for '%s' on '%s'",
-                                FileName,
-                                GetPoolStr (&SelfVolume->VolName)
-                            );
+                    if (IsValidTool (SelfVolume, FileName)) {
+                        #if REFIT_DEBUG > 0
+                        LOG(3, LOG_LINE_NORMAL,
+                            L"Adding Hybrid MBR Tag:- '%s' on '%s'",
+                            FileName, GetPoolStr (&SelfVolume->VolName)
+                        );
+                        #endif
 
-                            FoundTool = TRUE;
-                            AddToolEntry (
-                                SelfVolume,
-                                FileName,
-                                TheTitle,
-                                BuiltinIcon (TheIcon),
-                                TheShortcut,
-                                FALSE
-                            );
+                        FoundTool = TRUE;
+                        AddToolEntry (
+                            SelfVolume, FileName,
+                            TheTitle,
+                            BuiltinIcon (TheIcon),
+                            TheShortcut, FALSE
+                        );
 
-                            MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
-                        } // if IsValidTool
-                    } // if FileExists
+                        #if REFIT_DEBUG > 0
+                        ToolStr = PoolPrint (L"Added Tool:- '%s' ... %s", ToolName, FileName);
+                        LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr);
+                        if (j > 0) {
+                            MsgLog ("\n                               ");
+                        }
+                        MsgLog ("%s", ToolStr);
+                        MyFreePool (&ToolStr);
+                        #endif
+                    }
 
                     MyFreePool (&FileName);
                 } // while
@@ -2261,27 +3040,35 @@ VOID ScanForTools (VOID) {
 
             case TAG_GDISK:
                 while ((FileName = FindCommaDelimited (GDISK_NAMES, j++)) != NULL) {
-                    if (FileExists (SelfVolume->RootDir, FileName)) {
-                        if (IsValidTool (SelfVolume, FileName)) {
-                            LOG(1, LOG_LINE_NORMAL,
-                                L"Adding GPT fdisk tag for '%s' on '%s'",
-                                FileName,
-                                GetPoolStr (&SelfVolume->VolName)
-                            );
+                    if (IsValidTool (SelfVolume, FileName)) {
+                        #if REFIT_DEBUG > 0
+                        LOG(3, LOG_LINE_NORMAL,
+                            L"Adding GDisk Tag:- '%s' on '%s'",
+                            FileName, GetPoolStr (&SelfVolume->VolName)
+                        );
+                        #endif
 
-                            FoundTool = TRUE;
-                            AddToolEntry (
-                                SelfVolume,
-                                FileName,
-                                TheTitle,
-                                BuiltinIcon (TheIcon),
-                                TheShortcut,
-                                FALSE
-                            );
+                        FoundTool = TRUE;
+                        AddToolEntry (
+                            SelfVolume, FileName,
+                            TheTitle,
+                            BuiltinIcon (TheIcon),
+                            TheShortcut, FALSE
+                        );
 
-                            MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
-                        } // if IsValidTool
-                    } // if FileExists
+                        #if REFIT_DEBUG > 0
+                        ToolStr = PoolPrint (L"Added Tool:- '%s' ... %s", ToolName, FileName);
+                        LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr);
+                        if (OtherFind) {
+                            MsgLog ("\n                               ");
+                        }
+                        MsgLog ("%s", ToolStr);
+                        MyFreePool (&ToolStr);
+                        #endif
+
+                        OtherFind = TRUE;
+                    }
+
                     MyFreePool (&FileName);
                 } // while
                 break;
@@ -2289,69 +3076,104 @@ VOID ScanForTools (VOID) {
             case TAG_NETBOOT:
                 while ((FileName = FindCommaDelimited (NETBOOT_NAMES, j++)) != NULL) {
                     if (IsValidTool (SelfVolume, FileName)) {
-                        LOG(1, LOG_LINE_NORMAL,
-                            L"Adding Netboot tag for '%s' on '%s'",
-                            FileName,
-                            GetPoolStr (&SelfVolume->VolName)
+                        #if REFIT_DEBUG > 0
+                        LOG(3, LOG_LINE_NORMAL,
+                            L"Adding Netboot Tag:- '%s' on '%s'",
+                            FileName, GetPoolStr (&SelfVolume->VolName)
                         );
+                        #endif
 
                         FoundTool = TRUE;
                         AddToolEntry (
-                            SelfVolume,
-                            FileName,
+                            SelfVolume, FileName,
                             TheTitle,
                             BuiltinIcon (TheIcon),
-                            TheShortcut,
-                            FALSE
+                            TheShortcut, FALSE
                         );
 
-                        MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
-                    } // if IsValidTool
+                        #if REFIT_DEBUG > 0
+                        ToolStr = PoolPrint (L"Added Tool:- '%s' ... %s", ToolName, FileName);
+                        LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr);
+                        if (OtherFind) {
+                            MsgLog ("\n                               ");
+                        }
+                        MsgLog ("%s", ToolStr);
+                        MyFreePool (&ToolStr);
+                        #endif
+
+                        OtherFind = TRUE;
+                    }
 
                     MyFreePool (&FileName);
-                    FileName = NULL;
                 } // while
                 break;
 
             case TAG_APPLE_RECOVERY:
                 for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
-                    //MsgLog ("[ Scanning for Apple Recovery\n");
                     j = 0;
                     while (
-                        (FileName = FindCommaDelimited (GlobalConfig.MacOSRecoveryFiles, j++)) != NULL
+                        (
+                            FileName = FindCommaDelimited (
+                                GlobalConfig.MacOSRecoveryFiles, j++
+                            )
+                        ) != NULL
                     ) {
-                        //MsgLog ("[ Looking for '%s'\n", FileName);
                         if ((Volumes[VolumeIndex]->RootDir != NULL) &&
-                            FileExists (Volumes[VolumeIndex]->RootDir, FileName)
+                            (IsValidTool (Volumes[VolumeIndex], FileName))
                         ) {
-                            //MsgLog ("Found '%s'\n", FileName);
-                            if (IsValidTool (Volumes[VolumeIndex], FileName)) {
-                                LOG(1, LOG_LINE_NORMAL,
-                                    L"Adding Apple Recovery tag for '%s' on '%s'",
-                                    FileName, GetPoolStr (&Volumes[VolumeIndex]->VolName)
-                                );
+                            // Get a meaningful tag for the recovery volume if available
+                            for (k = 0; k < VolumesCount; k++) {
+                                TmpStr = GuidAsString (&(Volumes[k]->VolUuid));
+                                if (MyStrStrIns (FileName, TmpStr)) {
+                                    MyFreePool (&TmpStr);
+                                    RecoverVol = StrDuplicate (GetPoolStr (&Volumes[k]->VolName));
 
-                                FoundTool = TRUE;
-                                Description = PoolPrint (
-                                    L"%s on %s",
-                                    ToolName, GetPoolStr (&Volumes[VolumeIndex]->VolName)
-                                );
-                                AddToolEntry (
-                                    Volumes[VolumeIndex],
-                                    FileName, Description,
-                                    BuiltinIcon (TheIcon),
-                                    TheShortcut, TRUE
-                                );
+                                    break;
+                                }
+                                MyFreePool (&TmpStr);
+                            } // for
 
-                                MyFreePool (&Description);
+                            VolumeTag = RecoverVol ? RecoverVol : GetPoolStr (&Volumes[VolumeIndex]->VolName);
 
-                                MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
-                            } // if IsValidTool
-                        } // if Volumes[VolumeIndex]
-                        //MsgLog ("] Looking for '%s'\n", FileName);
+                            #if REFIT_DEBUG > 0
+                            LOG(3, LOG_LINE_NORMAL,
+                                L"Adding Mac Recovery Tag:- '%s' for '%s'",
+                                FileName, VolumeTag
+                            );
+                            #endif
+
+                            FoundTool = TRUE;
+                            Description = PoolPrint (
+                                L"%s for %s",
+                                ToolName, VolumeTag
+                            );
+                            AddToolEntry (
+                                Volumes[VolumeIndex],
+                                FileName, Description,
+                                BuiltinIcon (TheIcon),
+                                TheShortcut, TRUE
+                            );
+                            MyFreePool (&Description);
+
+                            #if REFIT_DEBUG > 0
+                            ToolStr = PoolPrint (
+                                L"Added Tool:- '%s' ... %s for %s",
+                                ToolName, FileName, VolumeTag
+                            );
+                            LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr);
+                            if (OtherFind) {
+                                MsgLog ("\n                               ");
+                            }
+                            MsgLog ("%s", ToolStr);
+                            MyFreePool (&ToolStr);
+                            #endif
+
+                            OtherFind = TRUE;
+                        }
+
                         MyFreePool (&FileName);
+                        MyFreePool (&RecoverVol);
                     } // while
-                    //MsgLog ("] Scanning for Apple Recovery\n");
                 } // for
                 break;
 
@@ -2359,16 +3181,19 @@ VOID ScanForTools (VOID) {
                 while (
                     (FileName = FindCommaDelimited (GlobalConfig.WindowsRecoveryFiles, j++)) != NULL
                 ) {
-                    SplitVolumeAndFilename (&FileName, &VolName);
+                    SplitVolumeAndFilename (&FileName, &VolumeTag);
                     for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
                         if ((Volumes[VolumeIndex]->RootDir != NULL) &&
+                            (MyStrStr (FileName, L"\\BOOT\\BOOT") != NULL) &&
                             (IsValidTool (Volumes[VolumeIndex], FileName)) &&
-                            ((VolName == NULL) || MyStriCmp (VolName, GetPoolStr (&Volumes[VolumeIndex]->VolName)))
+                            ((VolumeTag == NULL) || MyStriCmp (VolumeTag, GetPoolStr (&Volumes[VolumeIndex]->VolName)))
                         ) {
-                            LOG(1, LOG_LINE_NORMAL,
-                                L"Adding Windows Recovery tag for '%s' on '%s'",
+                            #if REFIT_DEBUG > 0
+                            LOG(3, LOG_LINE_NORMAL,
+                                L"Adding Windows Recovery Tag:- '%s' on '%s'",
                                 FileName, GetPoolStr (&Volumes[VolumeIndex]->VolName)
                             );
+                            #endif
 
                             FoundTool = TRUE;
                             Description = PoolPrint (
@@ -2384,39 +3209,61 @@ VOID ScanForTools (VOID) {
                                 TheShortcut,
                                 TRUE
                             );
-
                             MyFreePool (&Description);
 
-                            MsgLog ("Added Tool:- (%s) '%s'\n", ToolName, FileName);
+                            #if REFIT_DEBUG > 0
+                            ToolStr = PoolPrint (L"Added Tool:- '%s' ... %s", ToolName, FileName);
+                            LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr);
+                            if (OtherFind) {
+                                MsgLog ("\n                               ");
+                            }
+                            MsgLog ("%s", ToolStr);
+                            MyFreePool (&ToolStr);
+                            #endif
+
+                            OtherFind = TRUE;
                         } // if Volumes[VolumeIndex]->RootDir
                     } // for
 
                     MyFreePool (&FileName);
-                    MyFreePool (&VolName);
-                    FileName = VolName = NULL;
+                    MyFreePool (&VolumeTag);
                 } // while
                 break;
 
-        } // switch()
+        } // switch
         
         #if REFIT_DEBUG > 0
         if (Skipped) {
             if (FoundTool) {
-                MsgLog ("* WARN: Found tool for '%s'\n", ToolName);
+                ToolStr = PoolPrint (L"Skipped Found Tool:- '%s'", ToolName);
+                LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr);
+                MsgLog ("** WARN ** %s", ToolStr);
+                MyFreePool (&ToolStr);
             }
         }
         else {
             if (!FoundTool) {
-                MsgLog ("Could Not Find Tool:- '%s'\n", ToolName);
+                ToolStr = PoolPrint (L"Could Not Find Tool:- '%s'", ToolName);
+                LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr);
+                MsgLog ("** WARN ** %s", ToolStr);
+                MyFreePool (&ToolStr);
             }
             MsgLog ("] Tool Type %02d ...%s\n", i + 1, ToolName);
         }
         #endif
 
         MyFreePool (&FileName);
-        MyFreePool (&VolName);
     } // for
 
+    #if REFIT_DEBUG > 0
+    ToolStr = PoolPrint (L"Processed %d Tool Types", ToolTotal);
+    LOG(3, LOG_THREE_STAR_SEP, L"%s", ToolStr);
+    LOG(3, LOG_BLANK_LINE_SEP, L"%s", ToolStr);
+    MsgLog ("\n\n");
+    MsgLog ("INFO: %s", ToolStr);
+    MsgLog ("\n\n");
+    #endif
+    
     MyFreePool (&MokLocations);
 
     MsgLog ("] ScanForTools\n");

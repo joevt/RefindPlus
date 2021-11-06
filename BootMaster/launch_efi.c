@@ -58,7 +58,6 @@
 #include "scan.h"
 #include "BootLog.h"
 
-
 //
 // constants
 
@@ -79,10 +78,16 @@
 
 #define FAT_ARCH                0x0ef1fab9 /* ID for Apple "fat" binary */
 
+CHAR16 *BootSelection = NULL;
+
+
+extern BOOLEAN IsBoot;
+
+
 static
 VOID WarnSecureBootError(
-    CHAR16 *Name,
-    BOOLEAN Verbose
+    CHAR16  *Name,
+    BOOLEAN  Verbose
 ) {
     CHAR16 *MsgStrA = NULL;
     CHAR16 *MsgStrB = NULL;
@@ -98,9 +103,9 @@ VOID WarnSecureBootError(
 
     MsgStrA = PoolPrint (L"Secure Boot Validation Failure While Loading %s!!", Name);
 
-    refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
+    REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
     PrintUglyText (MsgStrA, NEXTLINE);
-    refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
+    REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
     if (Verbose && secure_mode()) {
         MsgStrB = PoolPrint (
@@ -140,8 +145,17 @@ VOID WarnSecureBootError(
 } // VOID WarnSecureBootError()
 
 // Returns TRUE if this file is a valid EFI loader file, and is proper ARCH
-BOOLEAN IsValidLoader(EFI_FILE *RootDir, CHAR16 *FileName) {
-    BOOLEAN         IsValid;
+BOOLEAN IsValidLoader (
+    EFI_FILE *RootDir,
+    CHAR16   *FileName
+) {
+    BOOLEAN IsValid;
+
+    if (!FileExists (RootDir, FileName)) {
+        // Early return if file does not exist
+        return FALSE;
+    }
+
 
 #if defined (EFIX64) | defined (EFI32) | defined (EFIAARCH64)
     EFI_STATUS      Status;
@@ -153,48 +167,54 @@ BOOLEAN IsValidLoader(EFI_FILE *RootDir, CHAR16 *FileName) {
         // Assume valid here, because Macs produce NULL RootDir (& maybe FileName)
         // when launching from a Firewire drive. This should be handled better, but
         // fix would have to be in StartEFIImage() and/or in FindVolumeAndFilename().
+        #if REFIT_DEBUG > 0
         LOG(4, LOG_THREE_STAR_MID,
-            L"EFI file is *ASSUMED* to be valid:- '%s'",
-            FileName
+            L"EFI File is *ASSUMED* to be Valid:- '%s'",
+            FileName ? FileName : L"NULL"
         );
+        #endif
 
         return TRUE;
     } // if
 
     LEAKABLEEXTERNALSTART ("IsValidLoader Open");
-    Status = refit_call5_wrapper(
+    Status = REFIT_CALL_5_WRAPPER(
         RootDir->Open, RootDir,
         &FileHandle, FileName,
         EFI_FILE_MODE_READ, 0
     );
     LEAKABLEEXTERNALSTOP ();
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
+        #if REFIT_DEBUG > 0
         LOG(4, LOG_THREE_STAR_MID,
-            L"EFI file is *NOT* valid:- '%s'",
-            FileName
+            L"EFI File is *NOT* Valid:- '%s'",
+            FileName ? FileName : L"NULL"
         );
-        
+        #endif
+
         return FALSE;
     }
 
-    Status = refit_call3_wrapper(FileHandle->Read, FileHandle, &Size, Header);
-    refit_call1_wrapper(FileHandle->Close, FileHandle);
+    Status = REFIT_CALL_3_WRAPPER(FileHandle->Read, FileHandle, &Size, Header);
+    REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
 
-    IsValid = !EFI_ERROR (Status) &&
+    IsValid = !EFI_ERROR(Status) &&
               Size == sizeof (Header) &&
               ((Header[0] == 'M' && Header[1] == 'Z' &&
-               (Size = *(UINT32 *)&Header[0x3c]) < 0x180 &&
+               (Size = *(UINT32 *) &Header[0x3c]) < 0x180 &&
                Header[Size] == 'P' && Header[Size+1] == 'E' &&
                Header[Size+2] == 0 && Header[Size+3] == 0 &&
-               *(UINT16 *)&Header[Size+4] == EFI_STUB_ARCH) ||
-              (*(UINT32 *)&Header == FAT_ARCH));
+               *(UINT16 *) &Header[Size+4] == EFI_STUB_ARCH) ||
+              (*(UINT32 *) &Header == FAT_ARCH));
 
+    #if REFIT_DEBUG > 0
     LOG(4, LOG_THREE_STAR_MID,
-        L"EFI file is %s:- '%s'",
-        IsValid ? L"valid" : L"*NOT* valid",
-        FileName
+        L"EFI File is %s:- '%s'",
+        IsValid  ? L"Valid" : L"*NOT* Valid",
+        FileName ? FileName : L"NULL"
     );
+    #endif
 #else
     IsValid = TRUE;
 #endif
@@ -208,9 +228,9 @@ EFI_STATUS StartEFIImage (
     IN CHAR16        *Filename,
     IN CHAR16        *LoadOptions,
     IN CHAR16        *ImageTitle,
-    IN CHAR8         OSType,
-    IN BOOLEAN       Verbose,
-    IN BOOLEAN       IsDriver
+    IN CHAR8          OSType,
+    IN BOOLEAN        Verbose,
+    IN BOOLEAN        IsDriver
 ) {
     EFI_STATUS         Status;
     EFI_STATUS         ReturnStatus;
@@ -219,59 +239,91 @@ EFI_STATUS StartEFIImage (
     EFI_DEVICE_PATH   *DevicePath        = NULL;
     EFI_LOADED_IMAGE  *ChildLoadedImage  = NULL;
     CHAR16            *FullLoadOptions   = NULL;
-    CHAR16            *ErrorInfo         = NULL;
     CHAR16            *EspGUID           = NULL;
+    CHAR16            *MsgStr            = NULL;
     EFI_GUID           SystemdGuid       = SYSTEMD_GUID_VALUE;
-
 
     MsgLog ("[ StartEFIImage Title:'%s' FileName:'%s'\n", ImageTitle, Filename);
 
     if (!Volume) {
         ReturnStatus = EFI_INVALID_PARAMETER;
+
+        #if REFIT_DEBUG > 0
+        LOG2(1, LOG_STAR_SEPARATOR, L"* ", L"\n\n", L"ERROR: '%r' While Starting EFI Image!!",
+            ReturnStatus
+        );
+        #endif
+
         MsgLog ("] StartEFIImage Volume is NULL\n");
         return ReturnStatus;
     }
 
     // set load options
     if (LoadOptions != NULL) {
-        FullLoadOptions = StrDuplicate(LoadOptions);
+        FullLoadOptions = StrDuplicate (LoadOptions);
         if (OSType == 'M') {
-            MergeStrings(&FullLoadOptions, L" ", 0);
+            MergeStrings (&FullLoadOptions, L" ", 0);
             // NOTE: That last space is also added by the EFI shell and seems to be significant
             // when passing options to Apple's boot.efi...
-        } // if
-    } // if (LoadOptions != NULL)
+        }
+    }
 
-    LOG(3, LOG_LINE_NORMAL,
+    MsgStr = PoolPrint (
         L"Starting '%s' ... Load Options:- '%s'",
-        ImageTitle,
-        FullLoadOptions ? FullLoadOptions : L""
+        ImageTitle, FullLoadOptions ? FullLoadOptions : L"NULL"
     );
 
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL, MsgStr);
+    #endif
+
     if (Verbose) {
-        Print(
-            L"Starting %s\nUsing load options '%s'\n",
-            ImageTitle,
-            FullLoadOptions ? FullLoadOptions : L""
-        );
+        Print(L"%s\n", MsgStr);
     }
+
+    MyFreePool (&MsgStr);
 
     ReturnStatus = Status = EFI_LOAD_ERROR;  // in case the list is empty
     // Some EFIs crash if attempting to load driver for invalid architecture, so
     // protect for this condition; but sometimes Volume comes back NULL, so provide
     // an exception. (TODO: Handle this special condition better.)
-    if (IsValidLoader(Volume->RootDir, Filename)) {
-        DevicePath = FileDevicePath(Volume->DeviceHandle, Filename);
-        // NOTE: Commented-out line below could be more efficient if file were read ahead of
-        // time and passed as a pre-loaded image to LoadImage(), but it doesn't work on my
-        // 32-bit Mac Mini or my 64-bit Intel box when launching a Linux kernel; the
-        // kernel returns a "Failed to handle fs_proto" error message.
+    if (IsValidLoader (Volume->RootDir, Filename)) {
+        // Store loader name if booting and set to do so
+        if (IsBoot && BootSelection) {
+            StoreLoaderName (BootSelection);
+        }
+        BootSelection = NULL;
+
+        DevicePath = FileDevicePath (Volume->DeviceHandle, Filename);
+
+        // Stall to avoid unwanted flash of text when starting loaders
+        // Stall works best in smaller increments as per Specs
+        if (!IsDriver && (!AllowGraphicsMode || Verbose)) {
+            REFIT_CALL_1_WRAPPER(gBS->Stall, 250000);
+            REFIT_CALL_1_WRAPPER(gBS->Stall, 250000);
+            REFIT_CALL_1_WRAPPER(gBS->Stall, 250000);
+            REFIT_CALL_1_WRAPPER(gBS->Stall, 250000);
+            REFIT_CALL_1_WRAPPER(gBS->Stall, 250000);
+            REFIT_CALL_1_WRAPPER(gBS->Stall, 250000);
+            REFIT_CALL_1_WRAPPER(gBS->Stall, 250000);
+            REFIT_CALL_1_WRAPPER(gBS->Stall, 250000);
+        }
+
+        // NOTE: Commented-out lines below could be more efficient if file were read ahead of
+        // time and passed as a pre-loaded image to LoadImage(), but it does not work on my
+        // 32-bit Mac Mini or my 64-bit Intel box when launching a Linux kernel.
+        // The kernel returns a "Failed to handle fs_proto" error message.
         // TODO: Track down the cause of this error and fix it, if possible.
-        // Status = refit_call6_wrapper(gBS->LoadImage, FALSE, SelfImageHandle, DevicePath,
-        //                              ImageData, ImageSize, &ChildImageHandle);
-        // ReturnStatus = Status;
+        /*
+        Status = REFIT_CALL_6_WRAPPER(
+            gBS->LoadImage, FALSE,
+            SelfImageHandle, DevicePath,
+            ImageData, ImageSize,
+            &ChildImageHandle
+        );
+        */
         LEAKABLEEXTERNALSTART ("StartEFIImage LoadImage");
-        Status = refit_call6_wrapper(
+        Status = REFIT_CALL_6_WRAPPER(
             gBS->LoadImage, FALSE,
             SelfImageHandle, DevicePath,
             NULL, 0,
@@ -284,19 +336,21 @@ EFI_STATUS StartEFIImage (
         if (secure_mode() && ShimLoaded()) {
             // Load ourself into memory. This is a trick to work around a bug in Shim 0.8,
             // which ties itself into the gBS->LoadImage() and gBS->StartImage() functions and
-            // then unregisters itself from the EFI system table when its replacement
+            // then unregisters itself from the UEFI system table when its replacement
             // StartImage() function is called *IF* the previous LoadImage() was for the same
             // program. The result is that RefindPlus can validate only the first program it
             // launches (often a filesystem driver). Loading a second program (RefindPlus itself,
             // here, to keep it smaller than a kernel) works around this problem. See the
             // replacements.c file in Shim, and especially its start_image() function, for
             // the source of the problem.
-            // NOTE: This doesn't check the return status or handle errors. It could
+            // NOTE: This does not check the return status or handle errors. It could
             // conceivably do weird things if, say, RefindPlus were on a USB drive that the
             // user pulls before launching a program.
-            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Employing Shim 'LoadImage' Hack");
+            #if REFIT_DEBUG > 0
+            LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Employing Shim 'LoadImage' Hack");
+            #endif
 
-            refit_call6_wrapper(
+            REFIT_CALL_6_WRAPPER(
                 gBS->LoadImage,
                 FALSE,
                 SelfImageHandle,
@@ -308,24 +362,31 @@ EFI_STATUS StartEFIImage (
         }
     }
     else {
-        LOG2(1, LOG_LINE_NORMAL, L"", L"\n\n", L"ERROR: Invalid Loader!!");
+        #if REFIT_DEBUG > 0
+        LOG2(1, LOG_LINE_NORMAL, L"* ", L"\n\n", L"ERROR: Invalid Loader!!");
+        #endif
     }
 
     if ((Status == EFI_ACCESS_DENIED) || (Status == EFI_SECURITY_VIOLATION)) {
-        LOG2(1, LOG_LINE_NORMAL, L"", L"\n\n", L"ERROR: '%r' returned by secure boot while loading %s!!", Status, ImageTitle);
+        #if REFIT_DEBUG > 0
+        LOG2(1, LOG_LINE_NORMAL, L"* ", L"\n\n",
+            L"ERROR: '%r' Returned by Secure Boot While Loading %s!!",
+            Status, ImageTitle
+        );
+        #endif
 
-        WarnSecureBootError(ImageTitle, Verbose);
+        WarnSecureBootError (ImageTitle, Verbose);
         goto bailout;
     }
 
-    ErrorInfo = PoolPrint (L"while loading %s", ImageTitle);
-    if (CheckError(Status, ErrorInfo)) {
-        MyFreePool (&ErrorInfo);
+    MsgStr = PoolPrint (L"When Loading %s", ImageTitle);
+    if (CheckError (Status, MsgStr)) {
+        MyFreePool (&MsgStr);
         goto bailout;
     }
-    MyFreePool (&ErrorInfo);
+    MyFreePool (&MsgStr);
 
-    Status = refit_call3_wrapper(
+    Status = REFIT_CALL_3_WRAPPER(
         gBS->HandleProtocol,
         ChildImageHandle,
         &LoadedImageProtocol,
@@ -333,14 +394,13 @@ EFI_STATUS StartEFIImage (
     );
     ReturnStatus = Status;
 
-    if (CheckError(Status, L"while getting a LoadedImageProtocol handle")) {
+    if (CheckError (Status, L"while Getting LoadedImageProtocol Handle")) {
         goto bailout_unload;
     }
 
     ChildLoadedImage->LoadOptions     = (VOID *) FullLoadOptions;
     ChildLoadedImage->LoadOptionsSize = FullLoadOptions
-        ? ((UINT32)StrLen(FullLoadOptions) + 1) * sizeof (CHAR16)
-        : 0;
+        ? ((UINT32) StrLen (FullLoadOptions) + 1) * sizeof (CHAR16) : 0;
 
     // turn control over to the image
     // TODO: (optionally) re-enable the EFI watchdog timer!
@@ -348,9 +408,14 @@ EFI_STATUS StartEFIImage (
         ((OSType == 'L') || (OSType == 'E') || (OSType == 'G'))
     ) {
         // Tell systemd what ESP RefindPlus used
-        EspGUID = GuidAsString(&(SelfVolume->PartGuid));
+        EspGUID = GuidAsString (&(SelfVolume->PartGuid));
 
-        LOG2(1, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Systemd LoaderDevicePartUUID:- '%s'", EspGUID);
+        #if REFIT_DEBUG > 0
+        LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n",
+            L"Systemd LoaderDevicePartUUID:- '%s'",
+            EspGUID
+        );
+        #endif
 
         Status = EfivarSetRaw (
             &SystemdGuid,
@@ -362,32 +427,64 @@ EFI_STATUS StartEFIImage (
 
         #if REFIT_DEBUG > 0
         if (EFI_ERROR (Status)) {
-            LOG2(1, LOG_LINE_NORMAL, L"", L"\n\n", L"ERROR: '%r' when trying to set LoaderDevicePartUUID EFI variable!!", Status);
+            LOG3(1, LOG_LINE_NORMAL, L"* ERROR: ", L"\n\n", L"ERROR:- ",
+                L"ERROR: '%r' When Trying to Set LoaderDevicePartUUID UEFI Variable!!",
+                Status
+            );
         }
         #endif
 
         MyFreePool (&EspGUID);
-    } // if write systemd EFI variables
+    } // if write systemd UEFI variables
 
     // close open file handles
     UninitRefitLib();
 
+    #if REFIT_DEBUG > 0
+    MsgStr = IsDriver ? L"Loading UEFI Driver" : L"Running Child Image";
+
+    if (!IsDriver) {
+        // Do not log this for drivers
+        LOG(3, LOG_LINE_NORMAL, L"%s via Loader:- '%s'", MsgStr, ImageTitle);
+    }
+    #endif
+
     MsgLog("[ StartImage '%s'\n", ImageTitle);
     BootLogPause();
     LEAKABLEEXTERNALSTART (kLeakableWhatStartEFIImageStartImage);
-    Status = refit_call3_wrapper(gBS->StartImage, ChildImageHandle, NULL, NULL);
+    Status = REFIT_CALL_3_WRAPPER(
+        gBS->StartImage, ChildImageHandle,
+        NULL, NULL
+    );
     LEAKABLEEXTERNALSTOP ();
     ReturnStatus = Status;
     MsgLog("] StartImage\n");
+
     // control returns here when the child image calls Exit()
-    ErrorInfo = PoolPrint (L"returned from %s", ImageTitle);
-    CheckError (ReturnStatus, ErrorInfo);
-    MyFreePool (&ErrorInfo);
+    #if REFIT_DEBUG > 0
+    LOG(4, LOG_THREE_STAR_MID, L"'%r' When %s", ReturnStatus, MsgStr);
+    #endif
+
+    MsgStr = L"Returned from Child Image";
+
+    #if REFIT_DEBUG > 0
+    if (!IsDriver) {
+        LOG(2, LOG_THREE_STAR_SEP, L"%s", MsgStr);
+
+        if (Verbose) {
+            MsgLog ("User Input Received:\n");
+            MsgLog ("  - Exit Child Image Loader:- '%s'\n\n", ImageTitle);
+        }
+    }
+    #endif
+
+    CheckError (ReturnStatus, MsgStr);
+
     if (IsDriver) {
         // Below should have no effect on most systems, but works
         // around bug with some EFIs that prevents filesystem drivers
         // from binding to partitions.
-        ConnectFilesystemDriver(ChildImageHandle);
+        ConnectFilesystemDriver (ChildImageHandle);
     }
 
     // re-open file handles
@@ -397,7 +494,7 @@ EFI_STATUS StartEFIImage (
 bailout_unload:
     // unload the image, we do not care if it works or not
     if (!IsDriver) {
-        refit_call1_wrapper(gBS->UnloadImage, ChildImageHandle);
+        REFIT_CALL_1_WRAPPER(gBS->UnloadImage, ChildImageHandle);
     }
 
 bailout:
@@ -413,9 +510,8 @@ bailout:
 // From gummiboot: Reboot the computer into its built-in user interface
 EFI_STATUS RebootIntoFirmware (VOID) {
     UINT64     *ItemBuffer;
-    CHAR16     *MsgStr = NULL;
-    UINT64     osind;
-    EFI_STATUS err;
+    UINT64      osind;
+    EFI_STATUS  err;
 
     osind = EFI_OS_INDICATIONS_BOOT_TO_FW_UI;
 
@@ -439,18 +535,22 @@ EFI_STATUS RebootIntoFirmware (VOID) {
         TRUE
     );
 
-    MsgLog ("INFO: Reboot Into Firmware ...%r\n\n", err);
+    #if REFIT_DEBUG > 0
+    MsgLog ("INFO: Reboot into Firmware ... %r\n\n", err);
+    #endif
 
     if (err != EFI_SUCCESS) {
         return err;
     }
 
-    LOG(1, LOG_LINE_SEPARATOR, L"Rebooting into the computer's firmware");
+    #if REFIT_DEBUG > 0
+    LOG(1, LOG_LINE_SEPARATOR, L"Rebooting into the Computer's Firmware");
+    #endif
 
     UninitRefitLib();
     BootLogPause();
 
-    refit_call4_wrapper(
+    REFIT_CALL_4_WRAPPER(
         gRT->ResetSystem,
         EfiResetCold,
         EFI_SUCCESS,
@@ -461,17 +561,21 @@ EFI_STATUS RebootIntoFirmware (VOID) {
     ReinitRefitLib();
     BootLogResume();
 
-    MsgStr = PoolPrint (L"Error calling ResetSystem ... %r", err);
+    CHAR16 *MsgStr = PoolPrint (L"Error Calling ResetSystem ... %r", err);
 
-    refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
+    REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
     PrintUglyText (MsgStr, NEXTLINE);
-    refit_call2_wrapper(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
+    REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
+    #if REFIT_DEBUG > 0
     MsgLog ("** WARN: %s\n\n", MsgStr);
+    #endif
 
     PauseForKey();
 
-    LOG(1, LOG_LINE_NORMAL, L"%s", MsgStr);
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+    #endif
 
     MyFreePool (&MsgStr);
 
@@ -482,17 +586,20 @@ EFI_STATUS RebootIntoFirmware (VOID) {
 VOID RebootIntoLoader (
     LOADER_ENTRY *Entry
 ) {
-    EFI_STATUS Status;
+    EFI_STATUS  Status;
+    CHAR16     *MsgStr = NULL;
 
-    LOG(1, LOG_LINE_SEPARATOR,
-        L"Rebooting into EFI Loader '%s' (Boot%04x)",
+    #if REFIT_DEBUG > 0
+    LOG2(1, LOG_LINE_SEPARATOR, L"INFO: ", L"\n\n",
+        L"Reboot into NVRAM Boot Option:- '%s' (Boot%04x)",
         GetPoolStr (&Entry->Title),
         Entry->EfiBootNum
     );
+    #endif
 
     MsgLog ("IsBoot = TRUE\n");
     IsBoot = TRUE;
-
+    
     Status = EfivarSetRaw (
         &GlobalGuid,
         L"BootNext",
@@ -501,23 +608,40 @@ VOID RebootIntoLoader (
         TRUE
     );
 
-    MsgLog ("INFO: Reboot Into EFI Loader ...%r\n\n", Status);
-
     if (EFI_ERROR(Status)) {
-        Print(L"Error: %d\n", Status);
+        MsgStr = PoolPrint (
+            L"'%r' while Rebooting into NVRAM Boot Option",
+            Status
+        );
+
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL, L"%s!!", MsgStr);
+        #endif
+
+        Print(L"%s\n", MsgStr);
+        PauseForKey();
+
+        MyFreePool (&MsgStr);
         return;
     }
 
     StoreLoaderName(GetPoolStr (&Entry->me.Title));
 
-    LOG(1, LOG_LINE_NORMAL, L"Attempting to reboot", GetPoolStr (&Entry->Title), Entry->EfiBootNum);
+    REFIT_CALL_4_WRAPPER(
+        gRT->ResetSystem, EfiResetCold,
+        EFI_SUCCESS, 0, NULL
+    );
 
-    refit_call4_wrapper(RT->ResetSystem, EfiResetCold, EFI_SUCCESS, 0, NULL);
+    MsgStr = PoolPrint (L"Call ResetSystem ... %r", Status);
 
-    Print(L"Error calling ResetSystem: %r", Status);
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+    #endif
+
+    Print(MsgStr);
     PauseForKey();
 
-    LOG(1, LOG_LINE_NORMAL, L"Error calling ResetSystem: %r", Status);
+    MyFreePool (&MsgStr);
 } // RebootIntoLoader()
 
 //
@@ -529,11 +653,13 @@ VOID RebootIntoLoader (
 static
 VOID DoEnableAndLockVMX(VOID) {
 #if defined (EFIX64) | defined (EFI32)
-    UINT32 msr = 0x3a;
+    UINT32 msr       = 0x3a;
     UINT32 low_bits  = 0;
     UINT32 high_bits = 0;
 
-    LOG(1, LOG_LINE_NORMAL, L"Attempting to enable and lock VMX");
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL, L"Attempting to Enable and Lock VMX");
+    #endif
 
     // is VMX active ?
     __asm__ volatile ("rdmsr" : "=a" (low_bits), "=d" (high_bits) : "c" (msr));
@@ -549,10 +675,20 @@ VOID DoEnableAndLockVMX(VOID) {
 } // VOID DoEnableAndLockVMX()
 
 // Directly launch an EFI boot loader (or similar program)
-VOID StartLoader(LOADER_ENTRY *Entry, CHAR16 *SelectionName) {
-    CHAR16 *LoaderPath;
+VOID StartLoader (
+    LOADER_ENTRY *Entry,
+    CHAR16       *SelectionName
+) {
+    CHAR16 *MsgStr     = NULL;
+    CHAR16 *LoaderPath = NULL;
 
-    LOG(1, LOG_LINE_NORMAL, L"Launching '%s'", SelectionName);
+    BootSelection = SelectionName;
+    LoaderPath    = Basename (GetPoolStr (&Entry->LoaderPath));
+    MsgStr        = PoolPrint (L"Launching Loader:- '%s'", SelectionName);
+
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+    #endif
 
     MsgLog ("IsBoot = TRUE\n");
     IsBoot = TRUE;
@@ -561,10 +697,8 @@ VOID StartLoader(LOADER_ENTRY *Entry, CHAR16 *SelectionName) {
         DoEnableAndLockVMX();
     }
 
-    LoaderPath = Basename(GetPoolStr (&Entry->LoaderPath));
-    BeginExternalScreen(Entry->UseGraphicsMode, L"Booting OS");
-    StoreLoaderName(SelectionName);
-    StartEFIImage(
+    BeginExternalScreen (Entry->UseGraphicsMode, MsgStr);
+    StartEFIImage (
         Entry->Volume,
         GetPoolStr (&Entry->LoaderPath),
         GetPoolStr (&Entry->LoadOptions),
@@ -574,22 +708,40 @@ VOID StartLoader(LOADER_ENTRY *Entry, CHAR16 *SelectionName) {
         FALSE
     );
 
+    MyFreePool (&MsgStr);
     MyFreePool (&LoaderPath);
 } // VOID StartLoader()
 
 // Launch an EFI tool (a shell, SB management utility, etc.)
-VOID StartTool(IN LOADER_ENTRY *Entry) {
-    CHAR16 *LoaderPath;
+VOID StartTool (
+    IN LOADER_ENTRY *Entry
+) {
+    CHAR16 *MsgStr     = NULL;
+    CHAR16 *LoaderPath = NULL;
 
-    LOG(1, LOG_LINE_NORMAL, L"Starting '%s'", GetPoolStr (&Entry->me.Title));
+    LoaderPath    = Basename (GetPoolStr (&Entry->LoaderPath));
+    MsgStr        = PoolPrint (L"Launching Tool:- '%s'", GetPoolStr (&Entry->me.Title));
 
-    MsgLog ("IsBoot = TRUE\n");
-    IsBoot = TRUE;
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
 
-    LoaderPath = Basename(GetPoolStr (&Entry->LoaderPath));
-    BeginExternalScreen(Entry->UseGraphicsMode, GetPoolStr (&Entry->me.Title) + 5);  // assumes "Load <title>" as assigned below; see ./scan.c:1772
-    StoreLoaderName(GetPoolStr (&Entry->me.Title));
-    StartEFIImage(
+    if (AllowGraphicsMode && !Entry->UseGraphicsMode) {
+        MsgLog ("INFO: Running Graphics Mode Switch\n");
+    }
+    #endif
+
+    MsgLog ("IsBoot = FALSE\n");
+    IsBoot        = FALSE;
+
+    BeginExternalScreen (Entry->UseGraphicsMode, MsgStr);
+
+    #if REFIT_DEBUG > 0
+    if (AllowGraphicsMode && !Entry->UseGraphicsMode) {
+        MsgLog ("      Switch Graphics to Text Mode ... Success\n\n");
+    }
+    #endif
+
+    StartEFIImage (
         Entry->Volume,
         GetPoolStr (&Entry->LoaderPath),
         GetPoolStr (&Entry->LoadOptions),
@@ -599,5 +751,6 @@ VOID StartTool(IN LOADER_ENTRY *Entry) {
         FALSE
     );
 
+    MyFreePool (&MsgStr);
     MyFreePool (&LoaderPath);
 } // VOID StartTool()

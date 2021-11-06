@@ -109,14 +109,14 @@ LibCreateNewFile (
                          String to be allocated by the called function.
 
   @retval  EFI_INVALID_PARAMETER  Request is illegal syntax, or unknown name.
-  @retval  EFI_NOT_FOUND          Routing data doesn't match any storage in this driver.
+  @retval  EFI_NOT_FOUND          Routing data does not match any storage in this driver.
 
 **/
 EFI_STATUS
 EFIAPI
 LibExtractConfig (
-  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
-  IN  CONST EFI_STRING                       Request,
+  IN  const EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
+  IN  const EFI_STRING                       Request,
   OUT EFI_STRING                             *Progress,
   OUT EFI_STRING                             *Results
   )
@@ -141,14 +141,14 @@ LibExtractConfig (
                          name/value pair) or the terminating NULL if all was successful.
 
   @retval  EFI_INVALID_PARAMETER  Configuration is NULL.
-  @retval  EFI_NOT_FOUND          Routing data doesn't match any storage in this driver.
+  @retval  EFI_NOT_FOUND          Routing data does not match any storage in this driver.
 
 **/
 EFI_STATUS
 EFIAPI
 LibRouteConfig (
-  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
-  IN  CONST EFI_STRING                       Configuration,
+  IN  const EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
+  IN  const EFI_STRING                       Configuration,
   OUT EFI_STRING                             *Progress
   )
 {
@@ -183,7 +183,7 @@ LibRouteConfig (
 EFI_STATUS
 EFIAPI
 LibCallback (
-  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
+  IN  const EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
   IN  EFI_BROWSER_ACTION                     Action,
   IN  EFI_QUESTION_ID                        QuestionId,
   IN  UINT8                                  Type,
@@ -281,7 +281,7 @@ LibCallback (
     if (QuestionId >= FILE_OPTION_OFFSET) {
       LibGetDevicePath(QuestionId);
       Status = LibUpdateFileExplorer (QuestionId);
-      if (EFI_ERROR (Status)) {
+      if (EFI_ERROR(Status)) {
         return Status;
       }
     }
@@ -455,7 +455,7 @@ LibOpenRoot (
   //
   // Open the root directory of the volume
   //
-  if (!EFI_ERROR (Status)) {
+  if (!EFI_ERROR(Status)) {
     Status = Volume->OpenVolume (
                       Volume,
                       &File
@@ -464,7 +464,7 @@ LibOpenRoot (
   //
   // Done
   //
-  return EFI_ERROR (Status) ? NULL : File;
+  return EFI_ERROR(Status) ? NULL : File;
 }
 
 /**
@@ -493,7 +493,7 @@ LibDevicePathToStr (
                   NULL,
                   (VOID **) &DevPathToText
                   );
-  ASSERT_EFI_ERROR (Status);
+  ASSERT_EFI_ERROR(Status);
   ToText = DevPathToText->ConvertDevicePathToText (
                             DevPath,
                             FALSE,
@@ -521,8 +521,8 @@ LibStrDuplicate (
   CHAR16  *Dest;
   UINTN   Size;
 
-  Size  = StrSize (Src);
-  Dest  = AllocateZeroPool (Size);
+  Size = StrSize (Src);
+  Dest = AllocateZeroPool (Size);
   ASSERT (Dest != NULL);
   if (Dest != NULL) {
     CopyMem (Dest, Src, Size);
@@ -705,7 +705,7 @@ LibAppendFileName (
   }
 
   MaxLen = (Size1 + Size2 + sizeof (CHAR16))/ sizeof (CHAR16);
-  Str   = AllocateZeroPool (Size1 + Size2 + sizeof (CHAR16));
+  Str = AllocateZeroPool (Size1 + Size2 + sizeof (CHAR16));
   ASSERT (Str != NULL);
 
   TmpStr = AllocateZeroPool (Size1 + Size2 + sizeof (CHAR16));
@@ -797,7 +797,7 @@ LibFindFileSystem (
                   &NoSimpleFsHandles,
                   &SimpleFsHandle
                   );
-  if (!EFI_ERROR (Status)) {
+  if (!EFI_ERROR(Status)) {
     //
     // Find all the instances of the File System prototocol
     //
@@ -841,8 +841,10 @@ LibFindFileSystem (
           }
         }
       }
-      MenuEntry->DisplayString  = AllocateZeroPool (MAX_CHAR);
+      MenuEntry->DisplayString = AllocateZeroPool (MAX_CHAR);
+
       ASSERT (MenuEntry->DisplayString != NULL);
+
       UnicodeSPrint (
         MenuEntry->DisplayString,
         MAX_CHAR,
@@ -850,6 +852,7 @@ LibFindFileSystem (
         VolumeLabel,
         MenuEntry->HelpString
         );
+
       MenuEntry->DisplayStringToken = HiiSetString (
                                              gFileExplorerPrivate.FeHiiHandle,
                                              0,
@@ -907,7 +910,7 @@ LibGetFileHandleFromMenu (
                   EFI_FILE_READ_ONLY,
                   0
                   );
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     return Status;
   }
 
@@ -955,12 +958,12 @@ LibGetFileHandleFromDevicePath (
   //
   DevicePathNode = RootDirectory;
   Status = gBS->LocateDevicePath (&gEfiSimpleFileSystemProtocolGuid, &DevicePathNode, &Handle);
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     return Status;
   }
 
-  Status = gBS->HandleProtocol (Handle, &gEfiSimpleFileSystemProtocolGuid, (VOID**)&Volume);
-  if (EFI_ERROR (Status)) {
+  Status = gBS->HandleProtocol (Handle, &gEfiSimpleFileSystemProtocolGuid, (VOID **) &Volume);
+  if (EFI_ERROR(Status)) {
     return Status;
   }
 
@@ -968,7 +971,7 @@ LibGetFileHandleFromDevicePath (
   // Open the Volume to get the File System handle
   //
   Status = Volume->OpenVolume (Volume, &FileHandle);
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     return Status;
   }
 
@@ -1002,7 +1005,7 @@ LibGetFileHandleFromDevicePath (
   // our way down each device path node and close the previous node
   //
   DevicePathNode = TempDevicePathNode;
-  while (!EFI_ERROR (Status) && !IsDevicePathEnd (DevicePathNode)) {
+  while (!EFI_ERROR(Status) && !IsDevicePathEnd (DevicePathNode)) {
     if (DevicePathType (DevicePathNode) != MEDIA_DEVICE_PATH ||
         DevicePathSubType (DevicePathNode) != MEDIA_FILEPATH_DP) {
       Status = EFI_UNSUPPORTED;
@@ -1040,7 +1043,7 @@ LibGetFileHandleFromDevicePath (
     DevicePathNode = NextDevicePathNode (DevicePathNode);
   }
 
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     goto Done;
   }
 
@@ -1053,7 +1056,7 @@ Done:
     FreePool (TempDevicePathNode);
   }
 
-  if ((FileHandle != NULL) && (EFI_ERROR (Status))) {
+  if ((FileHandle != NULL) && (EFI_ERROR(Status))) {
     FileHandle->Close (FileHandle);
   }
 
@@ -1097,7 +1100,7 @@ LibCreateNewFile (
                           EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE| EFI_FILE_MODE_CREATE,
                           0
                           );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
       FileHandle->Close (FileHandle);
       return Status;
     }
@@ -1109,7 +1112,7 @@ LibCreateNewFile (
                           EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE| EFI_FILE_MODE_CREATE,
                           EFI_FILE_DIRECTORY
                           );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
       FileHandle->Close (FileHandle);
       return Status;
     }
@@ -1159,7 +1162,7 @@ LibFindFiles (
   OptionNumber = 0;
 
   DirBufferSize = sizeof (EFI_FILE_INFO) + 1024;
-  DirInfo       = AllocateZeroPool (DirBufferSize);
+  DirInfo = AllocateZeroPool (DirBufferSize);
   if (DirInfo == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
@@ -1175,7 +1178,7 @@ LibFindFiles (
     for (;;) {
       BufferSize  = DirBufferSize;
       Status      = FileHandle->Read (FileHandle, &BufferSize, DirInfo);
-      if (EFI_ERROR (Status) || BufferSize == 0) {
+      if (EFI_ERROR(Status) || BufferSize == 0) {
         Status = EFI_SUCCESS;
         break;
       }
@@ -1425,7 +1428,7 @@ LibUpdateFileExplorer (
     LibFreeMenu (gFileExplorerPrivate.FsOptionMenu);
     LibGetFileHandleFromMenu (NewMenuEntry, &FileHandle);
     Status = LibFindFiles (FileHandle, NewFileContext->FileName, NewFileContext->DeviceHandle);
-    if (!EFI_ERROR (Status)) {
+    if (!EFI_ERROR(Status)) {
       LibUpdateFileExplorePage ();
     } else {
       LibFreeMenu (gFileExplorerPrivate.FsOptionMenu);
@@ -1517,13 +1520,13 @@ ChooseFile (
     Status = LibFindFileSystem();
   } else {
     Status = LibGetFileHandleFromDevicePath(RootDirectory, &FileHandle, &FileName, &DeviceHandle);
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
       goto Done;
     }
 
     Status = LibFindFiles (FileHandle, FileName, DeviceHandle);
   }
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     goto Done;
   }
 
@@ -1578,7 +1581,7 @@ FileExplorerLibConstructor (
 {
   EFI_STATUS                     Status;
 
-  gHiiVendorDevicePath = (HII_VENDOR_DEVICE_PATH*) DuplicateDevicePath ((EFI_DEVICE_PATH_PROTOCOL*)&FeHiiVendorDevicePath);
+  gHiiVendorDevicePath = (HII_VENDOR_DEVICE_PATH*) DuplicateDevicePath ((EFI_DEVICE_PATH_PROTOCOL*) &FeHiiVendorDevicePath);
   ASSERT (gHiiVendorDevicePath != NULL);
   CopyGuid (&gHiiVendorDevicePath->VendorDevicePath.Guid, &gEfiCallerIdGuid);
 
@@ -1596,7 +1599,7 @@ FileExplorerLibConstructor (
   if (Status == EFI_ALREADY_STARTED) {
     return EFI_SUCCESS;
   }
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     return Status;
   }
 
@@ -1616,7 +1619,7 @@ FileExplorerLibConstructor (
   // Locate Formbrowser2 protocol
   //
   Status = gBS->LocateProtocol (&gEfiFormBrowser2ProtocolGuid, NULL, (VOID **) &gFileExplorerPrivate.FormBrowser2);
-  ASSERT_EFI_ERROR (Status);
+  ASSERT_EFI_ERROR(Status);
 
   InitializeListHead (&gFileExplorerPrivate.FsOptionMenu->Head);
 
@@ -1651,7 +1654,7 @@ FileExplorerLibDestructor (
                     &gFileExplorerPrivate.FeConfigAccess,
                     NULL
                     );
-    ASSERT_EFI_ERROR (Status);
+    ASSERT_EFI_ERROR(Status);
 
     HiiRemovePackages (gFileExplorerPrivate.FeHiiHandle);
   }

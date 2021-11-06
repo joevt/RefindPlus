@@ -51,15 +51,15 @@ VOID egDecompressIcnsRLE (
     UINT8 *cp;
     UINT8 *cp_end;
     UINT8 *pp;
-    UINTN pp_left;
-    UINTN len, i;
-    UINT8 value;
+    UINTN  pp_left;
+    UINTN  len, i;
+    UINT8  value;
 
     // setup variables
-    cp = *CompData;
-    cp_end = cp + *CompLen;
-    pp = PixelData;
-    pp_left = PixelCount;
+    cp      = *CompData;
+    cp_end  =  cp + *CompLen;
+    pp      =  PixelData;
+    pp_left =  PixelCount;
 
     // decode
     while (cp + 1 < cp_end && pp_left > 0) {
@@ -152,7 +152,7 @@ EG_IMAGE * egDecodeICNS (
                         Ptr[10] == 0 &&
                         Ptr[11] == 0
                     ) {
-                        DataPtr = Ptr + 12;
+                        DataPtr =      Ptr + 12;
                         DataLen = BlockLen - 12;
                     }
                 }
@@ -161,7 +161,7 @@ EG_IMAGE * egDecodeICNS (
                         Ptr[2]  == 'm' &&
                         Ptr[3]  == 'k'
                 ) {
-                    MaskPtr = Ptr + 8;
+                    MaskPtr =      Ptr + 8;
                     MaskLen = BlockLen - 8;
                 }
             }
@@ -171,7 +171,7 @@ EG_IMAGE * egDecodeICNS (
                     Ptr[2] == '3' &&
                     Ptr[3] == '2'
                 ) {
-                    DataPtr = Ptr + 8;
+                    DataPtr =      Ptr + 8;
                     DataLen = BlockLen - 8;
                 }
                 else if (Ptr[0] == 'h' &&
@@ -179,7 +179,7 @@ EG_IMAGE * egDecodeICNS (
                         Ptr[2]  == 'm' &&
                         Ptr[3]  == 'k'
                 ) {
-                    MaskPtr = Ptr + 8;
+                    MaskPtr =      Ptr + 8;
                     MaskLen = BlockLen - 8;
                 }
             }
@@ -189,7 +189,7 @@ EG_IMAGE * egDecodeICNS (
                     Ptr[2] == '3' &&
                     Ptr[3] == '2'
                 ) {
-                    DataPtr = Ptr + 8;
+                    DataPtr =      Ptr + 8;
                     DataLen = BlockLen - 8;
                 }
                 else if (Ptr[0] == 'l' &&
@@ -197,7 +197,7 @@ EG_IMAGE * egDecodeICNS (
                         Ptr[2]  == 'm' &&
                         Ptr[3]  == 'k'
                 ) {
-                    MaskPtr = Ptr + 8;
+                    MaskPtr =      Ptr + 8;
                     MaskLen = BlockLen - 8;
                 }
             }
@@ -207,7 +207,7 @@ EG_IMAGE * egDecodeICNS (
                     Ptr[2] == '3' &&
                     Ptr[3] == '2'
                 ) {
-                    DataPtr = Ptr + 8;
+                    DataPtr =      Ptr + 8;
                     DataLen = BlockLen - 8;
                 }
                 else if (Ptr[0] == 's' &&
@@ -215,7 +215,7 @@ EG_IMAGE * egDecodeICNS (
                         Ptr[2]  == 'm' &&
                         Ptr[3]  == 'k'
                 ) {
-                    MaskPtr = Ptr + 8;
+                    MaskPtr =      Ptr + 8;
                     MaskLen = BlockLen - 8;
                 }
             }

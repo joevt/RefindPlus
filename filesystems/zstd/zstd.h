@@ -92,7 +92,7 @@ static __attribute__((unused)) unsigned int ZSTD_isError(size_t code)
  * @functionResult: The result of a function for which ZSTD_isError() is true.
  *
  * Return:          The ZSTD_ErrorCode corresponding to the functionResult or 0
- *                  if the functionResult isn't an error.
+ *                  if the functionResult is not an error.
  */
 static __attribute__((unused)) ZSTD_ErrorCode ZSTD_getErrorCode(
 	size_t functionResult)
@@ -174,7 +174,7 @@ typedef struct {
  * ZSTD_getCParams() - returns ZSTD_compressionParameters for selected level
  * @compressionLevel: The compression level from 1 to ZSTD_maxCLevel().
  * @estimatedSrcSize: The estimated source size to compress or 0 if unknown.
- * @dictSize:         The dictionary size or 0 if a dictionary isn't being used.
+ * @dictSize:         The dictionary size or 0 if a dictionary is not being used.
  *
  * Return:            The selected ZSTD_compressionParameters.
  */
@@ -185,7 +185,7 @@ ZSTD_compressionParameters ZSTD_getCParams(int compressionLevel,
  * ZSTD_getParams() - returns ZSTD_parameters for selected level
  * @compressionLevel: The compression level from 1 to ZSTD_maxCLevel().
  * @estimatedSrcSize: The estimated source size to compress or 0 if unknown.
- * @dictSize:         The dictionary size or 0 if a dictionary isn't being used.
+ * @dictSize:         The dictionary size or 0 if a dictionary is not being used.
  *
  * The same as ZSTD_getCParams() except also selects the default frame
  * parameters (all zero).
@@ -236,7 +236,7 @@ typedef struct ZSTD_outBuffer_s {
  * Use ZSTD_decompressStream() repetitively to consume your input.
  * The function will update both `pos` fields.
  * If `input->pos < input->size`, some input has not been consumed.
- * It's up to the caller to present again remaining data.
+ * It is up to the caller to present again remaining data.
  * If `output->pos < output->size`, decoder has flushed everything it could.
  * Returns 0 iff a frame is completely decoded and fully flushed.
  * Otherwise it returns a suggested next input size that will never load more
@@ -289,7 +289,7 @@ size_t ZSTD_resetDStream(ZSTD_DStream *zds);
  *          decompressed data was written.
  * @input:  Source buffer. `input.pos` is updated to indicate how much data was
  *          read. Note that it may not consume the entire input, in which case
- *          `input.pos < input.size`, and it's up to the caller to present
+ *          `input.pos < input.size`, and it is up to the caller to present
  *          remaining data again.
  *
  * The `input` and `output` buffers may be any size. Guaranteed to make some
@@ -431,7 +431,7 @@ size_t ZSTD_getFrameParams(ZSTD_frameParams *fparamsPtr, const void *src,
  * - When a block is considered not compressible enough, ZSTD_compressBlock()
  *   result will be zero. In which case, nothing is produced into `dst`.
  *   + User must test for such outcome and deal directly with uncompressed data
- *   + ZSTD_decompressBlock() doesn't accept uncompressed data as input!!!
+ *   + ZSTD_decompressBlock() does not accept uncompressed data as input!!!
  *   + In case of multiple successive blocks, decoder must be informed of
  *     uncompressed block existence to follow proper history. Use
  *     ZSTD_insertBlock() in such a case.

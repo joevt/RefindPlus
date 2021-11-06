@@ -52,16 +52,14 @@
 
 
 /*
- * Check whether we're in Secure Boot and user mode
+ * Check whether we are in Secure Boot and user mode
  */
-BOOLEAN secure_mode (
-    VOID
-) {
-    EFI_STATUS status;
-    EFI_GUID global_var = EFI_GLOBAL_VARIABLE;
-    UINTN charsize;
-    UINT8 *sb = NULL;
-    UINT8 *setupmode = NULL;
+BOOLEAN secure_mode (VOID) {
+    EFI_STATUS  status;
+    EFI_GUID    global_var = EFI_GLOBAL_VARIABLE;
+    UINTN       charsize;
+    UINT8      *sb        = NULL;
+    UINT8      *setupmode = NULL;
 
     static BOOLEAN DoneOnce   = FALSE;
     static BOOLEAN SecureMode = FALSE;
@@ -73,13 +71,13 @@ BOOLEAN secure_mode (
     status = EfivarGetRaw (
         &global_var,
         L"SecureBoot",
-        (VOID**) &sb,
+        (VOID **) &sb,
         &charsize
     );
 
     /* FIXME - more paranoia here? */
     if (status != EFI_SUCCESS ||
-        charsize != sizeof (UINT8) ||
+        charsize != sizeof (CHAR8) ||
         *sb != 1
     ) {
         SecureMode = FALSE;
@@ -88,12 +86,12 @@ BOOLEAN secure_mode (
         status = EfivarGetRaw (
             &global_var,
             L"SetupMode",
-            (VOID**) &setupmode,
+            (VOID **) &setupmode,
             &charsize
         );
 
         if (status == EFI_SUCCESS &&
-            charsize == sizeof (UINT8) &&
+            charsize == sizeof (CHAR8) &&
             *setupmode == 1
         ) {
             SecureMode = FALSE;
@@ -103,28 +101,26 @@ BOOLEAN secure_mode (
         }
     }
 
+    DoneOnce = TRUE;
+
     MyFreePool (&sb);
     MyFreePool (&setupmode);
-
-    DoneOnce = TRUE;
 
     return SecureMode;
 } // secure_mode()
 
 // Returns TRUE if the shim program is available to verify binaries,
 // FALSE if not
-BOOLEAN ShimLoaded (
-    VOID
-) {
+BOOLEAN ShimLoaded (VOID) {
     SHIM_LOCK   *shim_lock;
     EFI_GUID    ShimLockGuid = SHIM_LOCK_GUID;
 
     return (
-        refit_call3_wrapper(
+        REFIT_CALL_3_WRAPPER(
             gBS->LocateProtocol,
             &ShimLockGuid,
             NULL,
-            (VOID**) &shim_lock
+            (VOID **) &shim_lock
         ) == EFI_SUCCESS
     );
 } // ShimLoaded()
@@ -140,11 +136,11 @@ BOOLEAN ShimValidate (
     EFI_GUID    ShimLockGuid = SHIM_LOCK_GUID;
 
     if ((data != NULL) &&
-        (refit_call3_wrapper(
+        (REFIT_CALL_3_WRAPPER(
             gBS->LocateProtocol,
             &ShimLockGuid,
             NULL,
-            (VOID**) &shim_lock
+            (VOID **) &shim_lock
         ) == EFI_SUCCESS)
     ) {
         if (!shim_lock) {

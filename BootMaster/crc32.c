@@ -12,7 +12,7 @@
  *  the MSB being 1
  *
  *  Note that the usual hardware shift register implementation, which
- *  is what we're using (we're merely optimizing it by doing eight-bit
+ *  is what we are using (we are merely optimizing it by doing eight-bit
  *  chunks at a time) shifts bits into the lowest-order term.  In our
  *  implementation, that means shifting towards the right.  Why do we
  *  do it this way?  Because the calculated CRC must be transmitted in
@@ -41,6 +41,12 @@
  */
 /*
  * Modified slightly for use on EFI by Rod Smith
+ */
+/*
+ * Modified for RefindPlus
+ * Copyright (c) 2020-2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ *
+ * Modifications distributed under the preceding terms.
  */
 
 #include "crc32.h"
@@ -91,9 +97,9 @@ static UINT32 crc32_tab[] = {
    0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-UINT32 crc32refit (UINT32 crc, CONST VOID *buf, UINTN size)
+UINT32 crc32refit (UINT32 crc, const VOID *buf, UINTN size)
 {
-   CONST UINT8 *p;
+   const UINT8 *p;
 
    p = buf;
    crc = crc ^ ~0U;

@@ -613,7 +613,6 @@ GetLoadedImageName (
     CheckStackPointer ();
     CHAR16 *FileName = NULL;
     if (LoadedImage) {
-        //DumpHexString (64 /* GetDevicePathSize (LoadedImage->FilePath) */, LoadedImage->FilePath); // GetDevicePathSize may crash for paths in EFI 1.1 that use type 0xFF
         FileName = FindLoadedImageFileName (LoadedImage);
     }
     return FileName;

@@ -39,7 +39,7 @@
 // supported.
 // Summed up, NanoJPEG should be able to decode all images from digital cameras
 // and most common forms of other non-progressive JPEG images.
-// The decoder is not optimized for speed, it's optimized for simplicity and
+// The decoder is not optimized for speed, it is optimized for simplicity and
 // small code. Image quality should be at a reasonable level. A bicubic chroma
 // upsampling filter ensures that subsampled YCbCr images are rendered in
 // decent quality. The decoder is not meant to deal with broken JPEG files in
@@ -59,7 +59,7 @@
 //
 // _NJ_EXAMPLE_PROGRAM     = Compile a main() function with an example
 //                           program.
-// _NJ_INCLUDE_HEADER_ONLY = Don't compile anything, just act as a header
+// _NJ_INCLUDE_HEADER_ONLY = Do not compile anything, just act as a header
 //                           file for NanoJPEG. Example:
 //                               #define _NJ_INCLUDE_HEADER_ONLY
 //                               #include "nanojpeg.c"
@@ -70,7 +70,7 @@
 //                               }
 // NJ_USE_LIBC=1           = Use the malloc(), free(), memset() and memcpy()
 //                           functions from the standard C library (default).
-// NJ_USE_LIBC=0           = Don't use the standard C library. In this mode,
+// NJ_USE_LIBC=0           = Do not use the standard C library. In this mode,
 //                           external functions njAlloc(), njFreeMem(),
 //                           njFillMem() and njCopyMem() need to be defined
 //                           and implemented somewhere.
@@ -114,7 +114,7 @@
 
 #include "../BootMaster/leaks.h"
 
-// Modified: Map libc-style free() and malloc() to their EFI equivalents....
+// Modified: Map libc-style free() and malloc() to their EFI equivalents.
 #define free FreePool
 #define malloc AllocatePool
 #define memset MyMemSet
@@ -888,7 +888,6 @@ NJ_INLINE void njConvert(void) {
 int njInit(void) {
     int i;
     njFillMem(&nj, 0, sizeof (nj_context_t));
-
     for (i = 0; i < 4; i++) {
         if (!nj_vlctab[i]) {
             nj_vlctab[i] = njAllocMem(sizeof (nj_vlc_code_t) * 65536);

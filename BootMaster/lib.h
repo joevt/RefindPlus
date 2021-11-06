@@ -41,6 +41,14 @@
  * with this source code or binaries made from it.
  *
  */
+/*
+ * Modified for RefindPlus
+ * Copyright (c) 2020-2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ * Portions Copyright (c) 2021 Joe van Tunen (joevt@shaw.ca)
+ *
+ * Modifications distributed under the preceding terms.
+ */
+
 
 #ifndef __LIB_H_
 #define __LIB_H_
@@ -79,7 +87,7 @@ typedef struct {
 #define IS_EXTENDED_PART_TYPE(type) ((type) == 0x05 || (type) == 0x0f || (type) == 0x85)
 
 // GPT attributes of interest to us for Freedesktop.org Discoverable
-// Partitions Specification....
+// Partitions Specification.
 #define GPT_READ_ONLY     0x1000000000000000
 #define GPT_NO_AUTOMOUNT  0x8000000000000000
 
@@ -89,10 +97,10 @@ typedef struct {
 extern EFI_GUID gFreedesktopRootGuid;
 
 INTN FindMem (
-    IN VOID *Buffer,
-    IN UINTN BufferLength,
-    IN VOID *SearchString,
-    IN UINTN SearchStringLength
+    IN VOID  *Buffer,
+    IN UINTN  BufferLength,
+    IN VOID  *SearchString,
+    IN UINTN  SearchStringLength
 );
 
 EFI_STATUS FindVarsDir (VOID);
@@ -103,7 +111,7 @@ EFI_STATUS EfivarGetRaw (
     IN  EFI_GUID  *VendorGUID,
     IN  CHAR16    *VariableName,
     OUT VOID     **VariableData,
-    OUT UINTN     *VariableSize     OPTIONAL
+    OUT UINTN     *VariableSize  OPTIONAL
 );
 EFI_STATUS EfivarSetRaw (
     IN  EFI_GUID  *VendorGUID,
@@ -118,22 +126,14 @@ VOID ReinitVolumes (VOID);
 VOID UninitRefitLib (VOID);
 VOID SetVolumeIcons (VOID);
 
-#if REFIT_DEBUG > 0
-VOID DebugOneVolume (REFIT_VOLUME *Volume, CHAR16 *TitleEntry, CHAR16 *EntryLoaderPath);
-#else
-#define DebugOneVolume(...)
-#endif
-
 VOID MyFreePoolProc (IN OUT VOID **Pointer);
 #define MyFreePool(a) do { MyFreePoolProc((VOID **)(a)); if (sizeof((a)) != sizeof(VOID *) || sizeof(*(a)) != sizeof(VOID *) || sizeof(**(a)) == 0) MsgLog ("What!!??\n"); } while (0)
 
 VOID RetainVolume (REFIT_VOLUME *Volume);
-VOID AllocateVolume (REFIT_VOLUME **Volume);
+REFIT_VOLUME * AllocateVolume (REFIT_VOLUME **Volume);
 REFIT_VOLUME * CopyVolume (REFIT_VOLUME *VolumeToCopy);
-VOID FreeVolume (REFIT_VOLUME **Volume);
 VOID AssignVolume (REFIT_VOLUME **Volume, REFIT_VOLUME *NewVolume);
 VOID AddToVolumeList (REFIT_VOLUME ***Volumes, UINTN *VolumesCount, REFIT_VOLUME *Volume);
-VOID FreeVolumes (REFIT_VOLUME ***Volumes, UINTN *VolumesCount);
 
 
 #if REFIT_DEBUG > 0
@@ -152,51 +152,63 @@ VOID LEAKABLEVOLUMES ();
 #endif
 
 
-VOID EraseUint32List (UINT32_LIST **TheList);
-VOID SetVolumeBadgeIcon (REFIT_VOLUME *Volume);
+VOID EraseUint32List (IN UINT32_LIST **TheList);
+VOID SetVolumeBadgeIcon (IN OUT REFIT_VOLUME *Volume);
 VOID CleanUpPathNameSlashes (IN OUT CHAR16 *PathName);
 VOID FreeList (IN OUT VOID ***ListPtr, IN OUT UINTN *ElementCount);
-VOID SplitPathName (CHAR16 *InPath, CHAR16 **VolName, CHAR16 **Path, CHAR16 **Filename);
-VOID CreateList (OUT VOID ***ListPtr, OUT UINTN *ElementCount, IN UINTN InitialElementCount);
+VOID FreeVolumes (IN OUT REFIT_VOLUME ***ListVolumes, IN OUT UINTN *ListCount);
+VOID FreeVolume (REFIT_VOLUME **Volume);
+VOID SanitiseVolumeName (REFIT_VOLUME **Volume);
+VOID AddListElement (
+    IN OUT VOID  ***ListPtr,
+    IN OUT UINTN   *ElementCount,
+    IN     VOID    *NewElement
+);
 VOID AddListElementSized (IN OUT VOID **ListPtr, IN OUT UINTN *ElementCount, IN VOID *NewElement, IN UINTN ElementSize);
-VOID AddListElement (IN OUT VOID ***ListPtr, IN OUT UINTN *ElementCount, IN VOID *NewElement);
+VOID SplitPathName (
+    IN     CHAR16  *InPath,
+    IN OUT CHAR16 **VolName,
+    IN OUT CHAR16 **Path,
+    IN OUT CHAR16 **Filename
+);
 VOID DirIterOpen (
-    IN EFI_FILE *BaseDir,
-    IN CHAR16 *RelativePath OPTIONAL,
+    IN  EFI_FILE       *BaseDir,
+    IN  CHAR16         *RelativePath OPTIONAL,
     OUT REFIT_DIR_ITER *DirIter
 );
 VOID FindVolumeAndFilename (
-    IN EFI_DEVICE_PATH *loadpath,
-    OUT REFIT_VOLUME **DeviceVolume,
-    OUT CHAR16 **loader
+    IN  EFI_DEVICE_PATH  *loadpath,
+    OUT REFIT_VOLUME    **DeviceVolume,
+    OUT CHAR16          **loader
 );
 
-CHAR16 *Basename (IN CHAR16 *Path);
-CHAR16 *FindPath (IN CHAR16* FullPath);
-CHAR16 *FindExtension (IN CHAR16 *Path);
-CHAR16 *FindLastDirName (IN CHAR16 *Path);
-CHAR16 *StripEfiExtension (CHAR16 *FileName);
-CHAR16 *GetVolumeName (IN REFIT_VOLUME *Volume);
-CHAR16 *SplitDeviceString (IN OUT CHAR16 *InString);
+CHAR16 * Basename (IN CHAR16 *Path);
+CHAR16 * FindPath (IN CHAR16* FullPath);
+CHAR16 * FindExtension (IN CHAR16 *Path);
+CHAR16 * FindLastDirName (IN CHAR16 *Path);
+CHAR16 * StripEfiExtension (IN CHAR16 *FileName);
+CHAR16 * GetVolumeName (IN REFIT_VOLUME *Volume);
+CHAR16 * SplitDeviceString (IN OUT CHAR16 *InString);
 
 BOOLEAN EjectMedia (VOID);
-BOOLEAN HasWindowsBiosBootFiles (REFIT_VOLUME *Volume);
-VOID DumpHexString (IN UINTN DataSize, IN VOID *UserData);
-BOOLEAN GuidsAreEqual (EFI_GUID *Guid1, EFI_GUID *Guid2);
-BOOLEAN FindVolume (REFIT_VOLUME **Volume, CHAR16 *Identifier);
+BOOLEAN HasWindowsBiosBootFiles (IN REFIT_VOLUME *Volume);
+BOOLEAN GuidsAreEqual (IN EFI_GUID *Guid1, IN EFI_GUID *Guid2);
+BOOLEAN FindVolume (IN REFIT_VOLUME **Volume, IN CHAR16 *Identifier);
 BOOLEAN FileExists (IN EFI_FILE *BaseDir, IN CHAR16 *RelativePath);
 BOOLEAN SplitVolumeAndFilename (IN OUT CHAR16 **Path, OUT CHAR16 **VolName);
-BOOLEAN VolumeMatchesDescription (REFIT_VOLUME *Volume, CHAR16 *Description);
+BOOLEAN VolumeMatchesDescription (IN REFIT_VOLUME *Volume, IN CHAR16 *Description);
 BOOLEAN FilenameIn (
     IN REFIT_VOLUME *Volume,
-    IN CHAR16 *Directory,
-    IN CHAR16 *Filename,
-    IN CHAR16 *List
+    IN CHAR16       *Directory,
+    IN CHAR16       *Filename,
+    IN CHAR16       *List
 );
 BOOLEAN DirIterNext (
-    IN OUT REFIT_DIR_ITER *DirIter,
-    IN UINTN FilterMode,
-    IN CHAR16 *FilePattern OPTIONAL,
-    OUT EFI_FILE_INFO **DirEntry
+    IN  OUT REFIT_DIR_ITER  *DirIter,
+    IN      UINTN            FilterMode,
+    IN      CHAR16          *FilePattern OPTIONAL,
+        OUT EFI_FILE_INFO  **DirEntry
 );
+
+REFIT_VOLUME * CopyVolume (IN REFIT_VOLUME *VolumeToCopy);
 #endif

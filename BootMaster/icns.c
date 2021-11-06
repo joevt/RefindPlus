@@ -40,6 +40,7 @@
 /*
  * Modified for RefindPlus
  * Copyright (c) 2020-2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ * Portions Copyright (c) 2021 Joe van Tunen (joevt@shaw.ca)
  *
  * Modifications distributed under the preceding terms.
  */
@@ -66,7 +67,7 @@ typedef struct {
     UINTN       IconSize;
 } BUILTIN_ICON;
 
-#define ONEICON(id, file, type) { {NULL, FALSE}, file, type },
+#define ONEICON(id, file, type) { NULLPI, file, type },
 BUILTIN_ICON BuiltinIconTable[] = {
     #include "icns.include"
 };
@@ -93,7 +94,7 @@ PoolImage * BuiltinIcon(IN UINTN Id)
                 AssignCachedPoolImage (&BuiltinIconTable[Id].Image, DummyImage(GlobalConfig.IconSizes[BuiltinIconTable[Id].IconSize]));
             }
         }
-        
+
         #if REFIT_DEBUG > 0
             MsgLog ("[ LEAKABLEBUILTINICON %d\n", Id);
             LEAKABLEPATHINIT (kLeakableBuiltinIcons+Id);
@@ -121,46 +122,54 @@ EG_IMAGE * LoadOSIcon(
 ) {
     EG_IMAGE        *Image = NULL;
     CHAR16          *CutoutName, *BaseName;
-    UINTN           Index = 0;
+    UINTN            Index = 0;
 
-    if (GlobalConfig.TextOnly) {
+    if (!AllowGraphicsMode) {
         // skip loading if it is not used anyway
         return NULL;
     }
 
-    // First, try to find an icon from the OSIconName list....
-    while ((Image == NULL) && ((CutoutName = FindCommaDelimited(OSIconName, Index++)) != NULL)) {
+    // First, try to find an icon from the OSIconName list.
+    while ((Image == NULL) &&
+        ((CutoutName = FindCommaDelimited (OSIconName, Index++)) != NULL)
+    ) {
         BaseName = PoolPrint (L"%s_%s", BootLogo ? L"boot" : L"os", CutoutName);
-        Image = egFindIcon(BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
-       MyFreePool (&CutoutName);
-       MyFreePool (&BaseName);
+        Image    = egFindIcon (BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
+        MyFreePool (&CutoutName);
+        MyFreePool (&BaseName);
     }
 
-    // If that fails, try again using the FallbackIconName....
+    // If that fails, try again using the FallbackIconName.
     if (Image == NULL) {
-       BaseName = PoolPrint (L"%s_%s", BootLogo ? L"boot" : L"os", FallbackIconName);
+        BaseName = PoolPrint (L"%s_%s", BootLogo ? L"boot" : L"os", FallbackIconName);
 
-       LOG(4, LOG_LINE_NORMAL, L"Trying to find an icon from '%s'", BaseName);
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL, L"Trying to find an icon from '%s'", BaseName);
+        #endif
 
-       Image = egFindIcon(BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
-       MyFreePool (&BaseName);
+        Image = egFindIcon (BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
+        MyFreePool (&BaseName);
     }
 
-    // If that fails and if BootLogo was set, try again using the "os_" start of the name....
+    // If that fails and if BootLogo was set, try again using the "os_" start of the name.
     if (BootLogo && (Image == NULL)) {
-       BaseName = PoolPrint (L"os_%s", FallbackIconName);
+        BaseName = PoolPrint (L"os_%s", FallbackIconName);
 
-       LOG(4, LOG_LINE_NORMAL, L"Trying to find an icon from '%s'", BaseName);
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL, L"Trying to find an icon from '%s'", BaseName);
+        #endif
 
-       Image = egFindIcon(BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
-       MyFreePool (&BaseName);
+        Image = egFindIcon (BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
+        MyFreePool (&BaseName);
     }
 
-    // If all of these fail, return the dummy image....
+    // If all of these fail, return the dummy image.
     if (Image == NULL) {
-        LOG(4, LOG_LINE_NORMAL, L"Setting dummy image");
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL, L"Setting dummy image");
+        #endif
 
-        Image = DummyImage(GlobalConfig.IconSizes[ICON_SIZE_BIG]);
+        Image = DummyImage (GlobalConfig.IconSizes[ICON_SIZE_BIG]);
     }
 
     return Image;
@@ -176,7 +185,7 @@ EG_IMAGE * DummyImage (
     IN UINTN PixelSize
 ) {
     EG_IMAGE        *Image;
-    UINTN           x, y, LineOffset;
+    UINTN            x, y, LineOffset;
     CHAR8           *Ptr, *YPtr;
 
     Image = egCreateFilledImage (PixelSize, PixelSize, TRUE, &BlackPixel);

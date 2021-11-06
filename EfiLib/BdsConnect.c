@@ -9,60 +9,75 @@ http://opensource.org/licenses/bsd-license.php
 
 THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
 WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
-
+**/
+/**
+ * Modified for RefindPlus
+ * Copyright (c) 2020-2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ *
+ * Modifications distributed under the preceding terms.
 **/
 
 #include "Platform.h"
 #include "../BootMaster/lib.h"
+#include "../BootMaster/screenmgt.h"
 #include "../BootMaster/mystrings.h"
 #include "../BootMaster/launch_efi.h"
 #include "../include/refit_call_wrapper.h"
 #include "../BootMaster/leaks.h"
+
+#if REFIT_DEBUG > 0
 #include "../../ShellPkg/Include/Library/HandleParsingLib.h"
+#endif
 
 #define IS_PCI_GFX(_p) IS_CLASS2 (_p, PCI_CLASS_DISPLAY, PCI_CLASS_DISPLAY_OTHER)
 
 BOOLEAN FoundGOP        = FALSE;
 BOOLEAN ReLoaded        = FALSE;
-BOOLEAN PostConnect     = FALSE;
+BOOLEAN AcquireErrorGOP = FALSE;
 BOOLEAN DetectedDevices = FALSE;
+
+UINTN   AllHandleCount;
+
 
 extern EFI_STATUS AmendSysTable (VOID);
 extern EFI_STATUS AcquireGOP (VOID);
 
+#ifdef __MAKEWITH_TIANO
+// DA-TAG: Limit to TianoCore
+//         Technically Not Needed
+extern EFI_STATUS OcConnectDrivers (VOID);
+#endif
 
 static
 EFI_STATUS EFIAPI daConnectController (
-    IN  EFI_HANDLE               ControllerHandle,
+    IN  EFI_HANDLE                ControllerHandle,
     IN  EFI_HANDLE               *DriverImageHandle   OPTIONAL,
     IN  EFI_DEVICE_PATH_PROTOCOL *RemainingDevicePath OPTIONAL,
-    IN  BOOLEAN                  Recursive
+    IN  BOOLEAN                   Recursive
 ) {
-    EFI_STATUS  Status;
+    EFI_STATUS   Status;
     VOID        *DevicePath;
     
     MsgLog("[ daConnectController ControllerHandle:%p Recursive:%d\n", ControllerHandle, Recursive);
 
     if (ControllerHandle == NULL) {
         Status = EFI_INVALID_PARAMETER;
-        MsgLog("] daConnectController ControllerHandle...%r\n", Status);
+        MsgLog("] daConnectController ControllerHandle... %r\n", Status);
         return Status;
     }
-    //
-    // Do not connect controllers without device paths.
-    // REF: https://bugzilla.tianocore.org/show_bug.cgi?id=2460
-    //
+
+    // DA-TAG: Do not connect controllers without device paths.
+    //         REF: https://bugzilla.tianocore.org/show_bug.cgi?id=2460
     Status = gBS->HandleProtocol (
         ControllerHandle,
         &gEfiDevicePathProtocolGuid,
         &DevicePath
     );
 
-    if (EFI_ERROR (Status)) {
-        MsgLog("] daConnectController HandleProtocol...%r\n", Status);
+    if (EFI_ERROR(Status)) {
+        MsgLog("] daConnectController HandleProtocol... %r\n", Status);
         return EFI_NOT_STARTED;
     }
-    //MyFreePool(&DevicePath); // DevicePath is not always a pool allocated ptr
 
     LEAKABLEEXTERNALSTART (kLeakableWhatdaConnectControllerConnectController);
     Status = gBS->ConnectController (
@@ -72,34 +87,32 @@ EFI_STATUS EFIAPI daConnectController (
         Recursive
     );
     LEAKABLEEXTERNALSTOP ();
-    
-    MsgLog("] daConnectController ConnectController...%r\n", Status);
+
+    MsgLog("] daConnectController ConnectController... %r\n", Status);
     return Status;
 } // EFI_STATUS daConnectController()
 
 EFI_STATUS ScanDeviceHandles (
-    EFI_HANDLE ControllerHandle,
-    UINTN      *HandleCount,
+    EFI_HANDLE   ControllerHandle,
+    UINTN       *HandleCount,
     EFI_HANDLE **HandleBuffer,
     UINT32     **HandleType
 ) {
-    EFI_STATUS                          Status;
+    EFI_STATUS                            Status;
     EFI_GUID                            **ProtocolGuidArray;
-    UINTN                               k;
-    UINTN                               ArrayCount;
-    UINTN                               ProtocolIndex;
-    UINTN                               OpenInfoCount;
-    UINTN                               OpenInfoIndex;
-    UINTN                               ChildIndex;
-    EFI_OPEN_PROTOCOL_INFORMATION_ENTRY *OpenInfo;
+    UINTN                                 k, ArrayCount;
+    UINTN                                 ProtocolIndex;
+    UINTN                                 OpenInfoCount;
+    UINTN                                 OpenInfoIndex;
+    UINTN                                 ChildIndex;
+    EFI_OPEN_PROTOCOL_INFORMATION_ENTRY  *OpenInfo;
 
     *HandleCount  = 0;
     *HandleBuffer = NULL;
     *HandleType   = NULL;
-    //
-    // Retrieve a list of handles with device paths
-    // REF: https://bugzilla.tianocore.org/show_bug.cgi?id=2460
-    //
+
+    // DA-TAG: Retrieve a list of handles with device paths
+    //         REF: https://bugzilla.tianocore.org/show_bug.cgi?id=2460
     Status = gBS->LocateHandleBuffer (
         ByProtocol,
         &gEfiDevicePathProtocolGuid,
@@ -107,10 +120,9 @@ EFI_STATUS ScanDeviceHandles (
         HandleCount,
         HandleBuffer
     );
-    // LOG2(4, LOG_LINE_NORMAL, L"", L"\n", L"  %p H:%d", ControllerHandle, *HandleCount);
 
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         goto Error;
     }
 
@@ -122,43 +134,45 @@ EFI_STATUS ScanDeviceHandles (
 
     for (k = 0; k < *HandleCount; k++) {
         (*HandleType)[k] = EFI_HANDLE_TYPE_UNKNOWN;
-        //
+
         // Retrieve a list of all the protocols on each handle
-        //
         Status = gBS->ProtocolsPerHandle (
             (*HandleBuffer)[k],
             &ProtocolGuidArray,
             &ArrayCount
         );
 
-        if (!EFI_ERROR (Status)) {
-            //LOG2(4, LOG_LINE_NORMAL, L"", L"\n", L"    %d %p PPH:%d", k, (*HandleBuffer)[k], ArrayCount);
+        if (!EFI_ERROR(Status)) {
             for (ProtocolIndex = 0; ProtocolIndex < ArrayCount; ProtocolIndex++) {
                 if (CompareGuid (ProtocolGuidArray[ProtocolIndex], &gEfiLoadedImageProtocolGuid)) {
                     (*HandleType)[k] |= EFI_HANDLE_TYPE_IMAGE_HANDLE;
                 }
+
                 if (CompareGuid (ProtocolGuidArray[ProtocolIndex], &gEfiDriverBindingProtocolGuid)) {
                     (*HandleType)[k] |= EFI_HANDLE_TYPE_DRIVER_BINDING_HANDLE;
                 }
+
                 if (CompareGuid (ProtocolGuidArray[ProtocolIndex], &gEfiDriverConfigurationProtocolGuid)) {
                     (*HandleType)[k] |= EFI_HANDLE_TYPE_DRIVER_CONFIGURATION_HANDLE;
                 }
+
                 if (CompareGuid (ProtocolGuidArray[ProtocolIndex], &gEfiDriverDiagnosticsProtocolGuid)) {
                     (*HandleType)[k] |= EFI_HANDLE_TYPE_DRIVER_DIAGNOSTICS_HANDLE;
                 }
+
                 if (CompareGuid (ProtocolGuidArray[ProtocolIndex], &gEfiComponentName2ProtocolGuid)) {
                     (*HandleType)[k] |= EFI_HANDLE_TYPE_COMPONENT_NAME_HANDLE;
                 }
+
                 if (CompareGuid (ProtocolGuidArray[ProtocolIndex], &gEfiComponentNameProtocolGuid)) {
                     (*HandleType)[k] |= EFI_HANDLE_TYPE_COMPONENT_NAME_HANDLE;
                 }
+
                 if (CompareGuid (ProtocolGuidArray[ProtocolIndex], &gEfiDevicePathProtocolGuid)) {
                     (*HandleType)[k] |= EFI_HANDLE_TYPE_DEVICE_HANDLE;
                 }
 
-                //
                 // Retrieve the list of agents that have opened each protocol
-                //
                 Status = gBS->OpenProtocolInformation (
                     (*HandleBuffer)[k],
                     ProtocolGuidArray[ProtocolIndex],
@@ -166,11 +180,8 @@ EFI_STATUS ScanDeviceHandles (
                     &OpenInfoCount
                 );
 
-                if (!EFI_ERROR (Status)) {
-                    //LOG2(4, LOG_LINE_NORMAL, L"", L"\n", L"      %d O:%d", ProtocolIndex, OpenInfoCount);
-
+                if (!EFI_ERROR(Status)) {
                     for (OpenInfoIndex = 0; OpenInfoIndex < OpenInfoCount; OpenInfoIndex++) {
-                        //LOG2(4, LOG_LINE_NORMAL, L"", L"\n", L"        %d %p", OpenInfoIndex, OpenInfo[OpenInfoIndex].ControllerHandle);
                         if (OpenInfo[OpenInfoIndex].ControllerHandle == ControllerHandle) {
                             if ((OpenInfo[OpenInfoIndex].Attributes &
                                 EFI_OPEN_PROTOCOL_BY_DRIVER) == EFI_OPEN_PROTOCOL_BY_DRIVER
@@ -178,15 +189,18 @@ EFI_STATUS ScanDeviceHandles (
                                 for (ChildIndex = 0; ChildIndex < *HandleCount; ChildIndex++) {
                                     if ((*HandleBuffer)[ChildIndex] == OpenInfo[OpenInfoIndex].AgentHandle) {
                                         (*HandleType)[ChildIndex] |= EFI_HANDLE_TYPE_DEVICE_DRIVER;
-                                            LOG2(4, LOG_LINE_NORMAL, L"", L"\n", L"          %3X %g %d %3X Device",
+                                        #if REFIT_DEBUG > 0
+                                        LOG2(4, LOG_LINE_NORMAL, L"", L"\n", L"          %3X %g %d %3X Device",
                                             ConvertHandleToHandleIndex ((*HandleBuffer)[k]),
                                             ProtocolGuidArray[ProtocolIndex],
                                             OpenInfoIndex,
                                             ConvertHandleToHandleIndex((*HandleBuffer)[ChildIndex])
                                         );
+                                        #endif
                                     }
                                 }
                             }
+
                             if ((OpenInfo[OpenInfoIndex].Attributes &
                                 EFI_OPEN_PROTOCOL_BY_CHILD_CONTROLLER) == EFI_OPEN_PROTOCOL_BY_CHILD_CONTROLLER
                             ) {
@@ -194,29 +208,31 @@ EFI_STATUS ScanDeviceHandles (
                                 for (ChildIndex = 0; ChildIndex < *HandleCount; ChildIndex++) {
                                     if ((*HandleBuffer)[ChildIndex] == OpenInfo[OpenInfoIndex].AgentHandle) {
                                         (*HandleType)[ChildIndex] |= EFI_HANDLE_TYPE_BUS_DRIVER;
+                                        #if REFIT_DEBUG > 0
                                         LOG2(4, LOG_LINE_NORMAL, L"", L"\n", L"          %3X %g %d %3X Bus",
                                             ConvertHandleToHandleIndex ((*HandleBuffer)[k]),
                                             ProtocolGuidArray[ProtocolIndex],
                                             OpenInfoIndex,
                                             ConvertHandleToHandleIndex((*HandleBuffer)[ChildIndex])
                                         );
+                                        #endif
                                     }
                                 }
                             }
                         }
-                    }
+                    } // for OpenInfoIndex = 0
 
                     MyFreePool (&OpenInfo);
                 }
-            }
+            } // for for ProtocolIndex = 0
 
             MyFreePool (&ProtocolGuidArray);
-        }
-    }
+        } // if !EFI_ERROR Status
+    } // for k = 0
 
     return EFI_SUCCESS;
 
-Error:
+    Error:
     MyFreePool (HandleType);
     MyFreePool (HandleBuffer);
 
@@ -231,23 +247,21 @@ Error:
 EFI_STATUS BdsLibConnectMostlyAllEfi (
     VOID
 ) {
-    EFI_STATUS           XStatus;
-    EFI_STATUS           Status           = EFI_SUCCESS;
+    EFI_STATUS            XStatus;
+    EFI_STATUS            Status          = EFI_SUCCESS;
     EFI_HANDLE           *AllHandleBuffer = NULL;
     EFI_HANDLE           *HandleBuffer    = NULL;
-    UINTN                i;
-    UINTN                k;
-    UINTN                HandleCount;
-    UINTN                AllHandleCount;
+    UINTN                 i, k;
+    UINTN                 HandleCount;
     UINT32               *HandleType = NULL;
-    BOOLEAN              Parent;
-    BOOLEAN              Device;
-    BOOLEAN              DevTag;
-    BOOLEAN              MakeConnection;
-    PCI_TYPE_GENERIC     Pci;
-    EFI_PCI_IO_PROTOCOL* PciIo;
+    BOOLEAN               Parent;
+    BOOLEAN               Device;
+    BOOLEAN               DevTag;
+    BOOLEAN               MakeConnection;
+    PCI_TYPE_GENERIC      Pci;
+    EFI_PCI_IO_PROTOCOL *PciIo;
 
-    UINTN      GOPCount;
+    UINTN       GOPCount;
     EFI_HANDLE *GOPArray         = NULL;
 
     UINTN  SegmentPCI;
@@ -258,7 +272,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
 
 
     #if REFIT_DEBUG > 0
-    UINTN  HexIndex          = 0;
+    UINTN   HexIndex         = 0;
     CHAR16 *GopDevicePathStr = NULL;
     CHAR16 *DevicePathStr    = NULL;
     CHAR16 *DeviceData       = NULL;
@@ -266,21 +280,20 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
 
     DetectedDevices = FALSE;
 
-    MsgLog ("[ BdsLibConnectMostlyAllEfi%s%s\n",
-        ReLoaded ? L" (Reconnect)" : L" (Link)",
-        PostConnect ? L" (Post Connect)" : L""
+    MsgLog ("[ BdsLibConnectMostlyAllEfi%s\n",
+        ReLoaded ? L" (Reconnect)" : L" (Link)"
     );
-    LOG2(2, LOG_LINE_SEPARATOR, L"", L"...\n", L"%s Device Handles to Controllers%s",
-        ReLoaded ? L"Reconnect" : L"Link",
-        PostConnect ? L" (Post Connect)" : L""
+    #if REFIT_DEBUG > 0
+    LOG2(1, LOG_LINE_SEPARATOR, L"", L"...\n", L"%s Device Handles to Controllers",
+        ReLoaded ? L"Reconnect" : L"Link"
     );
+    #endif
 
     // DISABLE scan all handles
     //Status = gBS->LocateHandleBuffer (AllHandles, NULL, NULL, &AllHandleCount, &AllHandleBuffer);
     //
     // Only connect controllers with device paths.
     // REF: https://bugzilla.tianocore.org/show_bug.cgi?id=2460
-    //
     Status = gBS->LocateHandleBuffer (
         ByProtocol,
         &gEfiDevicePathProtocolGuid,
@@ -289,20 +302,22 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
         &AllHandleBuffer
     );
 
-    if (EFI_ERROR (Status)) {
-        LOG2(2, LOG_THREE_STAR_MID, L"", L"\n\n", L"ERROR: Could Not Locate Device Handles");
+    if (EFI_ERROR(Status)) {
+        #if REFIT_DEBUG > 0
+        LOG2(1, LOG_STAR_SEPARATOR, L"", L"\n\n", L"ERROR: Could Not Locate Device Handles");
+        #endif
     }
     else {
-        LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"Located %d Device Handles", AllHandleCount);
         #if REFIT_DEBUG > 0
-        UINTN AllHandleCountTrigger = (UINTN) AllHandleCount - 1;
+        LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"Located %d Device Handles", AllHandleCount);
+        UINTN AllHandleCountTrigger = AllHandleCount - 1;
         #endif
 
         for (i = 0; i < AllHandleCount; i++) {
             MakeConnection = TRUE;
 
             #if REFIT_DEBUG > 0
-            HexIndex = ConvertHandleToHandleIndex (AllHandleBuffer[i]);
+            HexIndex   = ConvertHandleToHandleIndex (AllHandleBuffer[i]);
             DeviceData = NULL;
 
             DevicePathStr = ConvertDevicePathToText (
@@ -320,14 +335,20 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                 &HandleType
             );
 
-            if (EFI_ERROR (XStatus)) {
-                LOG2(1, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: %r", XStatus);
+            if (EFI_ERROR(XStatus)) {
+                #if REFIT_DEBUG > 0
+                LOG2(4, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: %r", XStatus);
+                #endif
             }
             else if (HandleType == NULL) {
-                LOG2(1, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: Invalid Handle Type");
+                #if REFIT_DEBUG > 0
+                LOG2(4, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: Invalid Handle Type");
+                #endif
             }
             else if (HandleBuffer == NULL) {
-                LOG2(1, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: Invalid Handle Buffer");
+                #if REFIT_DEBUG > 0
+                LOG2(4, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: Invalid Handle Buffer");
+                #endif
             }
             else {
                 // Assume Device
@@ -345,7 +366,9 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                 } // for
 
                 if (!Device) {
-                    LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ...Discounted [Other Item]");
+                    #if REFIT_DEBUG > 0
+                    LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ... Discounted [Other Item]");
+                    #endif
                 }
                 else {
                     // Assume Not Parent
@@ -354,7 +377,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                     for (k = 0; k < HandleCount; k++) {
                         if (HandleType[k] & EFI_HANDLE_TYPE_PARENT_HANDLE) {
                             MakeConnection = FALSE;
-                            Parent = TRUE;
+                            Parent         = TRUE;
                             break;
                         }
                     } // for
@@ -373,14 +396,14 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                     XStatus = EFI_SUCCESS;
 
                     if (DevTag) {
-                        XStatus = refit_call3_wrapper(
+                        XStatus = REFIT_CALL_3_WRAPPER(
                             gBS->HandleProtocol,
                             AllHandleBuffer[i],
                             &gEfiPciIoProtocolGuid,
                             (void **) &PciIo
                         );
 
-                        if (EFI_ERROR (XStatus)) {
+                        if (EFI_ERROR(XStatus)) {
                             #if REFIT_DEBUG > 0
                             DeviceData = StrDuplicate (L" - Not PCIe Device");
                             #endif
@@ -396,7 +419,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                                 &Pci
                             );
 
-                            if (EFI_ERROR (XStatus)) {
+                            if (EFI_ERROR(XStatus)) {
                                 MakeConnection = FALSE;
 
                                 #if REFIT_DEBUG > 0
@@ -408,7 +431,28 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
 
                                 BOOLEAN VGADevice = IS_PCI_VGA(&Pci.Device);
                                 BOOLEAN GFXDevice = IS_PCI_GFX(&Pci.Device);
-                                
+
+                                if (VGADevice) {
+                                    // DA-TAG: Unable to reconnect later after disconnecting here
+                                    //         Comment out and set MakeConnection to FALSE
+                                    // gBS->DisconnectController (AllHandleBuffer[i], NULL, NULL);
+
+                                    // joevt: Why include this for REFIT_DEBUG only? If you comment
+                                    //        this out because it crashes for REFIT_DEBUG then
+                                    //        there's a bug in REFIT_DEBUG that needs to be fixed.
+
+                                    /*
+                                    MakeConnection = FALSE;
+                                    */
+                                }
+                                else if (GFXDevice) {
+                                    // DA-TAG: Currently unable to detect GFX Device
+                                    //         Revisit Clover implementation later
+                                    //         Not currently missed but may allow new options
+                                    // UPDATE: Actually works on a Non-Mac Firmware Laptop
+                                    //         Is this because it is a laptop or Non-Mac Firmware?
+                                }
+
                                 CHAR16 *Buses;
                                 if (IS_PCI_BRIDGE(&Pci.Bridge) || IS_CARDBUS_BRIDGE(&Pci.Bridge)) {
                                     if (Pci.Bridge.Bridge.SecondaryBus == Pci.Bridge.Bridge.SubordinateBus) {
@@ -420,7 +464,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                                 else {
                                     Buses = StrDuplicate (L"");
                                 }
-                                
+
                                 CHAR16 *OptionRom;
                                 if (PciIo->RomImage || PciIo->RomSize) {
                                     OptionRom = PoolPrint (L" Rom:%d bytes", PciIo->RomSize);
@@ -447,20 +491,20 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                                         (GFXDevice ? L" - GraphicsFX Card" : L"")
                                     )
                                 );
-                                
+
                                 MyFreePool (&Buses);
                                 MyFreePool (&OptionRom);
 
                                 #endif
-                            } // is readable PCI device
-                        } // is PCI device
-                    } // is device
+                            } // if/else EFI_ERROR(XStatus) // is readable PCI device
+                        } // if/else !EFI_ERROR(XStatus) // is PCI device
+                    } // if DevTag // is device
                     else {
-                        LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"    ...Not a device");
+                        LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"    ... Not a device");
                     }
 
                     if (GOPArray == NULL) {
-                        XStatus = refit_call5_wrapper(
+                        XStatus = REFIT_CALL_5_WRAPPER(
                             gBS->LocateHandleBuffer,
                             ByProtocol,
                             &gEfiGraphicsOutputProtocolGuid,
@@ -532,16 +576,16 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
 
                     #if REFIT_DEBUG > 0
                     if (DeviceData == NULL) {
-                        DeviceData = StrDuplicate(L"");
+                        DeviceData = StrDuplicate (L"");
                     }
                     #endif
 
                     if (Parent) {
                         #if REFIT_DEBUG > 0
-                        LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ...Skipped [Parent Device]%s", DeviceData);
+                        LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ... Skipped [Parent Device]%s", DeviceData);
                         #endif
                     }
-                    else if (!EFI_ERROR (XStatus)) {
+                    else if (!EFI_ERROR(XStatus)) {
                         DetectedDevices = TRUE;
 
                         #if REFIT_DEBUG > 0
@@ -552,10 +596,10 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                         #if REFIT_DEBUG > 0
 
                         if (XStatus == EFI_NOT_STARTED) {
-                            LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ...Declined [Empty Device]%s", DeviceData);
+                            LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ... Declined [Empty Device]%s", DeviceData);
                         }
                         else if (XStatus == EFI_NOT_FOUND) {
-                            LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ...Bypassed [Not Linkable]%s", DeviceData);
+                            LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ... Bypassed [Not Linkable]%s", DeviceData);
                         }
                         else if (XStatus == EFI_INVALID_PARAMETER) {
                             LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    - ERROR: Invalid Param%s", DeviceData);
@@ -565,17 +609,16 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                         }
 
                         #endif
-                    } // if Parent elseif !EFI_ERROR (XStatus) else
+                    } // if Parent elseif !EFI_ERROR(XStatus) else
                 } // if !Device
-            } // if EFI_ERROR (XStatus)
+            } // if EFI_ERROR(XStatus)
 
-            if (EFI_ERROR (XStatus)) {
+            if (EFI_ERROR(XStatus)) {
                 // Change Overall Status on Error
                 Status = XStatus;
             }
 
             #if REFIT_DEBUG > 0
-
             if (i == AllHandleCountTrigger) {
                 MsgLog ("\n\n");
             }
@@ -585,7 +628,6 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
 
             MyFreePool (&DevicePathStr);
             MyFreePool (&DeviceData);
-
             #endif
 
             MyFreePool (&HandleBuffer);
@@ -596,7 +638,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
         MyFreePool (&GopDevicePathStr);
         MyFreePool (&GOPArray);
         #endif
-    } // if !EFI_ERROR (Status)
+    } // if !EFI_ERROR(Status)
 
     MyFreePool (&AllHandleBuffer);
 
@@ -616,22 +658,18 @@ EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (
 ) {
     EFI_STATUS  Status;
 
-    // Always position for multiple scan
-    PostConnect = FALSE;
+    // First Pass Driver Connection
+    // DA-TAG: Limit to TianoCore
+    //         Technically Not Needed
+    #ifdef __MAKEWITH_TIANO
+    OcConnectDrivers();
+    #endif
 
     do {
         FoundGOP = FALSE;
 
         // Connect All drivers
         BdsLibConnectMostlyAllEfi();
-
-        if (!PostConnect) {
-            // Reset and reconnect if only connected once.
-            PostConnect     = TRUE;
-            FoundGOP        = FALSE;
-            DetectedDevices = FALSE;
-            BdsLibConnectMostlyAllEfi();
-        }
 
         // Check if possible to dispatch additional DXE drivers as
         // BdsLibConnectAllEfi() may have revealed new DXE drivers.
@@ -640,20 +678,25 @@ EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (
         Status = gDS->Dispatch();
 
         #if REFIT_DEBUG > 0
-        if (EFI_ERROR (Status)) {
+        if (EFI_ERROR(Status)) {
             if (!FoundGOP && DetectedDevices) {
-                LOG2(1, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Could Not Find Path to GOP on Any Device Handle");
+                MsgLog ("INFO: Could Not Find Path to GOP on Any Device Handle");
             }
-            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Dispatch ...%r", Status);
+            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Dispatch ... %r", Status);
         }
         else {
-            LOG2(4, LOG_THREE_STAR_MID, L"INFO: ", L"\n\n", L"Additional DXE Drivers Revealed ...Relink Handles");
+            LOG2(4, LOG_THREE_STAR_MID, L"INFO: ", L"\n\n", L"Additional DXE Drivers Revealed ... Relink Handles");
         }
         #endif
 
-    } while (!EFI_ERROR (Status));
+    } while (!EFI_ERROR(Status));
 
-    LOG(3, LOG_THREE_STAR_SEP, L"Connected Handles to Controllers");
+    #if REFIT_DEBUG > 0
+    LOG2(2, LOG_THREE_STAR_SEP, !FoundGOP && DetectedDevices ? "\n      " : "INFO: ", L"\n", L"%s",
+        L"Processed %d Handle%s",
+        AllHandleCount, (AllHandleCount == 1) ? L"" : L"s"
+    );
+    #endif
 
     if (FoundGOP) {
         return EFI_SUCCESS;
@@ -672,22 +715,29 @@ EFI_STATUS ApplyGOPFix (
 ) {
     EFI_STATUS Status;
 
-    LOG(3, LOG_LINE_SEPARATOR, L"Reload Option ROM");
-
-    // Update Boot Services to permit reloading GPU Option ROM
+    // Update Boot Services to permit reloading GPU OptionROM
     Status = AmendSysTable();
+    #if REFIT_DEBUG > 0
+    LOG(1, LOG_LINE_SEPARATOR, L"Reload OptionROM");
 
-    LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Amend System Table ... %r", Status);
+    LOG2(3, LOG_LINE_NORMAL, L"\nINFO: ", L"\n\n", L"Amend System Table ... %r", Status);
+    #endif
 
-    if (!EFI_ERROR (Status)) {
+    if (!EFI_ERROR(Status)) {
         Status = AcquireGOP();
 
-        LOG2(4, LOG_LINE_NORMAL, L"      ", L"\n\n", L"Acquire Option ROM on Volatile Storage ...%r", Status);
+        #if REFIT_DEBUG > 0
+        LOG2(3, LOG_LINE_NORMAL, L"      ", L"\n\n", L"Acquire OptionROM on Volatile Storage ... %r", Status);
+        #endif
 
-        // connect all devices
-        if (!EFI_ERROR (Status)) {
+        // connect all devices if no error
+        if (EFI_ERROR(Status)) {
+            AcquireErrorGOP = TRUE;
+        }
+        else {
+            MsgLog ("\n\n");
             Status = BdsLibConnectAllDriversToAllControllersEx();
-            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"BdsLibConnectAllDriversToAllControllersEx ...%r", Status);
+            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"BdsLibConnectAllDriversToAllControllersEx ... %r", Status);
         }
     }
 
@@ -706,13 +756,18 @@ VOID EFIAPI BdsLibConnectAllDriversToAllControllers (
 ) {
     EFI_STATUS Status;
 
+    // Clear Keystrokes
+    ReadAllKeyStrokes();
+
     Status = BdsLibConnectAllDriversToAllControllersEx();
     if (GlobalConfig.ReloadGOP) {
-        if (EFI_ERROR (Status) && ResetGOP && !ReLoaded && DetectedDevices) {
+        if (EFI_ERROR(Status) && ResetGOP && !ReLoaded && DetectedDevices) {
             ReLoaded = TRUE;
             Status   = ApplyGOPFix();
 
-            LOG2(4, LOG_STAR_SEPARATOR, L"INFO: ", L"\n\n", L"Issue Option ROM from Volatile Storage ...%r", Status);
+            #if REFIT_DEBUG > 0
+            LOG2(1, LOG_STAR_SEPARATOR, L"INFO: ", L"\n\n", L"Issue Option ROM from Volatile Storage ... %r", Status);
+            #endif
 
             ReLoaded = FALSE;
         }

@@ -50,15 +50,17 @@ EFI_BLOCK_IO    *BlockIO = NULL;
 //
 
 // Returns size of disk in blocks
-UINT64 disk_size(VOID) {
+UINT64 disk_size (VOID) {
    return (UINT64) (BlockIO->Media->LastBlock + 1);
 } // UINT64 disk_size()
 
-UINTN read_sector(UINT64 lba, UINT8 *buffer)
-{
+UINTN read_sector (
+    UINT64  lba,
+    UINT8  *buffer
+) {
     EFI_STATUS          Status;
 
-    Status = refit_call5_wrapper(
+    Status = REFIT_CALL_5_WRAPPER(
         BlockIO->ReadBlocks,
         BlockIO,
         BlockIO->Media->MediaId,
@@ -66,18 +68,20 @@ UINTN read_sector(UINT64 lba, UINT8 *buffer)
         512,
         buffer
     );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         // TODO: report error
         return 1;
     }
     return 0;
 }
 
-UINTN write_sector(UINT64 lba, UINT8 *buffer)
-{
+UINTN write_sector (
+    UINT64 lba,
+    UINT8 *buffer
+) {
     EFI_STATUS          Status;
 
-    Status = refit_call5_wrapper(
+    Status = REFIT_CALL_5_WRAPPER(
         BlockIO->WriteBlocks,
         BlockIO,
         BlockIO->Media->MediaId,
@@ -85,7 +89,7 @@ UINTN write_sector(UINT64 lba, UINT8 *buffer)
         512,
         buffer
     );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         // TODO: report error
         return 1;
     }
@@ -96,40 +100,42 @@ UINTN write_sector(UINT64 lba, UINT8 *buffer)
 // Keyboard input
 //
 
-static BOOLEAN ReadAllKeyStrokes(VOID)
-{
+static
+BOOLEAN ReadAllKeyStrokes (VOID) {
     EFI_STATUS          Status;
     BOOLEAN             GotKeyStrokes;
     EFI_INPUT_KEY       Key;
 
     GotKeyStrokes = FALSE;
     for (;;) {
-        Status = refit_call2_wrapper(
+        Status = REFIT_CALL_2_WRAPPER(
             gST->ConIn->ReadKeyStroke,
             gST->ConIn,
             &Key
         );
+
         if (Status == EFI_SUCCESS) {
             GotKeyStrokes = TRUE;
             continue;
         }
+
         break;
     }
     return GotKeyStrokes;
 }
 
-static VOID PauseForKey(VOID)
-{
-    UINTN               Index;
+static
+VOID PauseForKey (VOID) {
+    UINTN Index;
 
-    Print(L"\n* Hit any key to continue *");
+    Print (L"\n* Press a Key to Continue *");
 
     if (ReadAllKeyStrokes()) {  // remove buffered key strokes
-        refit_call1_wrapper(gBS->Stall, 5000000);     // 5 seconds delay
+        REFIT_CALL_1_WRAPPER(gBS->Stall, 5000000);     // 5 seconds delay
         ReadAllKeyStrokes();    // empty the buffer again
     }
 
-    refit_call3_wrapper(
+    REFIT_CALL_3_WRAPPER(
         gBS->WaitForEvent,
         1,
         &gST->ConIn->WaitForKey,
@@ -140,8 +146,10 @@ static VOID PauseForKey(VOID)
     Print(L"\n");
 }
 
-UINTN input_boolean(CHARN *prompt, BOOLEAN *bool_out)
-{
+UINTN input_boolean (
+    CHARN   *prompt,
+    BOOLEAN *bool_out
+) {
     EFI_STATUS          Status;
     UINTN               Index;
     EFI_INPUT_KEY       Key;
@@ -149,19 +157,21 @@ UINTN input_boolean(CHARN *prompt, BOOLEAN *bool_out)
     Print(prompt);
 
     ReadAllKeyStrokes(); // Remove buffered key strokes
+
     do {
-        refit_call3_wrapper(
+        REFIT_CALL_3_WRAPPER(
             gBS->WaitForEvent,
             1,
             &gST->ConIn->WaitForKey,
             &Index
         );
-        Status = refit_call2_wrapper(
+        Status = REFIT_CALL_2_WRAPPER(
             gST->ConIn->ReadKeyStroke,
             gST->ConIn,
             &Key
         );
-        if (EFI_ERROR (Status) && Status != EFI_NOT_READY) {
+
+        if (EFI_ERROR(Status) && Status != EFI_NOT_READY) {
             return 1;
         }
     } while (Status == EFI_NOT_READY);
@@ -169,7 +179,8 @@ UINTN input_boolean(CHARN *prompt, BOOLEAN *bool_out)
     if (Key.UnicodeChar == 'y' || Key.UnicodeChar == 'Y') {
         Print(L"Yes\n");
         *bool_out = TRUE;
-    } else {
+    }
+    else {
         Print(L"No\n");
         *bool_out = FALSE;
     }
@@ -183,14 +194,17 @@ UINTN input_boolean(CHARN *prompt, BOOLEAN *bool_out)
 // EFI_GUID gEfiDxeServicesTableGuid = { 0x05AD34BA, 0x6F02, 0x4214, { 0x95, 0x2E, 0x4D, 0xA0, 0x39, 0x8E, 0x2B, 0xB9 }};
 
 // Minimal initialization function
-static VOID InitializeLib(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
-   gST            = SystemTable;
-   //    gImageHandle   = ImageHandle;
-   gBS            = SystemTable->BootServices;
-   //    gRS            = SystemTable->RuntimeServices;
-   gRT = SystemTable->RuntimeServices; // Some BDS functions need gRT to be set
-
-//   InitializeConsoleSim();
+static
+VOID InitializeLib (
+    IN EFI_HANDLE        ImageHandle,
+    IN EFI_SYSTEM_TABLE *SystemTable
+) {
+    //gImageHandle   = ImageHandle;
+    gST            = SystemTable;
+    gBS            = SystemTable->BootServices;
+    gRT            = SystemTable->RuntimeServices; // Some BDS functions need gRT to be set
+    //gRS            = SystemTable->RuntimeServices;
+    //InitializeConsoleSim();
 }
 
 // EFI_GUID gEfiBlockIoProtocolGuid = { 0x964E5B21, 0x6459, 0x11D2, { 0x8E, 0x39, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B }};
@@ -204,44 +218,53 @@ static VOID InitializeLib(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
 // because some EFIs have buggy StriCmp() functions that actually perform
 // case-sensitive comparisons.
 // Returns TRUE if strings are identical, FALSE otherwise.
-static BOOLEAN MyStriCmp(IN CHAR16 *FirstString, IN CHAR16 *SecondString) {
-    if (FirstString && SecondString) {
-        while ((*FirstString != L'\0') && ((*FirstString & ~0x20) == (*SecondString & ~0x20))) {
-                FirstString++;
-                SecondString++;
-        }
-        return (*FirstString == *SecondString);
-    } else {
+static
+BOOLEAN MyStriCmp (
+    IN CHAR16 *FirstString,
+    IN CHAR16 *SecondString
+) {
+    if (!FirstString || !SecondString) {
         return FALSE;
+    }
+    else {
+        while ((*FirstString != L'\0') && ((*FirstString & ~0x20) == (*SecondString & ~0x20))) {
+            FirstString++;
+            SecondString++;
+        }
+
+        return (*FirstString == *SecondString);
     }
 } // BOOLEAN MyStriCmp()
 
-// Check firmware vendor; get verification to continue if it's not Apple.
+// Check firmware vendor; get verification to continue if it is not Apple.
 // Returns TRUE if Apple firmware or if user assents to use, FALSE otherwise.
-static BOOLEAN VerifyGoOn(VOID) {
-   BOOLEAN GoOn = TRUE;
-   UINTN invalid;
+static
+BOOLEAN VerifyGoOn (VOID) {
+    BOOLEAN GoOn = TRUE;
+    UINTN invalid;
 
-   if (!MyStriCmp(L"Apple", gST->FirmwareVendor)) {
-      Print(L"Your firmware is made by %s.\n", gST->FirmwareVendor);
-      Print(L"Ordinarily, a hybrid MBR (which this program creates) should be used ONLY on\n");
-      Print(L"Apple Macs that dual-boot with Windows or some other BIOS-mode OS. Are you\n");
-      invalid = input_boolean(STR("SURE you want to continue? [y/N] "), &GoOn);
-      if (invalid)
-         GoOn = FALSE;
-   }
-   return GoOn;
+    if (!MyStriCmp(L"Apple", gST->FirmwareVendor)) {
+        Print (L"Your firmware is made by %s.\n", gST->FirmwareVendor);
+        Print (L"Ordinarily, a hybrid MBR (which this program creates) should be used ONLY on\n");
+        Print (L"Apple Macs that dual-boot with Windows or some other BIOS-mode OS. Are you\n");
+        invalid = input_boolean (STR("SURE you want to continue? [y/N] "), &GoOn);
+
+        if (invalid) {
+            GoOn = FALSE;
+        }
+    }
+
+    return GoOn;
 } // BOOLEAN VerifyGoOn()
 
 //
 // main entry point
 //
 
-EFI_STATUS
-EFIAPI
-efi_main    (IN EFI_HANDLE           ImageHandle,
-             IN EFI_SYSTEM_TABLE     *SystemTable)
-{
+EFI_STATUS EFIAPI efi_main (
+    IN EFI_HANDLE           ImageHandle,
+    IN EFI_SYSTEM_TABLE    *SystemTable
+) {
     EFI_STATUS          Status;
     UINTN               SyncStatus;
     UINTN               Index;
@@ -253,7 +276,7 @@ efi_main    (IN EFI_HANDLE           ImageHandle,
 
     InitializeLib(ImageHandle, SystemTable);
 
-    Status = refit_call5_wrapper(
+    Status = REFIT_CALL_5_WRAPPER(
         gBS->LocateHandleBuffer,
         ByProtocol,
         &BlockIoProtocol,
@@ -261,52 +284,67 @@ efi_main    (IN EFI_HANDLE           ImageHandle,
         &HandleCount,
         &HandleBuffer
     );
-    if (EFI_ERROR (Status)) {
-        Status = EFI_NOT_FOUND;
-        return Status;
+
+    if (EFI_ERROR(Status)) {
+        return EFI_NOT_FOUND;
     }
 
-    if (!VerifyGoOn())
-       return EFI_ABORTED;
+    if (!VerifyGoOn()) {
+        return EFI_ABORTED;
+    }
 
     for (Index = 0; Index < HandleCount; Index++) {
-
         DeviceHandle = HandleBuffer[Index];
 
         // check device path
-        DevicePath = DevicePathFromHandle(DeviceHandle);
+        DevicePath = DevicePathFromHandle (DeviceHandle);
         Usable = TRUE;
-        while (DevicePath != NULL && !IsDevicePathEndType(DevicePath)) {
-            NextDevicePath = NextDevicePathNode(DevicePath);
+        while (DevicePath != NULL && !IsDevicePathEndType (DevicePath)) {
+            NextDevicePath = NextDevicePathNode (DevicePath);
 
-            if (DevicePathType(DevicePath) == MESSAGING_DEVICE_PATH &&
-                (DevicePathSubType(DevicePath) == MSG_USB_DP ||
-                 DevicePathSubType(DevicePath) == MSG_USB_CLASS_DP ||
-                 DevicePathSubType(DevicePath) == MSG_1394_DP ||
-                 DevicePathSubType(DevicePath) == MSG_FIBRECHANNEL_DP))
-                Usable = FALSE;         // USB/FireWire/FC device
-            if (DevicePathType(DevicePath) == MEDIA_DEVICE_PATH)
-                Usable = FALSE;         // partition, El Torito entry, legacy BIOS device
+            if (DevicePathType (DevicePath) == MESSAGING_DEVICE_PATH &&
+                (
+                    DevicePathSubType (DevicePath) == MSG_USB_DP ||
+                    DevicePathSubType (DevicePath) == MSG_1394_DP ||
+                    DevicePathSubType (DevicePath) == MSG_USB_CLASS_DP ||
+                    DevicePathSubType (DevicePath) == MSG_FIBRECHANNEL_DP
+                )
+            ) {
+                // USB/FireWire/FC device
+                Usable = FALSE;
+            }
+
+            if (DevicePathType (DevicePath) == MEDIA_DEVICE_PATH) {
+                // partition, El Torito entry, legacy BIOS device
+                Usable = FALSE;
+            }
 
             DevicePath = NextDevicePath;
         }
-        if (!Usable)
-            continue;
 
-        Status = refit_call3_wrapper(
+        if (!Usable) {
+            continue;
+        }
+
+        Status = REFIT_CALL_3_WRAPPER(
             gBS->HandleProtocol,
             DeviceHandle,
             &BlockIoProtocol,
             (VOID **) &BlockIO
         );
-        if (EFI_ERROR (Status)) {
+
+        if (EFI_ERROR(Status)) {
             // TODO: report error
             BlockIO = NULL;
-        } else {
-            if (BlockIO->Media->BlockSize != 512)
-                BlockIO = NULL;    // optical media
-            else
+        }
+        else {
+            if (BlockIO->Media->BlockSize == 512) {
                 break;
+            }
+            else {
+                // optical media
+               BlockIO = NULL;
+            }
         }
 
     }

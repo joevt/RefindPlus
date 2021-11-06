@@ -84,7 +84,7 @@
     OcGuardLib|OpenCorePkg/Library/OcGuardLib/OcGuardLib.inf
     OcStringLib|OpenCorePkg/Library/OcStringLib/OcStringLib.inf
     OcDevicePathLib|OpenCorePkg/Library/OcDevicePathLib/OcDevicePathLib.inf
-    RpApfsLib|RefindPlusPkg/Library/RpApfsLib/RpApfsLib.inf
+    RP_ApfsLib|RefindPlusPkg/Library/RP_ApfsLib/RP_ApfsLib.inf
     OcDriverConnectionLib|OpenCorePkg/Library/OcDriverConnectionLib/OcDriverConnectionLib.inf
 
 # Added by dakanji (sf.net/u/dakanji/profile) for AcquireGOP
@@ -104,3 +104,7 @@
   RefindPlusPkg/filesystems/hfs.inf
   RefindPlusPkg/filesystems/iso9660.inf
   RefindPlusPkg/filesystems/ntfs.inf
+
+[BuildOptions.X64]
+  XCODE:*_*_*_CC_FLAGS = -save-temps -DREFIT_DEBUG=0
+  GCC:*_*_*_CC_FLAGS   = -save-temps -DREFIT_DEBUG=0

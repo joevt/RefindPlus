@@ -70,16 +70,16 @@
 // Multiplier for pseudo-floating-point operations in egScaleImage().
 // A value of 4096 should keep us within limits on 32-bit systems, but I've
 // seen some minor artifacts at this level, so give it a bit more precision
-// on 64-bit systems....
+// on 64-bit systems.
 #if defined(EFIX64) | defined(EFIAARCH64)
-#define FP_MULTIPLIER (UINTN) 65536
+    #define FP_MULTIPLIER (UINTN) 65536
 #else
-#define FP_MULTIPLIER (UINTN) 4096
+    #define FP_MULTIPLIER (UINTN) 4096
 #endif
 
 #ifndef __MAKEWITH_GNUEFI
-#define LibLocateHandle gBS->LocateHandleBuffer
-#define LibOpenRoot EfiLibOpenRoot
+    #define LibLocateHandle gBS->LocateHandleBuffer
+    #define LibOpenRoot EfiLibOpenRoot
 #endif
 
 //
@@ -91,7 +91,9 @@ EG_IMAGE * egCreateImage (
     IN UINTN    Height,
     IN BOOLEAN  HasAlpha
 ) {
-    EG_IMAGE *NewImage = (EG_IMAGE *) AllocatePool (sizeof (EG_IMAGE));
+    EG_IMAGE   *NewImage;
+
+    NewImage = (EG_IMAGE *) AllocatePool (sizeof (EG_IMAGE));
     if (NewImage == NULL) {
         return NULL;
     }
@@ -102,17 +104,17 @@ EG_IMAGE * egCreateImage (
         return NULL;
     }
 
-    NewImage->Width = Width;
-    NewImage->Height = Height;
+    NewImage->Width    = Width;
+    NewImage->Height   = Height;
     NewImage->HasAlpha = HasAlpha;
 
     return NewImage;
 }
 
 EG_IMAGE * egCreateFilledImage (
-    IN UINTN     Width,
-    IN UINTN     Height,
-    IN BOOLEAN   HasAlpha,
+    IN UINTN      Width,
+    IN UINTN      Height,
+    IN BOOLEAN    HasAlpha,
     IN EG_PIXEL  *Color
 ) {
     EG_IMAGE  *NewImage;
@@ -148,10 +150,10 @@ EG_IMAGE * egCopyImage (
 // If the specified area is larger than is in the original, returns NULL.
 EG_IMAGE * egCropImage (
     IN EG_IMAGE  *Image,
-    IN UINTN     StartX,
-    IN UINTN     StartY,
-    IN UINTN     Width,
-    IN UINTN     Height
+    IN UINTN      StartX,
+    IN UINTN      StartY,
+    IN UINTN      Width,
+    IN UINTN      Height
 ) {
     EG_IMAGE *NewImage = NULL;
     UINTN x, y;
@@ -164,11 +166,13 @@ EG_IMAGE * egCropImage (
     if (NewImage == NULL) {
         return NULL;
     }
+
     for (y = 0; y < Height; y++) {
         for (x = 0; x < Width; x++) {
             NewImage->PixelData[y * NewImage->Width + x] = Image->PixelData[(y + StartY) * Image->Width + x + StartX];
         }
     }
+
     return NewImage;
 } // EG_IMAGE * egCropImage()
 
@@ -184,21 +188,26 @@ EG_IMAGE * egCropImage (
 // needed for good results.
 EG_IMAGE * egScaleImage (
     IN EG_IMAGE  *Image,
-    IN UINTN     NewWidth,
-    IN UINTN     NewHeight
+    IN UINTN      NewWidth,
+    IN UINTN      NewHeight
 ) {
     EG_IMAGE  *NewImage = NULL;
-    EG_PIXEL  a, b, c, d;
-    UINTN     i, j;
+    EG_PIXEL   a, b, c, d;
+    UINTN      i, j;
     UINTN      x, y, Index;
-    UINTN     Offset = 0;
+    UINTN      Offset = 0;
     UINTN      x_diff, y_diff;
     UINTN      x_ratio, y_ratio;
 
-    LOG(4, LOG_LINE_NORMAL, L"Scaling image to %d x %d", NewWidth, NewHeight);
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL, L"Scaling Image to %d x %d", NewWidth, NewHeight);
+    #endif
 
     if ((Image == NULL) || (Image->Height == 0) || (Image->Width == 0) || (NewWidth == 0) || (NewHeight == 0)) {
-        LOG(1, LOG_LINE_NORMAL, L"In egScaleImage, image is NULL or a size is 0!!");
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL, L"In egScaleImage ... Image is NULL or a Size is 0!!");
+        #endif
+
         return NULL;
     }
 
@@ -208,7 +217,9 @@ EG_IMAGE * egScaleImage (
 
     NewImage = egCreateImage (NewWidth, NewHeight, Image->HasAlpha);
     if (NewImage == NULL) {
-        LOG(1, LOG_LINE_NORMAL, L"In egScaleImage, could not create new image!!");
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL, L"In egScaleImage ... Could Not Create New Image!!");
+        #endif
 
         return NULL;
     }
@@ -254,7 +265,9 @@ EG_IMAGE * egScaleImage (
         } // for (j...)
     } // for (i...)
 
-    LOG(3, LOG_LINE_NORMAL, L"Scaling image completed");
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL, L"Scaling Image Completed");
+    #endif
 
     return NewImage;
 } // EG_IMAGE * egScaleImage()
@@ -285,31 +298,32 @@ VOID egFreeImage (
 EFI_STATUS egLoadFile (
     IN EFI_FILE  *BaseDir,
     IN CHAR16    *FileName,
-    OUT UINT8    **FileData,
+    OUT UINT8   **FileData,
     OUT UINTN    *FileDataLength
 ) {
     EFI_STATUS          Status;
     UINT64              ReadSize;
     UINTN               BufferSize;
-    UINT8               *Buffer;
+    UINT8              *Buffer;
     EFI_FILE_INFO      *FileInfo;
     EFI_FILE_HANDLE     FileHandle;
-    
-    if (FileData) *FileData = NULL;
 
     #if LOG_ALL_LOADS
     MsgLog ("[ egLoadFile '%s'\n", FileName);
     #endif
     
+    if (FileData) *FileData = NULL;
+    
     if ((BaseDir == NULL) || (FileName == NULL)) {
         MsgLog (LOG_PRE "] egLoadFile '%s' invalid parameter!!\n", FileName);
+
         return EFI_INVALID_PARAMETER;
     }
 
     LEAKABLEEXTERNALSTART (kLeakableWhategLoadFileStart);
-    Status = refit_call5_wrapper(BaseDir->Open, BaseDir, &FileHandle, FileName, EFI_FILE_MODE_READ, 0);
+    Status = REFIT_CALL_5_WRAPPER(BaseDir->Open, BaseDir, &FileHandle, FileName, EFI_FILE_MODE_READ, 0);
     LEAKABLEEXTERNALSTOP ();
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         #if LOG_ALL_LOADS
         MsgLog (LOG_PRE "] egLoadFile '%s' not opened (%r)\n", FileName, Status);
         #endif
@@ -318,7 +332,7 @@ EFI_STATUS egLoadFile (
 
     FileInfo = LibFileInfo (FileHandle);
     if (FileInfo == NULL) {
-        refit_call1_wrapper(FileHandle->Close, FileHandle);
+        REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
         MsgLog (LOG_PRE "] egLoadFile '%s' can't get info\n", FileName);
         return EFI_NOT_FOUND;
     }
@@ -339,28 +353,36 @@ EFI_STATUS egLoadFile (
     BufferSize = (UINTN)ReadSize;   // was limited to 1 GB above, so this is safe
     Buffer = (UINT8 *) AllocatePool (BufferSize);
     if (Buffer == NULL) {
-        refit_call1_wrapper(FileHandle->Close, FileHandle);
+        REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
         MsgLog (LOG_PRE "] egLoadFile '%s' no memory\n", FileName);
+
         return EFI_OUT_OF_RESOURCES;
     }
 
-    Status = refit_call3_wrapper(FileHandle->Read, FileHandle, &BufferSize, Buffer);
-    refit_call1_wrapper(FileHandle->Close, FileHandle);
-    if (EFI_ERROR (Status)) {
+    Status = REFIT_CALL_3_WRAPPER(FileHandle->Read, FileHandle, &BufferSize, Buffer);
+    REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
+    if (EFI_ERROR(Status)) {
         MyFreePool (&Buffer);
         MsgLog (LOG_PRE "] egLoadFile '%s' can't read (%r)\n", FileName, Status);
+
         return Status;
     }
 
     if (FileData) {
-        *FileData = Buffer;
+        *FileData       = Buffer;
     } else {
         MyFreePool (&Buffer);
     }
-    if (FileDataLength) *FileDataLength = BufferSize;
+    if (FileDataLength) {
+        *FileDataLength = BufferSize;
+    }
 
     #if LOG_ALL_LOADS
     MsgLog ("] egLoadFile '%s' loaded\n", FileName);
+    #else
+    #if REFIT_DEBUG > 0
+    LOG(4, LOG_THREE_STAR_MID, L"In egLoadFile ... Loaded File:- '%s'", FileName);
+    #endif
     #endif
 
     return EFI_SUCCESS;
@@ -369,13 +391,13 @@ EFI_STATUS egLoadFile (
 EFI_STATUS egFindESP (
     OUT EFI_FILE_HANDLE *RootDir
 ) {
-    EFI_STATUS  Status;
-    UINTN       HandleCount = 0;
+    EFI_STATUS   Status;
+    UINTN        HandleCount = 0;
     EFI_HANDLE  *Handles;
-    EFI_GUID    ESPGuid = ESP_GUID_VALUE;
+    EFI_GUID     ESPGuid = ESP_GUID_VALUE;
 
     Status = LibLocateHandle (ByProtocol, &ESPGuid, NULL, &HandleCount, &Handles);
-    if (!EFI_ERROR (Status) && HandleCount > 0) {
+    if (!EFI_ERROR(Status) && HandleCount > 0) {
         *RootDir = LibOpenRoot (Handles[0]);
 
         if (*RootDir == NULL) {
@@ -392,7 +414,7 @@ EFI_STATUS egSaveFile (
     IN EFI_FILE  *BaseDir OPTIONAL,
     IN CHAR16    *FileName,
     IN UINT8     *FileData,
-    IN UINTN     FileDataLength
+    IN UINTN      FileDataLength
 ) {
     EFI_STATUS       Status;
     UINTN            BufferSize;
@@ -400,38 +422,41 @@ EFI_STATUS egSaveFile (
 
     if (BaseDir == NULL) {
         Status = egFindESP (&BaseDir);
-        if (EFI_ERROR (Status)) {
+        if (EFI_ERROR(Status)) {
             return Status;
         }
     }
+
     LEAKABLEEXTERNALSTART ("egSaveFile Open");
-    Status = refit_call5_wrapper(
+    Status = REFIT_CALL_5_WRAPPER(
         BaseDir->Open, BaseDir,
         &FileHandle, FileName,
         EFI_FILE_MODE_READ|EFI_FILE_MODE_WRITE|EFI_FILE_MODE_CREATE, 0
     );
     LEAKABLEEXTERNALSTOP ();
-    if (EFI_ERROR (Status)) {
+
+    if (EFI_ERROR(Status)) {
         return Status;
     }
 
-    if (FileDataLength > 0) {
+    if (FileDataLength == 0) {
+        Status = REFIT_CALL_1_WRAPPER(FileHandle->Delete, FileHandle);
+    }
+    else {
         BufferSize = FileDataLength;
         LEAKABLEEXTERNALSTART ("egSaveFile Write");
-        Status = refit_call3_wrapper(
+        Status     = REFIT_CALL_3_WRAPPER(
             FileHandle->Write, FileHandle,
             &BufferSize, FileData
         );
         LEAKABLEEXTERNALSTOP ();
         LEAKABLEEXTERNALSTART ("egSaveFile Close");
-        refit_call1_wrapper(FileHandle->Close, FileHandle);
+        REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
         LEAKABLEEXTERNALSTOP ();
-    } else {
-        Status = refit_call1_wrapper(FileHandle->Delete, FileHandle);
-    } // if/else (FileDataLength > 0)
+    }
 
     return Status;
-} // egSaveFile
+}
 
 EFI_STATUS egSaveFileNumbered (
     IN EFI_FILE  *BaseDir,
@@ -453,7 +478,7 @@ EFI_STATUS egSaveFileNumbered (
     // save to file on the ESP
     Status = egSaveFile (BaseDir, FileName, FileData, FileDataLength);
     
-    if (!EFI_ERROR (Status) && OutFileName) {
+    if (!EFI_ERROR(Status) && OutFileName) {
         *OutFileName = FileName;
     }
     else {
@@ -476,22 +501,14 @@ EFI_STATUS egSaveFileNumbered (
 static
 EG_IMAGE * egDecodeAny (
     IN UINT8    *FileData,
-    IN UINTN    FileDataLength,
-    IN UINTN    IconSize,
-    IN BOOLEAN  WantAlpha
+    IN UINTN     FileDataLength,
+    IN UINTN     IconSize,
+    IN BOOLEAN   WantAlpha
 ) {
-    EG_IMAGE *NewImage = NULL;
-
-    NewImage = egDecodePNG (FileData, FileDataLength, IconSize, WantAlpha);
-    if (NewImage == NULL) {
-        NewImage = egDecodeJPEG (FileData, FileDataLength, IconSize, WantAlpha);
-    }
-    if (NewImage == NULL) {
-        NewImage = egDecodeBMP (FileData, FileDataLength, IconSize, WantAlpha);
-    }
-    if (NewImage == NULL) {
-        NewImage = egDecodeICNS (FileData, FileDataLength, IconSize, WantAlpha);
-    }
+    EG_IMAGE *            NewImage = egDecodePNG  (FileData, FileDataLength, IconSize, WantAlpha);
+    if (NewImage == NULL) NewImage = egDecodeJPEG (FileData, FileDataLength, IconSize, WantAlpha);
+    if (NewImage == NULL) NewImage = egDecodeBMP  (FileData, FileDataLength, IconSize, WantAlpha);
+    if (NewImage == NULL) NewImage = egDecodeICNS (FileData, FileDataLength, IconSize, WantAlpha);
 
     return NewImage;
 }
@@ -499,16 +516,16 @@ EG_IMAGE * egDecodeAny (
 EG_IMAGE * egLoadImage (
     IN EFI_FILE *BaseDir,
     IN CHAR16   *FileName,
-    IN BOOLEAN  WantAlpha
+    IN BOOLEAN   WantAlpha
 ) {
-    EFI_STATUS      Status;
-    UINTN           FileDataLength;
+    EFI_STATUS   Status;
+    UINTN        FileDataLength;
     UINT8       *FileData;
-    EG_IMAGE        *NewImage;
+    EG_IMAGE    *NewImage;
 
     if (BaseDir == NULL || FileName == NULL) {
         #if REFIT_DEBUG > 0
-        LOG(4, LOG_LINE_NORMAL, L"In egLoadImage, requirements not met!!");
+        LOG(3, LOG_LINE_NORMAL, L"In egLoadImage ... Requirements Not Met!!");
         #endif
 
         return NULL;
@@ -516,10 +533,10 @@ EG_IMAGE * egLoadImage (
 
     // load file
     Status = egLoadFile (BaseDir, FileName, &FileData, &FileDataLength);
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         #if REFIT_DEBUG > 0
-        LOG(4, LOG_LINE_NORMAL,
-            L"In egLoadImage, '%r' returned while attempting to load file!!",
+        LOG(3, LOG_LINE_NORMAL,
+            L"In egLoadImage ... '%r' Returned While Attempting to Load File!!",
             Status
         );
         #endif
@@ -540,7 +557,7 @@ EG_IMAGE * egLoadImage (
 EG_IMAGE * egLoadIcon (
     IN EFI_FILE *BaseDir,
     IN CHAR16   *Path,
-    IN UINTN    IconSize
+    IN UINTN     IconSize
 ) {
     EFI_STATUS      Status;
     UINTN           FileDataLength;
@@ -552,12 +569,28 @@ EG_IMAGE * egLoadIcon (
         // set error status if unable to get to image
         Status = EFI_INVALID_PARAMETER;
     }
+    else if (!AllowGraphicsMode) {
+        #if REFIT_DEBUG > 0
+        LOG(4, LOG_THREE_STAR_MID,
+            L"In egLoadIcon ... Skipped Loading Icon in Text Screen Mode"
+        );
+        #endif
+
+        return NULL;
+    }
     else {
         // try to load file if able to get to image
         Status = egLoadFile (BaseDir, Path, &FileData, &FileDataLength);
     }
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL,
+            L"In egLoadIcon ... '%r' When Trying to Load Icon:- '%s'!!",
+            Status, Path
+        );
+        #endif
+
         // return null if error
         return NULL;
     }
@@ -570,7 +603,11 @@ EG_IMAGE * egLoadIcon (
 
     // return null if unable to decode
     if (Image == NULL) {
-        LOG(4, LOG_LINE_NORMAL, L"In egLoadIcon, could not decode file data!!");
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL,
+            L"In egLoadIcon ... Could Not Decode File Data!!"
+        );
+        #endif
 
         return NULL;
     }
@@ -584,14 +621,18 @@ EG_IMAGE * egLoadIcon (
             Image = NewImage;
         }
         else {
-            LOG(1, LOG_LINE_NORMAL,
-                L"Warning: Unable to scale icon from %d x %d to %d x %d from '%s'",
-                Image->Width, Image->Height, IconSize, IconSize, Path
+            CHAR16 *MsgStr = PoolPrint (
+                L"Could Not Scale Icon in '%s' from %d x %d to %d x %d!!",
+                Path, Image->Width, Image->Height, IconSize, IconSize
             );
 
-            Print(L"Warning: Unable to scale icon from %d x %d to %d x %d from '%s'\n",
-                Image->Width, Image->Height, IconSize, IconSize, Path
-            );
+            #if REFIT_DEBUG > 0
+            LOG(3, LOG_LINE_NORMAL, L"In egLoadIcon ... %s", MsgStr);
+            #endif
+
+            Print(MsgStr);
+
+            MyFreePool (&MsgStr);
         }
     }
 
@@ -607,25 +648,50 @@ EG_IMAGE * egLoadIconAnyType (
     IN EFI_FILE  *BaseDir,
     IN CHAR16    *SubdirName,
     IN CHAR16    *BaseName,
-    IN UINTN     IconSize
+    IN UINTN      IconSize
 ) {
     EG_IMAGE  *Image = NULL;
     CHAR16    *Extension;
     CHAR16    *FileName;
-    UINTN     i = 0;
+    UINTN      i = 0;
 
     MsgLog ("[ egLoadIconAnyType from '%s\\%s' with extensions '%s'\n",
         SubdirName, BaseName, ICON_EXTENSIONS
     );
     
+    if (!AllowGraphicsMode) {
+        #if REFIT_DEBUG > 0
+        LOG(4, LOG_THREE_STAR_MID,
+            L"In egLoadIconAnyType ... Skipped Loading Icon in Text Screen Mode"
+        );
+        #endif
+        MsgLog ("] egLoadIconAnyType\n");
+
+        return NULL;
+    }
+
+    #if REFIT_DEBUG > 0
+    LOG(4, LOG_THREE_STAR_MID,
+        L"Trying to Load Icon from '%s' with Base Name:- '%s'",
+        (StrLen (SubdirName) != 0) ? SubdirName : L"\\",
+        BaseName
+    );
+    #endif
+
     while ((Image == NULL) && ((Extension = FindCommaDelimited (ICON_EXTENSIONS, i++)) != NULL)) {
         FileName = PoolPrint (L"%s\\%s.%s", SubdirName, BaseName, Extension);
-        Image = egLoadIcon (BaseDir, FileName, IconSize);
+        Image    = egLoadIcon (BaseDir, FileName, IconSize);
 
         MyFreePool (&Extension);
         MyFreePool (&FileName);
-    } // while()
+    } // while
 
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL,
+        L"In egLoadIconAnyType ... %s",
+        (Image != NULL) ? L"Loaded Icon" : L"Could Not Load Icon!!"
+    );
+    #endif
     MsgLog ("] egLoadIconAnyType %s\n", Image ? L"Success" : L"Fail" );
 
     return Image;
@@ -641,7 +707,7 @@ EG_IMAGE * egLoadIconAnyType (
 // references are relative to SelfDir.
 EG_IMAGE * egFindIcon (
     IN CHAR16 *BaseName,
-    IN UINTN  IconSize
+    IN UINTN   IconSize
 ) {
     EG_IMAGE *Image = NULL;
 
@@ -663,18 +729,19 @@ EG_IMAGE * egFindIcon (
 } // EG_IMAGE * egFindIcon()
 
 EG_IMAGE * egPrepareEmbeddedImage (
-    IN EG_EMBEDDED_IMAGE  *EmbeddedImage,
+    IN EG_EMBEDDED_IMAGE *EmbeddedImage,
     IN BOOLEAN            WantAlpha
 ) {
     EG_IMAGE  *NewImage;
     UINT8     *CompData;
-    UINTN     CompLen;
-    UINTN     PixelCount;
+    UINTN      CompLen;
+    UINTN      PixelCount;
 
     // sanity checks
     if (!EmbeddedImage) {
         return NULL;
     }
+
     if (EmbeddedImage->PixelMode > EG_MAX_EIPIXELMODE ||
         (EmbeddedImage->CompressMode != EG_EICOMPMODE_NONE &&
         EmbeddedImage->CompressMode  != EG_EICOMPMODE_RLE)
@@ -756,7 +823,7 @@ EG_IMAGE * egPrepareEmbeddedImage (
         }
     }
     else {
-        // Default to 'Opaque' if Alpha is Required, otherwise clear unused bytes to 0
+        // Default to 'Opaque' 255 if Alpha is Required, otherwise clear unused bytes to 0
         egSetPlane (PLPTR(NewImage, a), WantAlpha ? 255 : 0, PixelCount);
     }
 
@@ -769,23 +836,20 @@ EG_IMAGE * egPrepareEmbeddedImage (
 
 VOID egRestrictImageArea (
     IN EG_IMAGE   *Image,
-    IN UINTN      AreaPosX,
-    IN UINTN      AreaPosY,
+    IN UINTN       AreaPosX,
+    IN UINTN       AreaPosY,
     IN OUT UINTN  *AreaWidth,
     IN OUT UINTN  *AreaHeight
 ) {
     if (Image && AreaWidth && AreaHeight) {
         if (AreaPosX >= Image->Width || AreaPosY >= Image->Height) {
             // out of bounds, operation has no effect
-            *AreaWidth  = 0;
-            *AreaHeight = 0;
+            *AreaWidth = *AreaHeight = 0;
         }
         else {
             // calculate affected area
-            if (*AreaWidth > Image->Width - AreaPosX)
-                *AreaWidth = Image->Width - AreaPosX;
-            if (*AreaHeight > Image->Height - AreaPosY)
-                *AreaHeight = Image->Height - AreaPosY;
+            if (*AreaWidth  > Image->Width  - AreaPosX) *AreaWidth  = Image->Width  - AreaPosX;
+            if (*AreaHeight > Image->Height - AreaPosY) *AreaHeight = Image->Height - AreaPosY;
         }
     }
 }
@@ -796,7 +860,7 @@ VOID egFillImage (
 ) {
     UINTN       i;
     EG_PIXEL    FillColor;
-    EG_PIXEL    *PixelPtr;
+    EG_PIXEL   *PixelPtr;
 
     if (CompImage && Color) {
         FillColor = *Color;
@@ -812,15 +876,15 @@ VOID egFillImage (
 }
 
 VOID egFillImageArea (
-    IN OUT EG_IMAGE  *CompImage,
+    IN OUT EG_IMAGE *CompImage,
     IN UINTN         AreaPosX,
     IN UINTN         AreaPosY,
     IN UINTN         AreaWidth,
     IN UINTN         AreaHeight,
-    IN EG_PIXEL      *Color
+    IN EG_PIXEL     *Color
 ) {
-    UINTN       x, y;
-    EG_PIXEL    FillColor;
+    UINTN        x, y;
+    EG_PIXEL     FillColor;
     EG_PIXEL    *PixelPtr;
     EG_PIXEL    *PixelBasePtr;
 
@@ -846,15 +910,15 @@ VOID egFillImageArea (
 }
 
 VOID egRawCopy (
-    IN OUT EG_PIXEL  *CompBasePtr,
-    IN EG_PIXEL      *TopBasePtr,
+    IN OUT EG_PIXEL *CompBasePtr,
+    IN EG_PIXEL     *TopBasePtr,
     IN UINTN         Width,
     IN UINTN         Height,
     IN UINTN         CompLineOffset,
     IN UINTN         TopLineOffset
 ) {
     UINTN       x, y;
-    EG_PIXEL    *TopPtr, *CompPtr;
+    EG_PIXEL   *TopPtr, *CompPtr;
 
     if (CompBasePtr && TopBasePtr) {
         for (y = 0; y < Height; y++) {
@@ -873,18 +937,18 @@ VOID egRawCopy (
 }
 
 VOID egRawCompose (
-    IN OUT EG_PIXEL  *CompBasePtr,
-    IN EG_PIXEL      *TopBasePtr,
+    IN OUT EG_PIXEL *CompBasePtr,
+    IN EG_PIXEL     *TopBasePtr,
     IN UINTN         Width,
     IN UINTN         Height,
     IN UINTN         CompLineOffset,
     IN UINTN         TopLineOffset
 ) {
-    UINTN       x, y;
+    UINTN        x, y;
     EG_PIXEL    *TopPtr, *CompPtr;
-    UINTN       Alpha;
-    UINTN       RevAlpha;
-    UINTN       Temp;
+    UINTN        Alpha;
+    UINTN        RevAlpha;
+    UINTN        Temp;
 
     if (CompBasePtr && TopBasePtr) {
         for (y = 0; y < Height; y++) {
@@ -895,11 +959,11 @@ VOID egRawCompose (
                 Alpha    = TopPtr->a;
                 RevAlpha = 255 - Alpha;
 
-                Temp       = (UINTN)CompPtr->b * RevAlpha + (UINTN)TopPtr->b * Alpha + 0x80;
+                Temp       = (UINTN) CompPtr->b * RevAlpha + (UINTN) TopPtr->b * Alpha + 0x80;
                 CompPtr->b = (Temp + (Temp >> 8)) >> 8;
-                Temp       = (UINTN)CompPtr->g * RevAlpha + (UINTN)TopPtr->g * Alpha + 0x80;
+                Temp       = (UINTN) CompPtr->g * RevAlpha + (UINTN) TopPtr->g * Alpha + 0x80;
                 CompPtr->g = (Temp + (Temp >> 8)) >> 8;
-                Temp       = (UINTN)CompPtr->r * RevAlpha + (UINTN)TopPtr->r * Alpha + 0x80;
+                Temp       = (UINTN) CompPtr->r * RevAlpha + (UINTN) TopPtr->r * Alpha + 0x80;
                 CompPtr->r = (Temp + (Temp >> 8)) >> 8;
 
                 TopPtr++, CompPtr++;
@@ -912,8 +976,8 @@ VOID egRawCompose (
 }
 
 VOID egComposeImage (
-    IN OUT EG_IMAGE  *CompImage,
-    IN EG_IMAGE      *TopImage,
+    IN OUT EG_IMAGE *CompImage,
+    IN EG_IMAGE     *TopImage,
     IN UINTN         PosX,
     IN UINTN         PosY
 ) {
@@ -946,7 +1010,7 @@ VOID egComposeImage (
             }
         }
     }
-} /* VOID egComposeImage() */
+} // VOID egComposeImage()
 
 //
 // misc internal functions
@@ -955,14 +1019,14 @@ VOID egComposeImage (
 VOID egInsertPlane (
     IN UINT8 *SrcDataPtr,
     IN UINT8 *DestPlanePtr,
-    IN UINTN PixelCount
+    IN UINTN  PixelCount
 ) {
     UINTN i;
 
     if (SrcDataPtr && DestPlanePtr) {
         for (i = 0; i < PixelCount; i++) {
-            *DestPlanePtr = *SrcDataPtr++;
-            DestPlanePtr += 4;
+            *DestPlanePtr  = *SrcDataPtr++;
+             DestPlanePtr += 4;
         }
     }
 }
@@ -983,15 +1047,15 @@ VOID egInvertPlane (
 
 VOID egSetPlane (
     IN UINT8 *DestPlanePtr,
-    IN UINT8 Value,
-    IN UINTN PixelCount
+    IN UINT8  Value,
+    IN UINTN  PixelCount
 ) {
     UINTN i;
 
     if (DestPlanePtr) {
         for (i = 0; i < PixelCount; i++) {
-            *DestPlanePtr = Value;
-            DestPlanePtr += 4;
+            *DestPlanePtr  = Value;
+             DestPlanePtr += 4;
         }
     }
 }
@@ -999,14 +1063,14 @@ VOID egSetPlane (
 VOID egCopyPlane (
     IN UINT8 *SrcPlanePtr,
     IN UINT8 *DestPlanePtr,
-    IN UINTN PixelCount
+    IN UINTN  PixelCount
 ) {
     UINTN i;
 
     if (SrcPlanePtr && DestPlanePtr) {
         for (i = 0; i < PixelCount; i++) {
-            *DestPlanePtr = *SrcPlanePtr;
-            DestPlanePtr += 4, SrcPlanePtr += 4;
+            *DestPlanePtr  = *SrcPlanePtr;
+             DestPlanePtr += 4, SrcPlanePtr += 4;
         }
     }
 }

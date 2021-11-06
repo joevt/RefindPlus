@@ -82,7 +82,7 @@ EFI_GUID gMyEfiFileSystemVolumeLabelInfoIdGuid = EFI_FILE_SYSTEM_VOLUME_LABEL_IN
 
 /** Helper macro for stringification. */
 #define FSW_EFI_STRINGIFY(x) #x
-/** Expands to the EFI driver name given the file system type name. */
+/** Expands to the UEFI driver name given the file system type name. */
 #define FSW_EFI_DRIVER_NAME(t) L"RefindPlus 0.13.2 " FSW_EFI_STRINGIFY(t) L" File System Driver"
 
 // function prototypes
@@ -193,12 +193,12 @@ struct cache_data {
    FSW_VOLUME_DATA   *Volume; // NOTE: Do not deallocate; copied here to ID volume
 };
 
-#define NUM_CACHES 2 /* Don't increase without modifying fsw_efi_read_block() */
+#define NUM_CACHES 2 /* Do not increase without modifying fsw_efi_read_block() */
 static struct cache_data    Caches[NUM_CACHES];
 static int LastRead = -1;
 
 /**
- * Interface structure for the EFI Driver Binding protocol.
+ * Interface structure for the UEFI Driver Binding protocol.
  */
 
 REFINDPLUS_EFI_DRIVER_BINDING_PROTOCOL fsw_efi_DriverBinding_table = {
@@ -268,7 +268,7 @@ EFI_STATUS EFIAPI fsw_efi_main(
     fsw_efi_DriverBinding_table.ImageHandle          = ImageHandle;
     fsw_efi_DriverBinding_table.DriverBindingHandle  = ImageHandle;
     // install Driver Binding protocol
-    Status = refit_call4_wrapper(
+    Status = REFIT_CALL_4_WRAPPER(
         gBS->InstallProtocolInterface,
         &fsw_efi_DriverBinding_table.DriverBindingHandle,
         &gMyEfiDriverBindingProtocolGuid,
@@ -276,12 +276,12 @@ EFI_STATUS EFIAPI fsw_efi_main(
         &fsw_efi_DriverBinding_table
     );
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return Status;
     }
 
     // install Component Name protocol
-    Status = refit_call4_wrapper(
+    Status = REFIT_CALL_4_WRAPPER(
         gBS->InstallProtocolInterface,
         &fsw_efi_DriverBinding_table.DriverBindingHandle,
         &gMyEfiComponentNameProtocolGuid,
@@ -289,7 +289,7 @@ EFI_STATUS EFIAPI fsw_efi_main(
         &fsw_efi_ComponentName_table
     );
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return Status;
     }
 
@@ -318,7 +318,7 @@ EFI_STATUS EFIAPI fsw_efi_DriverBinding_Supported(
     // we check for both DiskIO and BlockIO protocols
 
     // first, open DiskIO
-    Status = refit_call6_wrapper(
+    Status = REFIT_CALL_6_WRAPPER(
         gBS->OpenProtocol,
         ControllerHandle,
         &gMyEfiDiskIoProtocolGuid,
@@ -327,12 +327,12 @@ EFI_STATUS EFIAPI fsw_efi_DriverBinding_Supported(
         ControllerHandle,
         EFI_OPEN_PROTOCOL_BY_DRIVER
     );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return Status;
     }
 
     // we were just checking, close it again
-    refit_call4_wrapper(
+    REFIT_CALL_4_WRAPPER(
         gBS->CloseProtocol,
         ControllerHandle,
         &gMyEfiDiskIoProtocolGuid,
@@ -341,7 +341,7 @@ EFI_STATUS EFIAPI fsw_efi_DriverBinding_Supported(
     );
 
     // next, check BlockIO without actually opening it
-    Status = refit_call6_wrapper(
+    Status = REFIT_CALL_6_WRAPPER(
         gBS->OpenProtocol,
         ControllerHandle,
         &gMyEfiBlockIoProtocolGuid,
@@ -384,7 +384,7 @@ fsw_efi_DriverBinding_Start(
 #endif
 
     // open consumed protocols
-    Status = refit_call6_wrapper(
+    Status = REFIT_CALL_6_WRAPPER(
         gBS->OpenProtocol,
         ControllerHandle,
         &gMyEfiBlockIoProtocolGuid,
@@ -393,11 +393,11 @@ fsw_efi_DriverBinding_Start(
          ControllerHandle,
          EFI_OPEN_PROTOCOL_GET_PROTOCOL
      );   // NOTE: we only want to look at the MediaId
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return Status;
     }
 
-    Status = refit_call6_wrapper(
+    Status = REFIT_CALL_6_WRAPPER(
         gBS->OpenProtocol,
         ControllerHandle,
         &gMyEfiDiskIoProtocolGuid,
@@ -406,7 +406,7 @@ fsw_efi_DriverBinding_Start(
         ControllerHandle,
         EFI_OPEN_PROTOCOL_BY_DRIVER
     );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return Status;
     }
 
@@ -431,12 +431,12 @@ fsw_efi_DriverBinding_Start(
         ),
         Volume
     );
-    if (!EFI_ERROR (Status)) {
+    if (!EFI_ERROR(Status)) {
         // register the SimpleFileSystem protocol
         Volume->FileSystem.Revision     = EFI_FILE_IO_INTERFACE_REVISION;
         Volume->FileSystem.OpenVolume   = fsw_efi_FileSystem_OpenVolume;
 
-        Status = refit_call4_wrapper(
+        Status = REFIT_CALL_4_WRAPPER(
             gBS->InstallMultipleProtocolInterfaces,
             &ControllerHandle,
             &gMyEfiSimpleFileSystemProtocolGuid,
@@ -446,13 +446,13 @@ fsw_efi_DriverBinding_Start(
     }
 
     // on errors, close the opened protocols
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         if (Volume->vol != NULL) {
             fsw_unmount(Volume->vol);
         }
         FreePool(Volume);
 
-        refit_call4_wrapper(
+        REFIT_CALL_4_WRAPPER(
             gBS->CloseProtocol,
             ControllerHandle,
             &gMyEfiDiskIoProtocolGuid,
@@ -488,7 +488,7 @@ EFI_STATUS EFIAPI fsw_efi_DriverBinding_Stop(
 #endif
 
     // get the installed SimpleFileSystem interface
-    Status = refit_call6_wrapper(
+    Status = REFIT_CALL_6_WRAPPER(
         gBS->OpenProtocol,
         ControllerHandle,
         &gMyEfiSimpleFileSystemProtocolGuid,
@@ -497,7 +497,7 @@ EFI_STATUS EFIAPI fsw_efi_DriverBinding_Stop(
         ControllerHandle,
         EFI_OPEN_PROTOCOL_GET_PROTOCOL
     );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return EFI_UNSUPPORTED;
     }
 
@@ -505,14 +505,14 @@ EFI_STATUS EFIAPI fsw_efi_DriverBinding_Stop(
     Volume = FSW_VOLUME_FROM_FILE_SYSTEM(FileSystem);
 
     // uninstall Simple File System protocol
-    Status = refit_call4_wrapper(
+    Status = REFIT_CALL_4_WRAPPER(
         gBS->UninstallMultipleProtocolInterfaces,
         ControllerHandle,
         &gMyEfiSimpleFileSystemProtocolGuid,
         &Volume->FileSystem,
         NULL
     );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
  //       Print(L"Fsw ERROR: UninstallMultipleProtocolInterfaces returned %x\n", Status);
         return Status;
     }
@@ -527,7 +527,7 @@ EFI_STATUS EFIAPI fsw_efi_DriverBinding_Stop(
     FreePool(Volume);
 
     // close the consumed protocols
-    Status = refit_call4_wrapper(
+    Status = REFIT_CALL_4_WRAPPER(
         gBS->CloseProtocol,
         ControllerHandle,
         &gMyEfiDiskIoProtocolGuid,
@@ -566,7 +566,7 @@ EFI_STATUS EFIAPI fsw_efi_ComponentName_GetDriverName(
 
 /**
  * Component Name EFI protocol, GetControllerName function. Not implemented
- * because this is not a "bus" driver in the sense of the EFI Driver Model.
+ * because this is not a "bus" driver in the sense of the UEFI Driver Model.
  */
 
 EFI_STATUS EFIAPI fsw_efi_ComponentName_GetControllerName(
@@ -620,12 +620,12 @@ fsw_status_t EFIAPI fsw_efi_read_block(
    if (buffer == NULL)
       return (fsw_status_t) EFI_BAD_BUFFER_SIZE;
 
-   // Initialize static data structures, if necessary....
+   // Initialize static data structures, if necessary.
    if (LastRead < 0) {
       fsw_efi_clear_cache();
    } // if
 
-   // Look for a cache hit on the current query....
+   // Look for a cache hit on the current query.
    i = 0;
    do {
       if ((Caches[i].Volume == Volume) &&
@@ -637,7 +637,7 @@ fsw_status_t EFIAPI fsw_efi_read_block(
       i++;
    } while ((i < NUM_CACHES) && (ReadCache < 0));
 
-   // No cache hit found; load new cache and pass it on....
+   // No cache hit found; load new cache and pass it on.
    if (ReadCache < 0) {
       if (LastRead == -1)
          LastRead = 1;
@@ -652,12 +652,12 @@ fsw_status_t EFIAPI fsw_efi_read_block(
          // compiled with Tianocore. Further clue: Omitting "Status =" avoids the
          // hang but produces a failure to mount the filesystem, even when the same
          // change is made to later similar call. Calling Volume->DiskIo->ReadDisk()
-         // directly (without refit_call5_wrapper()) changes nothing. Placing Print()
+         // directly (without REFIT_CALL_5_WRAPPER()) changes nothing. Placing Print()
          // statements at the start and end of the function, and before and after the
          // ReadDisk() call, suggests that when it fails, the program is executing
          // code starting mid-function, so there seems to be something messed up in
          // the way the function is being called. FIGURE THIS OUT!
-         Status = refit_call5_wrapper(
+         Status = REFIT_CALL_5_WRAPPER(
              Volume->DiskIo->ReadDisk,
              Volume->DiskIo,
              Volume->MediaId,
@@ -665,7 +665,7 @@ fsw_status_t EFIAPI fsw_efi_read_block(
              (UINTN) CACHE_SIZE,
              (VOID*) Caches[ReadCache].Cache
          );
-         if (!EFI_ERROR (Status)) {
+         if (!EFI_ERROR(Status)) {
             Caches[ReadCache].CacheStart = StartRead;
             Caches[ReadCache].CacheValid = TRUE;
             Caches[ReadCache].Volume = Volume;
@@ -684,8 +684,8 @@ fsw_status_t EFIAPI fsw_efi_read_block(
       ReadOneBlock = TRUE;
    }
 
-   if (ReadOneBlock) { // Something's failed, so try a simple disk read of one block....
-      Status = refit_call5_wrapper(
+   if (ReadOneBlock) { // Something's failed, so try a simple disk read of one block.
+      Status = REFIT_CALL_5_WRAPPER(
           Volume->DiskIo->ReadDisk,
           Volume->DiskIo,
           Volume->MediaId,
@@ -795,7 +795,7 @@ EFI_STATUS EFIAPI fsw_efi_FileHandle_Close(IN EFI_FILE *This) {
 EFI_STATUS EFIAPI fsw_efi_FileHandle_Delete(IN EFI_FILE *This) {
     EFI_STATUS          Status;
 
-    Status = refit_call1_wrapper(This->Close, This);
+    Status = REFIT_CALL_1_WRAPPER(This->Close, This);
     if (Status == EFI_SUCCESS) {
         // this driver is read-only
         Status = EFI_WARN_DELETE_FAILURE;
@@ -928,7 +928,7 @@ EFI_STATUS fsw_efi_dnode_to_FileHandle(
 
     // make sure the dnode has complete info
     Status = fsw_efi_map_status(fsw_dnode_fill(dno), (FSW_VOLUME_DATA *)dno->vol->host_data);
-    if (EFI_ERROR (Status))
+    if (EFI_ERROR(Status))
         return Status;
 
     // check type
@@ -949,7 +949,7 @@ EFI_STATUS fsw_efi_dnode_to_FileHandle(
     // open shandle
     Status = fsw_efi_map_status(fsw_shandle_open(dno, &File->shand),
                                 (FSW_VOLUME_DATA *)dno->vol->host_data);
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         FreePool(File);
         return Status;
     }
@@ -1058,13 +1058,13 @@ EFI_STATUS fsw_efi_dir_open(
 
     // resolve the path (symlinks along the way are automatically resolved)
     Status = fsw_efi_map_status(fsw_dnode_lookup_path(File->shand.dnode, &lookup_path, '\\', &dno), Volume);
-    if (EFI_ERROR (Status))
+    if (EFI_ERROR(Status))
         return Status;
 
     // if the final node is a symlink, also resolve it
     Status = fsw_efi_map_status(fsw_dnode_resolve(dno, &target_dno), Volume);
     fsw_dnode_release(dno);
-    if (EFI_ERROR (Status))
+    if (EFI_ERROR(Status))
         return Status;
     dno = target_dno;
 
@@ -1098,11 +1098,11 @@ EFI_STATUS fsw_efi_dir_read(
         // end of directory
         *BufferSize = 0;
 #if DEBUG_LEVEL
-        Print(L"...no more entries\n");
+        Print(L"... no more entries\n");
 #endif
         return EFI_SUCCESS;
     }
-    if (EFI_ERROR (Status))
+    if (EFI_ERROR(Status))
         return Status;
 
     // get info into buffer
@@ -1178,7 +1178,7 @@ EFI_STATUS fsw_efi_dnode_getinfo(
         // get the missing info from the fs driver
         ZeroMem(&vsb, sizeof (struct fsw_volume_stat));
         Status = fsw_efi_map_status(fsw_volume_stat(Volume->vol, &vsb), Volume);
-        if (EFI_ERROR (Status))
+        if (EFI_ERROR(Status))
             return Status;
         FSInfo->VolumeSize  = vsb.total_bytes;
         FSInfo->FreeSpace   = vsb.free_bytes;
@@ -1216,7 +1216,7 @@ EFI_STATUS fsw_efi_dnode_getinfo(
 /**
  * Time mapping callback for the fsw_dnode_stat call. This function converts
  * a Posix style timestamp into an EFI_TIME structure and writes it to the
- * appropriate member of the EFI_FILE_INFO structure that we're filling.
+ * appropriate member of the EFI_FILE_INFO structure that we are filling.
  */
 
 void fsw_store_time_posix(
@@ -1237,7 +1237,7 @@ void fsw_store_time_posix(
 /**
  * Mode mapping callback for the fsw_dnode_stat call. This function looks at
  * the Posix mode passed by the file system driver and makes appropriate
- * adjustments to the EFI_FILE_INFO structure that we're filling.
+ * adjustments to the EFI_FILE_INFO structure that we are filling.
  */
 
 void fsw_store_attr_posix(
@@ -1276,7 +1276,7 @@ EFI_STATUS fsw_efi_dnode_fill_FileInfo(
 
     // make sure the dnode has complete info
     Status = fsw_efi_map_status(fsw_dnode_fill(dno), Volume);
-    if (EFI_ERROR (Status))
+    if (EFI_ERROR(Status))
         return Status;
 
     // TODO: check/assert that the dno's name is in UTF16
@@ -1307,7 +1307,7 @@ EFI_STATUS fsw_efi_dnode_fill_FileInfo(
     ZeroMem(&sb, sizeof (struct fsw_dnode_stat));
     sb.host_data = FileInfo;
     Status = fsw_efi_map_status(fsw_dnode_stat(dno, &sb), Volume);
-    if (EFI_ERROR (Status))
+    if (EFI_ERROR(Status))
         return Status;
     FileInfo->PhysicalSize      = sb.used_bytes;
 

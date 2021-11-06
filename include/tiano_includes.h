@@ -109,7 +109,7 @@
 #include "../EfiLib/Platform.h"
 
 
-BOOLEAN CheckError(IN EFI_STATUS Status, IN CHAR16 *where);
+BOOLEAN CheckError (IN EFI_STATUS Status, IN CHAR16 *where);
 
 //
 // BmLib

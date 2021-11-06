@@ -437,7 +437,7 @@ struct item_head {
 
 /* these operate on indirect items, where you've got an array of ints
 ** at a possibly unaligned location.  These are a noop on ia32
-** 
+**
 ** p is the array of __u32, i is the index into the array, v is the value
 ** to store there.
 */
@@ -582,7 +582,7 @@ static inline void cpu_key_k_offset_dec(struct cpu_key *key)
 #define REISERFS_ROOT_OBJECTID 2
 #define REISERFS_ROOT_PARENT_OBJECTID 1
 
-/* 
+/*
  * Picture represents a leaf of the S+tree
  *  ______________________________________________________
  * |      |  Array of     |                   |           |
@@ -786,7 +786,7 @@ struct stat_data {
 /***************************************************************************/
 /*                      DIRECTORY STRUCTURE                                */
 /***************************************************************************/
-/* 
+/*
    Picture represents the structure of directory items
    ________________________________________________
    |  Array of     |   |     |        |       |   |
@@ -809,12 +809,12 @@ struct stat_data {
 #define FIRST_ITEM_OFFSET 1
 
 /*
-   Q: How to get key of object pointed to by entry from entry?  
+   Q: How to get key of object pointed to by entry from entry?
 
    A: Each directory entry has its header. This header has deh_dir_id and deh_objectid fields, those are key
       of object, entry points to */
 
-/* NOT IMPLEMENTED:   
+/* NOT IMPLEMENTED:
    Directory will someday contain stat data of object */
 
 struct reiserfs_de_head {
@@ -1027,7 +1027,7 @@ struct path_element {
 	/* buffer above.                                  */
 };
 
-#define MAX_HEIGHT 5		/* maximal height of a tree. don't change this without changing JOURNAL_PER_BALANCE_CNT */
+#define MAX_HEIGHT 5		/* maximal height of a tree. do not change this without changing JOURNAL_PER_BALANCE_CNT */
 #define EXTENDED_MAX_HEIGHT         7	/* Must be equals MAX_HEIGHT + FIRST_PATH_ELEMENT_OFFSET */
 #define FIRST_PATH_ELEMENT_OFFSET   2	/* Must be equal to at least 2. */
 
@@ -1042,9 +1042,9 @@ struct path_element {
    invalid, and this means we must check it when using it to see if it
    is still valid. You'll need to read search_by_key and the comments
    in it, especially about decrement_counters_in_path(), to understand
-   this structure.  
+   this structure.
 
-Paths make the code so much harder to work with and debug.... An
+Paths make the code so much harder to work with and debug. An
 enormous number of bugs are due to them, and trying to write or modify
 code that uses them just makes my head hurt.  They are based on an
 excessive effort to avoid disturbing the precious VFS code.:-( The
@@ -1326,19 +1326,19 @@ struct buffer_info {
 };
 
 /* there are 4 types of items: stat data, directory item, indirect, direct.
-+-------------------+------------+--------------+------------+
-|	            |  k_offset  | k_uniqueness | mergeable? |
-+-------------------+------------+--------------+------------+
-|     stat data     |	0        |      0       |   no       |
-+-------------------+------------+--------------+------------+
-| 1st directory item| DOT_OFFSET |DIRENTRY_UNIQUENESS|   no       | 
-| non 1st directory | hash value |              |   yes      |
-|     item          |            |              |            |
-+-------------------+------------+--------------+------------+
-| indirect item     | offset + 1 |TYPE_INDIRECT |   if this is not the first indirect item of the object
-+-------------------+------------+--------------+------------+
-| direct item       | offset + 1 |TYPE_DIRECT   | if not this is not the first direct item of the object
-+-------------------+------------+--------------+------------+
++-------------------+------------+-------------------+------------+
+|	                |  k_offset  | k_uniqueness      | mergeable? |
++-------------------+------------+-------------------+------------+
+|     stat data     |	0        |      0            |   no       |
++-------------------+------------+-------------------+------------+
+| 1st directory item| DOT_OFFSET |DIRENTRY_UNIQUENESS|   no       |
+| non 1st directory | hash value |                   |   yes      |
+|     item          |            |                   |            |
++-------------------+------------+-------------------+------------+
+| indirect item     | offset + 1 |TYPE_INDIRECT      |   if this is not the first indirect item of the object
++-------------------+------------+-------------------+------------+
+| direct item       | offset + 1 |TYPE_DIRECT        | if not this is not the first direct item of the object
++-------------------+------------+-------------------+------------+
 */
 
 struct item_operations {
@@ -1472,9 +1472,9 @@ struct reiserfs_journal_header {
 
 /* biggest tunable defines are right here */
 #define JOURNAL_BLOCK_COUNT 8192	/* number of blocks in the journal */
-#define JOURNAL_TRANS_MAX_DEFAULT 1024	/* biggest possible single transaction, don't change for now (8/3/99) */
+#define JOURNAL_TRANS_MAX_DEFAULT 1024	/* biggest possible single transaction, do not change for now (8/3/99) */
 #define JOURNAL_TRANS_MIN_DEFAULT 256
-#define JOURNAL_MAX_BATCH_DEFAULT   900	/* max blocks to batch into one transaction, don't make this any bigger than 900 */
+#define JOURNAL_MAX_BATCH_DEFAULT   900	/* max blocks to batch into one transaction, do not make this any bigger than 900 */
 #define JOURNAL_MIN_RATIO 2
 #define JOURNAL_MAX_COMMIT_AGE 30
 #define JOURNAL_MAX_TRANS_AGE 30
@@ -1496,8 +1496,8 @@ struct reiserfs_journal_header {
 
 /* both of these can be as low as 1, or as high as you want.  The min is the
 ** number of 4k bitmap nodes preallocated on mount. New nodes are allocated
-** as needed, and released when transactions are committed.  On release, if 
-** the current number of nodes is > max, the node is freed, otherwise, 
+** as needed, and released when transactions are committed.  On release, if
+** the current number of nodes is > max, the node is freed, otherwise,
 ** it is put on a free list for faster use later.
 */
 #define REISERFS_MIN_BITMAP_NODES 10
@@ -1604,12 +1604,12 @@ static inline void copy_key(struct reiserfs_key *to,
 
 /* inode.c */
 /* args for the create parameter of reiserfs_get_block */
-#define GET_BLOCK_NO_CREATE 0	/* don't create new blocks or convert tails */
+#define GET_BLOCK_NO_CREATE 0	/* do not create new blocks or convert tails */
 #define GET_BLOCK_CREATE 1	/* add anything you need to find block */
 #define GET_BLOCK_NO_HOLE 2	/* return -ENOENT for file holes */
 #define GET_BLOCK_READ_DIRECT 4	/* read the tail if indirect item not found */
-#define GET_BLOCK_NO_IMUX     8	/* i_mutex is not held, don't preallocate */
-#define GET_BLOCK_NO_DANGLE   16	/* don't leave any transactions running */
+#define GET_BLOCK_NO_IMUX     8	/* i_mutex is not held, do not preallocate */
+#define GET_BLOCK_NO_DANGLE   16	/* do not leave any transactions running */
 
 /* bitmap.c */
 

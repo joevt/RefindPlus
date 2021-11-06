@@ -272,8 +272,8 @@ static VOID generate_hybrid_mbr(VOID) {
     new_mbr_part_count = 1;
     first_used_lba = (UINT64) MAX_MBR_LBA + (UINT64) 1;
 
-    // Copy partitions in three passes....
-    // First, do FAT and NTFS partitions....
+    // Copy partitions in three passes.
+    // First, do FAT and NTFS partitions.
     i = 0;
     do {
         // (gpt_parts[i].end_lba <= MAX_MBR_LBA)                    = Within MBR limits
@@ -314,9 +314,9 @@ static VOID generate_hybrid_mbr(VOID) {
        i--;
     } // while
 
-    // Third, do anything that's left to cover uncovered spaces; but this requires
-    // first creating the EFI protective entry, since we don't want to bother with
-    // anything already covered by this entry....
+    // Third, do anything that is left to cover uncovered spaces; but this requires
+    // first creating the EFI protective entry, since we do not want to bother with
+    // anything already covered by this entry.
     new_mbr_parts[0].index     = 0;
     new_mbr_parts[0].start_lba = 1;
     new_mbr_parts[0].end_lba   = (disk_size() > first_used_lba) ? (first_used_lba - 1) : disk_size() - 1;
@@ -335,7 +335,7 @@ static VOID generate_hybrid_mbr(VOID) {
        i++;
     } // while
 
-    // find matching partitions in the old MBR table, copy undetected details....
+    // find matching partitions in the old MBR table, copy undetected details.
     for (i = 1; i < new_mbr_part_count; i++) {
        for (k = 0; k < mbr_part_count; k++) {
            if (mbr_parts[k].start_lba == new_mbr_parts[i].start_lba) {
@@ -355,7 +355,7 @@ static VOID generate_hybrid_mbr(VOID) {
 
     sort_mbr(new_mbr_parts);
 
-    // make sure there's exactly one active partition
+    // make sure there is exactly one active partition
     for (iter = 0; iter < 3; iter++) {
         // check
         count_active = 0;
@@ -405,7 +405,7 @@ static BOOLEAN should_rewrite(VOID) {
    UINTN i, num_existing_hybrid = 0, num_new_hybrid = 0;
 
    // Check to see if the proposed table is identical to the current one;
-   // if so, synchronizing is pointless....
+   // if so, synchronizing is pointless.
    for (i = 0; i < 4; i++) {
       if ((new_mbr_parts[i].mbr_type != 0xEE) && (mbr_parts[i].mbr_type != 0xEE) &&
           ((new_mbr_parts[i].active != mbr_parts[i].active) ||
@@ -414,7 +414,7 @@ static BOOLEAN should_rewrite(VOID) {
            (new_mbr_parts[i].mbr_type != mbr_parts[i].mbr_type)))
          all_identical = FALSE;
 
-      // while we're looping, count the number of old & new hybrid partitions....
+      // while we are looping, count the number of old & new hybrid partitions.
       if ((mbr_parts[i].mbr_type != 0x00) && (mbr_parts[i].mbr_type != 0xEE))
          num_existing_hybrid++;
       if ((new_mbr_parts[i].mbr_type != 0x00) && (new_mbr_parts[i].mbr_type != 0xEE))
@@ -426,7 +426,7 @@ static BOOLEAN should_rewrite(VOID) {
       return FALSE;
    }
 
-   // If there's nothing to hybridize, but an existing hybrid MBR exists, offer to replace
+   // If there is nothing to hybridize, but an existing hybrid MBR exists, offer to replace
    // the hybrid MBR with a protective MBR.
    if ((num_new_hybrid == 0) && (num_existing_hybrid > 0)) {
       Print(L"Found no partitions that could be hybridized, but an existing hybrid MBR exists.\n");
@@ -436,10 +436,10 @@ static BOOLEAN should_rewrite(VOID) {
          retval = FALSE;
    } // if
 
-   // If existing hybrid MBR that's NOT identical to the new one, ask the user
+   // If existing hybrid MBR that is NOT identical to the new one, ask the user
    // before overwriting the old one.
    if ((num_new_hybrid > 0) && (num_existing_hybrid > 0)) {
-      Print(L"Existing hybrid MBR detected, but it's not identical to what this program\n");
+      Print(L"Existing hybrid MBR detected, but it is not identical to what this program\n");
       Print(L"would generate. Do you want to see the hybrid MBR that this program would\n");
       invalid = input_boolean(STR("generate? [y/N] "), &retval);
       if (invalid)

@@ -7,30 +7,119 @@
 ##--------------------------------------------------------------##
 #
 #
-# RefindPlus defaults to scanning volumes for ".VolumeIcon" icns files and if
-# found, these are used as display icons for internal volumes. However, most
+# Supply APFS filesystem capability. By default, RefindPlus is set up to always load
+# Mac OS APFS filesystem drivers, apfs.efi, which are available in system folders of
+# Mac OS 10.13 (High Sierra) and later. The drivers are loaded to match each specific
+# Mac OS version. This ensures that any changes made to APFS drivers for each specific
+# Mac OS version are accommodated, compared to using one driver no matter what specific
+# Mac OS version is being loaded. This default is deactivated whenever this token is set.
+# NB: This functionality is only available on TianoCore Builds.
+#
+# APFS filesystem capability is supplied (if required) when commented out
+#
+#decline_apfsload
+
+# Suppress verbose APFS loading text output. RefindPlus is set up by default to always
+# suppress verbose text output from APFS drivers loaded via its "SupplyAPFS" functionality.
+# This feature only acts on apfs drivers loaded via the default "SupplyAPFS" functionality.
+# This feature may impact other text output however, and should be disabled by activating
+# this option if such negative effects are observed. This option only applies to Mac OS.
+# NB: This functionality is only available on TianoCore Builds.
+#
+# Verbose APFS text is allowed (if genereated) when commented out
+#
+#decline_apfsmute
+
+# Apple has partially enforced the use of the Pre-Boot Loader stored in the "PreBoot" partitions
+# of APFS volumes by requiring this to run the Mac Boot Loader, starting with Mac OS v11.x, when
+# SIP is enabled. Attempts to run such Mac OS Boot Loaders directly when SIP is enabled result
+# in kernel panics. The default setting in RefindPlus is to always map APFS volumes to their
+# respective "PreBoot" partitions, which will be used to boot such Mac OS instances and the
+# associated "PreBoot" partitions will be hidden from view. This arrangement also permits
+# booting into FileVault encrypted APFS volumes with their volume labels (not PreBoot).
+# When this option is enabled however, the RefindPlus "SyncAPFS" feature is disabled.
+#
+# NB: Maintain the default naming pattern for APFS data volumes, "VolName - Data",
+# to improve the reliability of "SyncAPFS" distinguishing between APFS volumes.
+# Also, avoid the use of special characters in Mac OS volume names and limit
+# names to alphanumeric characters. Dashes, underscores and/or spaces can
+# be used in combination with alphanumeric characters without issue.
+#
+# APFS partition synchronisation is allowed when commented out
+#
+#decline_apfssync
+
+# Allow scans of multiple ESPs. When this option is active, RefindPlus
+# will make other ESPs, separate from that containing RefindPlus,
+# available to be scanned for kernels and loaders.
+#
+# Scans of other ESPs are allowed when commented out
+#
+#decline_espfilter
+
+# Allow or prevent UEFI Windows "Secure Boot" from saving certificates to Apple NVRAM. By default,
+# RefindPlus will prevent UEFI Windows Secure Boot from writing to the NVRAM on Apple Firmware
+# as this can lead to damage resulting in an inability to boot. Legacy Windows does not have
+# this issue and is recommended instead when running Microsoft Windows on Apple Firmware.
+# This setting is only activated when Apple Firmware is detected on UEFI Windows boot.
+#
+# UEFI Windows certificate writes to Apple NVRAM are allowed when commented out
+#
+#decline_nvramprotect
+
+# When GOP drivers, which are UEFI 2.x drivers, are implemented in compliance with
+# UEFI 2.x requirements, they do not work on legacy devices as the specifications
+# mandate that on installation, compliant GOP drivers should confirm devices are
+# UEFI 2.x compliant and to fail if they are not. Hence, compliant GOP drivers
+# do not activate on Classic MacPros for instance, as these are not actually
+# UEFI 2.x but EFI 1.x devices to which Apple has added a chunk of, but not
+# all of, the UEFI 2.x capabilities. RefindPlus is configred by default to
+# temporarily partially amend a device's EFI Revision to v2.x and then try
+# reinstalling a copy of the GPU's Option ROM whenever it detects that GOP
+# is not available. The changes are reverted afterwards and permit running
+# modern GPUs on some legacy units when they would otherwise fail to work.
+# This program default configuration is deactivated by setting this token.
+#
+# GOP drivers are not reloaded when commented out
+#
+#decline_reloadgop
+
+# Help with "hidden_tags" setup. RefindPlus always makes the "hidden_tags" tool available
+# by default (even when the tool is not specified in the "showtools" list). This is done
+# to ensure that items hidden (always possible) can also be unhidden (only possible if
+# the "hidden_tags" tool is available). When this option is enabled, this "help" with
+# setup will be deactivated and the ability to unhide items will be solely based on
+# whether the "hidden_tags" tool has been explicitly added to the "showtools" list.
+#
+# The "hidden_tags" tool is always available when commented out
+#
+#decline_tagshelp
+
+# RefindPlus defaults to scanning volumes for ".VolumeIcon" image icons and if
+# found, these may be used as display icons for some volumes. However, most
 # RefindPlus setups do not include these files and most of those that may
 # do, typically Apple Macs, do not require the files as their icons in
 # Refindplus. Hence, scanning for the files typically just slows the
 # RefindPlus boot process down. When active, this speeds booting
 # RefindPlus up by skipping scanning volumes for these files.
 #
-# Always scans for ".VolumeIcon" icns files when commented out
+# Always scans for ".VolumeIcon" image icons when commented out
 #
-#ignore_volume_icns
+#ignore_hidden_icons
 
-# RefindPlus defaults to storing the name of the last booted loader in
-# the "PreviousBoot" variable in the NVRAM under the RefindPlus GUID. This
-# provides a default option to be selected on the main screen when RefindPlus
-# is loaded. This can however increase wear and tear on the NVRAM and disabling
-# the "use_nvram" token writes variables to the filesystem instead, limiting this.
-# On some setups however, such as when the "default_selection" token is set, such
-# writes are not required to start with. When the "ignore_previous_boot" setting
-# is active, RefindPlus will not store the "PreviousBoot" variable anywhere.
+# While RefindPlus does default to scanning volumes for ".VolumeIcon" image icons,
+# any such files found are only used as last ditch display icons when all other
+# display icon options fail. When this option is set, RefindPlus will instead
+# first try to display ".VolumeIcon" image files before attempting to load
+# other image icon files. This permits flexibility in theming loaders by
+# positioning such files for loading by RefindPlus. Note however, that
+# the "ignore_hidden_icons" option takes priority over this setting.
+# NB: ".VolumeIcon" icon files can be in any supported format ...
+# ICNS (*.icns), BMP (*.bmp), PNG (*.png), or JPG (*.jpg/jpeg).
 #
-# Always saves the "PreviousBoot" variable when commented out
+# Does not prioritise ".VolumeIcon" images when commented out
 #
-#ignore_previous_boot
+#prefer_hidden_icons
 
 # The SimpleText protocol on the ConsoleOut handle is usually used for
 # text output. On Macs and some other firmware, this is complicated by
@@ -47,13 +136,18 @@
 #
 #text_renderer
 
-# Adds the UGA Protocol to GOP when absent. This option allows the RefindPlus
-# screen when using modern GPUs on units with only EFIBoot capability.
-# NB: This functionality is only available on TianoCore Builds.
+# RefindPlus defaults to storing the name of the last booted loader in
+# the "PreviousBoot" variable in the NVRAM under the RefindPlus GUID. This
+# provides a default option to be selected on the main screen when RefindPlus
+# is loaded. This can however increase wear and tear on the NVRAM and disabling
+# the "use_nvram" token writes variables to the filesystem instead, limiting this.
+# On some setups however, such as when the "default_selection" token is set, such
+# writes are not required to start with. When the "ignore_previous_boot" setting
+# is active, RefindPlus will not store the "PreviousBoot" variable anywhere.
 #
-# Inactive when commented out (Does not add UGA to GOP)
+# Always saves the "PreviousBoot" variable when commented out
 #
-#uga_pass_through
+#ignore_previous_boot
 
 # Some computers may have multiple GOP instances:
 #     - One installed on the ConsoleOut handle
@@ -71,21 +165,13 @@
 #
 #provide_console_gop
 
-# When GOP drivers, which are UEFI 2.x drivers, are implemented in compliance with
-# UEFI 2.x requirements, they do not work on legacy devices as the specifications
-# mandate that on installation, compliant GOP drivers should confirm devices are
-# UEFI 2.x compliant and to fail if they are not. Hence, compliant GOP drivers
-# do not activate on Classic MacPros for instance, as these are not actually
-# UEFI 2.x but EFI 1.x devices to which Apple has added a chunk of, but not
-# all of, the UEFI 2.x capabilities. When this token is active, RefindPlus
-# will temporarily amend the device's EFI Revision to UEFI 2.x and attempt
-# reinstalling a copy of the GPU's Option ROM whenever it detects that GOP
-# is not available. The changes are reverted afterwards and allow running
-# modern GPUs on some legacy units where they would usually fail to work.
+# Adds the UGA Protocol to GOP when absent. This option allows the RefindPlus
+# screen when using modern GPUs on units with only EFIBoot capability.
+# NB: This functionality is only available on TianoCore Builds.
 #
-# Inactive when commented out (Does not reinstall GOP)
+# Inactive when commented out (Does not add UGA to GOP)
 #
-#reload_gop
+#uga_pass_through
 
 # Use a built-in GOP renderer which may provide enhanced performance
 # and fix rendering issues on certain specific GPU models including
@@ -101,7 +187,7 @@
 
 # Proceed automatically when notices are shown on-screen instead
 # of having to press a key to continue. When this option is active,
-# RefindPlus will pause for three seconds when on-screen warnings
+# RefindPlus will pause for nine seconds when on-screen notices
 # are shown and then proceed as if a key had been pressed.
 #
 # Inactive when commented out (Does not proceed automatically)
@@ -110,10 +196,10 @@
 
 # Force "TRIM" on non-Apple SSDs. "TRIM", which may improve SSD health,
 # is inactive by default for non-Apple SSDs in Mac OS. When this option
-# is active, RefindPlus will enforce Mac OS "TRIM" on for all SSDs types
-# including on non-Apple SSDs. This setting only applies to Mac OS. Note
-# that this setting will create a Mac OS NVRAM entry the first time it is
-# triggered and that this will remain active until explicitly cleared even
+# is active however, RefindPlus will enforce Mac OS "TRIM" for all types
+# of SSDs, including non-Apple SSDs. This setting only applies to Mac OS.
+# Note that the setting will create a Mac OS NVRAM entry the first time it
+# is triggered and that this will stay active until explicitly cleared even
 # if the setting is subsequently disabled. Also note that forcing "TRIM"
 # may significantly increase boot times and that enabling "TRIM" on
 # non-Apple SSDs may affect the integrity of data on such SSDs.
@@ -124,13 +210,13 @@
 
 # Disable Mac OS compatibility check when booting. Macs check whether the
 # current Mac OS version is supported on the machine when booting and halts
-# if not. When this option is active, RefindPlus will set the "-no_compat_check"
+# if not. When this option is active, RefindPlus will set a "-no_compat_check"
 # boot argument which disables this check and allows boot to proceed on otherwise
 # unsupported Macs. This setting only applies to Mac OS. Note that this setting will
 # create a Mac OS boot argument the first time it is triggered and it will remain
 # active until explicitly cleared even if the setting is subsequently disabled.
 #
-# Inactive when commented out (Does not disable the compatibility check)
+# Inactive when commented out (Allows Mac OS compatibility checks)
 #
 #disable_compat_check
 
@@ -141,75 +227,9 @@
 # boot argument the first time it is triggered and that this will remain active
 # until explicitly cleared even if the setting is subsequently disabled.
 #
-# Inactive when commented out (Does not disable AMFI checks)
+# Inactive when commented out (Allows AMFI checks)
 #
 #disable_amfi
-
-# Supply APFS filesystem capability. When this option is activated, RefindPlus loads
-# Mac OS APFS filesystem drivers, apfs.efi, which are available in system folders of
-# Mac OS 10.13 (High Sierra) and later. The drivers are loaded to match each specific
-# Mac OS version. This ensures that any changes made to APFS drivers for each specific
-# Mac OS version are accomodated, compared to using one driver no matter which specific
-# Mac OS version is being loaded. This setting only applies to Mac OS and only as needed.
-# NB: This functionality is only available on TianoCore Builds.
-#
-# Inactive when commented out (Does not supply APFS filesystem capability)
-#
-#supply_apfs
-
-# Suppress verbose APFS loading text output. When this option is active, RefindPlus will
-# suppress verbose text output from APFS drivers loaded via the "supply_apfs" option.
-# This option only acts on apfs drivers loaded by RefindPlus using "supply_apfs".
-# This option may impact other text output and should be disabled if such
-# negative effects are observed. This setting only applies to Mac OS.
-# NB: This functionality is only available on TianoCore Builds.
-#
-# Inactive when commented out (Does not suppress verbose APFS text)
-#
-#silence_apfs
-
-# Apple has partially enforced the use of the Pre-Boot Loader stored in the "PreBoot" partitions
-# of APFS volumes by requiring this to run the Mac Boot Loader, starting with Mac OS v11.x, when
-# SIP is enabled. Attempts to run such Mac OS Boot Loaders directly when SIP is enabled result
-# in kernel panics. When this option is activated, RefindPlus will map APFS volumes to their
-# respective "PreBoot" partitions which will be used to boot such Mac OS instances and the
-# associated "PreBoot" partitions will be hidden from view. This option also allows direct
-# booting into FileVault encrypted APFS volumes with their volume labels (not "PreBoot").
-# NB: Maintain the default naming pattern for APFS data volumes, "VolName - Data", to
-# improve the reliability of this option in distinguishing between APFS partitions.
-#
-# Inactive when commented out (Does not map APFS volumes to PreBoot partitions)
-#
-#sync_apfs
-
-# Prevent UEFI Windows "Secure Boot" from writing to Apple NVRAM. When this option is active,
-# RefindPlus will prevent UEFI Windows Secure Boot from writing to the NVRAM on Apple Firmware
-# as this can lead to damage resulting in an inability to boot. Legacy Windows does not have
-# this issue and is recommended instead when running Microsoft Windows on Apple Firmware.
-# This setting only applies when loading Windows on Apple Firmware.
-#
-# Inactive when commented out (Does not prevent UEFI Windows writes to Apple NVRAM)
-#
-#protect_nvram
-
-# Allow scans of multiple ESPs. When this option is active, RefindPlus
-# will make other ESPs, separate from that containing RefindPlus,
-# available to be scanned for kernels and loaders.
-#
-# Inactive when commented out (Does not make other ESPs available)
-#
-#scan_other_esp
-
-# Help with "hidden_tags" setup. RefindPlus always makes the "hidden_tags" tool available
-# by default (even when the tool is not specified in the "showtools" list). This is done
-# to ensure that items hidden (always possible) can also be unhidden (only possible if
-# the "hidden_tags" tool is available). When this option is enabled, this "help" with
-# setup will be inactivated and the ability to unhide items will be solely based on
-# whether the "hidden_tags" tool has been explictly added to the "showtools" list.
-#
-# Inactive when commented out (Does not disable help with hidden_tags)
-#
-#disable_tag_help
 
 # RefindPlus will automatically enlarge icons and text when HiDPI screens are detected.
 # The detection is basic and based on detecting a minimum 1601px vertical resolution.
@@ -222,21 +242,21 @@
 #
 #scale_ui 1
 
-# This token allows actively enabling or disabling the System Intergrity Protection (SIP)
+# This token allows actively enabling or disabling the System Integrity Protection (SIP)
 # and Sealed System Volume (SSV) settings defined under the "csr_values" option. When this
 # token is active, RefindPlus will actively set the CSR Policy as defined. This is done when
 # RefindPlus is loaded but users can manually toggle the set values "ON" or "OFF" by using the
-# "Toggle Mac CSR" tool after RefindPlus is loaded.
+# "Toggle CSR" tool after RefindPlus is loaded.
 # The following options are available:
-#  -1    - Always Disable SIP (and SSV, if on Mac OS 11.x and configured under "csr_values")
+#  -1    - Always Disable SIP (and SSV on Mac OS 11.x or later when configured in "csr_values")
 #   0    - Take no Action
-#   1    - Always Enable SIP (and SSV, if on Mac OS 11.x)
+#   1    - Always Enable SIP (and SSV on Mac OS 11.x or later)
 #
-# Inactive when commented out (Takes no action on SIP and SSV)
+# Inactive when commented out (Takes no action on SIP and/or SSV)
 #
 #active_csr 1
 
-# As of Mac OS v11.x (Big Sur), the previous default SIP/SSV setttings which had all included
+# As of Mac OS v11.x (Big Sur), the previous default SIP/SSV settings which had all included
 # the "CSR_ALLOW_APPLE_INTERNAL" bit may leave Macs not able to receive "Over The Air" (OTA)
 # updates from Apple. Mac OS v11.x (and later) remove this bit on boot if detected but the
 # attempted removal may fail when booting into Mac OS via non-standard path ways such as
@@ -296,7 +316,7 @@
 # its variables to a folder on the filesystem instead. However, this will not
 # work if RefindPlus is on a filesystem that is read-only to the EFI, such as
 # HFS+ volumes. In such cases, an attempt to write to the first ESP RefindPlus
-# can identify will be made. If this attempt is not sucessful, the variable will
+# can identify will be made. If this attempt is not successful, the variable will
 # not be saved and this fact will be logged if running the debug version. NB: This
 # option only applies to RefindPlus variables such as the PreviousBoot, HiddenTags,
 # HiddenTools, and HiddenLegacy variables and does not apply to any variables from
@@ -308,36 +328,39 @@
 
 # Non-bootloader tools to show on the "tools" line
 # of the main menu and their display order:
-#  shell            - UEFI/EFI Shell. (External program; see documentation)
-#  memtest          - Memory Testing Utility. (External program; memtest86)
-#  gptsync          - the (dangerous) gptsync.efi utility (requires external
-#                     program; see documentation for details)
+#  shell            - UEFI/EFI Shell.
+#                     NB: Requires external program
+#                         See documentation for details
+#  memtest          - Memory Testing Utility.
+#                     NB: Requires external memtest8 program
+#  gptsync          - the (dangerous) gptsync.efi utility
+#                     NB: Requires external program
+#                         See documentation for details
 #  gdisk            - the gdisk partitioning program
-#  show_bootscreen  - load Apple Boot Screen if available. (External program)
-#                     Needs GOP-Compatible Fully Compatible GPU on Apple Firmware.
-#                     "Fully Compatible GPUs" are those with native Apple Boot Screen
-#  clean_nvram      - reset NVRAM from RefindPlus. (External program)
-#                     Requires Apple Firmware.
-#  apple_recovery   - boots the Apple Recovery HD partition, if present
-#  windows_recovery - boots an OEM Windows recovery tool, if present
-#                     (see also the windows_recovery_files option)
-#  mok_tool         - makes available the Machine Owner Key (MOK) maintenance
-#                     tool, MokManager.efi, used on Secure Boot systems
-#  csr_rotate       - adjusts Apple System Integrity Protection (SIP)
-#                     policy. Requires "csr_values" to be set.
-#  install          - an option to install RefindPlus from the current location
-#                     to another ESP
-#  bootorder        - adjust the EFI's (NOT RefindPlus') boot order
-#  about            - an "about this program" option
+#  show_bootscreen  - load Apple Boot Screen if available.
+#                     NB: Needs External program.
+#                         Needs GOP-Compatible Fully Compatible GPU on Apple Firmware.
+#                         "Fully Compatible GPUs" are those with native Apple Boot Screen
+#  clean_nvram      - reset NVRAM from RefindPlus.
+#                     NB: Needs External program.
+#                         Requires Apple Firmware.
+#  apple_recovery   - loads Apple Mac Recovery partitions, if present
+#  windows_recovery - boots an OEM Windows recovery tool, if present.
+#                     NB: Also refer to the "windows_recovery_files" option
+#  mok_tool         - makes available the Machine Owner Key (MOK) maintenance tool,
+#                     MokManager.efi, used on Secure Boot systems
+#  csr_rotate       - adjusts Apple System Integrity Protection (SIP) policy.
+#                     NB: Requires "csr_values" to be set.
+#  install          - an option to install RefindPlus from the current location to another ESP
+#  bootorder        - adjust the firmware's boot order variables
+#  about            - an "About This Program" option
 #  hidden_tags      - manage hidden tags
-#  exit             - a tag to exit from RefindPlus
-#  shutdown         - shuts down the computer (a bug causes this to reboot
-#                     many UEFI systems)
-#  reboot           - a tag to reboot the computer
-#  firmware         - a tag to reboot the computer into the firmware's
-#                     user interface (ignored on older computers)
-#  fwupdate         - a tag to update the firmware; launches the fwupx64.efi
-#                     (or similar) program
+#  exit             - a tag to exit RefindPlus
+#  shutdown         - shuts down the computer (a bug causes this to reboot many UEFI systems)
+#  reboot           - a tag to reboot the computer normally
+#  firmware         - a tag to reboot the computer into the firmware's user interface.
+#                     NB: Ignored on older computers.
+#  fwupdate         - a tag to update the firmware; launches the fwupx64.efi (or similar) program
 #  netboot          - launch the ipxe.efi tool for network (PXE) booting
 #
 # The default setting is shell, memtest, gdisk, apple_recovery, windows_recovery, mok_tool, about, hidden_tags, shutdown, reboot, firmware, fwupdate
@@ -374,14 +397,14 @@
 
 # Set the logging level. When set to "0", a log file in the native RefindPlus format
 # is produced in the RefindPlus home directory on the ESP, logging information about
-# what RefindPlus is doing. When set to "1" or above, the logging is in the upsteam
+# what RefindPlus is doing. When set to "1" or above, the logging is in the upstream
 # format instead (a variant of). Higher values, up to the maximum of 4, record more
 # information. NOTE: This option is only active when running DEBUG builds and the
 # logging process, particularly higher levels, noticeably slows RefindPlus down.
 #
 # The native format is used when commented out (DEBUG builds only)
 #
-#log_level 3
+#log_level 2
 
 # Set the CSR values for Apple's System Integrity Protection (SIP) and
 # Sealed System Volume (SSV) features that define access levels on Mac OS.
@@ -394,7 +417,7 @@
 # commands, added in Mac OS v11.x (Big Sur), set values of 10 (ON) and 87F (OFF)
 # respectively, when run along with the "csrutil enable / disable" commands.
 #
-# As of Mac OS v11.x (Big Sur), the previous default settting of 10 (ON)
+# As of Mac OS v11.x (Big Sur), the previous default setting of "10" (ON)
 # may leave Macs not able to receive "Over The Air" (OTA) updates from
 # Apple with the reliable setting being enabling SIP/SSV by clearing
 # the stored CSR value in the NVRAM. RefindPlus will clear the CSR
@@ -403,27 +426,36 @@
 # is recommended however, to keep the default "OFF" setting
 # of "10" in place, and to use the "normalise_csr" token
 # instead to better achieve the same end (both values).
-#      CSR_ALLOW_UNTRUSTED_KEXTS               0x0001
-#      CSR_ALLOW_UNRESTRICTED_FS               0x0002
-#      CSR_ALLOW_TASK_FOR_PID                  0x0004
-#      CSR_ALLOW_KERNEL_DEBUGGER               0x0008
-#      CSR_ALLOW_APPLE_INTERNAL                0x0010
-#      CSR_ALLOW_UNRESTRICTED_DTRACE           0x0020
-#      CSR_ALLOW_UNRESTRICTED_NVRAM            0x0040
-#      CSR_ALLOW_DEVICE_CONFIGURATION          0x0080
-#      CSR_ALLOW_ANY_RECOVERY_OS               0x0100
-#      CSR_ALLOW_UNAPPROVED_KEXTS              0x0200
-#      CSR_ALLOW_EXECUTABLE_POLICY_OVERRIDE    0x0400
-#      CSR_ALLOW_UNAUTHENTICATED_ROOT          0x0800
+#      CSR_ALLOW_UNTRUSTED_KEXTS                0x0001
+#      CSR_ALLOW_UNRESTRICTED_FS                0x0002
+#      CSR_ALLOW_TASK_FOR_PID                   0x0004
+#      CSR_ALLOW_KERNEL_DEBUGGER                0x0008
+#      CSR_ALLOW_APPLE_INTERNAL                 0x0010
+#      CSR_ALLOW_UNRESTRICTED_DTRACE            0x0020
+#      CSR_ALLOW_UNRESTRICTED_NVRAM             0x0040
+#      CSR_ALLOW_DEVICE_CONFIGURATION           0x0080
+#      CSR_ALLOW_ANY_RECOVERY_OS                0x0100
+#      CSR_ALLOW_UNAPPROVED_KEXTS               0x0200
+#      CSR_ALLOW_EXECUTABLE_POLICY_OVERRIDE     0x0400
+#      CSR_ALLOW_UNAUTHENTICATED_ROOT           0x0800
 #
 # Inactive when commented out (CSR values for SIP/SSV cannot be set)
 #
 #csr_values 10,77
 
+# Blank screen and show different solid colours after the specified
+# number of seconds without input. Screen is restored on keypresses
+# (Excluding keys such as "Shift", "Control", "Alt", and "Option").
+# "-1" causes RefindPlus to start up with the screensaver active.
+#
+# The screensaver is disabled when commented out
+#
+#screensaver 300
+
 
 ##--------------------------------------------------------------##
 ##                STANDARD CONFIGURATION ITEMS                  ##
-##                  Standard rEFInd Features                    ##
+##                  Unchanged  Functionality                    ##
 ##--------------------------------------------------------------##
 #
 #
@@ -434,18 +466,9 @@
 # CAUTION: MANY COMPUTERS WILL HANG OR REBOOT INSTEAD! Macs and more
 # recent UEFI-based PCs are most likely to work with this feature.
 #
-# Boots the default selection when commented out
+# Boots the default selection on timeout when commented out
 #
 #shutdown_after_timeout
-
-# Blank screen and show different solid colours after the specified
-# number of seconds without input. Screen is restored on keypresses
-# (Excluding keys such as "Shift", "Control", "Alt", and "Option").
-# "-1" causes RefindPlus to start up with the screensaver active.
-#
-# The screensaver is diabled when commented out
-#
-#screensaver 300
 
 # Hide user interface elements for personal preference or for security:
 #  banner      - the RefindPlus title banner (built-in or loaded via "banner")
@@ -500,7 +523,7 @@
 # an optimally sized one is specified, this may be scaled in an "ugly" way.
 #
 # As with the "banner" setting below, these options take filenames of
-# uncompressed BMP, JPEG, PNG or ICNS image files with a color depth
+# uncompressed BMP, JPEG, PNG or ICNS image files with a colour depth
 # of 24, 8, 4, or 1 bits. PNG or ICNS image files are required for
 # transparency support. As with the "banner" setting below, paths
 # are relative to the directory containing the RefindPlus efi.
@@ -556,9 +579,9 @@
 # takes a single digit that refers to a mode number. Mode "0" is usually
 # 80x25, "1" is sometimes 80x50, and higher numbers are system-specific
 # modes. Mode "1024" is a special code that sets RefindPlus not to use
-# text mode spcifically but instead use whatever mode was in use when
-# it was launched. If an invalid mode is specified, RefindPlus will
-# pause booting to display information on valid modes instead.
+# text mode specifically but to instead use whatever mode was in use
+# when it was launched. If an invalid mode is specified, RefindPlus
+# will pause booting to display information on valid modes instead.
 #
 # CAUTION: On VirtualBox, and perhaps on some real computers, specifying
 # a text mode and uncommenting the "textonly" option without specifying
@@ -627,7 +650,7 @@
 #
 #windows_recovery_files LRS_ESP:/EFI/Microsoft/Boot/LrsBootmgr.efi
 
-# Directories in which to search for EFI drivers. These drivers
+# Directories in which to search for UEFI drivers. These drivers
 # provide filesystem support, give access to hard disks on plug-in
 # controllers, etc. When such drivers are present and RefindPlus is
 # required to automatically load them, paths to the driver locations
@@ -724,7 +747,7 @@
 # as "myvol:EFI/somedir", to exclude EFI/somedirfrom the scan
 # on the "myvol" volume but not on other volumes.
 #
-# Inactive when commented out (Does not exclude additional directories)
+# Inactive when commented out (Allows additional directories)
 #
 #dont_scan_dirs ESP:/EFI/boot,EFI/Dell,EFI/memtest86
 
@@ -752,7 +775,7 @@
 # specified as the first item in the new list. If not,
 # items from the default list are likely to appear.
 #
-# Inactive when commented out (Does not exclude additional files)
+# Inactive when commented out (Allows additional files)
 #
 #dont_scan_files shim.efi,MokManager.efi
 
@@ -811,10 +834,10 @@
 #
 #extra_kernel_version_strings linux-lts,linux
 
-# Write to systemd EFI variables (currently only LoaderDevicePartUUID) when
-# launching Linux via an EFI stub loader, ELILO, or GRUB. This variable,
-# when present, causes systemd to mount the ESP at /boot *IF* that
-# directory is empty and nothing else is mounted there.
+# Write to systemd UEFI variables (currently only LoaderDevicePartUUID)
+# when launching Linux via an EFI stub loader, ELILO, or GRUB. This
+# variable, when present, causes systemd to mount the ESP at /boot
+# *IF* that directory is empty and nothing else is mounted there.
 #
 # Inactive when commented out (No systemd mount attempt)
 #
@@ -835,7 +858,7 @@
 #  - A digit between 1 and 9, in which case the Nth loader in the menu
 #    will be the default.
 #  - A "+" symbol at the start of the string, which refers to the most
-#    recently booted loader.
+#    recently booted loader (Unless overriden by 'IgnorePreviousBoot').
 #  - Any substring that corresponds to a portion of the loader's title
 #    (usually the OS's name, boot loader's path, or a volume or
 #    filesystem title).
@@ -851,7 +874,7 @@
 # set followed by one or more that include times to set different
 # defaults for different times of day.
 #
-# Boots the previously booted loader when commented out
+# Defaults to "+" when commented out (Selects the last run loader)
 #
 #default_selection 1
 #default_selection Microsoft
@@ -862,7 +885,7 @@
 # Enable VMX bit and lock the CPU MSR if unlocked. On some
 # Intel Apple computers, the firmware does not lock the MSR 0x3A.
 # The symptom on Windows is "Hyper-V" not working even if the CPU
-# meets the minimum requirements (HW assisted virtualization and SLAT)
+# meets the minimum requirements (HW assisted virtualisation and SLAT)
 #
 # DO NOT SET THIS EXCEPT ON INTEL CPUs THAT SUPPORT VMX! See
 # http://www.thomas-krenn.com/en/wiki/Activating_the_Intel_VT_Virtualization_Feature
@@ -891,7 +914,7 @@
 # Include a secondary configuration file within this one. This secondary
 # file is loaded as if its options appeared at the point of the "include"
 # option. So, to override a setting in the main file, the secondary file
-# must be referenced AFTER the setting to be overriden. NB: A secondary
+# must be referenced AFTER the setting to be overridden. NB: A secondary
 # configuration file cannot reference a tertiary configuration file.
 #
 # Inactive when commented out (secondary file is not loaded)

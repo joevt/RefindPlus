@@ -12,12 +12,12 @@
 
 #ifdef __MAKEWITH_GNUEFI
 
+EFI_STATUS AmendSysTable (VOID);
+
 /**
   @retval EFI_INCOMPATIBLE_VERSION  Running on incompatible GNUEFI compiled version
 **/
-EFI_STATUS AmendSysTable (
-    VOID
-) {
+EFI_STATUS AmendSysTable (VOID) {
     // NOOP if not compiled using EDK II
     return EFI_INCOMPATIBLE_VERSION;
 }
@@ -47,34 +47,33 @@ EFI_RUNTIME_ARCH_PROTOCOL gRuntimeTemplate = {
     FALSE, FALSE
 };
 
-UINTN                      gEventPending      = 0;
-EFI_TPL                    gEfiCurrentTpl     = TPL_APPLICATION;
-EFI_LOCK                   gEventQueueLock    = EFI_INITIALIZE_LOCK_VARIABLE (TPL_HIGH_LEVEL);
-EFI_RUNTIME_ARCH_PROTOCOL  *gRuntime          = &gRuntimeTemplate;
-LIST_ENTRY                 gEventSignalQueue  = INITIALIZE_LIST_HEAD_VARIABLE (gEventSignalQueue);
-LIST_ENTRY                 gEventQueue[TPL_HIGH_LEVEL + 1];
+UINTN                       gEventPending      = 0;
+EFI_TPL                     gEfiCurrentTpl     = TPL_APPLICATION;
+EFI_LOCK                    gEventQueueLock    = EFI_INITIALIZE_LOCK_VARIABLE (TPL_HIGH_LEVEL);
+EFI_RUNTIME_ARCH_PROTOCOL  *gRuntime           = &gRuntimeTemplate;
+LIST_ENTRY                  gEventSignalQueue  = INITIALIZE_LIST_HEAD_VARIABLE (gEventSignalQueue);
+LIST_ENTRY                  gEventQueue[TPL_HIGH_LEVEL + 1];
 
 UINT32 mEventTable[] = {
-    EVT_TIMER | EVT_NOTIFY_SIGNAL,
+    EVT_TIMER|EVT_NOTIFY_SIGNAL,
     EVT_TIMER, EVT_NOTIFY_WAIT, EVT_NOTIFY_SIGNAL,
     EVT_SIGNAL_EXIT_BOOT_SERVICES,
     EVT_SIGNAL_VIRTUAL_ADDRESS_CHANGE, 0x00000000,
-    EVT_TIMER | EVT_NOTIFY_WAIT
+    EVT_TIMER|EVT_NOTIFY_WAIT
 };
 
 EFI_TPL EFIAPI FakeRaiseTpl (IN EFI_TPL  NewTpl);
-VOID EFIAPI FakeRestoreTpl (IN EFI_TPL  NewTpl);
-VOID FakeSetInterruptState (IN BOOLEAN  Enable);
-VOID FakeDispatchEventNotifies (IN EFI_TPL  Priority);
-VOID FakeAcquireLock (IN EFI_LOCK  *Lock);
-VOID FakeReleaseLock (IN EFI_LOCK  *Lock);
-EFI_STATUS AmendSysTable (VOID);
-EFI_STATUS FakeCreateEventEx (
-    UINT32            Type,
-    EFI_TPL           NotifyTpl,
-    EFI_EVENT_NOTIFY  NotifyFunction,
+VOID    EFIAPI FakeRestoreTpl (IN EFI_TPL  NewTpl);
+VOID           FakeSetInterruptState (IN BOOLEAN  Enable);
+VOID           FakeDispatchEventNotifies (IN EFI_TPL  Priority);
+VOID           FakeAcquireLock (IN EFI_LOCK  *Lock);
+VOID           FakeReleaseLock (IN EFI_LOCK  *Lock);
+EFI_STATUS     FakeCreateEventEx (
+    UINT32             Type,
+    EFI_TPL            NotifyTpl,
+    EFI_EVENT_NOTIFY   NotifyFunction,
     const void        *NotifyContext,
-    CONST EFI_GUID    *EventGroup,
+    const EFI_GUID    *EventGroup,
     EFI_EVENT         *Event
 );
 
@@ -101,7 +100,7 @@ VOID FakeSetInterruptState (
     }
 
     Status = gSmmBase2->InSmm (gSmmBase2, &InSmm);
-    if (!EFI_ERROR (Status) && !InSmm) {
+    if (!EFI_ERROR(Status) && !InSmm) {
         gCpu->EnableInterrupt (gCpu);
     }
 }
@@ -122,14 +121,14 @@ VOID FakeDispatchEventNotifies (
 
     // Dispatch pending notifications
     while (!IsListEmpty (Head)) {
-        Event = refit_call4_wrapper(
+        Event = REFIT_CALL_4_WRAPPER(
             CR,
             Head->ForwardLink,
             IEVENT,
             NotifyLink,
             EVENT_SIGNATURE
         );
-        refit_call1_wrapper(RemoveEntryList, &Event->NotifyLink);
+        REFIT_CALL_1_WRAPPER(RemoveEntryList, &Event->NotifyLink);
         Event->NotifyLink.ForwardLink = NULL;
 
         // Only clear the SIGNAL status if it is a SIGNAL type event.
@@ -142,7 +141,8 @@ VOID FakeDispatchEventNotifies (
 
         // Notify this event
         ASSERT (Event->NotifyFunction != NULL);
-        refit_call2_wrapper(
+
+        REFIT_CALL_2_WRAPPER(
             Event->NotifyFunction,
             Event,
             Event->NotifyContext
@@ -169,11 +169,14 @@ EFI_TPL EFIAPI FakeRaiseTpl (
 
     OldTpl = gEfiCurrentTpl;
     if (OldTpl > NewTpl) {
+        #if REFIT_DEBUG > 0
         MsgLog (
             "FATAL ERROR: RaiseTpl with OldTpl (0x%x) > NewTpl (0x%x)\n\n",
             OldTpl,
             NewTpl
         );
+        #endif
+
         ASSERT (FALSE);
     }
     ASSERT (VALID_TPL (NewTpl));
@@ -202,11 +205,14 @@ VOID EFIAPI FakeRestoreTpl (
 
     OldTpl = gEfiCurrentTpl;
     if (NewTpl > OldTpl) {
+        #if REFIT_DEBUG > 0
         MsgLog (
             "FATAL ERROR: RestoreTpl with NewTpl (0x%x) > OldTpl (0x%x)\n",
             NewTpl,
             OldTpl
         );
+        #endif
+
         ASSERT (FALSE);
     }
     ASSERT (VALID_TPL (NewTpl));
@@ -280,15 +286,15 @@ EFI_STATUS FakeCreateEventEx (
     IN        UINT32             Type,
     IN        EFI_TPL            NotifyTpl,
     IN        EFI_EVENT_NOTIFY   NotifyFunction OPTIONAL,
-    IN  CONST VOID              *NotifyContext  OPTIONAL,
-    IN  CONST EFI_GUID          *EventGroup     OPTIONAL,
+    IN  const VOID              *NotifyContext  OPTIONAL,
+    IN  const EFI_GUID          *EventGroup     OPTIONAL,
     OUT       EFI_EVENT         *Event
 )
 #if 1
 {
-    EFI_STATUS      Status;
-    IEVENT          *IEvent;
-    INTN            Index;
+    EFI_STATUS         Status;
+    IEVENT            *IEvent;
+    INTN               Index;
 
     Status = EFI_SUCCESS;
 
@@ -314,7 +320,7 @@ EFI_STATUS FakeCreateEventEx (
             break;
         }
     }
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
         return EFI_INVALID_PARAMETER;
     }
 
@@ -374,9 +380,8 @@ EFI_STATUS FakeCreateEventEx (
         return EFI_OUT_OF_RESOURCES;
     }
 
-    IEvent->Signature = EVENT_SIGNATURE;
-    IEvent->Type = Type;
-
+    IEvent->Signature      = EVENT_SIGNATURE;
+    IEvent->Type           = Type;
     IEvent->NotifyTpl      = NotifyTpl;
     IEvent->NotifyFunction = NotifyFunction;
     IEvent->NotifyContext  = (VOID *)NotifyContext;
@@ -466,10 +471,8 @@ EFI_STATUS FakeCreateEventEx (
   @retval EFI_INVALID_PARAMETER     Command usage error.
   @retval Other value               Unknown error.
 **/
-EFI_STATUS AmendSysTable (
-    VOID
-) {
-    EFI_STATUS        Status;
+EFI_STATUS AmendSysTable (VOID) {
+    EFI_STATUS         Status;
     EFI_BOOT_SERVICES *uBS;
 
     if (gST->Hdr.Revision >= MIN_EFI_REVISION) {
@@ -495,7 +498,7 @@ EFI_STATUS AmendSysTable (
                 &uBS->Hdr.CRC32
             );
 
-            gBS = uBS;
+            gBS       = uBS;
             SetSysTab = TRUE;
             Status    = (EFI_STATUS) EFI_SUCCESS;
 
@@ -508,8 +511,8 @@ EFI_STATUS AmendSysTable (
                 gST->Hdr.HeaderSize,
                 &gST->Hdr.CRC32
             );
-    }
-    }
+        } // if/else uBS == NULL
+    } // if/else gST->Hdr.Revision
 
     return Status;
 }

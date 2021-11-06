@@ -84,7 +84,7 @@ InstallRamDiskConfigForm (
                   ConfigAccess,
                   NULL
                   );
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     return Status;
   }
 
@@ -226,15 +226,15 @@ UnregisterAllRamDisks (
                                   values.
   @retval EFI_OUT_OF_RESOURCES    Not enough memory to store the results.
   @retval EFI_INVALID_PARAMETER   Request is illegal syntax, or unknown name.
-  @retval EFI_NOT_FOUND           Routing data doesn't match any storage in
+  @retval EFI_NOT_FOUND           Routing data does not match any storage in
                                   this driver.
 
 **/
 EFI_STATUS
 EFIAPI
 RamDiskExtractConfig (
-  IN CONST EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
-  IN CONST EFI_STRING                       Request,
+  IN const EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
+  IN const EFI_STRING                       Request,
        OUT EFI_STRING                       *Progress,
        OUT EFI_STRING                       *Results
   )
@@ -261,15 +261,15 @@ RamDiskExtractConfig (
 
   @retval EFI_SUCCESS             The Results is processed successfully.
   @retval EFI_INVALID_PARAMETER   Configuration is NULL.
-  @retval EFI_NOT_FOUND           Routing data doesn't match any storage in
+  @retval EFI_NOT_FOUND           Routing data does not match any storage in
                                   this driver.
 
 **/
 EFI_STATUS
 EFIAPI
 RamDiskRouteConfig (
-  IN CONST EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
-  IN CONST EFI_STRING                       Configuration,
+  IN const EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
+  IN const EFI_STRING                       Configuration,
        OUT EFI_STRING                       *Progress
   )
 {
@@ -361,19 +361,19 @@ HiiCreateRamDisk (
     Status = gBS->AllocatePool (
                     EfiBootServicesData,
                     (UINTN)Size,
-                    (VOID**)&StartingAddr
+                    (VOID **) &StartingAddr
                     );
   } else if (MemoryType == RAM_DISK_RESERVED_MEMORY) {
     Status = gBS->AllocatePool (
                     EfiReservedMemoryType,
                     (UINTN)Size,
-                    (VOID**)&StartingAddr
+                    (VOID **) &StartingAddr
                     );
   } else {
     Status = EFI_INVALID_PARAMETER;
   }
 
-  if ((StartingAddr == NULL) || EFI_ERROR (Status)) {
+  if ((StartingAddr == NULL) || EFI_ERROR(Status)) {
     do {
       CreatePopUp (
         EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
@@ -426,7 +426,7 @@ HiiCreateRamDisk (
              NULL,
              &DevicePath
              );
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     do {
       CreatePopUp (
         EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
@@ -586,7 +586,7 @@ UpdateMainForm (
 EFI_STATUS
 EFIAPI
 RamDiskCallback (
-  IN CONST EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
+  IN const EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
   IN     EFI_BROWSER_ACTION                 Action,
   IN     EFI_QUESTION_ID                    QuestionId,
   IN     UINT8                              Type,
@@ -646,7 +646,7 @@ RamDiskCallback (
     switch (QuestionId) {
     case MAIN_GOTO_FILE_EXPLORER_ID:
       Status = ChooseFile (NULL, NULL, NULL, &FileDevPath);
-      if (EFI_ERROR (Status)) {
+      if (EFI_ERROR(Status)) {
         break;
       }
 
@@ -660,7 +660,7 @@ RamDiskCallback (
                    EFI_FILE_MODE_READ,
                    0
                    );
-        if (EFI_ERROR (Status)) {
+        if (EFI_ERROR(Status)) {
           break;
         }
 
@@ -673,7 +673,7 @@ RamDiskCallback (
                    FileHandle,
                    ConfigPrivate->ConfigStore.MemType
                    );
-        if (EFI_ERROR (Status)) {
+        if (EFI_ERROR(Status)) {
           break;
         }
 
@@ -724,7 +724,7 @@ RamDiskCallback (
                  NULL,
                  ConfigPrivate->ConfigStore.MemType
                  );
-      if (EFI_ERROR (Status)) {
+      if (EFI_ERROR(Status)) {
         break;
       }
 

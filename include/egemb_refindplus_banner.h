@@ -809,4 +809,7 @@ static CONST UINT8 egemb_refindplus_banner_data[9616] = {
  0xff, 0xbf, 0xff, 0xbf, 0xff, 0xbf, 0xff, 0xbf, 0xff, 0xbf, 0xff, 0xbf,
  0xff, 0xbf, 0xdb, 0xbf,
 };
-static EG_EMBEDDED_IMAGE egemb_refindplus_banner = { 320, 140, EG_EIPIXELMODE_GRAY, EG_EICOMPMODE_RLE, egemb_refindplus_banner_data, 9616 };
+static EG_EMBEDDED_IMAGE egemb_refindplus_banner = {
+    320, 140, EG_EIPIXELMODE_GRAY, EG_EICOMPMODE_RLE,
+    egemb_refindplus_banner_data, 9616
+};

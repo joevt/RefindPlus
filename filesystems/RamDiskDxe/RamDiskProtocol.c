@@ -93,7 +93,7 @@ RamDiskPublishSsdt (
                (VOID **) &Table,
                &TableSize
                );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
       break;
     }
 
@@ -104,9 +104,9 @@ RamDiskPublishSsdt (
                                      TableSize,
                                      &mRamDiskSsdtTableKey
                                      );
-      ASSERT_EFI_ERROR (Status);
+      ASSERT_EFI_ERROR(Status);
 
-      if (!EFI_ERROR (Status)) {
+      if (!EFI_ERROR(Status)) {
         mRamDiskSsdtTableKeyValid = TRUE;
       }
 
@@ -183,11 +183,11 @@ RamDiskPublishNfit (
                     &DescriptorSize,
                     &DescriptorVersion
                     );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
       FreePool (MemoryMap);
     }
   } while (Status == EFI_BUFFER_TOO_SMALL);
-  ASSERT_EFI_ERROR (Status);
+  ASSERT_EFI_ERROR(Status);
 
   MemoryMapEntry = MemoryMap;
   MemoryMapEnd   = (EFI_MEMORY_DESCRIPTOR *) ((UINT8 *) MemoryMap + MemoryMapSize);
@@ -220,14 +220,14 @@ RamDiskPublishNfit (
   TableKey    = 0;
   TableHeader = NULL;
 
-  while (!EFI_ERROR (Status)) {
+  while (!EFI_ERROR(Status)) {
     Status = mAcpiSdtProtocol->GetAcpiTable (
                                  TableIndex,
-                                 (EFI_ACPI_SDT_HEADER **)&TableHeader,
+                                 (EFI_ACPI_SDT_HEADER **) &TableHeader,
                                  &TableVersion,
                                  &TableKey
                                  );
-    if (!EFI_ERROR (Status)) {
+    if (!EFI_ERROR(Status)) {
       TableIndex++;
 
       if (((EFI_ACPI_SDT_HEADER *)TableHeader)->Signature ==
@@ -237,7 +237,7 @@ RamDiskPublishNfit (
     }
   }
 
-  if (!EFI_ERROR (Status)) {
+  if (!EFI_ERROR(Status)) {
     //
     // A NFIT is already in the ACPI table.
     //
@@ -248,7 +248,8 @@ RamDiskPublishNfit (
 
     NfitHeader = (EFI_ACPI_DESCRIPTION_HEADER *)TableHeader;
     NfitLen    = NfitHeader->Length + sizeof (EFI_ACPI_6_1_NFIT_SYSTEM_PHYSICAL_ADDRESS_RANGE_STRUCTURE);
-    Nfit       = AllocateZeroPool (NfitLen);
+
+    Nfit = AllocateZeroPool (NfitLen);
     if (Nfit == NULL) {
       return EFI_OUT_OF_RESOURCES;
     }
@@ -266,9 +267,9 @@ RamDiskPublishNfit (
                                    mAcpiTableProtocol,
                                    TableKey
                                    );
-    ASSERT_EFI_ERROR (Status);
+    ASSERT_EFI_ERROR(Status);
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
       FreePool (Nfit);
       return Status;
     }
@@ -297,7 +298,7 @@ RamDiskPublishNfit (
     // Description Table (SSDT).
     //
     Status = RamDiskPublishSsdt ();
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
       return Status;
     }
 
@@ -311,7 +312,8 @@ RamDiskPublishNfit (
 
     NfitLen = sizeof (EFI_ACPI_6_1_NVDIMM_FIRMWARE_INTERFACE_TABLE) +
               sizeof (EFI_ACPI_6_1_NFIT_SYSTEM_PHYSICAL_ADDRESS_RANGE_STRUCTURE);
-    Nfit    = AllocateZeroPool (NfitLen);
+
+    Nfit = AllocateZeroPool (NfitLen);
     if (Nfit == NULL) {
       return EFI_OUT_OF_RESOURCES;
     }
@@ -355,11 +357,11 @@ RamDiskPublishNfit (
                                  NfitHeader->Length,
                                  &TableKey
                                  );
-  ASSERT_EFI_ERROR (Status);
+  ASSERT_EFI_ERROR(Status);
 
   FreePool (Nfit);
 
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     return Status;
   }
 
@@ -407,14 +409,14 @@ RamDiskUnpublishNfit (
   TableKey    = 0;
   TableHeader = NULL;
 
-  while (!EFI_ERROR (Status)) {
+  while (!EFI_ERROR(Status)) {
     Status = mAcpiSdtProtocol->GetAcpiTable (
                                  TableIndex,
-                                 (EFI_ACPI_SDT_HEADER **)&TableHeader,
+                                 (EFI_ACPI_SDT_HEADER **) &TableHeader,
                                  &TableVersion,
                                  &TableKey
                                  );
-    if (!EFI_ERROR (Status)) {
+    if (!EFI_ERROR(Status)) {
       TableIndex++;
 
       if (((EFI_ACPI_SDT_HEADER *)TableHeader)->Signature ==
@@ -424,7 +426,7 @@ RamDiskUnpublishNfit (
     }
   }
 
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     //
     // No NFIT is found in the ACPI table.
     //
@@ -447,8 +449,8 @@ RamDiskUnpublishNfit (
                                    mAcpiTableProtocol,
                                    TableKey
                                    );
-    ASSERT_EFI_ERROR (Status);
-    if (EFI_ERROR (Status)) {
+    ASSERT_EFI_ERROR(Status);
+    if (EFI_ERROR(Status)) {
       return Status;
     }
 
@@ -530,9 +532,9 @@ RamDiskUnpublishNfit (
                                  mAcpiTableProtocol,
                                  TableKey
                                  );
-  ASSERT_EFI_ERROR (Status);
+  ASSERT_EFI_ERROR(Status);
 
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     FreePool (NewNfit);
     return Status;
   }
@@ -548,10 +550,10 @@ RamDiskUnpublishNfit (
                                  NewNfitLen,
                                  &TableKey
                                  );
-  ASSERT_EFI_ERROR (Status);
+  ASSERT_EFI_ERROR(Status);
 
   FreePool (NewNfit);
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     return Status;
   }
 
@@ -704,7 +706,7 @@ RamDiskRegister (
                   PrivateData->DevicePath,
                   NULL
                   );
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     goto ErrorExit;
   }
 
@@ -751,7 +753,7 @@ ErrorExit:
   @retval EFI_UNSUPPORTED         The device specified by DevicePath is not a
                                   valid ramdisk device path and not supported
                                   by the driver.
-  @retval EFI_NOT_FOUND           The RAM disk pointed by DevicePath doesn't
+  @retval EFI_NOT_FOUND           The RAM disk pointed by DevicePath does not
                                   exist.
 
 **/

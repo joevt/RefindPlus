@@ -14,20 +14,19 @@ Modified 2021, Dayo Akanji. (sf.net/u/dakanji/profile)
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
-#include "RpApfsInternal.h"
+#include "RP_ApfsInternal.h"
 #include <IndustryStandard/PeImage.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
-#include "RpApfsLib.h"
+#include "RP_ApfsLib.h"
 #include <Library/OcGuardLib.h>
 
 #include "../../include/refit_call_wrapper.h"
 
 static
-UINT64
-ApfsFletcher64 (
+UINT64 ApfsFletcher64 (
   VOID    *Data,
   UINTN   DataSize
   )
@@ -79,8 +78,7 @@ ApfsFletcher64 (
 }
 
 static
-BOOLEAN
-ApfsBlockChecksumVerify (
+BOOLEAN ApfsBlockChecksumVerify (
   APFS_OBJ_PHYS   *Block,
   UINTN           DataSize
   )
@@ -102,8 +100,7 @@ ApfsBlockChecksumVerify (
 }
 
 static
-EFI_STATUS
-ApfsReadJumpStart (
+EFI_STATUS ApfsReadJumpStart (
   IN  APFS_PRIVATE_DATA      *PrivateData,
   OUT APFS_NX_EFI_JUMPSTART  **JumpStartPtr
   )
@@ -128,7 +125,7 @@ ApfsReadJumpStart (
   BlockIo = InternalApfsTranslateBlock (PrivateData, PrivateData->EfiJumpStart, &Lba);
 
   // Read jump start and abort on failure.
-  Status = refit_call5_wrapper(
+  Status = REFIT_CALL_5_WRAPPER(
       BlockIo->ReadBlocks,
       BlockIo,
       BlockIo->Media->MediaId,
@@ -137,7 +134,7 @@ ApfsReadJumpStart (
       JumpStart
   );
 
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
       FreePool (JumpStart);
       return Status;
   }
@@ -167,8 +164,7 @@ ApfsReadJumpStart (
 }
 
 static
-EFI_STATUS
-ApfsReadDriver (
+EFI_STATUS ApfsReadDriver (
   IN  APFS_PRIVATE_DATA      *PrivateData,
   IN  APFS_NX_EFI_JUMPSTART  *JumpStart,
   OUT UINTN                  *DriverSize,
@@ -221,7 +217,7 @@ ApfsReadDriver (
       ChunkPtr
       );
 
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
       FreePool (EfiFile);
       return Status;
     }
@@ -243,8 +239,7 @@ ApfsReadDriver (
   return EFI_SUCCESS;
 }
 
-EFI_STATUS
-InternalApfsReadSuperBlock (
+EFI_STATUS InternalApfsReadSuperBlock (
   IN  EFI_BLOCK_IO_PROTOCOL  *BlockIo,
   OUT APFS_NX_SUPERBLOCK     **SuperBlockPtr
   )
@@ -269,7 +264,7 @@ InternalApfsReadSuperBlock (
     }
 
     // Read super block and abort on failure.
-    Status = refit_call5_wrapper(
+    Status = REFIT_CALL_5_WRAPPER(
         BlockIo->ReadBlocks,
         BlockIo,
         BlockIo->Media->MediaId,
@@ -277,7 +272,7 @@ InternalApfsReadSuperBlock (
         ReadSize,
         SuperBlock
     );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR(Status)) {
       break;
     }
 
@@ -333,8 +328,7 @@ InternalApfsReadSuperBlock (
   return EFI_UNSUPPORTED;
 }
 
-EFI_STATUS
-InternalApfsReadDriver (
+EFI_STATUS InternalApfsReadDriver (
   IN  APFS_PRIVATE_DATA    *PrivateData,
   OUT UINTN                *DriverSize,
   OUT VOID                 **DriverBuffer
@@ -347,7 +341,7 @@ InternalApfsReadDriver (
     PrivateData,
     &JumpStart
     );
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     return Status;
   }
 
@@ -360,7 +354,7 @@ InternalApfsReadDriver (
 
   FreePool (JumpStart);
 
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR(Status)) {
     return Status;
   }
 

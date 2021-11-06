@@ -78,7 +78,7 @@ struct fsw_posix_volume * fsw_posix_mount(const char *path, struct fsw_fstype_ta
     struct fsw_posix_volume *pvol;
 
     // allocate volume structure
-    status = fsw_alloc_zero(sizeof (struct fsw_posix_volume), (void **)&pvol);
+    status = fsw_alloc_zero(sizeof (struct fsw_posix_volume), (void **) &pvol);
     if (status)
         return NULL;
     pvol->fd = -1;
@@ -386,7 +386,7 @@ fsw_status_t fsw_posix_read_block(struct fsw_volume *vol, fsw_u32 phys_bno, void
 /**
  * Time mapping callback for the fsw_dnode_stat call. This function converts
  * a Posix style timestamp into an EFI_TIME structure and writes it to the
- * appropriate member of the EFI_FILE_INFO structure that we're filling.
+ * appropriate member of the EFI_FILE_INFO structure that we are filling.
  */
 
 /*
@@ -406,7 +406,7 @@ static void fsw_posix_store_time_posix(struct fsw_dnode_stat *sb, int which, fsw
 /**
  * Mode mapping callback for the fsw_dnode_stat call. This function looks at
  * the Posix mode passed by the file system driver and makes appropriate
- * adjustments to the EFI_FILE_INFO structure that we're filling.
+ * adjustments to the EFI_FILE_INFO structure that we are filling.
  */
 
 /*
@@ -436,7 +436,7 @@ EFI_STATUS fsw_posix_dnode_fill_FileInfo(IN FSW_VOLUME_DATA *Volume,
 
     // make sure the dnode has complete info
     Status = fsw_posix_map_status(fsw_dnode_fill(dno), Volume);
-    if (EFI_ERROR (Status))
+    if (EFI_ERROR(Status))
         return Status;
 
     // TODO: check/assert that the dno's name is in UTF16
@@ -466,7 +466,7 @@ EFI_STATUS fsw_posix_dnode_fill_FileInfo(IN FSW_VOLUME_DATA *Volume,
     sb.store_attr_posix = fsw_posix_store_attr_posix;
     sb.host_data = FileInfo;
     Status = fsw_posix_map_status(fsw_dnode_stat(dno, &sb), Volume);
-    if (EFI_ERROR (Status))
+    if (EFI_ERROR(Status))
         return Status;
     FileInfo->PhysicalSize      = sb.used_bytes;
 

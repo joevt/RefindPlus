@@ -120,7 +120,7 @@ HUF_compress() does the following:
 5. encode the data stream using HUF_compress4X_usingCTable()
 
 The following API allows targeting specific sub-functions for advanced tasks.
-For example, it's possible to compress several blocks using the same 'CTable',
+For example, it is possible to compress several blocks using the same 'CTable',
 or to save and regenerate 'CTable' using external methods.
 */
 /* FSE_count() : find it within "fse.h" */
@@ -138,7 +138,7 @@ typedef enum {
 /** HUF_compress4X_repeat() :
 *   Same as HUF_compress4X_wksp(), but considers using hufTable if *repeat != HUF_repeat_none.
 *   If it uses hufTable it does not modify hufTable or repeat.
-*   If it doesn't, it sets *repeat = HUF_repeat_none, and it sets hufTable to the table used.
+*   If it does not, it sets *repeat = HUF_repeat_none, and it sets hufTable to the table used.
 *   If preferRepeat then the old table will always be used if valid. */
 size_t HUF_compress4X_repeat(void *dst, size_t dstSize, const void *src, size_t srcSize, unsigned maxSymbolValue, unsigned tableLog, void *workSpace,
 			     size_t wkspSize, HUF_CElt *hufTable, HUF_repeat *repeat,
@@ -191,7 +191,7 @@ size_t HUF_compress1X_usingCTable(void *dst, size_t dstSize, const void *src, si
 /** HUF_compress1X_repeat() :
 *   Same as HUF_compress1X_wksp(), but considers using hufTable if *repeat != HUF_repeat_none.
 *   If it uses hufTable it does not modify hufTable or repeat.
-*   If it doesn't, it sets *repeat = HUF_repeat_none, and it sets hufTable to the table used.
+*   If it does not, it sets *repeat = HUF_repeat_none, and it sets hufTable to the table used.
 *   If preferRepeat then the old table will always be used if valid. */
 size_t HUF_compress1X_repeat(void *dst, size_t dstSize, const void *src, size_t srcSize, unsigned maxSymbolValue, unsigned tableLog, void *workSpace,
 			     size_t wkspSize, HUF_CElt *hufTable, HUF_repeat *repeat,

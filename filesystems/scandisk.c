@@ -57,10 +57,10 @@ static struct fsw_volume *create_dummy_volume(EFI_DISK_IO *diskio, UINT32 mediai
     struct fsw_volume *vol;
     FSW_VOLUME_DATA *Volume;
 
-    err = fsw_alloc_zero(sizeof (struct fsw_volume), (void **)&vol);
+    err = fsw_alloc_zero(sizeof (struct fsw_volume), (void **) &vol);
     if(err)
         return NULL;
-    err = fsw_alloc_zero(sizeof (FSW_VOLUME_DATA), (void **)&Volume);
+    err = fsw_alloc_zero(sizeof (FSW_VOLUME_DATA), (void **) &Volume);
     if(err) {
         fsw_free(vol);
         return NULL;
@@ -96,13 +96,13 @@ static int scan_disks(int (*hook)(struct fsw_volume *, struct fsw_volume *), str
     UINTN       i;
     UINTN       scanned = 0;
 
-    // Driver hangs if compiled with GNU-EFI unless there's a Print() statement somewhere.
-    // I'm still trying to track that down; in the meantime, work around it....
+    // Driver hangs if compiled with GNU-EFI unless there is a Print() statement somewhere.
+    // I'm still trying to track that down; in the meantime, work around it.
 #if defined(__MAKEWITH_GNUEFI)
     Print(L" ");
 #endif
     DPRINT(L"Scanning disks\n");
-    Status = refit_call5_wrapper(
+    Status = REFIT_CALL_5_WRAPPER(
         gBS->LocateHandleBuffer,
         ByProtocol,
         &gMyEfiDiskIoProtocolGuid,
@@ -117,7 +117,7 @@ static int scan_disks(int (*hook)(struct fsw_volume *, struct fsw_volume *), str
     for (i = 0; i < HandleCount; i++) {
         EFI_DISK_IO *diskio;
         EFI_BLOCK_IO *blockio;
-        Status = refit_call3_wrapper(
+        Status = REFIT_CALL_3_WRAPPER(
             gBS->HandleProtocol,
             Handles[i],
             &gMyEfiDiskIoProtocolGuid,
@@ -126,7 +126,7 @@ static int scan_disks(int (*hook)(struct fsw_volume *, struct fsw_volume *), str
         if (Status != 0) {
             continue;
         }
-        Status = refit_call3_wrapper(
+        Status = REFIT_CALL_3_WRAPPER(
             gBS->HandleProtocol,
             Handles[i],
             &gMyEfiBlockIoProtocolGuid,

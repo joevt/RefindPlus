@@ -1,13 +1,12 @@
 /*++
-
 Copyright (c) 2006 - 2007, Intel Corporation. All rights reserved.<BR>
-This program and the accompanying materials                          
-are licensed and made available under the terms and conditions of the BSD License         
-which accompanies this distribution.  The full text of the license may be found at        
-http://opensource.org/licenses/bsd-license.php                                            
-                                                                                          
-THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,                     
-WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.             
+This program and the accompanying materials
+are licensed and made available under the terms and conditions of the BSD License
+which accompanies this distribution.  The full text of the license may be found at
+http://opensource.org/licenses/bsd-license.php
+
+THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 Module Name:
 
@@ -32,7 +31,7 @@ typedef
 UINTN
 EFIAPI
 (EFIAPI *EFI_DEVICE_PATH_UTILS_GET_DEVICE_PATH_SIZE) (
-  IN CONST EFI_DEVICE_PATH_PROTOCOL *DevicePath
+  IN const EFI_DEVICE_PATH_PROTOCOL *DevicePath
   )
 /*++
 
@@ -52,7 +51,7 @@ typedef
 EFI_DEVICE_PATH_PROTOCOL*
 EFIAPI
 (EFIAPI *EFI_DEVICE_PATH_UTILS_DUP_DEVICE_PATH) (
-  IN CONST EFI_DEVICE_PATH_PROTOCOL *DevicePath
+  IN const EFI_DEVICE_PATH_PROTOCOL *DevicePath
   )
 /*++
 
@@ -73,8 +72,8 @@ typedef
 EFI_DEVICE_PATH_PROTOCOL*
 EFIAPI
 (EFIAPI *EFI_DEVICE_PATH_UTILS_APPEND_PATH) (
-  IN CONST EFI_DEVICE_PATH_PROTOCOL *Src1,
-  IN CONST EFI_DEVICE_PATH_PROTOCOL *Src2
+  IN const EFI_DEVICE_PATH_PROTOCOL *Src1,
+  IN const EFI_DEVICE_PATH_PROTOCOL *Src2
   )
 /*++
 
@@ -97,8 +96,8 @@ typedef
 EFI_DEVICE_PATH_PROTOCOL*
 EFIAPI
 (EFIAPI *EFI_DEVICE_PATH_UTILS_APPEND_NODE) (
-  IN CONST EFI_DEVICE_PATH_PROTOCOL *DevicePath,
-  IN CONST EFI_DEVICE_PATH_PROTOCOL *DeviceNode
+  IN const EFI_DEVICE_PATH_PROTOCOL *DevicePath,
+  IN const EFI_DEVICE_PATH_PROTOCOL *DeviceNode
   )
 /*++
 
@@ -121,8 +120,8 @@ typedef
 EFI_DEVICE_PATH_PROTOCOL*
 EFIAPI
 (EFIAPI *EFI_DEVICE_PATH_UTILS_APPEND_INSTANCE) (
-  IN CONST EFI_DEVICE_PATH_PROTOCOL *DevicePath,
-  IN CONST EFI_DEVICE_PATH_PROTOCOL *DevicePathInstance
+  IN const EFI_DEVICE_PATH_PROTOCOL *DevicePath,
+  IN const EFI_DEVICE_PATH_PROTOCOL *DevicePathInstance
   )
 /*++
 
@@ -171,7 +170,7 @@ typedef
 BOOLEAN
 EFIAPI
 (EFIAPI *EFI_DEVICE_PATH_UTILS_IS_MULTI_INSTANCE) (
-  IN CONST EFI_DEVICE_PATH_PROTOCOL         *DevicePath
+  IN const EFI_DEVICE_PATH_PROTOCOL         *DevicePath
   )
 /*++
 

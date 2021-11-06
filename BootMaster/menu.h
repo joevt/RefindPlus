@@ -35,11 +35,16 @@
  */
 /*
  * Modifications copyright (c) 2012 Roderick W. Smith
- * 
+ *
  * Modifications distributed under the terms of the GNU General Public
  * License (GPL) version 3 (GPLv3), a copy of which must be distributed
  * with this source code or binaries made from it.
- * 
+ */
+/*
+ * Modified for RefindPlus
+ * Copyright (c) 2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ *
+ * Modifications distributed under the preceding terms.
  */
 
 #ifndef __REFINDPLUS_MENU_H_
@@ -105,7 +110,15 @@ typedef struct {
 
 extern REFIT_MENU_ENTRY TagMenuEntry[];
 
-typedef VOID (*MENU_STYLE_FUNC)(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN Function, IN CHAR16 *ParamText);
+typedef VOID (*MENU_STYLE_FUNC) (
+    IN REFIT_MENU_SCREEN *Screen,
+    IN SCROLL_STATE *State,
+    IN UINTN Function,
+    IN CHAR16 *ParamText
+);
+
+VOID FreeLoaderEntry (IN OUT LOADER_ENTRY **Entry);
+VOID FreeBdsOption (BDS_COMMON_OPTION **BdsOption);
 
 VOID AddMenuInfoLine(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine, IN BOOLEAN Cached);
 VOID AddMenuInfoLinePool(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine);
@@ -113,31 +126,47 @@ VOID AddMenuInfoLineCached(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine);
 VOID AddMenuInfoLinePoolStr_PS_ (IN REFIT_MENU_SCREEN *Screen, IN PoolStr *InfoLine);
 #define AddMenuInfoLinePoolStr(s, i) AddMenuInfoLinePoolStr_PS_ (s, i##_PS_)
 
-VOID AddMenuEntry(IN REFIT_MENU_SCREEN *Screen, IN REFIT_MENU_ENTRY *Entry);
-VOID AddMenuEntryCopy(IN REFIT_MENU_SCREEN *Screen, IN REFIT_MENU_ENTRY *Entry);
+VOID AddMenuEntry (IN REFIT_MENU_SCREEN *Screen, IN REFIT_MENU_ENTRY *Entry);
+VOID AddMenuEntryCopy (IN REFIT_MENU_SCREEN *Screen, IN REFIT_MENU_ENTRY *Entry);
 
-UINTN ComputeRow0PosY(VOID);
-VOID MainMenuStyle(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN Function, IN CHAR16 *ParamText);
-UINTN RunMenu(IN REFIT_MENU_SCREEN *Screen, OUT REFIT_MENU_ENTRY **ChosenEntry);
-VOID DisplaySimpleMessage(CHAR16 *Title, CHAR16 *Message);
-VOID TextMenuStyle(IN REFIT_MENU_SCREEN *Screen,
-                   IN SCROLL_STATE *State,
-                   IN UINTN Function,
-                   IN CHAR16 *ParamText);
-VOID GraphicsMenuStyle(IN REFIT_MENU_SCREEN *Screen,
-                       IN SCROLL_STATE *State,
-                       IN UINTN Function,
-                       IN CHAR16 *ParamText);
-UINTN RunGenericMenu(IN REFIT_MENU_SCREEN *Screen,
-                     IN MENU_STYLE_FUNC StyleFunc,
-                     IN OUT INTN *DefaultEntryIndex,
-                     OUT REFIT_MENU_ENTRY **ChosenEntry);
-VOID ManageHiddenTags(VOID);
-CHAR16* ReadHiddenTags(CHAR16 *VarName);
-UINTN RunMainMenu(IN REFIT_MENU_SCREEN **ScreenPtr, IN CHAR16** DefaultSelection, OUT REFIT_MENU_ENTRY **ChosenEntry);
-UINTN FindMainMenuItem(IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN PosX, IN UINTN PosY);
-VOID GenerateWaitList();
-UINTN WaitForInput(IN UINTN Timeout);
+VOID DisplaySimpleMessage (CHAR16 *Title, CHAR16 *Message);
+VOID ManageHiddenTags (VOID);
+VOID GenerateWaitList (VOID);
+VOID MainMenuStyle (
+    IN REFIT_MENU_SCREEN *Screen,
+    IN SCROLL_STATE *State,
+    IN UINTN Function,
+    IN CHAR16 *ParamText
+);
+VOID TextMenuStyle (
+    IN REFIT_MENU_SCREEN *Screen,
+    IN SCROLL_STATE *State,
+    IN UINTN Function,
+    IN CHAR16 *ParamText
+);
+VOID GraphicsMenuStyle (
+    IN REFIT_MENU_SCREEN *Screen,
+    IN SCROLL_STATE *State,
+    IN UINTN Function,
+    IN CHAR16 *ParamText
+);
+UINTN RunGenericMenu (
+    IN REFIT_MENU_SCREEN *Screen,
+    IN MENU_STYLE_FUNC StyleFunc,
+    IN OUT INTN *DefaultEntryIndex,
+    OUT REFIT_MENU_ENTRY **ChosenEntry
+);
+
+UINTN ComputeRow0PosY (VOID);
+UINTN RunMenu (IN REFIT_MENU_SCREEN *Screen, OUT REFIT_MENU_ENTRY **ChosenEntry);
+UINTN RunMainMenu (IN REFIT_MENU_SCREEN **ScreenPtr, IN CHAR16** DefaultSelection, OUT REFIT_MENU_ENTRY **ChosenEntry);
+UINTN FindMainMenuItem (IN REFIT_MENU_SCREEN *Screen, IN SCROLL_STATE *State, IN UINTN PosX, IN UINTN PosY);
+UINTN WaitForInput (IN UINTN Timeout);
+
+CHAR16 * ReadHiddenTags (CHAR16 *VarName);
+CHAR16 * MenuExitInfo (IN UINTN MenuExit);
+
+BDS_COMMON_OPTION * CopyBdsOption (BDS_COMMON_OPTION *BdsOption);
 
 REFIT_MENU_SCREEN * CopyMenuScreen (REFIT_MENU_SCREEN *Entry);
 REFIT_MENU_ENTRY * CopyMenuEntry (REFIT_MENU_ENTRY *Entry);
@@ -146,9 +175,6 @@ ENTRY_TYPE GetMenuEntryType (REFIT_MENU_ENTRY *Entry);
 
 VOID FreeMenuEntry (REFIT_MENU_ENTRY **Entry);
 VOID FreeMenuScreen (REFIT_MENU_SCREEN **Menu);
-
-VOID FreeBdsOption (BDS_COMMON_OPTION **BdsOption);
-BDS_COMMON_OPTION * CopyBdsOption (BDS_COMMON_OPTION *BdsOption);
 
 #if REFIT_DEBUG > 0
 VOID LEAKABLEBDSOPTION (BDS_COMMON_OPTION *BdsOption);

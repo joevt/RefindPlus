@@ -81,36 +81,36 @@ typedef enum {
 #define DEFAULT_ICONS_DIR L"icons"
 
 // OS bit codes (Actual Decimal); used in GlobalConfig.GraphicsFor
-#define GRAPHICS_FOR_OSX        1
-#define GRAPHICS_FOR_LINUX      2
-#define GRAPHICS_FOR_ELILO      4
-#define GRAPHICS_FOR_GRUB       8
-#define GRAPHICS_FOR_WINDOWS   16
-#define GRAPHICS_FOR_OPENCORE  32
-#define GRAPHICS_FOR_CLOVER    64
+#define GRAPHICS_FOR_OSX         1
+#define GRAPHICS_FOR_LINUX       2
+#define GRAPHICS_FOR_ELILO       4
+#define GRAPHICS_FOR_GRUB        8
+#define GRAPHICS_FOR_WINDOWS    16
+#define GRAPHICS_FOR_OPENCORE   32
+#define GRAPHICS_FOR_CLOVER     64
 
 // Type of legacy (BIOS) boot support detected
-#define LEGACY_TYPE_NONE 0
-#define LEGACY_TYPE_MAC  1
-#define LEGACY_TYPE_UEFI 2
+#define LEGACY_TYPE_NONE         0
+#define LEGACY_TYPE_MAC          1
+#define LEGACY_TYPE_UEFI         2
 
 // How was a loader added to the menu?
-#define DISCOVERY_TYPE_UNKNOWN  0
-#define DISCOVERY_TYPE_AUTO     1
-#define DISCOVERY_TYPE_MANUAL   2
+#define DISCOVERY_TYPE_UNKNOWN   0
+#define DISCOVERY_TYPE_AUTO      1
+#define DISCOVERY_TYPE_MANUAL    2
 
 #ifdef __MAKEWITH_GNUEFI
 //
 // define BBS Device Types
 //
-#define BBS_FLOPPY        0x01
-#define BBS_HARDDISK      0x02
-#define BBS_CDROM         0x03
-#define BBS_PCMCIA        0x04
-#define BBS_USB           0x05
-#define BBS_EMBED_NETWORK 0x06
-#define BBS_BEV_DEVICE    0x80
-#define BBS_UNKNOWN       0xff
+#define BBS_FLOPPY             0x01
+#define BBS_HARDDISK           0x02
+#define BBS_CDROM              0x03
+#define BBS_PCMCIA             0x04
+#define BBS_USB                0x05
+#define BBS_EMBED_NETWORK      0x06
+#define BBS_BEV_DEVICE         0x80
+#define BBS_UNKNOWN            0xff
 #endif
 
 // BIOS Boot Specification (BBS) device types, as returned in DevicePath->Type field
@@ -121,38 +121,38 @@ typedef enum {
 #define DEVICE_TYPE_BIOS       0x05 /* returned by legacy (BIOS) boot loaders */
 #define DEVICE_TYPE_END        0x75 /* end of path */
 
-// Filesystem type identifiers. Not all are yet used....
-#define FS_TYPE_UNKNOWN        0
-#define FS_TYPE_WHOLEDISK      1
-#define FS_TYPE_FAT            2
-#define FS_TYPE_EXFAT          3
-#define FS_TYPE_NTFS           4
-#define FS_TYPE_EXT2           5
-#define FS_TYPE_EXT3           6
-#define FS_TYPE_EXT4           7
-#define FS_TYPE_HFSPLUS        8
-#define FS_TYPE_REISERFS       9
-#define FS_TYPE_BTRFS          10
-#define FS_TYPE_XFS            11
-#define FS_TYPE_JFS            12
-#define FS_TYPE_ISO9660        13
-#define FS_TYPE_APFS           14
-#define NUM_FS_TYPES           15
+// Filesystem type identifiers. Not all are yet used.
+#define FS_TYPE_UNKNOWN           0
+#define FS_TYPE_WHOLEDISK         1
+#define FS_TYPE_FAT               2
+#define FS_TYPE_EXFAT             3
+#define FS_TYPE_NTFS              4
+#define FS_TYPE_EXT2              5
+#define FS_TYPE_EXT3              6
+#define FS_TYPE_EXT4              7
+#define FS_TYPE_HFSPLUS           8
+#define FS_TYPE_REISERFS          9
+#define FS_TYPE_BTRFS            10
+#define FS_TYPE_XFS              11
+#define FS_TYPE_JFS              12
+#define FS_TYPE_ISO9660          13
+#define FS_TYPE_APFS             14
+#define NUM_FS_TYPES             15
 
 // How to scale banner images
-#define BANNER_NOSCALE         0
-#define BANNER_FILLSCREEN      1
+#define BANNER_NOSCALE            0
+#define BANNER_FILLSCREEN         1
 
 // Sizes of the default icons; badges are 1/4 the big icon size
-#define DEFAULT_SMALL_ICON_SIZE 48
+#define DEFAULT_SMALL_ICON_SIZE  48
 #define DEFAULT_BIG_ICON_SIZE   128
-#define DEFAULT_MOUSE_SIZE      16
+#define DEFAULT_MOUSE_SIZE       16
 
 // Codes for types of icon sizes; used for indexing into GlobalConfig.IconSizes[]
-#define ICON_SIZE_BADGE 0
-#define ICON_SIZE_SMALL 1
-#define ICON_SIZE_BIG   2
-#define ICON_SIZE_MOUSE 3
+#define ICON_SIZE_BADGE           0
+#define ICON_SIZE_SMALL           1
+#define ICON_SIZE_BIG             2
+#define ICON_SIZE_MOUSE           3
 
 // Minimum vertical resolution for a screen to be considered High-DPI
 #define HIDPI_MIN 1601
@@ -161,22 +161,18 @@ typedef enum {
 #define EFI_OS_INDICATIONS_BOOT_TO_FW_UI 0x0000000000000001ULL
 #endif
 
-// Names of binaries that can manage MOKs....
+// Names of binaries that can manage MOKs.
 #if defined (EFIX64)
-    #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,\
-KeyTool.efi,KeyTool-signed.efi,mmx64.efi"
+    #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,KeyTool.efi,KeyTool-signed.efi,mmx64.efi"
 #elif defined(EFI32)
-    #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,\
-KeyTool.efi,KeyTool-signed.efi,mmia32.efi"
+    #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,KeyTool.efi,KeyTool-signed.efi,mmia32.efi"
 #elif defined(EFIAARCH64)
-    #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,\
-KeyTool.efi,KeyTool-signed.efi,mmaa64.efi"
+    #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,KeyTool.efi,KeyTool-signed.efi,mmaa64.efi"
 #else
-    #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,\
-KeyTool.efi,KeyTool-signed.efi"
+    #define MOK_NAMES L"MokManager.efi,HashTool.efi,HashTool-signed.efi,KeyTool.efi,KeyTool-signed.efi"
 #endif
 
-// Names of binaries that can update firmware....
+// Names of binaries that can update firmware.
 #if defined (EFIX64)
     #define FWUPDATE_NAMES          L"fwupx64.efi"
 #elif defined(EFI32)
@@ -187,38 +183,29 @@ KeyTool.efi,KeyTool-signed.efi"
     #define FWUPDATE_NAMES          L"fwup.efi"
 #endif
 
-// Directories to search for these MOK-managing programs. Note that SelfDir is
-// searched in addition to these locations....
+// Directories to search for these MOK-managing programs.
+// Note that SelfDir is searched in addition to these locations.
 #define MOK_LOCATIONS \
-L"\\,EFI\\tools,EFI\\fedora,EFI\\redhat,EFI\\ubuntu,EFI\\suse,EFI\\opensuse,EFI\\altlinux"
-
-// Directories to search for memtest86....
+L"\\EFI\\tools,\\EFI\\fedora,\\EFI\\redhat,\\EFI\\ubuntu,\\EFI\\suse,\\EFI\\opensuse,\\EFI\\altlinux"
+// Directories to search for memtest86.
 // Warning: These are also used for DontScanDirs so don't add EFI here.
+#define MEMTEST_LOCATIONS_BASE "\\EFI\\tools,\\EFI\\tools\\memtest86,\\EFI\\tools\\memtest,\\EFI\\memtest86,\\EFI\\memtest,\\EFI\\tools"
 #if defined (EFIX64)
-#define MEMTEST_LOCATIONS L"EFI\\BOOT\\x64_tools,EFI\\BOOT\\tools_x64,EFI\\tools_x64,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#define MEMTEST_LOCATIONS L"\\EFI\\BOOT\\x64_tools,\\EFI\\BOOT\\tools_x64,\\EFI\\tools_x64" MEMTEST_LOCATIONS_BASE
 #elif defined (EFI32)
-#define MEMTEST_LOCATIONS                    L"EFI\\BOOT\\tools_ia32,EFI\\tools_ia32,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#define MEMTEST_LOCATIONS                      L"\\EFI\\BOOT\\tools_ia32,\\EFI\\tools_ia32" MEMTEST_LOCATIONS_BASE
 #elif defined (EFIAARCH64)
-#define MEMTEST_LOCATIONS                    L"EFI\\BOOT\\tools_aa64,EFI\\tools_aa64,EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#define MEMTEST_LOCATIONS                      L"\\EFI\\BOOT\\tools_aa64,\\EFI\\tools_aa64" MEMTEST_LOCATIONS_BASE
 else
-#define MEMTEST_LOCATIONS                                                          L"EFI\\tools\\memtest86,EFI\\tools\\memtest,EFI\\memtest86,EFI\\memtest,EFI\\tools"
+#define MEMTEST_LOCATIONS                                                                   MEMTEST_LOCATIONS_BASE
 #endif
-#define MEMTEST_LOCATIONS2 L",EFI"
-
-// Directories to search for BootKicker....
-#define BOOTKICKER_LOCATIONS \
-L"\\EFI\\BOOT\\tools,\\EFI\\BOOT\\tools_x64,\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
-// Directories to search for CleanNvram....
-#define NVRAMCLEAN_LOCATIONS \
-L"\\EFI\\BOOT\\tools,\\EFI\\BOOT\\tools_x64,\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
-
+#define MEMTEST_LOCATIONS2 L",\\EFI"
 // Files that may be Windows recovery files
 #if defined (EFI32)
-#define WINDOWS_RECOVERY_FILES L"EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootia32.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
+#define WINDOWS_RECOVERY_FILES L"\\EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootia32.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
 #else
-#define WINDOWS_RECOVERY_FILES L"EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootx64.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
+#define WINDOWS_RECOVERY_FILES L"\\EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootx64.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
 #endif
-
 // Files that may be Mac OS recovery files
 #define MACOS_RECOVERY_FILES    L"com.apple.recovery.boot\\boot.efi"
 #define MACOSX_LOADER_DIR       L"System\\Library\\CoreServices"
@@ -229,7 +216,7 @@ L"\\EFI\\BOOT\\tools,\\EFI\\BOOT\\tools_x64,\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
 // L"*.EFI") is fine for most systems; but Gigabyte's buggy Hybrid EFI does a case-sensitive
 // comparison when it should do a case-insensitive comparison, so I'm doubling this up. It does
 // no harm on other computers, AFAIK. In theory, every case variation should be done for
-// completeness, but that's ridiculous....
+// completeness, but that is ridiculous.
 #define LOADER_MATCH_PATTERNS   L"*.efi,*.EFI"
 
 // Definitions for the "hideui" option in config.conf
@@ -264,26 +251,13 @@ L"\\EFI\\BOOT\\tools,\\EFI\\BOOT\\tools_x64,\\EFI\\tools,\\EFI\\tools_x64,\\EFI"
 #define SYSTEMD_GUID_VALUE            {0x4a67b082, 0x0a4c, 0x41cf, {0xb6, 0xc7, 0x44, 0x0b, 0x29, 0xbb, 0x8c, 0x4f}};
 
 // Define EFI Certificate GUIDs. Others are in mok/guid.c
-#define EFI_CERT_SHA1_GUID \
-{ 0x826ca512, 0xcf10, 0x4ac9, { 0xb1, 0x87, 0xbe, 0x01, 0x49, 0x66, 0x31, 0xbd } };
-
-#define EFI_CERT_SHA224_GUID \
-{ 0x0b6e5233, 0xa65c, 0x44c9, { 0x94, 0x07, 0xd9, 0xab, 0x83, 0xbf, 0xc8, 0xbd } };
-
-#define EFI_CERT_SHA384_GUID \
-{ 0xff3e5307, 0x9fd0, 0x48c9, { 0x85, 0xf1, 0x8a, 0xd5, 0x6c, 0x70, 0x1e, 0x01 } };
-
-#define EFI_CERT_SHA512_GUID \
-{ 0x093e0fae, 0xa6c4, 0x4f50, { 0x9f, 0x1b, 0xd4, 0x1e, 0x2b, 0x89, 0xc1, 0x9a } };
-
-#define EFI_CERT_TYPE_PKCS7_GUID \
-{ 0x4aafd29d, 0x68df, 0x49ee, { 0x8a, 0xa9, 0x34, 0x7d, 0x37, 0x56, 0x65, 0xa7 } };
-
-#define EFI_CERT_RSA2048_SHA1_GUID \
-{ 0x67f8444f, 0x8743, 0x48f1, { 0xa3, 0x28, 0x1e, 0xaa, 0xb8, 0x73, 0x60, 0x80 } };
-
-#define EFI_CERT_RSA2048_SHA256_GUID \
-{ 0xe2b36190, 0x879b, 0x4a3d, { 0xad, 0x8d, 0xf2, 0xe7, 0xbb, 0xa3, 0x27, 0x84 } };
+#define EFI_CERT_SHA1_GUID            {0x826ca512, 0xcf10, 0x4ac9, {0xb1, 0x87, 0xbe, 0x01, 0x49, 0x66, 0x31, 0xbd}};
+#define EFI_CERT_SHA224_GUID          {0x0b6e5233, 0xa65c, 0x44c9, {0x94, 0x07, 0xd9, 0xab, 0x83, 0xbf, 0xc8, 0xbd}};
+#define EFI_CERT_SHA384_GUID          {0xff3e5307, 0x9fd0, 0x48c9, {0x85, 0xf1, 0x8a, 0xd5, 0x6c, 0x70, 0x1e, 0x01}};
+#define EFI_CERT_SHA512_GUID          {0x093e0fae, 0xa6c4, 0x4f50, {0x9f, 0x1b, 0xd4, 0x1e, 0x2b, 0x89, 0xc1, 0x9a}};
+#define EFI_CERT_TYPE_PKCS7_GUID      {0x4aafd29d, 0x68df, 0x49ee, {0x8a, 0xa9, 0x34, 0x7d, 0x37, 0x56, 0x65, 0xa7}};
+#define EFI_CERT_RSA2048_SHA1_GUID    {0x67f8444f, 0x8743, 0x48f1, {0xa3, 0x28, 0x1e, 0xaa, 0xb8, 0x73, 0x60, 0x80}};
+#define EFI_CERT_RSA2048_SHA256_GUID  {0xe2b36190, 0x879b, 0x4a3d, {0xad, 0x8d, 0xf2, 0xe7, 0xbb, 0xa3, 0x27, 0x84}};
 
 // Configuration file variables
 #define KERNEL_VERSION L"%v"
@@ -300,7 +274,7 @@ EFI_STATUS OcUseBuiltinTextOutput (IN EFI_CONSOLE_CONTROL_SCREEN_MODE  Mode);
 #endif
 
 /* DA-TAG: Add Macros */
-#define MY_OFFSET_OF(st, m) ((UINTN)((char *)&((st *)0)->m - (char *)0))
+#define MY_OFFSET_OF(st, m) ((UINTN)((char *) &((st *)0)->m - (char *)0))
 
 
 //
@@ -314,10 +288,16 @@ typedef struct {
     BOOLEAN Cached;
 } PoolStr;
 
+#define NULLPS {NULL, FALSE}
+#define EMPTYPS {L"", TRUE}
+#define CACHEDPS(x) {x, TRUE}
+
 typedef struct {
     EG_IMAGE *Image;
     BOOLEAN Cached;
 } PoolImage;
+
+#define NULLPI {NULL, FALSE}
 
 typedef struct _uint32_list {
     UINT32               Value;
@@ -379,11 +359,11 @@ typedef struct _refit_menu_entry {
 } REFIT_MENU_ENTRY;
 
 typedef struct _refit_menu_screen {
-   PoolStr            Title_PS_;          // For EFI firmware entry, this includes "Reboot to" prefix
+   PoolStr            Title_PS_;      // For EFI firmware entry, this includes "Reboot to" prefix
    PoolImage          TitleImage_PI_;
    UINTN              InfoLineCount;
    PoolStr           *InfoLines;
-   UINTN              EntryCount;         // total number of entries registered
+   UINTN              EntryCount;     // total number of entries registered
    REFIT_MENU_ENTRY **Entries;
    UINTN              TimeoutSeconds;
    PoolStr            TimeoutText_PS_;
@@ -393,17 +373,17 @@ typedef struct _refit_menu_screen {
 
 typedef struct {
    REFIT_MENU_ENTRY  me;
-   PoolStr           Title_PS_;        // For EFI firmware entry, this is "raw" title
+   PoolStr           Title_PS_;       // For EFI firmware entry, this is "raw" title
    PoolStr           LoaderPath_PS_;
    REFIT_VOLUME     *Volume;
    BOOLEAN           UseGraphicsMode;
    BOOLEAN           Enabled;
    PoolStr           LoadOptions_PS_;
-   PoolStr           InitrdPath_PS_;   // Linux stub loader only
+   PoolStr           InitrdPath_PS_;  // Linux stub loader only
    CHAR8             OSType;
    UINTN             DiscoveryType;
-   EFI_DEVICE_PATH  *EfiLoaderPath;    // path to NVRAM-defined loader
-   UINT16            EfiBootNum;       // Boot#### number for NVRAM-defined loader
+   EFI_DEVICE_PATH  *EfiLoaderPath;   // path to NVRAM-defined loader
+   UINT16            EfiBootNum;      // Boot#### number for NVRAM-defined loader
 } LOADER_ENTRY;
 
 typedef struct {
@@ -425,7 +405,8 @@ typedef struct {
    BOOLEAN           HiddenTags;
    BOOLEAN           UseNvram;
    BOOLEAN           IgnorePreviousBoot;
-   BOOLEAN           IgnoreVolumeICNS;
+   BOOLEAN           IgnoreHiddenIcons;
+   BOOLEAN           PreferHiddenIcons;
    BOOLEAN           TextRenderer;
    BOOLEAN           UgaPassThrough;
    BOOLEAN           ProvideConsoleGOP;
@@ -439,8 +420,8 @@ typedef struct {
    BOOLEAN           SilenceAPFS;
    BOOLEAN           SyncAPFS;
    BOOLEAN           ProtectNVRAM;
-   BOOLEAN           ScanOtherESP;
-   BOOLEAN           DisableTagHelp;
+   BOOLEAN           ScanAllESP;
+   BOOLEAN           TagsHelp;
    BOOLEAN           NormaliseCSR;
    BOOLEAN           ShutdownAfterTimeout;
    BOOLEAN           Install;
@@ -449,19 +430,19 @@ typedef struct {
    UINTN             RequestedScreenHeight;
    UINTN             BannerBottomEdge;
    UINTN             RequestedTextMode;
-   UINTN             Timeout;
    UINTN             HideUIFlags;
    UINTN             MaxTags;
    UINTN             GraphicsFor;
    UINTN             LegacyType;
    UINTN             ScanDelay;
-   UINTN             ScreensaverTime;
    UINTN             MouseSpeed;
    UINTN             IconSizes[4];
    UINTN             BannerScale;
-   UINTN             ScaleUI;
-   UINTN             ActiveCSR;
-   UINTN             LogLevel;
+   INTN              ScreensaverTime;
+   INTN              Timeout;
+   INTN              ScaleUI;
+   INTN              ActiveCSR;
+   INTN              LogLevel;
    REFIT_VOLUME     *DiscoveredRoot;
    EFI_DEVICE_PATH  *SelfDevicePath;
    CHAR16           *BannerFileName;
@@ -494,14 +475,13 @@ extern CHAR16              *gHiddenTools;
 
 extern UINTN                VolumesCount;
 extern UINTN                PreBootVolumesCount;
+extern UINTN                SystemVolumesCount;
+extern UINTN                DataVolumesCount;
 
-extern BOOLEAN              IsBoot;
 extern BOOLEAN              SetSysTab;
-/*
 extern BOOLEAN              MuteLogger;
-*/
 extern BOOLEAN              DetectedDevices;
-extern BOOLEAN              ForceNativeLoggging;
+extern BOOLEAN              NativeLogger;
 
 extern EFI_FILE            *SelfDir;
 extern EFI_FILE            *SelfRootDir;
@@ -518,19 +498,21 @@ extern EFI_LOADED_IMAGE    *SelfLoadedImage;
 extern REFIT_VOLUME        *SelfVolume;
 extern REFIT_VOLUME       **Volumes;
 extern REFIT_VOLUME       **PreBootVolumes;
+extern REFIT_VOLUME       **SystemVolumes;
+extern REFIT_VOLUME       **DataVolumes;
 
 extern REFIT_CONFIG         GlobalConfig;
 
 extern REFIT_MENU_SCREEN   *MainMenu;
 
 
-VOID AboutRefindPlus(VOID);
-VOID StoreLoaderName(IN CHAR16 *Name);
-VOID RescanAll(BOOLEAN DisplayMessage, BOOLEAN Reconnect);
+VOID AboutRefindPlus (VOID);
+VOID StoreLoaderName (IN CHAR16 *Name);
+VOID RescanAll (BOOLEAN DisplayMessage, BOOLEAN Reconnect);
 
 PoolImage * GetDiskBadge (IN UINTN DiskType);
 
-LOADER_ENTRY * MakeGenericLoaderEntry(VOID);
+LOADER_ENTRY * MakeGenericLoaderEntry (VOID);
 
 VOID ZeroPoolStr_PS_ (PoolStr *object);
 VOID AssignPoolStr_PS_ (PoolStr *object, CHAR16 *Str);

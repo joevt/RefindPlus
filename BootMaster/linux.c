@@ -43,6 +43,7 @@
 /*
  * Modified for RefindPlus
  * Copyright (c) 2020-2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ * Portions Copyright (c) 2021 Joe van Tunen (joevt@shaw.ca)
  *
  * Modifications distributed under the preceding terms.
  */
@@ -69,261 +70,522 @@
 // If more than one initrd file matches the extracted version string AND they match
 // the same amount of characters, the initrd file with the shortest file name is used.
 // If no matching init file can be found, returns NULL.
-CHAR16 * FindInitrd(IN CHAR16 *LoaderPath, IN REFIT_VOLUME *Volume) {
-    CHAR16              *InitrdName = NULL, *FileName, *KernelVersion, *InitrdVersion, *Path;
-    CHAR16              *KernelPostNum, *InitrdPostNum;
-    UINTN                MaxSharedChars, SharedChars;
-    STRING_LIST         *InitrdNames = NULL, *FinalInitrdName = NULL, *CurrentInitrdName = NULL, *MaxSharedInitrd;
-    REFIT_DIR_ITER       DirIter;
+CHAR16 * FindInitrd (
+    IN CHAR16       *LoaderPath,
+    IN REFIT_VOLUME *Volume
+) {
+    UINTN                SharedChars       = 0;
+    UINTN                MaxSharedChars    = 0;
+    CHAR16              *Path              = NULL;
+    CHAR16              *FileName          = NULL;
+    CHAR16              *InitrdName        = NULL;
+    CHAR16              *KernelPostNum     = NULL;
+    CHAR16              *InitrdPostNum     = NULL;
+    CHAR16              *KernelVersion     = NULL;
+    CHAR16              *InitrdVersion     = NULL;
+    STRING_LIST         *InitrdNames       = NULL;
+    STRING_LIST         *FinalInitrdName   = NULL;
+    STRING_LIST         *MaxSharedInitrd   = NULL;
+    STRING_LIST         *CurrentInitrdName = NULL;
     EFI_FILE_INFO       *DirEntry;
+    REFIT_DIR_ITER       DirIter;
 
     MsgLog ("[ FindInitrd to match '%s' on '%s'\n", LoaderPath, GetPoolStr (&Volume->VolName));
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_LINE_NORMAL,
+        L"Search for Initrd Matching '%s' in '%s'",
+        LoaderPath, GetPoolStr (&Volume->VolName)
+    );
+    #endif
 
-    FileName      = Basename(LoaderPath);
-    KernelVersion = FindNumbers(FileName);
-    Path          = FindPath(LoaderPath);
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 1 - START");
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 2");
+    FileName = Basename (LoaderPath);
 
-    LOG(4, LOG_LINE_NORMAL, L"Kernel version string is '%s'", KernelVersion);
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 3");
+    KernelVersion = FindNumbers (FileName);
+
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 4");
+    Path  = FindPath (LoaderPath);
 
     // Add trailing backslash for root directory; necessary on some systems, but must
     // NOT be added to all directories, since on other systems, a trailing backslash on
     // anything but the root directory causes them to flake out!
-    if (StrLen(Path) == 0) {
-        MergeStrings(&Path, L"\\", 0);
+    if (StrLen (Path) == 0) {
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 4a 1");
+        MergeStrings (&Path, L"\\", 0);
+
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 4a 2");
     }
 
-    DirIterOpen(Volume->RootDir, Path, &DirIter);
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 5");
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_THREE_STAR_MID, L"Path                  : '%s'", Path);
+    LOG(3, LOG_THREE_STAR_MID, L"FileName              : '%s'", FileName);
+    LOG(3, LOG_THREE_STAR_MID, L"Kernel Version String : '%s'", KernelVersion);
+    #endif
+
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 6");
+    DirIterOpen (Volume->RootDir, Path, &DirIter);
 
     // Now add a trailing backslash if it was NOT added earlier, for consistency in
-    // building the InitrdName later....
-    if ((StrLen(Path) > 0) && (Path[StrLen(Path) - 1] != L'\\')) {
+    // building the InitrdName later
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 7");
+    if ((StrLen (Path) > 0) && (Path[StrLen (Path) - 1] != L'\\')) {
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 7a 1");
         MergeStrings(&Path, L"\\", 0);
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 7a 2");
     }
 
-    while (DirIterNext(&DirIter, 2, L"init*,booster*", &DirEntry)) {
-        InitrdVersion = FindNumbers(DirEntry->FileName);
-        if (((KernelVersion != NULL) && (MyStriCmp(InitrdVersion, KernelVersion))) ||
-            ((KernelVersion == NULL) && (InitrdVersion == NULL))) {
-                CurrentInitrdName = AllocateZeroPool(sizeof (STRING_LIST));
-                if (InitrdNames == NULL) {
-                    InitrdNames = FinalInitrdName = CurrentInitrdName;
-                }
-                if (CurrentInitrdName) {
-                    CurrentInitrdName->Value = PoolPrint(L"%s%s", Path, DirEntry->FileName);
-                    if (CurrentInitrdName != FinalInitrdName) {
-                        FinalInitrdName->Next = CurrentInitrdName;
-                        FinalInitrdName       = CurrentInitrdName;
-                    }
-                }
-        }
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8");
+    while (DirIterNext (&DirIter, 2, L"init*,booster*", &DirEntry)) {
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 0");
+        InitrdVersion = FindNumbers (DirEntry->FileName);
 
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL,
+            L"Checking 'KernelVersion = %s' Against 'InitrdVersion = %s' from '%s'",
+            KernelVersion,
+            InitrdVersion ? InitrdVersion : L"NULL",
+            DirEntry->FileName
+        );
+        #endif
+
+        LOG(5, LOG_BLANK_LINE_SEP, L"X");
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 1 - START WHILE LOOP");
+
+
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2");
+        if (((KernelVersion != NULL) && (MyStriCmp (InitrdVersion, KernelVersion))) ||
+            ((KernelVersion == NULL) && (InitrdVersion == NULL))
+        ) {
+            LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 1");
+            CurrentInitrdName = AllocateZeroPool (sizeof(STRING_LIST));
+
+            LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 2");
+            if (InitrdNames == NULL) {
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 2a 1");
+                InitrdNames = FinalInitrdName = CurrentInitrdName;
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 2a 2");
+            }
+
+            LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 3");
+            if (CurrentInitrdName) {
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 3a 1");
+                CurrentInitrdName->Value = PoolPrint (L"%s%s", Path, DirEntry->FileName);
+
+                LOG(5, LOG_LINE_FORENSIC,
+                    L"In FindInitrd ... 8a 2a 3a 2 - CurrentInitrdName = '%s'",
+                    CurrentInitrdName->Value ? CurrentInitrdName->Value : L"NULL"
+                );
+                if (CurrentInitrdName != FinalInitrdName) {
+                    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 3a 2a 1");
+                    FinalInitrdName->Next = CurrentInitrdName;
+                    FinalInitrdName       = CurrentInitrdName;
+                    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 3a 2a 2");
+                }
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 3a 3");
+            }
+            LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 4");
+        }
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 2a 5");
         MyFreePool (&InitrdVersion);
         MyFreePool (&DirEntry);
+
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 8a 3 - END WHILE LOOP");
+        LOG(5, LOG_BLANK_LINE_SEP, L"X");
     } // while
 
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9");
     if (InitrdNames) {
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9a 1");
         if (InitrdNames->Next == NULL) {
-            InitrdName = StrDuplicate(InitrdNames->Value);
+            LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9a 1a 1");
+            InitrdName = StrDuplicate (InitrdNames->Value);
+            LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9a 1a 2");
         }
         else {
+            LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 1");
             MaxSharedInitrd = CurrentInitrdName = InitrdNames;
             MaxSharedChars = 0;
+
+            LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 2");
             while (CurrentInitrdName != NULL) {
-                KernelPostNum = MyStrStr(LoaderPath, KernelVersion);
-                InitrdPostNum = MyStrStr(CurrentInitrdName->Value, KernelVersion);
-                SharedChars = NumCharsInCommon(KernelPostNum, InitrdPostNum);
+                LOG(5, LOG_BLANK_LINE_SEP, L"X");
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 2a 1 - START WHILE LOOP");
+
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 2a 2");
+                KernelPostNum = MyStrStr (LoaderPath, KernelVersion);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 2a 3");
+                InitrdPostNum = MyStrStr (CurrentInitrdName->Value, KernelVersion);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 2a 4");
+                SharedChars = NumCharsInCommon (KernelPostNum, InitrdPostNum);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 2a 5");
                 if ((SharedChars > MaxSharedChars) ||
-                    (SharedChars == MaxSharedChars && StrLen(CurrentInitrdName->Value) < StrLen(MaxSharedInitrd->Value))
+                    (
+                        SharedChars == MaxSharedChars
+                        && StrLen (CurrentInitrdName->Value) < StrLen (MaxSharedInitrd->Value)
+                    )
                 ) {
+                    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 2a 5a 1");
                     MaxSharedChars = SharedChars;
                     MaxSharedInitrd = CurrentInitrdName;
-                } // if
+                    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 2a 5a 2");
+                }
 
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 2a 6");
                 // TODO: Compute number of shared characters & compare with max.
                 CurrentInitrdName = CurrentInitrdName->Next;
-            } // while ()
-
-            if (MaxSharedInitrd) {
-                InitrdName = StrDuplicate(MaxSharedInitrd->Value);
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 2a 7");
             }
-        } // if/else
+
+            LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 3");
+            if (MaxSharedInitrd) {
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 3a 1");
+                InitrdName = StrDuplicate (MaxSharedInitrd->Value);
+                LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 3a 2");
+            }
+            LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 4");
+        } // if/else InitrdNames->Next == NULL
+        LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 9b 4");
     } // if
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 10");
     DeleteStringList(InitrdNames);
 
-    MyFreePool (&KernelVersion);
-    MyFreePool (&FileName);
+    LOG(5, LOG_LINE_FORENSIC, L"In FindInitrd ... 11");
     MyFreePool (&Path);
+    MyFreePool (&FileName);
+    MyFreePool (&KernelVersion);
 
+    LOG(5, LOG_LINE_FORENSIC,
+        L"In FindInitrd ... 12 - END:- return CHAR16 *InitrdName = '%s'",
+        InitrdName ? InitrdName : L"NULL"
+    );
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
+
+    #if REFIT_DEBUG > 0
+    LOG(3, LOG_THREE_STAR_MID, L"Located Initrd:- '%s'", InitrdName ? InitrdName : L"NULL");
+    #endif
     MsgLog ("] FindInitrd  Located initrd is '%s'\n", InitrdName ? InitrdName : L"NULL");
+    return InitrdName;
+} // static CHAR16 * FindInitrd()
 
-    return (InitrdName);
-} // FindInitrd
 
-// Adds InitrdPath to Options, but only if Options doesn't already include an
+// Adds InitrdPath to Options, but only if Options does not already include an
 // initrd= line or a `%v` variable. Done to enable overriding the default initrd
 // selection in a refind_linux.conf file's options list.
 // If a `%v` substring/variable is found in Options, it is replaced with the
-// initrd version string. This is available to allow for more complex customization
+// initrd version string. This is available to allow for more complex customisation
 // of initrd options.
 // Returns a pointer to a new string. The calling function is responsible for
 // freeing its memory.
-CHAR16 *AddInitrdToOptions(CHAR16 *Options, CHAR16 *InitrdPath) {
+CHAR16 * AddInitrdToOptions (
+    CHAR16 *Options,
+    CHAR16 *InitrdPath
+) {
     CHAR16 *NewOptions = NULL;
 
-    if (Options != NULL)
-        NewOptions = StrDuplicate(Options);
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
+    LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 1 - START");
+    if (Options != NULL) {
+        LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 1a 1");
+        NewOptions = StrDuplicate (Options);
 
-    if (InitrdPath != NULL) {
-        if (StriSubCmp(L"%v", Options)) {
-            CHAR16 *InitrdVersion = FindNumbers(InitrdPath);
-            ReplaceSubstring(&NewOptions, L"%v", InitrdVersion);
-
-            MyFreePool (&InitrdVersion);
-        }
-        else if (!StriSubCmp(L"initrd=", Options)) {
-            MergeStrings(&NewOptions, L"initrd=", L' ');
-            MergeStrings(&NewOptions, InitrdPath, 0);
-        }
+        LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 1a 2");
     }
+
+    LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 2");
+    if (InitrdPath != NULL) {
+        LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 2a 1");
+        if (StriSubCmp (L"%v", Options)) {
+            LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 2a 1a 1");
+            CHAR16 *InitrdVersion = FindNumbers (InitrdPath);
+
+            LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 2a 1a 2");
+            ReplaceSubstring (&NewOptions, L"%v", InitrdVersion);
+
+            LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 2a 1a 3");
+            MyFreePool (&InitrdVersion);
+
+            LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 2a 1a 4");
+        }
+        else if (!StriSubCmp (L"initrd=", Options)) {
+            LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 2a 1b 1");
+            MergeStrings (&NewOptions, L"initrd=", L' ');
+
+            LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 2a 1b 2");
+            MergeStrings (&NewOptions, InitrdPath, 0);
+
+            LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 2a 1b 3");
+        }
+        LOG(5, LOG_LINE_FORENSIC, L"In AddInitrdToOptions ... 2a 2");
+    }
+
+    LOG(5, LOG_LINE_FORENSIC,
+        L"In AddInitrdToOptions ... 3 - END:- return CHAR16 *NewOptions = '%s'",
+        NewOptions ? NewOptions : L"NULL"
+    );
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
     return NewOptions;
 } // CHAR16 *AddInitrdToOptions()
 
 // Returns options for a Linux kernel. Reads them from an options file in the
 // kernel's directory; and if present, adds an initrd= option for an initial
 // RAM disk file with the same version number as the kernel file.
-CHAR16 * GetMainLinuxOptions(IN CHAR16 * LoaderPath, IN REFIT_VOLUME *Volume) {
+CHAR16 * GetMainLinuxOptions (
+    IN CHAR16       *LoaderPath,
+    IN REFIT_VOLUME *Volume
+) {
     MsgLog ("[ GetMainLinuxOptions LoaderPath:'%s' Volume:'%s'\n", LoaderPath, GetPoolStr (&Volume->VolName));
     CHAR16 *Options = NULL, *InitrdName, *FullOptions = NULL, *KernelVersion;
 
-    Options       = GetFirstOptionsFromFile(LoaderPath, Volume);
-    InitrdName    = FindInitrd(LoaderPath, Volume);
-    KernelVersion = FindNumbers(InitrdName);
-    ReplaceSubstring(&Options, KERNEL_VERSION, KernelVersion);
-    FullOptions = AddInitrdToOptions(Options, InitrdName);
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
+    LOG(5, LOG_LINE_FORENSIC, L"In GetMainLinuxOptions ... 1 - START");
+    Options = GetFirstOptionsFromFile (LoaderPath, Volume);
 
+    LOG(5, LOG_LINE_FORENSIC, L"In GetMainLinuxOptions ... 2");
+    InitrdName = FindInitrd (LoaderPath, Volume);
+
+    LOG(5, LOG_LINE_FORENSIC, L"In GetMainLinuxOptions ... 3");
+    KernelVersion = FindNumbers (InitrdName);
+
+    LOG(5, LOG_LINE_FORENSIC, L"In GetMainLinuxOptions ... 4");
+    ReplaceSubstring (&Options, KERNEL_VERSION, KernelVersion);
+
+    LOG(5, LOG_LINE_FORENSIC, L"In GetMainLinuxOptions ... 5");
+    FullOptions = AddInitrdToOptions (Options, InitrdName);
+
+    LOG(5, LOG_LINE_FORENSIC, L"In GetMainLinuxOptions ... 6");
     MyFreePool (&Options);
     MyFreePool (&InitrdName);
     MyFreePool (&KernelVersion);
 
+    LOG(5, LOG_LINE_FORENSIC,
+        L"In GetMainLinuxOptions ... 7 - END:- return CHAR16 *FullOptions = '%s'",
+        FullOptions ? FullOptions : L"NULL"
+    );
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
     MsgLog ("] GetMainLinuxOptions Options:%s\n", FullOptions);
-    return (FullOptions);
+    return FullOptions;
 } // static CHAR16 * GetMainLinuxOptions()
 
 // Read the specified file and add values of "ID", "NAME", or "DISTRIB_ID" tokens to
 // OSIconName list. Intended for adding Linux distribution clues gleaned from
 // /etc/lsb-release and /etc/os-release files.
 static
-VOID ParseReleaseFile(CHAR16 **OSIconName, REFIT_VOLUME *Volume, CHAR16 *FileName) {
-    UINTN       FileSize = 0;
-    REFIT_FILE  File;
+VOID ParseReleaseFile (
+    CHAR16       **OSIconName,
+    REFIT_VOLUME  *Volume,
+    CHAR16        *FileName
+) {
+    UINTN         FileSize   = 0;
+    UINTN         TokenCount = 0;
     CHAR16      **TokenList;
-    UINTN       TokenCount = 0;
-    BOOLEAN     GotLine;
+    REFIT_FILE    File;
+    BOOLEAN       GotLine;
 
-    if ((Volume == NULL) || (FileName == NULL) || (OSIconName == NULL) || (*OSIconName == NULL))
+    if ((Volume == NULL) || (FileName == NULL) ||
+        (OSIconName == NULL) || (*OSIconName == NULL)
+    ) {
         return;
+    }
 
-    if (FileExists(Volume->RootDir, FileName) &&
-        (RefitReadFile(Volume->RootDir, FileName, &File, &FileSize) == EFI_SUCCESS)) {
+    if (FileExists (Volume->RootDir, FileName) &&
+        (RefitReadFile (Volume->RootDir, FileName, &File, &FileSize) == EFI_SUCCESS)
+    ) {
         do {
             TokenCount = ReadTokenLine(&File, &TokenList);
-            GotLine = (TokenCount > 0);
-            if ((TokenCount > 1) && (MyStriCmp(TokenList[0], L"ID") ||
-                                     MyStriCmp(TokenList[0], L"NAME") ||
-                                     MyStriCmp(TokenList[0], L"DISTRIB_ID"))) {
-                MergeWords(OSIconName, TokenList[1], L',');
-            } // if
-            FreeTokenLine(&TokenList, &TokenCount);
+            GotLine = (TokenCount > 0); // in case FreeTokenLine changes TokenCount to 0 (maybe should change FreeTokenLine to not take a pointer to TokenCount?)
+            if ((TokenCount > 1) &&
+                (
+                    MyStriCmp (TokenList[0], L"ID") ||
+                    MyStriCmp (TokenList[0], L"NAME") ||
+                    MyStriCmp (TokenList[0], L"DISTRIB_ID")
+                )
+            ) {
+                MergeUniqueWords (OSIconName, TokenList[1], L',');
+            }
+
+            FreeTokenLine (&TokenList, &TokenCount);
         } while (GotLine);
         MyFreePool (&File.Buffer);
+
     } // if
 } // VOID ParseReleaseFile()
 
 // Try to guess the name of the Linux distribution & add that name to
 // OSIconName list.
-VOID GuessLinuxDistribution(CHAR16 **OSIconName, REFIT_VOLUME *Volume, CHAR16 *LoaderPath) {
-    // If on Linux root fs, /etc/os-release or /etc/lsb-release file probably has clues....
-    ParseReleaseFile(OSIconName, Volume, L"etc\\lsb-release");
-    ParseReleaseFile(OSIconName, Volume, L"etc\\os-release");
+VOID GuessLinuxDistribution (
+    CHAR16       **OSIconName,
+    REFIT_VOLUME  *Volume,
+    CHAR16        *LoaderPath
+) {
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
+    LOG(5, LOG_LINE_FORENSIC, L"In GuessLinuxDistribution ... 1 - START");
 
-    // Search for clues in the kernel's filename....
-    if (StriSubCmp(L".fc", LoaderPath))
-        MergeStrings(OSIconName, L"fedora", L',');
-    if (StriSubCmp(L".el", LoaderPath))
-        MergeStrings(OSIconName, L"redhat", L',');
+    // If on Linux root fs, /etc/os-release or /etc/lsb-release file probably has clues.
+    LOG(5, LOG_LINE_FORENSIC, L"In GuessLinuxDistribution ... 2");
+    ParseReleaseFile (OSIconName, Volume, L"etc\\lsb-release");
+
+    LOG(5, LOG_LINE_FORENSIC, L"In GuessLinuxDistribution ... 3");
+    ParseReleaseFile (OSIconName, Volume, L"etc\\os-release");
+
+    // Search for clues in the kernel's filename.
+    LOG(5, LOG_LINE_FORENSIC, L"In GuessLinuxDistribution ... 4");
+    if (StriSubCmp (L".fc", LoaderPath)) {
+        LOG(5, LOG_LINE_FORENSIC, L"In GuessLinuxDistribution ... 4a 1");
+        MergeStrings (OSIconName, L"fedora", L',');
+
+        LOG(5, LOG_LINE_FORENSIC, L"In GuessLinuxDistribution ... 4a 2");
+    }
+
+    LOG(5, LOG_LINE_FORENSIC, L"In GuessLinuxDistribution ... 5");
+    if (StriSubCmp (L".el", LoaderPath)) {
+        LOG(5, LOG_LINE_FORENSIC, L"In GuessLinuxDistribution ... 5a 1");
+        MergeStrings (OSIconName, L"redhat", L',');
+
+        LOG(5, LOG_LINE_FORENSIC, L"In GuessLinuxDistribution ... 5a 2");
+    }
+
+    LOG(5, LOG_LINE_FORENSIC, L"In GuessLinuxDistribution ... 6 - END:- VOID");
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
 } // VOID GuessLinuxDistribution()
 
 // Add a Linux kernel as a submenu entry for another (pre-existing) Linux kernel entry.
-VOID AddKernelToSubmenu(LOADER_ENTRY * TargetLoader, CHAR16 *FileName, REFIT_VOLUME *Volume) {
+VOID AddKernelToSubmenu (
+    LOADER_ENTRY *TargetLoader,
+    CHAR16       *FileName,
+    REFIT_VOLUME *Volume
+) {
     REFIT_FILE          *File;
-    CHAR16              **TokenList = NULL, *InitrdName, *SubmenuName = NULL, *VolName = NULL;
+    CHAR16             **TokenList = NULL, *InitrdName, *SubmenuName = NULL, *VolName = NULL;
     CHAR16              *Path = NULL, *Title, *KernelVersion;
     REFIT_MENU_SCREEN   *SubScreen;
     LOADER_ENTRY        *SubEntry;
-    UINTN               TokenCount;
+    UINTN                TokenCount;
 
-    LOG(4, LOG_THREE_STAR_SEP, L"Adding Linux Kernel as SubMenu Entry");
+    #if REFIT_DEBUG > 0
+    LOG(2, LOG_THREE_STAR_SEP, L"Adding Linux Kernel as SubMenu Entry");
+    #endif
 
-    File = ReadLinuxOptionsFile(GetPoolStr (&TargetLoader->LoaderPath), Volume);
-    if (File != NULL) {
+    LOG(5, LOG_BLANK_LINE_SEP, L"X");
+    LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 1 - START");
+    File = ReadLinuxOptionsFile (GetPoolStr (&TargetLoader->LoaderPath), Volume);
+
+    LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2");
+    if (File == NULL) {
+        LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2a 1");
+
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_THREE_STAR_END, L"ReadLinuxOptionsFile FAILED!!");
+        #endif
+
+        LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2a 2");
+    }
+    else {
+        LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 1");
         SubScreen     = TargetLoader->me.SubScreen;
-        InitrdName    = FindInitrd(FileName, Volume);
-        KernelVersion = FindNumbers(FileName);
 
-        while ((TokenCount = ReadTokenLine(File, &TokenList)) > 1) {
-            ReplaceSubstring(&(TokenList[1]), KERNEL_VERSION, KernelVersion);
+        LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 2");
+        InitrdName    = FindInitrd (FileName, Volume);
+
+        LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 3");
+        KernelVersion = FindNumbers (FileName);
+
+        LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4");
+        while ((TokenCount = ReadTokenLine (File, &TokenList)) > 1) {
+            LOG(5, LOG_BLANK_LINE_SEP, L"X");
+            LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 1 - START WHILE LOOP");
+            ReplaceSubstring (&(TokenList[1]), KERNEL_VERSION, KernelVersion);
+
+            LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 2");
             SubEntry = InitializeLoaderEntry (TargetLoader);
 
-            // DA_TAG: InitializeLoaderEntry can return NULL
+            LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3");
+            // DA-TAG: InitializeLoaderEntry can return NULL
             if (SubEntry != NULL) {
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 1");
                 LOGPOOL(VolName);
                 LOGPOOL(Path);
                 LOGPOOL(SubmenuName);
-                SplitPathName(FileName, &VolName, &Path, &SubmenuName);
-                MergeStrings(&SubmenuName, L": ", '\0');
-                MergeStrings(
+                SplitPathName (FileName, &VolName, &Path, &SubmenuName);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 2");
+                MergeStrings (&SubmenuName, L": ", '\0');
+
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 3");
+                MergeStrings (
                     &SubmenuName,
-                    TokenList[0] ? StrDuplicate(TokenList[0]) : StrDuplicate(L"Boot Linux"),
+                    TokenList[0] ? StrDuplicate (TokenList[0]) : StrDuplicate (L"Boot Linux"),
                     '\0'
                 );
 
-                Title = StrDuplicate(SubmenuName);
-                LimitStringLength(Title, MAX_LINE_LENGTH);
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 5");
+                Title = StrDuplicate (SubmenuName);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 6");
+                LimitStringLength (Title, MAX_LINE_LENGTH);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 7");
                 AssignPoolStr (&SubEntry->me.Title, Title);
-                AssignPoolStr (&SubEntry->LoadOptions, AddInitrdToOptions(TokenList[1], InitrdName));
+
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 8");
+                AssignPoolStr (&SubEntry->LoadOptions, AddInitrdToOptions (TokenList[1], InitrdName));
+
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 9");
                 CopyPoolStr (&SubEntry->LoaderPath, FileName);
-                CleanUpPathNameSlashes(GetPoolStr (&SubEntry->LoaderPath));
+
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 10");
+                CleanUpPathNameSlashes (GetPoolStr (&SubEntry->LoaderPath));
+
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 11");
                 AssignVolume (&SubEntry->Volume, Volume);
                 SubEntry->UseGraphicsMode = GlobalConfig.GraphicsFor & GRAPHICS_FOR_LINUX;
-                AddMenuEntry(SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 12");
+                AddMenuEntry (SubScreen, (REFIT_MENU_ENTRY *)SubEntry);
+
+                LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 3a 13");
             }
             else {
                 LOG(4, LOG_LINE_NORMAL, L"InitializeLoaderEntry on '%s' is NULL!!", TargetLoader);
 
                 break;
             }
-            FreeTokenLine(&TokenList, &TokenCount);
-        } // while
-        FreeTokenLine(&TokenList, &TokenCount);
+            LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 4");
+            FreeTokenLine (&TokenList, &TokenCount);
 
+            LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 4a 5 - END WHILE LOOP");
+            LOG(5, LOG_BLANK_LINE_SEP, L"X");
+        } // while
+
+        LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 5");
+        FreeTokenLine (&TokenList, &TokenCount);
+
+        LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 6");
         MyFreePool (&VolName);
         MyFreePool (&Path);
         MyFreePool (&SubmenuName);
         MyFreePool (&InitrdName);
         MyFreePool (&File);
         MyFreePool (&KernelVersion);
+        LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 2b 7");
     }
-    else {
-        LOG(4, LOG_THREE_STAR_END, L"ReadLinuxOptionsFile FAILED!!");
-    }
+    LOG(5, LOG_LINE_FORENSIC, L"In AddKernelToSubmenu ... 3 - END:- VOID");
 
+    #if REFIT_DEBUG > 0
     LOG(4, LOG_THREE_STAR_MID, L"Added Linux Kernel as SubMenu Entry");
+    #endif
 } // static VOID AddKernelToSubmenu()
 
 // Returns TRUE if a file with the same name as the original but with
 // ".efi.signed" is also present in the same directory. Ubuntu is using
 // this filename as a signed version of the original unsigned kernel, and
-// there's no point in cluttering the display with two kernels that will
+// there is no point in cluttering the display with two kernels that will
 // behave identically on non-SB systems, or when one will fail when SB
 // is active.
 // CAUTION: *FullName MUST be properly cleaned up (via CleanUpPathNameSlashes())
@@ -335,7 +597,9 @@ BOOLEAN HasSignedCounterpart(IN REFIT_VOLUME *Volume, IN CHAR16 *FullName) {
     MergeStrings(&NewFile, L".efi.signed", 0);
     if (NewFile != NULL) {
         if (FileExists(Volume->RootDir, NewFile)) {
-            LOG(2, LOG_LINE_NORMAL, L"Found signed counterpart to '%s'", FullName);
+            #if REFIT_DEBUG > 0
+            LOG(3, LOG_LINE_NORMAL, L"Found signed counterpart to '%s'", FullName);
+            #endif
 
             retval = TRUE;
         }

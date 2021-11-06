@@ -105,6 +105,7 @@ int MyStrlen(const char *InString) {
 } // int MyStrlen()
 
 VOID *MyMemSet(VOID *s, int c, size_t n) {
+    // DA-TAG: Changed order of params
     SetMem(s, n, c);
     return s;
 }
@@ -141,7 +142,7 @@ EG_IMAGE * egDecodePNG(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN Ico
        return NULL;
    }
    if (NewImage->Width != Width || NewImage->Height != Height) {
-       // Should never happen; just being paranoid....
+       // Should never happen; just being paranoid.
        egFreeImage(NewImage);
        return NULL;
    }
@@ -149,7 +150,7 @@ EG_IMAGE * egDecodePNG(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN Ico
    LodeData = (lode_color *) PixelData;
 
    // Annoyingly, EFI and LodePNG use different ordering of RGB values in
-   // their pixel data representations, so we've got to adjust them....
+   // their pixel data representations, so we've got to adjust them.
    for (i = 0; i < (NewImage->Height * NewImage->Width); i++) {
       NewImage->PixelData[i].r = LodeData[i].red;
       NewImage->PixelData[i].g = LodeData[i].green;
