@@ -15,8 +15,7 @@
 
 #include "NvmExpress.h"
 #include "../../include/refit_call_wrapper.h"
-
-extern VOID MyFreePool (IN OUT VOID *Pointer);
+#include "../../BootMaster/lib.h"
 
 // NVM Express Driver Binding Protocol Instance
 EFI_DRIVER_BINDING_PROTOCOL gNvmExpressDriverBinding = {

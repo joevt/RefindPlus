@@ -15,8 +15,7 @@
 
 #include "NvmExpress.h"
 #include "../../include/refit_call_wrapper.h"
-
-extern VOID MyFreePool (IN OUT VOID *Pointer);
+#include "../../BootMaster/lib.h"
 
 /**
   Read some sectors from the device.

@@ -49,19 +49,23 @@
   NvmExpressPassthru.c
 
 [Packages]
+  OpenCorePkg/OpenCorePkg.dec
   MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  IntelFrameworkPkg/IntelFrameworkPkg.dec
+  IntelFrameworkModulePkg/IntelFrameworkModulePkg.dec
 
 [LibraryClasses]
-  BaseMemoryLib
   BaseLib
+  BaseMemoryLib
   DebugLib
   DevicePathLib
   MemoryAllocationLib
   #UefiDriverEntryPoint
-  UefiBootServicesTableLib
-  UefiLib
   PrintLib
   ReportStatusCodeLib
+  UefiBootServicesTableLib
+  UefiLib
 
 [Protocols]
   gEfiPciIoProtocolGuid                       ## TO_START
@@ -82,3 +86,15 @@
 
 [UserExtensions.TianoCore."ExtraFiles"]
   NvmExpressDxeExtra.uni
+
+[BuildOptions.IA32]
+  XCODE:*_*_*_CC_FLAGS = -Os -DEFI32 -D__MAKEWITH_TIANO
+  GCC:*_*_*_CC_FLAGS   = -Os -DEFI32 -D__MAKEWITH_TIANO
+
+[BuildOptions.X64]
+  XCODE:*_*_*_CC_FLAGS = -Os -DEFIX64 -D__MAKEWITH_TIANO
+  GCC:*_*_*_CC_FLAGS   = -Os -DEFIX64 -D__MAKEWITH_TIANO
+
+[BuildOptions.AARCH64]
+  XCODE:*_*_*_CC_FLAGS = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO
+  GCC:*_*_*_CC_FLAGS   = -Os -DEFIAARCH64 -D__MAKEWITH_TIANO
