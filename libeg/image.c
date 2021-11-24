@@ -921,6 +921,235 @@ VOID egFillImageArea (
     }
 }
 
+// typedefs and stack functions for egSeedFillImage
+
+typedef struct Span {
+    INTN x1, x2, y, dy; // left, right, y, direction, previous span
+    struct Span *ps; // previous span that is left of this span
+} Span;
+
+/*
+egSeedFillImage
+
+See https://en.wikipedia.org/wiki/Flood_fill
+
+Based on:
+    1) Heckbert, Paul S. "IV.10: A Seed Fill Algorithm". pp. 275–277, "A Seed Fill Algorithm" pp. 721-722
+    2) Fishkin, Ken "IV.11: Filling a Region in a Frame Buffer". pp. 278–284
+    In Glassner, Andrew S (ed.). Graphics Gems. Academic Press.
+    ISBN 0122861663. (1990)
+
+Modifications by joevt which may or may not be improvements.
+*/
+
+VOID egSeedFillImage (
+    IN EG_IMAGE *Image,
+    INTN x,
+    INTN y,
+    IN EG_PIXEL *FillColor,
+    IN EG_PIXEL *FillMask,
+    IN EG_PIXEL *TestColor,
+    IN EG_PIXEL *TestMask,
+    IN BOOLEAN EightWay,
+    IN BOOLEAN ExtraPixel
+) {
+    UINT32 fc = *(UINT32 *)FillColor;
+    UINT32 fm = *(UINT32 *)FillMask;
+    UINT32 tc = *(UINT32 *)TestColor;
+    UINT32 tm = *(UINT32 *)TestMask;
+
+    UINT32 *p = (UINT32 *)Image->PixelData;
+    INTN w = Image->Width;
+    INTN h = Image->Height;
+    INTN pw = w;
+
+    // pixels at these locations are not mapped in memory and always match the test color
+    INTN ignoreX1, ignoreX2, ignoreY1, ignoreY2;
+
+    if (ExtraPixel) {
+        // add a single extra pixel border around the image which always matches the test color
+        x++;
+        y++;
+        p = p - w - 1; // up one extra pixel and left one extra pixel
+        h += 2; // one extra pixel top and bottom
+        w += 2; // one extra pixel left and right
+        ignoreX1 = 0;
+        ignoreX2 = w - 1;
+        ignoreY1 = 0;
+        ignoreY2 = h - 1;
+    }
+    else {
+        ignoreX1 = -1;
+        ignoreX2 = w;
+        ignoreY1 = -1;
+        ignoreY2 = h;
+    }
+
+    if (x < 0 || x >= w || y < 0 || y >= h) return; // not inside (out of bounds)
+
+    BOOLEAN ignore, ignoreY;
+    UINT32 *pc = NULL; // pointer to current p
+    UINT32 c = 0; // the color to be tested or set in *pc
+
+    ignoreY = (y == ignoreY1 || y == ignoreY2);
+    #define Matched(x, y) ( (ignore = (ignoreY || x == ignoreX1 || x == ignoreX2)) || ( ((c = *(pc = &p[y * pw + x])) & tm) == tc ) )
+    if (!Matched (x, y)) return;  // not inside (not test color)
+
+    // [
+    /*
+    joevt:
+    The algorithm requires knowing which pixels were previously filled.
+    If fill color is different than test color then it is usually sufficient to just check the pixel color.
+    There are 3 reasons why we cannot just check the pixel color to know if the pixel was previously filled:
+    1) We use a mask for test and fill color so the resulting pixel color could still match the test color.
+    2) If we had a fill pattern instead of a single color then the pattern could contain the test color.
+    3) We have the ExtraPixel option which adds an unmapped pixel border that cannot be altered.
+    Therefore, we need to store which pixels are filled.
+    */
+    const INTN fs = 6; // for divide by 64
+    const INTN fn = (1 << fs) - 1; // for mod 64
+    UINT64 *f = AllocateZeroPool (((h * w + fn) >> fs) * sizeof(*f));
+    if (!f) return; // not enough memory
+    // ]
+
+    UINT64 *fp; // pointer to current f[] UINT64
+    UINT64 fb; // the bit to be tested or set in *fp
+    INTN fi; // the bit index to be tested or set in *fp
+
+    fm = ~fm; // bits to be cleared
+
+    #define NotFilled(x, y) (fi = (y * w + x), !(*(fp = &f[fi >> fs]) & (fb = ((UINT64)1 << (fi & fn)))))
+    #define Inside(x, y) (NotFilled(x, y) && Matched(x, y))
+    #define Set() do { *fp |= fb; if (!ignore) *pc = (c & fm) | fc; } while (0)
+
+    Span *sp; // current stack pointer for next item
+    Span *st; // stack start
+    Span *sm; // after stack end
+    Span *psr = NULL; // previous span in the reverse direction
+    Span *psf = NULL; // previous span in the forward direction
+
+    #define SpanStackNew() \
+        do { \
+            st = AllocatePool (sizeof(Span) * 1000); \
+            if (!st) return; \
+            sp = st; \
+            sm = &st[1000]; \
+        } while (0)
+
+    #define SpanStackFree() \
+        MyFreePool (&st)
+
+    #define SpanStackPush(_x1, _x2, _dy, _ps) \
+        do { \
+            INTN yn = y + _dy; \
+            if (yn < 0 || yn >= h) break; \
+            if (sp == sm) { \
+                UINTN oldsize = (VOID*)sp - (VOID*)st; \
+                Span *so = st; \
+                st = ReallocatePool (oldsize, oldsize * 2, so); \
+                if (!st) return; \
+                sp = (Span *)((VOID *)st + oldsize); \
+                sm = (Span *)((VOID *)st + oldsize * 2); \
+                for (Span *si = st; si < sp; si++) si->ps = st + (sp->ps - so); \
+                if (psr) psr = st + (psr - so); \
+                if (psf) psf = st + (psf - so); \
+            } \
+            sp->x1 = _x1; \
+            sp->x2 = _x2; \
+            sp->y = yn; \
+            sp->dy = _dy; \
+            sp->ps = _ps; \
+            _ps = sp; \
+            sp++; \
+        } while (0)
+
+    #define SpanStackPop(_x1, _x2, _y, _dy, _ps) \
+        do { \
+            sp--; \
+            _x1 = sp->x1; \
+            _x2 = sp->x2; \
+            _y = sp->y; \
+            _dy = sp->dy; \
+            _ps = sp->ps; \
+            ignoreY = (_y == ignoreY1 || _y == ignoreY2); \
+        } while (0)
+
+    #define SpanStack() (sp > st)
+
+    SpanStackNew ();
+
+    // 2nd: test span (single pixel wide) below x,y and move in a downward direction
+    SpanStackPush (x - ((EightWay && (x > 0)) ? 1 : 0), x + ((EightWay && x < w - 1) ? 1 : 0), 1, psr);
+
+    // 1st: test span at pixel that is at x,y and move in an upward direction
+    y++;
+    SpanStackPush (x, x, -1, psf);
+
+    INTN xr1 = -1;
+    INTN xr2 = -1;
+
+    while (SpanStack ()) {
+        Span *ps; // previous span that is left of this span
+        INTN x1, x2, dy;
+        SpanStackPop (x1, x2, y, dy, ps);
+        if (!dy) continue; // this span was invalidated
+
+        psr = NULL; // previous span for reverse direction
+        psf = NULL; // previous span for forward direction
+
+        // x1..x2 is parent span, dy is direction of vertical traversal
+/*1*/   for (x = x1; x >= 0 && Inside (x, y); x--) Set ();
+        //printicon(Image, f, sp, st);
+
+        // [ joevt: while there are previous spans known to be on the same line and to the left of this span
+        while (ps) {
+            if (x <= ps->x1) { // if the first non-inside pixel is on or left of the left-most possible inside pixel of the previous span
+                ps->dy = 0; // then invalidate the previous span
+            }
+            else {
+                if (x <= ps->x2) // if the first non-inside pixel is on or left of the right-most possible inside pixel of the previous span
+                    ps->x2 = x - 1; // then shorten the previous span
+                break;
+            }
+            ps = ps->ps;
+        }
+        // ]
+
+        if (x == x1) goto skip; // no span - search to the right of x1 for next span
+
+/*2*/   if (EightWay && (x >= 0)) {} else x++; // left most pixel that was set + one more pixel to the left if doing 8-way
+/*3*/   if (x < x1) { xr1 = x; xr2 = x1 - 1; } // new span left of parent span may be an overhang in the reverse direction
+        // x <= x1 and is the left side of this span
+        do {
+/*4*/       for (x1++; x1 < w && Inside (x1, y); x1++) Set ();
+/*5*/       if (EightWay && (x1 < w)) {} else x1--; // right most pixel of this span + one more pixel to the right if doing 8-way
+/*6*/       SpanStackPush (x, x1, dy, psf); // continue this span in the forward direction
+            //printicon(Image, f, sp, st);
+/*7*/       if (x1 > x2) {
+                if (xr2 >= 0) { SpanStackPush (xr1, xr2, -dy, psr); xr2 = -1; }
+                SpanStackPush (x2 + 1, x1, -dy, psr); // new span right of parent span may be an overhang in the reverse direction
+                //printicon(Image, f, sp, st);
+            }
+skip:
+/*8*/       for (x1++; x1 < w && x1 <= x2; x1++) { if (Inside (x1, y)) { Set(); break; } }
+/*9*/       if (EightWay) x1--; // find left pixel of next span + one more pixel to the left if doing 8-way
+/*10*/      x = x1; // x is the left side of next span
+        } while (x1 <= x2);
+
+        /*
+        It maybe beneficial to search reverse direction spans first because according to Ken Fishkin on pp 280:
+        "turns are relatively rare and usually lead into small areas; by processing them first, stack size is reduced".
+        So we push the reverse direction spans last.
+        */
+        if (xr2 >= 0) { SpanStackPush (xr1, xr2, -dy, psr); xr2 = -1; }
+        //printicon(Image, f, sp, st);
+    }
+    //printicon(Image, f, sp, st);
+    SpanStackFree ();
+
+    MyFreePool (&f);
+} // egSeedFillImage
+
 VOID egRawCopy (
     IN OUT EG_PIXEL *CompBasePtr,
     IN EG_PIXEL     *TopBasePtr,

@@ -129,6 +129,17 @@ VOID egFillImageArea(IN OUT EG_IMAGE *CompImage,
                      IN UINTN AreaPosX, IN UINTN AreaPosY,
                      IN UINTN AreaWidth, IN UINTN AreaHeight,
                      IN EG_PIXEL *Color);
+VOID egSeedFillImage (
+    IN EG_IMAGE *Image,
+    INTN x,
+    INTN y,
+    IN EG_PIXEL *FillColor,
+    IN EG_PIXEL *FillMask,
+    IN EG_PIXEL *TestColor,
+    IN EG_PIXEL *TestMask,
+    IN BOOLEAN EightWay,
+    IN BOOLEAN ExtraPixel
+);
 VOID egComposeImage(IN OUT EG_IMAGE *CompImage, IN EG_IMAGE *TopImage, IN UINTN PosX, IN UINTN PosY);
 
 UINTN egGetFontHeight(VOID);
