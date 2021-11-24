@@ -133,7 +133,8 @@ EG_IMAGE * egDecodeICNS(
     IN UINT8   *FileData,
     IN UINTN   FileDataLength,
     IN UINTN   IconSize,
-    IN BOOLEAN WantAlpha
+    IN BOOLEAN WantAlpha,
+    IN UINTN   Level
 );
 
 VOID egEncodeBMP(
