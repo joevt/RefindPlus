@@ -624,7 +624,22 @@ EG_IMAGE * egLoadIcon (
     }
 
     if ((Image->Width != IconSize) || (Image->Height != IconSize)) {
-        NewImage = egScaleImage (Image, IconSize, IconSize);
+        // Do proportional scaling
+        UINTN w = Image->Width;
+        UINTN h = Image->Height;
+        if (h < w) {
+            h = IconSize * h / w;
+            w = IconSize;
+        }
+        else if (w < h) {
+            w = IconSize * w / h;
+            h = IconSize;
+        }
+        else {
+            w = IconSize;
+            h = IconSize;
+        }
+        NewImage = egScaleImage (Image, w, h);
 
         // use scaled image if available
         if (NewImage) {
