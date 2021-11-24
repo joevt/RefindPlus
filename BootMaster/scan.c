@@ -2888,7 +2888,7 @@ VOID ScanForTools (VOID) {
             Skipped = TRUE;
             ToolName = L"Skipped";
         }
-        
+
         if (!Skipped) {
             ToolTotal = ToolTotal + 1;
             LOGBLOCKENTRY("Tool Type %02d ...%s", ToolTotal, ToolName);
@@ -3005,11 +3005,11 @@ VOID ScanForTools (VOID) {
                     #if REFIT_DEBUG > 0
                     LOG(3, LOG_BLANK_LINE_SEP, L"X");
                     #endif
-                
+
                     if (ScanFirmwareDefined (1, L"Shell", BuiltinIcon(TheIcon))) {
                         FoundTool = TRUE;
                     }
-                
+
                     #if REFIT_DEBUG > 0
                     LOG(3, LOG_BLANK_LINE_SEP, L"X");
                     #endif
@@ -3243,7 +3243,7 @@ VOID ScanForTools (VOID) {
                 break;
 
         } // switch
-        
+
         #if REFIT_DEBUG > 0
         if (Skipped) {
             if (FoundTool) {
@@ -3275,7 +3275,7 @@ VOID ScanForTools (VOID) {
     MsgLog ("INFO: %s", ToolStr);
     MsgLog ("\n\n");
     #endif
-    
+
     MyFreePool (&MokLocations);
 
     LOGPROCEXIT();

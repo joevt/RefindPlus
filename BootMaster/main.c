@@ -1702,7 +1702,7 @@ VOID LogBasicInfo (VOID) {
     for (Index = 0; Index < gST->NumberOfTableEntries; Index++) {
         LogTableInfo (&gST->ConfigurationTable[Index]);
     }
-    
+
     VOID *TestPool = PoolPrint(L"");
     switch (PoolVersion(TestPool)) {
         case  1: MsgStr = L"EFI"    ; break;
@@ -2518,7 +2518,7 @@ EFI_STATUS EFIAPI efi_main (
             MsgLog ("No chosen entry copy %a:%d\n", __FILE__, __LINE__);
             continue;
         }
-        
+
         if ((MenuExit == MENU_EXIT_TIMEOUT) &&
             GlobalConfig.ShutdownAfterTimeout
         ) {

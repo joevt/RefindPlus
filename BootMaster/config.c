@@ -687,7 +687,7 @@ VOID ReadConfig (
         GlobalConfig.DontScanFiles = StrDuplicate (DONT_SCAN_FILES);
 
         MyFreePool (&GlobalConfig.DontScanTools);
-        
+
         MyFreePool (&GlobalConfig.DontScanFirmware);
         MergeStrings (&(GlobalConfig.DontScanFiles), MOK_NAMES, L',');
         MergeStrings (&(GlobalConfig.DontScanFiles), FWUPDATE_NAMES, L',');

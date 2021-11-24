@@ -599,7 +599,7 @@ VOID RebootIntoLoader (
 
     MsgLog ("IsBoot = TRUE\n");
     IsBoot = TRUE;
-    
+
     Status = EfivarSetRaw (
         &GlobalGuid,
         L"BootNext",

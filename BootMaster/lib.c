@@ -467,7 +467,7 @@ VOID UninitRefitLib (VOID) {
     CloseDir (&SelfDir);
     CloseDir (&SelfRootDir);
     CloseDir (&gVarsDir);
-    
+
     LOGPROCEXIT();
 } // VOID UninitRefitLib()
 
@@ -2246,7 +2246,7 @@ VOID ScanVolumes (VOID) {
     EFI_GUID            VolumeGuid;
     EFI_GUID            ContainerGuid;
     APPLE_APFS_VOLUME_ROLE VolumeRole;
-    
+
     LOGPROCENTRY();
 
     #if REFIT_DEBUG > 0
@@ -2527,10 +2527,10 @@ VOID ScanVolumes (VOID) {
         #endif
 
         ScannedOnce = TRUE;
-        
+
         // since Volume started as NULL, free it if it is not NULL
         FreeVolume (&Volume);
-        
+
         LOGBLOCKEXIT("Volumes[%d]", HandleIndex);
     } // for: first pass
     LOGBLOCKEXIT("ScanVolumes first pass");
@@ -2686,7 +2686,7 @@ VOID ScanVolumes (VOID) {
     if (SelfVolRun && GlobalConfig.SyncAPFS) {
         VetSyncAPFS();
     }
-    
+
 Done:
     // since Volume started as NULL, free it if it is not NULL
     FreeVolume (&Volume);

@@ -305,9 +305,9 @@ EFI_STATUS egLoadFile (
     #if LOG_ALL_LOADS
     LOGPROCENTRY("'%s'", FileName);
     #endif
-    
+
     if (FileData) *FileData = NULL;
-    
+
     if ((BaseDir == NULL) || (FileName == NULL)) {
         #if LOG_ALL_LOADS
         LOGPROCEXIT("'%s' invalid parameter!!", FileName);
@@ -479,7 +479,7 @@ EFI_STATUS egSaveFileNumbered (
 ) {
     CHAR16 *FileName = NULL;
     EFI_STATUS Status;
-    
+
     // Search for existing screen shot files; increment number to an unused value...
     UINTN i = 0;
     do {
@@ -489,7 +489,7 @@ EFI_STATUS egSaveFileNumbered (
 
     // save to file on the ESP
     Status = egSaveFile (BaseDir, FileName, FileData, FileDataLength);
-    
+
     if (!EFI_ERROR(Status) && OutFileName) {
         *OutFileName = FileName;
     }
@@ -670,7 +670,7 @@ EG_IMAGE * egLoadIconAnyType (
     LOGPROCENTRY("from '%s\\%s' with extensions '%s'\n",
         SubdirName, BaseName, ICON_EXTENSIONS
     );
-    
+
     if (!AllowGraphicsMode) {
         #if REFIT_DEBUG > 0
         LOG(4, LOG_THREE_STAR_MID,
@@ -818,7 +818,7 @@ EG_IMAGE * egPrepareEmbeddedImage (
         WantAlpha && (
             EmbeddedImage->PixelMode == EG_EIPIXELMODE_GRAY_ALPHA ||
             EmbeddedImage->PixelMode == EG_EIPIXELMODE_COLOR_ALPHA ||
-            EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA || 
+            EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA ||
             EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA_INVERT
         )
     ) {

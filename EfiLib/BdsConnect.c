@@ -57,7 +57,7 @@ EFI_STATUS EFIAPI daConnectController (
 ) {
     EFI_STATUS   Status;
     VOID        *DevicePath;
-    
+
     LOGPROCENTRY("ControllerHandle:%p Recursive:%d", ControllerHandle, Recursive);
 
     if (ControllerHandle == NULL) {
@@ -547,7 +547,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                             MyFreePool (&oldDeviceData);
                         }
                     }
-                    
+
                     if (GOPArray) {
                         for (m = 0; m < GOPCount; m++) {
                             if (GOPArray[m] == AllHandleBuffer[i]) {

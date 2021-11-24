@@ -285,7 +285,7 @@ EFI_STATUS AcquireGOP (
                         RomFileName = PoolPrint (L"Handle%X", HandleIndex);
 
                         PciIo->GetLocation (PciIo, &SegmentPCI, &BusPCI, &DevicePCI, &FunctionPCI);
-                        
+
                         MsgLog("Loading option ROM at PCI(%02llX|%02llX:%02llX.%llX)\n",
                             SegmentPCI,
                             BusPCI,

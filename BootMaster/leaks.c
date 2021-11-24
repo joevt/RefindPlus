@@ -200,7 +200,7 @@ LogPoolProc (
                 }
             }
         }
-    
+
         POOL_HEAD1 *head1 = DATA_TO_HEAD1(Pointer);
         POOL_HEAD2 *head2 = DATA_TO_HEAD2(Pointer);
         POOL_TAIL1 *tail1 = HEAD_TO_TAIL1(head1);
@@ -250,11 +250,11 @@ LogPoolProc (
                 break;
         }
     } while (0);
-    
+
     if (DoDumpCStack) {
         DumpCallStack (NULL, FALSE);
     }
-    
+
     curLogProc--;
 
     return result;
@@ -465,7 +465,7 @@ GetStackLimits (
             &DescriptorSize,
             &DescriptorVersion
         );
-        
+
         do {
             MemoryMap = LeaksAllocatePool (MemoryMapSize);
             if (MemoryMap) {
@@ -485,7 +485,7 @@ GetStackLimits (
         if (!EFI_ERROR(Status)) {
             EFI_MEMORY_DESCRIPTOR *MemoryMapEntry;
             EFI_MEMORY_DESCRIPTOR *MemoryMapEnd;
-            
+
             MemoryMapEntry = MemoryMap;
             MemoryMapEnd = (EFI_MEMORY_DESCRIPTOR *) ((UINT8 *) MemoryMap + MemoryMapSize);
 
@@ -537,11 +537,11 @@ FindLoadedImageFileName (
     VOID                           *Buffer = NULL;
     UINTN                          BufferSize = 0;
     UINT32                         AuthenticationStatus;
-  
+
     if ((LoadedImage == NULL) || (LoadedImage->FilePath == NULL)) {
         return NULL;
     }
-  
+
     NameGuid = EfiGetNameGuidFromFwVolDevicePathNode((MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *)LoadedImage->FilePath);
     if (NameGuid) {
         /*        */ {
@@ -550,7 +550,7 @@ FindLoadedImageFileName (
             //
             Status = gBS->HandleProtocol (LoadedImage->DeviceHandle, &gEfiFirmwareVolume2ProtocolGuid, (VOID**) &Fv2);
             //MsgLog ("gBS->HandleProtocol gEfiFirmwareVolume2ProtocolGuid Status:%r Fv2:%p\n", Status, Fv2);
-  
+
             //
             // FirmwareVolume2Protocol is PI, and is not required to be available.
             //
@@ -563,14 +563,14 @@ FindLoadedImageFileName (
                 //MsgLog ("Fv2->ReadSection Status:%r Name:%s\n", Status, Buffer ? Buffer : L"NULL");
             }
         }
-    
+
         if (!Buffer) {
             //
             // Get the FirmwareVolume1Protocol of the device handle that this image was loaded from.
             //
             Status = gBS->HandleProtocol (LoadedImage->DeviceHandle, &gEfiFirmwareVolumeProtocolGuid, (VOID**) &Fv1);
             //MsgLog ("gBS->HandleProtocol gEfiFirmwareVolume1ProtocolGuid Status:%r Fv1:%p\n", Status, Fv1);
-        
+
             if (!EFI_ERROR (Status)) {
                 //
                 // Read the user interface section of the image.
@@ -713,9 +713,9 @@ GetCallStack (
     UINTN CurrentFramePointerAddress;
     UINTN NextFramePointerAddress;
     BOOLEAN dumpit = FALSE;
-    
+
     GetStackLimits (FramePointerAddress);
-    
+
     INTN Pass;
     for (Pass = 0; Pass < 2; Pass++) {
         if (Pass) {
@@ -729,7 +729,7 @@ GetCallStack (
         CurrentIpAddress = IpAddress;
         CurrentFramePointerAddress = FramePointerAddress;
         NextFramePointerAddress = CurrentFramePointerAddress - 1;
-        
+
         for (;;) {
             if (!Pass) {
                 // if (DoFullScan) MsgLog ("%d.%d: %8p %8p %8p %8p\n", Pass, FrameCount, CurrentStackAddress, CurrentFramePointerAddress, *(VOID**)CurrentFramePointerAddress, CurrentIpAddress);
@@ -746,7 +746,7 @@ GetCallStack (
             if (DoFullScan && FrameCount) {
                 CurrentStackAddress += sizeof(VOID*);
             }
-            
+
             FrameCount++;
             if (!CurrentIpAddress) {
                 break;
@@ -758,7 +758,7 @@ GetCallStack (
                     (!DoFullScan) && (
                         CurrentFramePointerAddress <= NextFramePointerAddress ||
                         CurrentFramePointerAddress < StackMin ||
-                        CurrentFramePointerAddress >= StackMax 
+                        CurrentFramePointerAddress >= StackMax
                     )
                 )
                 || (BootLogIsPaused () && FrameCount > 300)
@@ -789,11 +789,11 @@ GetCallStack (
                 } // else not full scan
             } // else valid frame
         } // for
-        
+
     } // For pass
-    
+
     if (DoFullScan) {
-    
+
 /*
     Stack grows from StackMax (high address) to StackMin (low address)
     rbp is the current frame pointer address.
@@ -808,7 +808,7 @@ GetCallStack (
 
 
     StackMin:
-    
+
         Deepest/latest/newest data:
 
                    rsp: ...
@@ -818,11 +818,11 @@ GetCallStack (
     /\                  frame1 return address   points to after the call statement in frame1
     ||                  frame0 argument0        arguments are pushed in reverse order so that the
     ||                  frame0 argument1..      first argument always has the same offset from rbp
-    ||          
+    ||
     ||                  frame1 variables
     ||                  frame2 registers
-    stack       frame1: frame2 frame pointer            
-    grows               frame2 return address           
+    stack       frame1: frame2 frame pointer
+    grows               frame2 return address
     toward              frame1 argument0
     min                 frame1 argument1..
 
@@ -832,12 +832,12 @@ GetCallStack (
                         frame3 return address
                         frame2 argument0
                         frame2 argument1..
-                        
+
         Shallowest/earliest/oldest data:
-                    
+
     StackMax:
 */
-        
+
         // Fix up the frame pointer address for each stack frame.
         UINTN frameIndex;
         for (frameIndex = 1; frameIndex < FrameCount; frameIndex++) {
@@ -1016,7 +1016,6 @@ GetLoadedImages(
 
     BootLogPause ();
     UINTN OldInAlloc = DoingAlloc++;
-    
 
     if (!OldInAlloc) LOGPROCENTRY();
 
@@ -1117,7 +1116,7 @@ DumpOneCallStack (
     if (!Stack) {
         return;
     }
-        
+
     if (DumpingStack >= 4) {
         return;
     }
@@ -1131,7 +1130,7 @@ DumpOneCallStack (
         UINTN Offset;
         GetLoadedImageInfoForAddress (p, LoadedImages, &Name, &Offset);
         /*
-        Subtract one from the return address so that it points into the call 
+        Subtract one from the return address so that it points into the call
         instruction. This gives better results for `dwarfdump --lookup`.
         */
         #if 1
@@ -1174,7 +1173,7 @@ DumpCallStack (
         LOGPROCENTRY("CurrentStack");
     }
     LoadedImageRec *LoadedImages = GetLoadedImages ();
-    
+
     BOOLEAN DoFreeStack = FALSE;
     if (!Stack) {
         Stack = GetCallStack (AsmGetStackPointerAddress (), AsmGetCurrentIpAddress (), AsmGetFramePointerAddress (), STACK_SCAN_TYPE, LoadedImages);
@@ -1239,7 +1238,7 @@ AdjustStackMax (
         FreeCallStack (Stack);
     }
     FreeLoadedImages (LoadedImages);
-    
+
     #if LEAKS_FILL_STACK
         VOID *e = (VOID *)(AsmGetStackPointerAddress () & ~7);
         UINTN *p = (UINTN *)StackMin;
@@ -1248,7 +1247,7 @@ AdjustStackMax (
         UINT8 *q = (VOID *)p;
         while ((VOID *)q < e) *q++ = 0x69;
     #endif
-    
+
     LOGPROCEXIT();
     BootLogResume ();
     SetStackScanType(LEAKS_FULL_SCAN);
@@ -1315,13 +1314,13 @@ DumpAllocations (
     if (AllocTypes) {
         MyMemSet (AllocTypes, 0, AllocTypesSize);
     }
-    
+
     LoadedImageRec *LoadedImages = GetLoadedImages ();
     Allocation *a = AllocationsList;
     while (a) {
         TypeIndex = 0;
         StackLength = GetCallStackLength (a->Stack);
-        
+
         if (a->Num < MinAllocationNum || a->Num >= MaxAllocationNum) {
             TypeIndex |= atExcludedRange;
         }
@@ -1347,7 +1346,7 @@ DumpAllocations (
                 b = b->Next;
             }
         }
-        
+
         if (
                (!(TypeIndex & atExcludedRange))
             && (!(TypeIndex & atExcludedStackSize))
@@ -1401,7 +1400,7 @@ DumpAllocations (
         }
         LeaksFreePool ((VOID **) &AllocTypes);
     }
-    
+
     if (TotalAllocs > 0) {
         MsgLog ("  %5d:, Total\n", TotalAllocs);
     }
@@ -1430,7 +1429,7 @@ AllocatePoolEx (
 ) {
     CheckStackPointer ();
     EFI_STATUS Status = OrigAllocatePool (PoolType, Size, Buffer);
-    
+
     //LOGPROCENTRY("%p (%d)", Buffer, Size);
     if (EFI_ERROR(Status)) {
         MsgLog ("Allocation Error: cannot allocate %d\n", Size);
@@ -1538,7 +1537,7 @@ FreePoolEx (
             AddFreeAllocation (a);
         }
     }
-    
+
     EFI_STATUS Status = OrigFreePool (Buffer);
     if (Buffer && size >= 0) {
         if (tail1->Signature != POOL_TAIL_SIGNATURE) {
@@ -1569,7 +1568,7 @@ FreePoolEx (
         }
         //LOGPROCEXIT("%p", Buffer);
     }
-    
+
     if (DoDumpCStack) {
         DumpCallStack (NULL, FALSE);
     }
