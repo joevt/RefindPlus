@@ -109,6 +109,7 @@
   RefindPlusPkg/gptsync.inf
   RefindPlusPkg/filesystems/ext2.inf
   RefindPlusPkg/filesystems/ext4.inf
+  RefindPlusPkg/filesystems/btrfs.inf
   RefindPlusPkg/filesystems/reiserfs.inf
   RefindPlusPkg/filesystems/hfs.inf
   RefindPlusPkg/filesystems/iso9660.inf
