@@ -2567,7 +2567,7 @@ void lodepng_chunk_generate_crc(unsigned char* chunk) {
 
   /* Sanitise length */
   // DA-TAG: Initial arbitrary large value. Needs review
-  if (length > 100000) {
+  if (length > 200000) {
     LOGWHERE("length %d\n", length);
     return;
   }
