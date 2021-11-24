@@ -1604,7 +1604,7 @@ VOID ScanUserConfigured (
                             #if REFIT_DEBUG > 0
                             MsgLog ("\n");
                             MsgLog (
-                                "  - Found '%s' on '%s'",
+                                "  - Found '%s' on '%s'\n",
                                 GetPoolStr (&Entry->Title),
                                 GetPoolStr (&SelfVolume->VolName) ? GetPoolStr (&SelfVolume->VolName) : GetPoolStr (&Entry->LoaderPath)
                             );

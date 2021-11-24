@@ -115,10 +115,6 @@
 EFI_GUID GlobalGuid      = EFI_GLOBAL_VARIABLE;
 extern EFI_GUID GuidAPFS;
 
-#if REFIT_DEBUG > 0
-BOOLEAN  LogNewLine      = FALSE;
-#endif
-
 BOOLEAN  ScanningLoaders = FALSE;
 BOOLEAN  FirstLoaderScan = FALSE;
 
@@ -1194,7 +1190,7 @@ LOADER_ENTRY * AddLoaderEntry (
     #if REFIT_DEBUG > 0
     MsgLog ("\n");
     MsgLog (
-        "  - Found '%s' on '%s'",
+        "  - Found '%s' on '%s'\n",
         TitleEntry,
         DisplayName
             ? DisplayName
@@ -2548,21 +2544,12 @@ VOID ScanForBootloaders (
     for (i = 0; i < NUM_SCAN_OPTIONS; i++) {
         switch (GlobalConfig.ScanFor[i]) {
 
-           #if REFIT_DEBUG > 0
-                #define LOGNEWLINE(x) \
-                    if (LogNewLine) MsgLog ("\n"); \
-                    LogNewLine = TRUE; \
-                    MsgLog (x);
-            #else
-                #define LOGNEWLINE(x)
-            #endif
-
             #define DOONEMENUKEY(letter, msg, what) \
                 case letter : case letter - 32: \
-                    MsgLog ("[ " msg "\n"); \
-                    LOGNEWLINE(msg ":"); \
+                    LOGBLOCKENTRY(msg); \
+                    MsgLog(msg ":\n"); \
                     what ; \
-                    MsgLog ("] " msg "\n"); \
+                    LOGBLOCKEXIT(msg); \
                     break;
 
             DOONEMENUKEY('m', "Scan Manual"            , ScanUserConfigured0 (GlobalConfig.ConfigFilename));
@@ -2860,7 +2847,7 @@ VOID ScanForTools (VOID) {
 
     #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_SEPARATOR, L"Scan for UEFI Tools");
-    MsgLog ("Scan for UEFI Tools...");
+    MsgLog ("Scan for UEFI Tools...\n");
     #endif
 
     MokLocations = MergeStringsNew (MOK_LOCATIONS, SelfDirPath, L',');
@@ -2895,13 +2882,13 @@ VOID ScanForTools (VOID) {
         }
 
         #if REFIT_DEBUG > 0
-        #define TAGLOG() \
-        ToolStr = PoolPrint (L"Added Tool:- '%s'", ToolName); \
-        LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr); \
-        MsgLog ("%s", ToolStr); \
-        MyFreePool (&ToolStr);
+            #define TAGLOG() \
+                ToolStr = PoolPrint (L"Added Tool:- '%s'", ToolName); \
+                LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr); \
+                MsgLog ("%s\n", ToolStr); \
+                MyFreePool (&ToolStr);
         #else
-        #define TAGLOG()
+            #define TAGLOG()
         #endif
 
         #define TagAddMenuEntry() \
@@ -2990,7 +2977,7 @@ VOID ScanForTools (VOID) {
                         if (OtherFind) {
                             MsgLog ("\n                               ");
                         }
-                        MsgLog ("%s", ToolStr);
+                        MsgLog ("%s\n", ToolStr);
                         MyFreePool (&ToolStr);
                         #endif
 
@@ -3041,7 +3028,7 @@ VOID ScanForTools (VOID) {
                         if (j > 0) {
                             MsgLog ("\n                               ");
                         }
-                        MsgLog ("%s", ToolStr);
+                        MsgLog ("%s\n", ToolStr);
                         MyFreePool (&ToolStr);
                         #endif
                     }
@@ -3074,7 +3061,7 @@ VOID ScanForTools (VOID) {
                         if (OtherFind) {
                             MsgLog ("\n                               ");
                         }
-                        MsgLog ("%s", ToolStr);
+                        MsgLog ("%s\n", ToolStr);
                         MyFreePool (&ToolStr);
                         #endif
 
@@ -3109,7 +3096,7 @@ VOID ScanForTools (VOID) {
                         if (OtherFind) {
                             MsgLog ("\n                               ");
                         }
-                        MsgLog ("%s", ToolStr);
+                        MsgLog ("%s\n", ToolStr);
                         MyFreePool (&ToolStr);
                         #endif
 
@@ -3176,7 +3163,7 @@ VOID ScanForTools (VOID) {
                             if (OtherFind) {
                                 MsgLog ("\n                               ");
                             }
-                            MsgLog ("%s", ToolStr);
+                            MsgLog ("%s\n", ToolStr);
                             MyFreePool (&ToolStr);
                             #endif
 
@@ -3229,7 +3216,7 @@ VOID ScanForTools (VOID) {
                             if (OtherFind) {
                                 MsgLog ("\n                               ");
                             }
-                            MsgLog ("%s", ToolStr);
+                            MsgLog ("%s\n", ToolStr);
                             MyFreePool (&ToolStr);
                             #endif
 
@@ -3249,7 +3236,7 @@ VOID ScanForTools (VOID) {
             if (FoundTool) {
                 ToolStr = PoolPrint (L"Skipped Found Tool:- '%s'", ToolName);
                 LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr);
-                MsgLog ("** WARN ** %s", ToolStr);
+                MsgLog ("** WARN ** %s\n", ToolStr);
                 MyFreePool (&ToolStr);
             }
         }
@@ -3257,7 +3244,7 @@ VOID ScanForTools (VOID) {
             if (!FoundTool) {
                 ToolStr = PoolPrint (L"Could Not Find Tool:- '%s'", ToolName);
                 LOG(3, LOG_THREE_STAR_END, L"%s", ToolStr);
-                MsgLog ("** WARN ** %s", ToolStr);
+                MsgLog ("** WARN ** %s\n", ToolStr);
                 MyFreePool (&ToolStr);
             }
             LOGBLOCKEXIT("Tool Type %02d ...%s", ToolTotal, ToolName);

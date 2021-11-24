@@ -773,7 +773,7 @@ VOID AddLegacyEntry (
 
     #if REFIT_DEBUG > 0
     MsgLog ("\n");
-    MsgLog ("  - Found '%s' on '%s'", LoaderTitle, VolDesc);
+    MsgLog ("  - Found '%s' on '%s'\n", LoaderTitle, VolDesc);
     #endif
 
     // create the submenu
@@ -895,7 +895,7 @@ VOID AddLegacyEntryUEFI (
 
     #if REFIT_DEBUG > 0
     MsgLog ("\n");
-    MsgLog ("  - Found 'UEFI-Style' Legacy (BIOS) OS on '%s'", LegacyDescription);
+    MsgLog ("  - Found 'UEFI-Style' Legacy (BIOS) OS on '%s'\n", LegacyDescription);
     #endif
     MyFreePool (&LegacyDescription);
 } // static VOID AddLegacyEntryUEFI()

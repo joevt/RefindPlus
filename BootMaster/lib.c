@@ -147,10 +147,6 @@ EFI_GUID           GuidAppleTvRec      = APPLE_TV_RECOVERY_GUID;
 
 extern EFI_GUID RefindPlusGuid;
 
-#if REFIT_DEBUG > 0
-extern BOOLEAN  LogNewLine;
-#endif
-
 extern BOOLEAN  ScanningLoaders;
 
 
@@ -577,11 +573,6 @@ EFI_STATUS EfivarGetRaw (
         }
         else if (Status != EFI_NOT_FOUND) {
             #if REFIT_DEBUG > 0
-            if (ScanningLoaders && LogNewLine) {
-                LogNewLine = FALSE;
-                MsgLog ("\n");
-            }
-            
             LOG2(4, LOG_THREE_STAR_MID, L"** WARN: ", L"\n",   L"In Emulated NVRAM ... Could Not Read UEFI Variable:- '%s'", VariableName);
             LOG2(4, LOG_THREE_STAR_MID, L"         ", L"\n\n", L"Activate the 'use_nvram' Option to Silence this Warning");
             #endif

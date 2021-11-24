@@ -688,10 +688,6 @@ UINTN ScanDriverDir (
     // look through contents of the directory
     DirIterOpen (SelfRootDir, Path, &DirIter);
 
-    #if REFIT_DEBUG > 0
-    BOOLEAN RunOnce = FALSE;
-    #endif
-
     while (DirIterNext (&DirIter, 2, LOADER_MATCH_PATTERNS, &DirEntry)) {
         if (DirEntry->FileName[0] == '.') {
             // skip this
@@ -712,13 +708,7 @@ UINTN ScanDriverDir (
         MyFreePool (&DirEntry);
 
         #if REFIT_DEBUG > 0
-        if (RunOnce) {
-            MsgLog ("\n");
-        }
-
-        RunOnce = TRUE;
-
-        MsgLog ("  - %r ... UEFI Driver:- '%s'", Status, FileName);
+        MsgLog ("  - %r ... UEFI Driver:- '%s'\n", Status, FileName);
         #endif
 
         LOGBLOCKEXIT("Loading '%s' Result:%r", FileName, Status);
@@ -759,7 +749,7 @@ BOOLEAN LoadDrivers (VOID) {
     // load drivers from the subdirectories of RefindPlus' home directory
     // specified in the DRIVER_DIRS constant.
     #if REFIT_DEBUG > 0
-    MsgLog ("Load UEFI Drivers from Program Default Folder...");
+    MsgLog ("Load UEFI Drivers from Program Default Folder...\n");
     #endif
 
 
@@ -783,7 +773,7 @@ BOOLEAN LoadDrivers (VOID) {
                 L"'%s' ... Program Default Driver Folder:- '%s'",
                 MsgNotFound, SelfDirectory
             );
-            MsgLog ("  - %s", MsgNotFound);
+            MsgLog ("  - %s\n", MsgNotFound);
             #endif
         }
 
@@ -795,7 +785,7 @@ BOOLEAN LoadDrivers (VOID) {
     if (GlobalConfig.DriverDirs != NULL) {
         #if REFIT_DEBUG > 0
         MsgLog ("\n\n");
-        MsgLog ("Load UEFI Drivers from User Defined Folders...");
+        MsgLog ("Load UEFI Drivers from User Defined Folders...\n");
         #endif
 
         i = 0;
@@ -823,7 +813,7 @@ BOOLEAN LoadDrivers (VOID) {
                         L"'%s' ... User Defined Driver Folder:- '%s'",
                         MsgNotFound, SelfDirectory
                     );
-                    MsgLog ("  - %s", MsgNotFound);
+                    MsgLog ("  - %s\n", MsgNotFound);
                     #endif
                 }
             }
