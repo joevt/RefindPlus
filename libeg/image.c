@@ -595,12 +595,14 @@ EG_IMAGE * egLoadIcon (
     }
 
     if (EFI_ERROR(Status)) {
+        /*
         #if REFIT_DEBUG > 0
         LOG(3, LOG_LINE_NORMAL,
             L"In egLoadIcon ... '%r' When Trying to Load Icon:- '%s'!!",
             Status, Path
         );
         #endif
+        */
 
         // return null if error
         return NULL;
