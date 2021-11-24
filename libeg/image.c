@@ -510,17 +510,16 @@ EFI_STATUS egSaveFileNumbered (
 // Decode the specified image data. The IconSize parameter is relevant only
 // for ICNS, for which it selects which ICNS sub-image is decoded.
 // Returns a pointer to the resulting EG_IMAGE or NULL if decoding failed.
-static
 EG_IMAGE * egDecodeAny (
     IN UINT8    *FileData,
     IN UINTN     FileDataLength,
     IN UINTN     IconSize,
     IN BOOLEAN   WantAlpha
 ) {
-    EG_IMAGE *            NewImage = egDecodePNG  (FileData, FileDataLength, IconSize, WantAlpha);
-    if (NewImage == NULL) NewImage = egDecodeJPEG (FileData, FileDataLength, IconSize, WantAlpha);
-    if (NewImage == NULL) NewImage = egDecodeBMP  (FileData, FileDataLength, IconSize, WantAlpha);
-    if (NewImage == NULL) NewImage = egDecodeICNS (FileData, FileDataLength, IconSize, WantAlpha);
+    EG_IMAGE *NewImage; { NewImage = egDecodePNG  (FileData, FileDataLength, IconSize, WantAlpha   ); if (NewImage) MsgLog("loaded png\n"); }
+    if (!NewImage)      { NewImage = egDecodeICNS (FileData, FileDataLength, IconSize, WantAlpha, 0); if (NewImage) MsgLog("loaded icn\n"); }
+    if (!NewImage)      { NewImage = egDecodeJPEG (FileData, FileDataLength, IconSize, WantAlpha   ); if (NewImage) MsgLog("loaded jpg\n"); }
+    if (!NewImage)      { NewImage = egDecodeBMP  (FileData, FileDataLength, IconSize, WantAlpha   ); if (NewImage) MsgLog("loaded bmp\n"); }
 
     return NewImage;
 }
