@@ -479,7 +479,7 @@ VOID
 LEAKABLECSRVALUES (
     UINT32_LIST *CsrValues
 ) {
-    MsgLog ("[ LEAKABLECSRVALUES\n");
+    LOGPROCENTRY();
     LEAKABLEPATHINIT (kLeakableCsrValues);
         LEAKABLEPATHINC (); // space for Csr Index
             UINT32_LIST *CsrValue = CsrValues;
@@ -488,7 +488,7 @@ LEAKABLECSRVALUES (
             }
         LEAKABLEPATHDEC ();
     LEAKABLEPATHDONE ();
-    MsgLog ("] LEAKABLECSRVALUES\n");
+    LOGPROCEXIT();
 }
 #endif
 
@@ -649,9 +649,9 @@ static
 LOADER_ENTRY * AddPreparedLoaderEntry (
     LOADER_ENTRY *Entry
 ) {
-    MsgLog ("[ AddPreparedLoaderEntry %s\n", Entry && GetPoolStr (&Entry->me.Title) ? GetPoolStr (&Entry->me.Title) : L"NULL" );
+    LOGPROCENTRY("%s", Entry && GetPoolStr (&Entry->me.Title) ? GetPoolStr (&Entry->me.Title) : L"NULL" );
     AddMenuEntry (MainMenu, (REFIT_MENU_ENTRY *) Entry);
-    MsgLog ("] AddPreparedLoaderEntry\n");
+    LOGPROCEXIT();
 
     return Entry;
 } // LOADER_ENTRY * AddPreparedLoaderEntry()
@@ -668,7 +668,7 @@ VOID ReadConfig (
     CHAR16           *MsgStr;
     UINTN             TokenCount, i;
 
-    MsgLog ("[ ReadConfig %s\n", FileName);
+    LOGPROCENTRY("%s", FileName);
 
     // Set a few defaults only if we are loading the default file.
     if (MyStriCmp (FileName, GlobalConfig.ConfigFilename)) {
@@ -737,13 +737,13 @@ VOID ReadConfig (
         PauseForKey();
         SwitchToGraphics();
 
-        MsgLog ("] ReadConfig (file not found)\n");
+        LOGPROCEXIT("(file not found)");
         return;
     }
 
     Status = RefitReadFile (SelfDir, FileName, &File, &i);
     if (EFI_ERROR(Status)) {
-        MsgLog ("] ReadConfig (read error)\n");
+        LOGPROCEXIT("(read error)");
         return;
     }
 
@@ -1161,7 +1161,7 @@ VOID ReadConfig (
     }
 
     SilenceAPFS = GlobalConfig.SilenceAPFS;
-    MsgLog ("] ReadConfig\n");
+    LOGPROCEXIT();
 } // VOID ReadConfig()
 
 static
@@ -1276,7 +1276,7 @@ LOADER_ENTRY * AddStanzaEntries (
     REFIT_VOLUME *Volume,
     CHAR16       *Title
 ) {
-    MsgLog ("[ AddStanzaEntries %s\n", Title ? Title : L"NULL");
+    LOGPROCENTRY("%s", Title ? Title : L"NULL");
     UINTN           TokenCount;
     CHAR16         *OurEfiBootNumber  = NULL;
     CHAR16        **TokenList;
@@ -1292,7 +1292,7 @@ LOADER_ENTRY * AddStanzaEntries (
     // prepare the menu entry
     Entry = InitializeLoaderEntry (NULL);
     if (Entry == NULL) {
-        MsgLog ("] AddStanzaEntries NULL\n");
+        LOGPROCEXIT("NULL");
         return NULL;
     }
     AssignVolume(&CurrentVolume, Volume);
@@ -1539,7 +1539,12 @@ LOADER_ENTRY * AddStanzaEntries (
     FreeVolume (&CurrentVolume);
     FreeVolume (&PreviousVolume);
 
-    MsgLog("] AddStanzaEntries%s\n", Entry ? L"" : L" (Entry not enabled)");
+    if (Entry) {
+        LOGPROCEXIT("%s", L"(Entry not enabled)");
+    }
+    else {
+        LOGPROCEXIT();
+    }
     return Entry;
 } // static VOID AddStanzaEntries()
 
@@ -1548,7 +1553,7 @@ LOADER_ENTRY * AddStanzaEntries (
 VOID ScanUserConfigured (
     CHAR16 *FileName
 ) {
-    MsgLog ("[ ScanUserConfigured FileName:%s\n", FileName ? FileName : L"NULL");
+    LOGPROCENTRY("FileName:%s", FileName ? FileName : L"NULL");
     EFI_STATUS         Status;
     REFIT_FILE         File;
     CHAR16           **TokenList;
@@ -1560,9 +1565,9 @@ VOID ScanUserConfigured (
     if (FileExists (SelfDir, FileName)) {
         Status = RefitReadFile (SelfDir, FileName, &File, &size);
         if (!EFI_ERROR(Status)) {
-            MsgLog ("[ ScanUserConfigured loop\n");
+            LOGBLOCKENTRY("ScanUserConfigured loop");
             while ((TokenCount = ReadTokenLine (&File, &TokenList)) > 0) {
-                MsgLog ("[ ScanUserConfigured token '%s'\n", TokenList[0]);
+                LOGBLOCKENTRY("ScanUserConfigured token '%s'", TokenList[0]);
                 if (MyStriCmp (TokenList[0], L"menuentry") && (TokenCount > 1)) {
                     Entry = AddStanzaEntries (&File, SelfVolume, TokenList[1]);
                     if (Entry) {
@@ -1597,11 +1602,11 @@ VOID ScanUserConfigured (
                 }
 
                 FreeTokenLine (&TokenList, &TokenCount);
-                MsgLog ("] ScanUserConfigured token\n");
+                LOGBLOCKEXIT("ScanUserConfigured token");
             } // while
 
             FreeTokenLine (&TokenList, &TokenCount);
-            MsgLog ("] ScanUserConfigured loop\n");
+            LOGBLOCKEXIT("ScanUserConfigured loop");
             MyFreePool (&File.Buffer);
         }
     } // if FileExists
@@ -1613,7 +1618,7 @@ VOID ScanUserConfigured (
     #endif
 
     InnerScan = FALSE;
-    MsgLog ("] ScanUserConfigured\n");
+    LOGPROCEXIT();
 } // VOID ScanUserConfigured()
 
 // Create an options file based on /etc/fstab. The resulting file has two options

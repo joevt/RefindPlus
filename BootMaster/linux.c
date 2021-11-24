@@ -90,7 +90,7 @@ CHAR16 * FindInitrd (
     EFI_FILE_INFO       *DirEntry;
     REFIT_DIR_ITER       DirIter;
 
-    MsgLog ("[ FindInitrd to match '%s' on '%s'\n", LoaderPath, GetPoolStr (&Volume->VolName));
+    LOGPROCENTRY("to match '%s' on '%s'", LoaderPath, GetPoolStr (&Volume->VolName));
     #if REFIT_DEBUG > 0
     LOG(3, LOG_LINE_NORMAL,
         L"Search for Initrd Matching '%s' in '%s'",
@@ -270,7 +270,7 @@ CHAR16 * FindInitrd (
     #if REFIT_DEBUG > 0
     LOG(3, LOG_THREE_STAR_MID, L"Located Initrd:- '%s'", InitrdName ? InitrdName : L"NULL");
     #endif
-    MsgLog ("] FindInitrd  Located initrd is '%s'\n", InitrdName ? InitrdName : L"NULL");
+    LOGPROCEXIT("Located initrd is '%s'", InitrdName ? InitrdName : L"NULL");
     return InitrdName;
 } // static CHAR16 * FindInitrd()
 
@@ -340,7 +340,7 @@ CHAR16 * GetMainLinuxOptions (
     IN CHAR16       *LoaderPath,
     IN REFIT_VOLUME *Volume
 ) {
-    MsgLog ("[ GetMainLinuxOptions LoaderPath:'%s' Volume:'%s'\n", LoaderPath, GetPoolStr (&Volume->VolName));
+    LOGPROCENTRY("LoaderPath:'%s' Volume:'%s'", LoaderPath, GetPoolStr (&Volume->VolName));
     CHAR16 *Options = NULL, *InitrdName, *FullOptions = NULL, *KernelVersion;
 
     LOG(5, LOG_BLANK_LINE_SEP, L"X");
@@ -369,7 +369,7 @@ CHAR16 * GetMainLinuxOptions (
         FullOptions ? FullOptions : L"NULL"
     );
     LOG(5, LOG_BLANK_LINE_SEP, L"X");
-    MsgLog ("] GetMainLinuxOptions Options:%s\n", FullOptions);
+    LOGPROCEXIT("Options:%s", FullOptions);
     return FullOptions;
 } // static CHAR16 * GetMainLinuxOptions()
 

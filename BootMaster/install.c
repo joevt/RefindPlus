@@ -1201,7 +1201,7 @@ UINTN PickOneBootOption (
 
 static
 EFI_STATUS DeleteInvalidBootEntries (VOID) {
-    MsgLog ("[ DeleteInvalidBootEntries\n");
+    LOGPROCENTRY();
     UINTN    Status, VarSize, ListSize, i, j = 0;
     UINT16   *BootOrder, *NewBootOrder;
     VOID     *Contents;
@@ -1249,7 +1249,7 @@ EFI_STATUS DeleteInvalidBootEntries (VOID) {
         MyFreePool (&BootOrder);
     }
 
-    MsgLog ("] DeleteInvalidBootEntries\n");
+    LOGPROCEXIT();
     return Status;
 } // EFI_STATUS DeleteInvalidBootEntries()
 
@@ -1258,7 +1258,7 @@ VOID ManageBootorder (VOID) {
     UINTN           BootNum = 0, Operation;
     CHAR16          *Name, *Message;
 
-    MsgLog ("[ ManageBootorder\n");
+    LOGPROCENTRY();
     #if REFIT_DEBUG > 0
     LOG(3, LOG_LINE_NORMAL, L"Managing Boot Order List");
     #endif
@@ -1282,5 +1282,5 @@ VOID ManageBootorder (VOID) {
     }
     DeleteBootOrderEntries (Entries);
 
-    MsgLog ("] ManageBootorder\n");
+    LOGPROCEXIT();
 } // VOID ManageBootorder()

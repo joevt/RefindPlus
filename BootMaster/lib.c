@@ -265,7 +265,7 @@ CHAR16 * SplitDeviceString (
 
 static
 EFI_STATUS FinishInitRefitLib (VOID) {
-    MsgLog ("[ FinishInitRefitLib\n");
+    LOGPROCENTRY();
     EFI_STATUS Status = EFI_SUCCESS;
 
     if (SelfVolume && SelfVolume->DeviceHandle != SelfLoadedImage->DeviceHandle) {
@@ -294,14 +294,14 @@ EFI_STATUS FinishInitRefitLib (VOID) {
         }
     }
 
-    MsgLog ("] FinishInitRefitLib %r\n", Status);
+    LOGPROCEXIT("%r", Status);
     return Status;
 } // static EFI_STATUS FinishInitRefitLib()
 
 EFI_STATUS InitRefitLib (
     IN EFI_HANDLE ImageHandle
 ) {
-    //MsgLog ("[ InitRefitLib\n");
+    //LOGPROCENTRY();
     EFI_STATUS   Status;
     CHAR16      *Temp = NULL;
     CHAR16      *DevicePathAsString;
@@ -335,7 +335,7 @@ EFI_STATUS InitRefitLib (
 
     Status = FinishInitRefitLib();
 
-    //MsgLog ("] InitRefitLib %r\n", Status);
+    //LOGPROCEXIT("%r", Status);
     return Status;
 } // InitRefitLib
 
@@ -358,7 +358,7 @@ VOID UninitVolume (
 
 static
 VOID UninitVolumes (VOID) {
-    MsgLog ("[ UninitVolumes\n");
+    LOGPROCENTRY();
     REFIT_VOLUME *Volume = NULL;
     UINTN VolumeIndex;
 
@@ -368,7 +368,7 @@ VOID UninitVolumes (VOID) {
     }
     // since Volume started as NULL, free it if it is not NULL
     FreeVolume (&Volume);
-    MsgLog ("] UninitVolumes\n");
+    LOGPROCEXIT();
 } // static VOID UninitVolumes()
 
 static
@@ -432,7 +432,7 @@ VOID ReinitVolume (
 } // static VOID ReinitVolume()
 
 VOID ReinitVolumes (VOID) {
-    MsgLog ("[ ReinitVolumes\n");
+    LOGPROCENTRY();
     REFIT_VOLUME *Volume = NULL;
     UINTN VolumeIndex;
 
@@ -442,7 +442,7 @@ VOID ReinitVolumes (VOID) {
     }
     // since Volume started as NULL, free it if it is not NULL
     FreeVolume (&Volume);
-    MsgLog ("] ReinitVolumes\n");
+    LOGPROCEXIT();
 } // VOID ReinitVolumes()
 
 VOID CloseDir (EFI_FILE **theDir) {
@@ -454,7 +454,7 @@ VOID CloseDir (EFI_FILE **theDir) {
 
 // called before running external programs to close open file handles
 VOID UninitRefitLib (VOID) {
-    MsgLog ("[ UninitRefitLib\n");
+    LOGPROCENTRY();
     // This piece of code was made to correspond to weirdness in ReinitRefitLib().
     // See the comment on it there.
     if (SelfRootDir == SelfVolume->RootDir) {
@@ -468,18 +468,18 @@ VOID UninitRefitLib (VOID) {
     CloseDir (&SelfRootDir);
     CloseDir (&gVarsDir);
     
-    MsgLog ("] UninitRefitLib\n");
+    LOGPROCEXIT();
 } // VOID UninitRefitLib()
 
 // called after running external programs to re-open file handles
 EFI_STATUS ReinitRefitLib (VOID) {
-    MsgLog ("[ ReinitRefitLib\n");
+    LOGPROCENTRY();
     EFI_STATUS Status;
 
     ReinitVolumes();
     Status = FinishInitRefitLib();
 
-    MsgLog ("] ReinitRefitLib %r\n", Status);
+    LOGPROCEXIT("%r", Status);
     return Status;
 }
 
@@ -552,6 +552,9 @@ EFI_STATUS EfivarGetRaw (
     OUT VOID     **VariableData,
     OUT UINTN     *VariableSize  OPTIONAL
 ) {
+    BOOLEAN UseEmulatedNVRAM = !GlobalConfig.UseNvram && GuidsAreEqual (VendorGUID, &RefindPlusGuid);
+    LOGPROCENTRY("'%s' %s", VariableName, UseEmulatedNVRAM ? L"from Emulated NVRAM" : L"from Hardware NVRAM");
+
     VOID        *TmpBuffer     = NULL;
     UINTN        BufferSize    = 0;
     EFI_STATUS   Status        = EFI_LOAD_ERROR;
@@ -562,11 +565,7 @@ EFI_STATUS EfivarGetRaw (
         NativeLogger = FALSE;
     }
 
-    if (!GlobalConfig.UseNvram &&
-        GuidsAreEqual (VendorGUID, &RefindPlusGuid)
-    ) {
-        MsgLog ("[ EfivarGetRaw '%s' from Emulated NVRAM\n", VariableName);
-
+    if (UseEmulatedNVRAM) {
         Status = FindVarsDir();
         if (Status == EFI_SUCCESS) {
             Status = egLoadFile (
@@ -614,8 +613,6 @@ EFI_STATUS EfivarGetRaw (
         }
     }
     else {
-        MsgLog ("[ EfivarGetRaw '%s' from Hardware NVRAM\n", VariableName);
-
         // Pass in a zero-size buffer to find the required buffer size.
         Status = REFIT_CALL_5_WRAPPER(
             gRT->GetVariable, VariableName,
@@ -671,7 +668,7 @@ EFI_STATUS EfivarGetRaw (
         NativeLogger = TRUE;
     }
 
-    MsgLog ("] EfivarGetRaw '%s' ...'%r'\n", VariableName, Status);
+    LOGPROCEXIT("'%s' ...'%r'", VariableName, Status);
     return Status;
 } // EFI_STATUS EfivarGetRaw ()
 
@@ -686,7 +683,7 @@ EFI_STATUS EfivarSetRaw (
     IN  UINTN      VariableSize,
     IN  BOOLEAN    Persistent
 ) {
-    MsgLog ("[ EfivarSetRaw '%s' %p(%d)\n", VariableName, VariableData, VariableSize);
+    LOGPROCENTRY("'%s' %p(%d)", VariableName, VariableData, VariableSize);
     EFI_STATUS   Status;
     UINT32       StorageFlags;
     VOID        *OldBuf;
@@ -725,7 +722,7 @@ EFI_STATUS EfivarSetRaw (
 
                 MyFreePool (&OldBuf);
 
-                MsgLog ("] EfivarSetRaw Already Set\n");
+                LOGPROCEXIT("Already Set");
                 // State to be logged by caller if required
                 return EFI_ALREADY_STARTED;
             }
@@ -800,7 +797,7 @@ EFI_STATUS EfivarSetRaw (
         NativeLogger = TRUE;
     }
 
-    MsgLog ("] EfivarSetRaw %r\n", Status);
+    LOGPROCEXIT("%r", Status);
     return Status;
 } // EFI_STATUS EfivarSetRaw ()
 
@@ -910,7 +907,7 @@ VOID FreeVolumes (
     IN OUT UINTN           *ListCount
 ) {
     if (ListVolumes && *ListVolumes) {
-        MsgLog ("[ FreeVolumes %p->%p[%d]\n", ListVolumes, *ListVolumes, ListCount ? *ListCount : -1);
+        LOGPROCENTRY("%p->%p[%d]", ListVolumes, *ListVolumes, ListCount ? *ListCount : -1);
         UINTN i;
 
         if (ListCount && *ListCount) {
@@ -920,14 +917,14 @@ VOID FreeVolumes (
             *ListCount = 0;
         }
         MyFreePool (ListVolumes);
-        MsgLog ("] FreeVolumes\n");
+        LOGPROCEXIT();
     }
 } // VOID FreeVolumes()
 
 REFIT_VOLUME * CopyVolume (
     IN REFIT_VOLUME *VolumeToCopy
 ) {
-    MsgLog ("[ CopyVolume %p\n", VolumeToCopy);
+    LOGPROCENTRY("%p", VolumeToCopy);
     REFIT_VOLUME *Volume = NULL;
 
     if (VolumeToCopy) {
@@ -973,7 +970,7 @@ REFIT_VOLUME * CopyVolume (
         ReinitVolume (VolumeToCopy);
     } // if VolumeToCopy
 
-    MsgLog ("] CopyVolume %p\n", Volume);
+    LOGPROCEXIT("%p", Volume);
 
     return Volume;
 } // REFIT_VOLUME * CopyVolume()
@@ -986,7 +983,7 @@ VOID FreeVolume (
     REFIT_VOLUME **Volume
 ) {
     if (Volume && *Volume) {
-        VolumeLog (MsgLog ("[ FreeVolume %p->%p(#%d)\n", Volume, *Volume, (*Volume)->ReferenceCount));
+        VolumeLog (LOGPROCENTRY("%p->%p(#%d)", Volume, *Volume, (*Volume)->ReferenceCount));
         if ((*Volume)->ReferenceCount > 0) {
             (*Volume)->ReferenceCount--;
             if ((*Volume)->ReferenceCount == 0) {
@@ -1017,7 +1014,7 @@ VOID FreeVolume (
             MsgLog ("Allocation Error: Volume reference count is already zero.\n");
             DumpCallStack(NULL, FALSE);
         }
-        VolumeLog (MsgLog ("] FreeVolume %p->%p(#%d)\n", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1));
+        VolumeLog (LOGPROCEXIT("%p->%p(#%d)", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1));
         *Volume = NULL;
     }
 } // VOID FreeVolume()
@@ -1484,14 +1481,14 @@ VOID ScanVolumeBootcode (
 VOID SetVolumeBadgeIcon (
     IN OUT REFIT_VOLUME *Volume
 ) {
-    MsgLog ("[ SetVolumeBadgeIcon '%s'\n", GetPoolStr (&Volume->VolName));
+    LOGPROCENTRY("'%s'", GetPoolStr (&Volume->VolName));
     if (GlobalConfig.HideUIFlags & HIDEUI_FLAG_BADGES) {
-        MsgLog ("] SetVolumeBadgeIcon Hidden\n");
+        LOGPROCEXIT("Hidden");
         return;
     }
 
     if (Volume == NULL) {
-        MsgLog ("] SetVolumeBadgeIcon NULL Volume!!\n");
+        LOGPROCEXIT("NULL Volume!!");
         return;
     }
 
@@ -1514,7 +1511,7 @@ VOID SetVolumeBadgeIcon (
             case DISK_KIND_NET     : CopyFromPoolImage_PI_ (&Volume->VolBadgeImage_PI_, BuiltinIcon (BUILTIN_ICON_VOL_NET     )); break;
         } // switch
     }
-    MsgLog ("] SetVolumeBadgeIcon %sFound\n", GetPoolImage (&Volume->VolBadgeImage) ? L"" : L"Not ");
+    LOGPROCEXIT("%sFound", GetPoolImage (&Volume->VolBadgeImage) ? L"" : L"Not ");
 } // VOID SetVolumeBadgeIcon()
 
 // Return a string representing the input size in IEEE-1541 units.
@@ -1671,7 +1668,7 @@ VOID SetPartGuidAndName (
     IN OUT REFIT_VOLUME             *Volume,
     IN OUT EFI_DEVICE_PATH_PROTOCOL *DevicePath
 ) {
-    //MsgLog ("[ SetPartGuidAndName %p(#%d)\n", Volume, Volume ? Volume->ReferenceCount : -1);
+    //LOGPROCENTRY("%p(#%d)", Volume, Volume ? Volume->ReferenceCount : -1);
     HARDDRIVE_DEVICE_PATH    *HdDevicePath;
     GPT_ENTRY                *PartInfo;
 
@@ -1706,8 +1703,8 @@ VOID SetPartGuidAndName (
             Volume->PartGuid = StringAsGuid (L"92a6c61f-7130-49b9-b05c-8d7e7b039127");
         }
     } // if DevicePath->Type
-    //MsgLog ("] SetPartGuidAndName %p(#%d)\n", Volume, Volume ? Volume->ReferenceCount : -1);
-} // VOID SetPartGuid()
+    //LOGPROCEXIT("%p(#%d)", Volume, Volume ? Volume->ReferenceCount : -1);
+} // VOID SetPartGuidAndName()
 
 // Return TRUE if NTFS boot files are found or if Volume is unreadable,
 // FALSE otherwise. The idea is to weed out non-boot NTFS volumes from
@@ -1734,7 +1731,7 @@ BOOLEAN HasWindowsBiosBootFiles (
 VOID ScanVolume (
     IN OUT REFIT_VOLUME *Volume
 ) {
-    //MsgLog ("[ ScanVolume\n");
+    LOGPROCENTRY();
     EFI_STATUS        Status;
     EFI_DEVICE_PATH  *DevicePath;
     EFI_DEVICE_PATH  *NextDevicePath;
@@ -2013,7 +2010,7 @@ VOID ScanVolume (
             Volume->HasBootCode = HasWindowsBiosBootFiles (Volume);
         }
     }
-    //MsgLog ("] ScanVolume\n");
+    LOGPROCEXIT();
 } // ScanVolume()
 
 static
@@ -2250,7 +2247,7 @@ VOID ScanVolumes (VOID) {
     EFI_GUID            ContainerGuid;
     APPLE_APFS_VOLUME_ROLE VolumeRole;
     
-    MsgLog ("[ ScanVolumes\n");
+    LOGPROCENTRY();
 
     #if REFIT_DEBUG > 0
     CHAR16  *MsgStr       = NULL;
@@ -2330,9 +2327,9 @@ VOID ScanVolumes (VOID) {
     // first pass: collect information about all handles
     ScannedOnce = FALSE;
 
-    MsgLog ("[ ScanVolumes first pass [%d]\n", HandleCount);
+    LOGBLOCKENTRY("ScanVolumes first pass [%d]", HandleCount);
     for (HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
-        MsgLog ("[ Volumes[%d]\n", HandleIndex);
+        LOGBLOCKENTRY("Volumes[%d]", HandleIndex);
         #if REFIT_DEBUG > 0
         /* Exception for LOG_THREE_STAR_SEP */
         LOG(3, LOG_THREE_STAR_SEP, L"NEXT VOLUME");
@@ -2385,9 +2382,9 @@ VOID ScanVolumes (VOID) {
 
         if (Volume->DeviceHandle == SelfLoadedImage->DeviceHandle) {
             SelfVolSet = TRUE;
-            MsgLog ("[ SelfVolume at %d of %d\n", HandleIndex, HandleCount);
+            LOGBLOCKENTRY("SelfVolume at %d of %d", HandleIndex, HandleCount);
             AssignVolume (&SelfVolume, Volume);
-            MsgLog ("] SelfVolume\n");
+            LOGBLOCKEXIT("SelfVolume");
         }
 
         if (SelfVolRun) {
@@ -2534,9 +2531,9 @@ VOID ScanVolumes (VOID) {
         // since Volume started as NULL, free it if it is not NULL
         FreeVolume (&Volume);
         
-        MsgLog ("] Volumes[%d]\n", HandleIndex);
+        LOGBLOCKEXIT("Volumes[%d]", HandleIndex);
     } // for: first pass
-    MsgLog ("] ScanVolumes first pass\n");
+    LOGBLOCKEXIT("ScanVolumes first pass");
 
     MyFreePool (&UuidList);
     MyFreePool (&Handles);
@@ -2574,10 +2571,10 @@ VOID ScanVolumes (VOID) {
         #endif
     }
 
-    MsgLog ("[ ScanVolumes second pass\n");
+    LOGBLOCKENTRY("ScanVolumes second pass");
     // second pass: relate partitions and whole disk devices
     for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
-        MsgLog ("[ Volumes[%d]\n", VolumeIndex);
+        LOGBLOCKENTRY("Volumes[%d]", VolumeIndex);
         AssignVolume (&Volume, Volumes[VolumeIndex]);
         // check MBR partition table for extended partitions
         if (Volume->BlockIO != NULL && Volume->WholeDiskBlockIO != NULL &&
@@ -2603,9 +2600,9 @@ VOID ScanVolumes (VOID) {
                 if (Volumes[VolumeIndex2]->BlockIO == Volume->WholeDiskBlockIO &&
                     Volumes[VolumeIndex2]->BlockIOOffset == 0
                 ) {
-                    //MsgLog ("[ WholeDiskVolume\n");
+                    //LOGBLOCKENTRY("WholeDiskVolume");
                     AssignVolume (&WholeDiskVolume, Volumes[VolumeIndex2]);
-                    //MsgLog ("] WholeDiskVolume\n");
+                    //LOGBLOCKEXIT("WholeDiskVolume");
                 }
             }
         }
@@ -2678,9 +2675,9 @@ VOID ScanVolumes (VOID) {
             MyFreePool (&SectorBuffer1);
             MyFreePool (&SectorBuffer2);
         }
-        MsgLog ("] Volumes[%d]\n", VolumeIndex);
+        LOGBLOCKEXIT("Volumes[%d]", VolumeIndex);
     } // for
-    MsgLog ("] ScanVolumes second pass\n");
+    LOGBLOCKEXIT("ScanVolumes second pass");
 
     #if REFIT_DEBUG > 0
     LOG2(2, LOG_THREE_STAR_SEP, L"INFO: ", L"", L"Processed %d Volume%s", VolumesCount, (VolumesCount == 1) ? L"" : L"s");
@@ -2701,7 +2698,7 @@ Done:
     LEAKABLEPARTITIONS();
 #endif
 
-    MsgLog ("] ScanVolumes\n");
+    LOGPROCEXIT();
 } // VOID ScanVolumes()
 
 static
@@ -3617,12 +3614,12 @@ REFIT_VOLUME *
 AllocateVolume (
     REFIT_VOLUME **Volume
 ) {
-    VolumeLog (MsgLog ("[ AllocateVolume\n"));
+    VolumeLog (LOGPROCENTRY());
     if (Volume) {
         *Volume = AllocateZeroPool (sizeof (REFIT_VOLUME));
         RetainVolume (*Volume);
     }
-    VolumeLog (MsgLog ("] AllocateVolume %p(#%d)\n", Volume ? *Volume : NULL, (Volume && *Volume) ? (*Volume)->ReferenceCount : -1));
+    VolumeLog (LOGPROCEXIT("%p(#%d)", Volume ? *Volume : NULL, (Volume && *Volume) ? (*Volume)->ReferenceCount : -1));
     return Volume ? *Volume : NULL;
 }
 
@@ -3635,7 +3632,7 @@ AssignVolume (
     REFIT_VOLUME *NewVolume
 ) {
     if (Volume) {
-        VolumeLog (MsgLog ("[ AssignVolume Old:%p->%p(#%d) New:%p(#%d)\n", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1, NewVolume, NewVolume ? NewVolume->ReferenceCount : -1));
+        VolumeLog (LOGPROCENTRY("Old:%p->%p(#%d) New:%p(#%d)", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1, NewVolume, NewVolume ? NewVolume->ReferenceCount : -1));
         if (NewVolume && (NewVolume->ReferenceCount & 0xFFFF0000)) {
             MsgLog ("Allocation Error: weird volume reference count 0x%X\n", NewVolume->ReferenceCount);
             DumpCallStack(NULL, FALSE);
@@ -3646,7 +3643,7 @@ AssignVolume (
         RetainVolume (NewVolume);
         *Volume = NewVolume;
         FreeVolume (&OldVolume);
-        VolumeLog (MsgLog ("] AssignVolume Current:%p->%p(#%d) Old:%p(#%d)\n", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1, OldVolume, OldVolume ? OldVolume->ReferenceCount : -1));
+        VolumeLog (LOGPROCEXIT("Current:%p->%p(#%d) Old:%p(#%d)", Volume, *Volume, *Volume ? (*Volume)->ReferenceCount : -1, OldVolume, OldVolume ? OldVolume->ReferenceCount : -1));
     }
 }
 
@@ -3663,7 +3660,7 @@ AddToVolumeList (
     AddListElement ((VOID***)Volumes, VolumesCount, Volume);
     if (Volume) {
         RetainVolume (Volume);
-        VolumeLog (MsgLog ("[] AddToVolumeList %p->%p[%d] = %p(#%d)\n", Volumes, *Volumes ? *Volumes : 0, VolumesCount ? *VolumesCount - 1 : -1, Volume, Volume ? Volume->ReferenceCount : -1));
+        VolumeLog (LOGPROC("%p->%p[%d] = %p(#%d)\n", Volumes, *Volumes ? *Volumes : 0, VolumesCount ? *VolumesCount - 1 : -1, Volume, Volume ? Volume->ReferenceCount : -1));
     }
     else {
         MsgLog ("Allocation Error: Assigning null volume to list\n");
@@ -3721,7 +3718,7 @@ VOID
 LEAKABLEVOLUMES (
 ) {
     if (Volumes) {
-        MsgLog ("[ LEAKABLEVOLUMES\n");
+        LOGPROCENTRY();
         LEAKABLEPATHINIT (kLeakableVolumes);
             UINTN VolumeIndex;
             LEAKABLEPATHINC (); // space for VolumeIndex
@@ -3731,7 +3728,7 @@ LEAKABLEVOLUMES (
             LEAKABLEPATHDEC ();
             LEAKABLEWITHPATH( Volumes, "Volumes");
         LEAKABLEPATHDONE ();
-        MsgLog ("] LEAKABLEVOLUMES\n");
+        LOGPROCEXIT();
     }
 }
 #endif

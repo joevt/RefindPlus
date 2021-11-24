@@ -47,7 +47,7 @@ LEAKABLEAPFSPRIVATEDATA(
     LIST_ENTRY *list
 )
 {
-    MsgLog ("[ LEAKABLEAPFSPRIVATEDATA\n");
+    LOGPROCENTRY();
     LEAKABLEPATHINIT (kLeakableApfsPrivateData);
         LEAKABLEPATHINC (); // space for Apfs Private Data Index
             LIST_ENTRY *Entry;
@@ -57,7 +57,7 @@ LEAKABLEAPFSPRIVATEDATA(
             }
         LEAKABLEPATHDEC ();
     LEAKABLEPATHDONE ();
-    MsgLog ("] LEAKABLEAPFSPRIVATEDATA\n");
+    LOGPROCEXIT();
 }
 #endif
 

@@ -97,7 +97,7 @@ EFI_FILE_HANDLE EfiLibOpenRoot (
 
     // Done
     if (EFI_ERROR (Status)) {
-        MsgLog ("[] EfiLibOpenRoot %r\n", Status);
+        LOGPROC("%r", Status);
     }
     return EFI_ERROR(Status) ? NULL : File;
 } // EFI_FILE_HANDLE EfiLibOpenRoot()

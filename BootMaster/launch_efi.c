@@ -243,7 +243,7 @@ EFI_STATUS StartEFIImage (
     CHAR16            *MsgStr            = NULL;
     EFI_GUID           SystemdGuid       = SYSTEMD_GUID_VALUE;
 
-    MsgLog ("[ StartEFIImage Title:'%s' FileName:'%s'\n", ImageTitle, Filename);
+    LOGPROCENTRY("Title:'%s' FileName:'%s'", ImageTitle, Filename);
 
     if (!Volume) {
         ReturnStatus = EFI_INVALID_PARAMETER;
@@ -254,7 +254,7 @@ EFI_STATUS StartEFIImage (
         );
         #endif
 
-        MsgLog ("] StartEFIImage Volume is NULL\n");
+        LOGPROCEXIT("Volume is NULL");
         return ReturnStatus;
     }
 
@@ -449,7 +449,7 @@ EFI_STATUS StartEFIImage (
     }
     #endif
 
-    MsgLog("[ StartImage '%s'\n", ImageTitle);
+    LOGBLOCKENTRY("StartImage '%s'", ImageTitle);
     BootLogPause();
     LEAKABLEEXTERNALSTART (kLeakableWhatStartEFIImageStartImage);
     Status = REFIT_CALL_3_WRAPPER(
@@ -458,7 +458,7 @@ EFI_STATUS StartEFIImage (
     );
     LEAKABLEEXTERNALSTOP ();
     ReturnStatus = Status;
-    MsgLog("] StartImage\n");
+    LOGBLOCKEXIT("StartImage");
 
     // control returns here when the child image calls Exit()
     #if REFIT_DEBUG > 0
@@ -503,7 +503,7 @@ bailout:
         FinishExternalScreen();
     }
 
-    MsgLog ("] StartEFIImage ... %r\n", ReturnStatus);
+    LOGPROCEXIT("... %r", ReturnStatus);
     return ReturnStatus;
 } // EFI_STATUS StartEFIImage()
 

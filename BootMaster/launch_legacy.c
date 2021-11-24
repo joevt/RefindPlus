@@ -655,7 +655,7 @@ VOID StartLegacyUEFI (
     LEGACY_ENTRY *Entry,
     CHAR16       *SelectionName
 ) {
-    MsgLog ("[ StartLegacyUEFI '%s'\n", SelectionName);
+    LOGPROCENTRY("'%s'", SelectionName);
     CHAR16 *MsgStrA = L"'UEFI-Style' Legacy (BIOS) OS";
     CHAR16 *MsgStrB = PoolPrint (L"Booting %s", MsgStrA);
     CHAR16 *MsgStrC = PoolPrint (L"Failure %s", MsgStrB);
@@ -674,13 +674,13 @@ VOID StartLegacyUEFI (
     StoreLoaderName (SelectionName);
 
     UninitRefitLib();
-    MsgLog ("[ BdsLibConnectDevicePath\n");
+    LOGBLOCKENTRY("BdsLibConnectDevicePath");
     BdsLibConnectDevicePath (Entry->BdsOption->DevicePath);
-    MsgLog ("] BdsLibConnectDevicePath\n");
-    MsgLog ("[ BdsLibDoLegacyBoot\n");
+    LOGBLOCKEXIT("BdsLibConnectDevicePath");
+    LOGBLOCKENTRY("BdsLibDoLegacyBoot");
     BootLogPause();
     BdsLibDoLegacyBoot (Entry->BdsOption);
-    MsgLog ("] BdsLibDoLegacyBoot\n");
+    LOGBLOCKEXIT("BdsLibDoLegacyBoot");
 
     // There was a failure if we get here.
     ReinitRefitLib();
@@ -697,7 +697,7 @@ VOID StartLegacyUEFI (
     MyFreePool (&MsgStrC);
 
     FinishExternalScreen();
-    MsgLog ("] StartLegacyUEFI\n");
+    LOGPROCEXIT();
 } // static VOID StartLegacyUEFI()
 
 static

@@ -673,7 +673,7 @@ EFI_STATUS EFIAPI OpenProtocolEx (
 
     if (Status == EFI_UNSUPPORTED) {
         if (GuidsAreEqual (&gEfiGraphicsOutputProtocolGuid, Protocol)) {
-            MsgLog ("[ OpenProtocolEx gEfiGraphicsOutputProtocolGuid\n");
+            LOGPROCENTRY("gEfiGraphicsOutputProtocolGuid");
             if (GOPDraw != NULL) {
                 Status     = EFI_SUCCESS;
                 if (Interface) {
@@ -730,7 +730,7 @@ EFI_STATUS EFIAPI OpenProtocolEx (
                 }
                 MyFreePool (&HandleBuffer);
             } // If GOPDraw != NULL
-            MsgLog ("] OpenProtocolEx gEfiGraphicsOutputProtocolGuid\n");
+            LOGPROCEXIT("gEfiGraphicsOutputProtocolGuid");
         } // if GuidsAreEqual
 
     } // if Status == EFI_UNSUPPORTED
@@ -1378,7 +1378,7 @@ VOID RescanAll (
     BOOLEAN DisplayMessage,
     BOOLEAN Reconnect
 ) {
-    MsgLog ("[ RescanAll\n");
+    LOGPROCENTRY();
     #if REFIT_DEBUG > 0
     CHAR16 *MsgStr = L"Repeat Tool/Loader Scan";
 
@@ -1404,7 +1404,7 @@ VOID RescanAll (
     LEAKABLEVOLUMES();
     LEAKABLEPARTITIONS();
     LEAKABLEROOTMENU (kLeakableMenuMain, MainMenu);
-    MsgLog ("] RescanAll\n");
+    LOGPROCEXIT();
 } // VOID RescanAll()
 
 #ifdef __MAKEWITH_TIANO
@@ -1512,7 +1512,7 @@ VOID SetConfigFilename (
     );
 
     if ((Status == EFI_SUCCESS) && (Info->LoadOptionsSize > 0)) {
-        MsgLog ("[ SetConfigFilename: (%d) [0]=%d '%s'\n", Info->LoadOptionsSize, Info->LoadOptions ? ((CHAR16 *)(Info->LoadOptions))[0] : -1, Info->LoadOptions);
+        LOGPROCENTRY(": (%d) [0]=%d '%s'", Info->LoadOptionsSize, Info->LoadOptions ? ((CHAR16 *)(Info->LoadOptions))[0] : -1, Info->LoadOptions);
 
         Options   = (CHAR16 *) Info->LoadOptions;
         SubString = MyStrStr (Options, L" -c ");
@@ -1555,7 +1555,7 @@ VOID SetConfigFilename (
 
             MyFreePool (&FileName);
         } // if SubString
-        MsgLog ("] SetConfigFilename\n");
+        LOGPROCEXIT();
     } // if (Status == EFI_SUCCESS) && Info->LoadOptionsSize
 } // static VOID SetConfigFilename()
 
@@ -2531,7 +2531,7 @@ EFI_STATUS EFIAPI efi_main (
             #include "tags.include"
         }
 
-        MsgLog ("[ %a\n", TheTagName);
+        LOGBLOCKENTRY("%a", TheTagName);
 
         switch (ChosenEntry->Tag) {
             case TAG_NVRAMCLEAN:    // Clean NVRAM
@@ -3050,7 +3050,9 @@ EFI_STATUS EFIAPI efi_main (
                 }
                 else {
                    BeginTextScreen (L" ");
-                   MsgLog ("] %a (leaving main)\n", TheTagName);
+                   LOGBLOCKEXIT("%a (leaving main loop)", TheTagName);
+                   LOGBLOCKEXIT("Main Loop");
+                   LOGPROCEXIT();
                    return EFI_SUCCESS;
                 }
                 break;
@@ -3113,9 +3115,9 @@ EFI_STATUS EFIAPI efi_main (
 
                 break;
         } // switch
-        MsgLog ("] %a\n", TheTagName);
+        LOGBLOCKEXIT("%a", TheTagName);
     } // while
-    MsgLog ("] Main Loop\n");
+    LOGBLOCKEXIT("Main Loop");
     // MyFreePool (&SelectionName); // this should never happen - don't do it since it may be from a menu entry
 
     // If we end up here, things have gone wrong. Try to reboot, and if that

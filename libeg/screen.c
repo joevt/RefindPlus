@@ -1900,7 +1900,7 @@ VOID egScreenShot (VOID) {
     CHAR16       *FileName       = NULL;
     CHAR16       *MsgStr         = NULL;
 
-    MsgLog ("[ egScreenShot\n");
+    LOGPROCENTRY();
 
     Image = egCopyScreen();
     if (Image == NULL) {
@@ -1988,12 +1988,12 @@ VOID egScreenShot (VOID) {
     #endif
 
     MyFreePool (&FileName);
-    MsgLog ("] egScreenShot\n");
+    LOGPROCEXIT();
     return;
 
     // DEBUG: switch to text mode
 bailout_wait:
-    MsgLog ("] egScreenShot bailout\n");
+    LOGPROCEXIT("bailout");
     i = 0;
     egSetGraphicsModeEnabled (FALSE);
     REFIT_CALL_3_WRAPPER(
@@ -2003,6 +2003,7 @@ bailout_wait:
     return;
 
 error_exit:
+    LOGPROCEXIT("error");
     SwitchToText (FALSE);
     REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
     PrintUglyText (MsgStr, NEXTLINE);

@@ -101,7 +101,7 @@ VOID PrepareBlankLine (VOID) {
 //
 
 VOID InitScreen (VOID) {
-    MsgLog ("[ InitScreen\n");
+    LOGPROCENTRY();
     // initialise libeg
     egInitScreen();
 
@@ -152,7 +152,7 @@ VOID InitScreen (VOID) {
             DrawScreenHeader (L"Initialising...");
         }
     }
-    MsgLog ("] InitScreen\n");
+    LOGPROCEXIT();
 } // VOID InitScreen()
 
 // Set the screen resolution and mode (text vs. graphics).
@@ -163,7 +163,7 @@ VOID SetupScreen (VOID) {
     static BOOLEAN BannerLoaded = FALSE;
     static BOOLEAN ScaledIcons  = FALSE;
 
-    MsgLog ("[ SetupScreen\n");
+    LOGPROCENTRY();
 
     #if REFIT_DEBUG > 0
     CHAR16 *MsgStr = NULL;
@@ -358,7 +358,7 @@ VOID SetupScreen (VOID) {
 
         SwitchToText (FALSE);
     }
-    MsgLog ("] SetupScreen\n");
+    LOGPROCEXIT();
 } // VOID SetupScreen()
 
 extern EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION *mCharacterBuffer;
@@ -366,7 +366,7 @@ extern EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION *mCharacterBuffer;
 VOID SwitchToText (
     IN BOOLEAN CursorEnabled
 ) {
-    MsgLog ("[ SwitchToText CursorEnabled:%d\n", CursorEnabled);
+    LOGPROCENTRY("CursorEnabled:%d", CursorEnabled);
     EFI_STATUS Status;
 
     MsgLog ("TextRenderer:%d HIsBoot:%d\n", GlobalConfig.TextRenderer, IsBoot);
@@ -440,25 +440,25 @@ VOID SwitchToText (
         MsgLog ("INFO: Switch to Text Mode ... Success\n\n");
     }
     #endif
-    MsgLog ("] SwitchToText\n");
+    LOGPROCEXIT();
 } // VOID SwitchToText()
 
 EFI_STATUS SwitchToGraphics (VOID) {
-    MsgLog ("[ SwitchToGraphics\n");
+    LOGPROCENTRY();
     if (AllowGraphicsMode) {
         if (!egIsGraphicsModeEnabled()) {
             egSetGraphicsModeEnabled (TRUE);
             GraphicsScreenDirty = TRUE;
 
-            MsgLog ("] SwitchToGraphics EFI_SUCCESS\n");
+            LOGPROCEXIT("EFI_SUCCESS");
             return EFI_SUCCESS;
         }
 
-        MsgLog ("] SwitchToGraphics EFI_ALREADY_STARTED\n");
+        LOGPROCEXIT("EFI_ALREADY_STARTED");
         return EFI_ALREADY_STARTED;
     }
 
-    MsgLog ("] SwitchToGraphics EFI_NOT_FOUND\n");
+    LOGPROCEXIT("EFI_NOT_FOUND");
     return EFI_NOT_FOUND;
 } // EFI_STATUS SwitchToGraphics()
 
@@ -468,19 +468,19 @@ EFI_STATUS SwitchToGraphics (VOID) {
 VOID BeginTextScreen (
     IN CHAR16 *Title
 ) {
-    MsgLog ("[ BeginTextScreen Title:%s\n", Title ? Title : L"NULL");
+    LOGPROCENTRY("Title:%s", Title ? Title : L"NULL");
     DrawScreenHeader (Title);
     SwitchToText (FALSE);
 
     // reset error flag
     haveError = FALSE;
-    MsgLog ("] BeginTextScreen\n");
+    LOGPROCEXIT();
 } // VOID BeginTextScreen()
 
 VOID FinishTextScreen (
     IN BOOLEAN WaitAlways
 ) {
-    MsgLog ("[ FinishTextScreen WaitAlways:%d\n", WaitAlways);
+    LOGPROCENTRY("WaitAlways:%d", WaitAlways);
     if (haveError || WaitAlways) {
         SwitchToText (FALSE);
         PauseForKey();
@@ -488,14 +488,14 @@ VOID FinishTextScreen (
 
     // reset error flag
     haveError = FALSE;
-    MsgLog ("] FinishTextScreen\n");
+    LOGPROCEXIT();
 } // VOID FinishTextScreen()
 
 VOID BeginExternalScreen (
     IN BOOLEAN  UseGraphicsMode,
     IN CHAR16  *Title
 ) {
-    MsgLog ("[ BeginExternalScreen UseGraphicsMode:%d Title:%s\n", UseGraphicsMode, Title ? Title : L"NULL");
+    LOGPROCENTRY("UseGraphicsMode:%d Title:%s", UseGraphicsMode, Title ? Title : L"NULL");
     if (!AllowGraphicsMode) {
         UseGraphicsMode = FALSE;
     }
@@ -518,11 +518,11 @@ VOID BeginExternalScreen (
 
     // reset error flag
     haveError = FALSE;
-    MsgLog ("] BeginExternalScreen\n");
+    LOGPROCEXIT();
 } // VOID BeginExternalScreen()
 
 VOID FinishExternalScreen (VOID) {
-    MsgLog ("[ FinishExternalScreen\n");
+    LOGPROCENTRY();
     // make sure we clean up later
     GraphicsScreenDirty = TRUE;
 
@@ -536,24 +536,24 @@ VOID FinishExternalScreen (VOID) {
 
     // reset error flag
     haveError = FALSE;
-    MsgLog ("] FinishExternalScreen\n");
+    LOGPROCEXIT();
 } // VOID FinishExternalScreen()
 
 VOID TerminateScreen (VOID) {
-    MsgLog ("[ TerminateScreen\n");
+    LOGPROCENTRY();
     // clear text screen
     REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
     REFIT_CALL_1_WRAPPER(gST->ConOut->ClearScreen,  gST->ConOut);
 
     // enable cursor
     REFIT_CALL_2_WRAPPER(gST->ConOut->EnableCursor, gST->ConOut, TRUE);
-    MsgLog ("] TerminateScreen\n");
+    LOGPROCEXIT();
 } // VOID TerminateScreen()
 
 VOID DrawScreenHeader (
     IN CHAR16 *Title
 ) {
-    MsgLog ("[ DrawScreenHeader Title:%s\n", Title ? Title : L"NULL");
+    LOGPROCENTRY("Title:%s", Title ? Title : L"NULL");
     UINTN i;
 
     // clear to black background ... first clear in graphics mode
@@ -578,7 +578,7 @@ VOID DrawScreenHeader (
     // reposition cursor
     REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute,      gST->ConOut, ATTR_BASIC);
     REFIT_CALL_3_WRAPPER(gST->ConOut->SetCursorPosition, gST->ConOut, 0, 4);
-    MsgLog ("] DrawScreenHeader\n");
+    LOGPROCEXIT();
 } // VOID DrawScreenHeader()
 
 //
@@ -915,7 +915,7 @@ BOOLEAN CheckError (
 VOID SwitchToGraphicsAndClear (
     IN BOOLEAN ShowBanner
 ) {
-    MsgLog ("[ SwitchToGraphicsAndClear ShowBanner:%d\n", ShowBanner);
+    LOGPROCENTRY("ShowBanner:%d", ShowBanner);
     EFI_STATUS Status;
 
     #if REFIT_DEBUG > 0
@@ -932,7 +932,7 @@ VOID SwitchToGraphicsAndClear (
         MsgLog ("INFO: Restore Graphics Mode ... %r\n\n", Status);
     }
     #endif
-    MsgLog ("] SwitchToGraphicsAndClear\n");
+    LOGPROCEXIT();
 } // VOID SwitchToGraphicsAndClear()
 
 // DA-TAG: Permit Image->PixelData Memory Leak on Qemu
@@ -954,7 +954,7 @@ VOID egFreeImageQEMU (
 VOID BltClearScreen (
     BOOLEAN ShowBanner
 ) {
-    MsgLog ("[ BltClearScreen ShowBanner:%d\n", ShowBanner);
+    LOGPROCENTRY("ShowBanner:%d", ShowBanner);
 
     static EG_IMAGE *Banner    = NULL;
            EG_IMAGE *NewBanner = NULL;
@@ -1092,7 +1092,7 @@ VOID BltClearScreen (
     MsgLog ("GlobalConfig.ScreenBackground = egCopyScreen\n");
     LEAKABLEONEIMAGE(GlobalConfig.ScreenBackground, "ScreenBackground image");
 
-    MsgLog ("] BltClearScreen\n");
+    LOGPROCEXIT();
 } // VOID BltClearScreen()
 
 

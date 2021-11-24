@@ -131,14 +131,14 @@ extern UINT64 GetCurrentMS (VOID);
 
 static
 VOID InitSelection (VOID) {
-    MsgLog ("[ InitSelection\n");
+    LOGPROCENTRY();
     EG_IMAGE  *TempSmallImage    = NULL;
     EG_IMAGE  *TempBigImage      = NULL;
     BOOLEAN    LoadedSmallImage  = FALSE;
     BOOLEAN    TaintFree         = TRUE;
 
     if (!AllowGraphicsMode || (SelectionImages[0] != NULL)) {
-        MsgLog ("] InitSelection AllowGraphicsMode:%d SelectionImages[0]:%d\n", AllowGraphicsMode, SelectionImages[0] != NULL);
+        LOGPROCEXIT("AllowGraphicsMode:%d SelectionImages[0]:%d", AllowGraphicsMode, SelectionImages[0] != NULL);
         return;
     }
 
@@ -203,7 +203,7 @@ VOID InitSelection (VOID) {
 
     egFreeImage (TempSmallImage);
     egFreeImage (TempBigImage);
-    MsgLog ("] InitSelection\n");
+    LOGPROCEXIT();
 } // VOID InitSelection()
 
 //
@@ -747,7 +747,7 @@ UINTN RunGenericMenu (
     SCROLL_STATE   State;
     EFI_INPUT_KEY  key;
 
-    MsgLog ("[ RunGenericMenu '%s'\n", GetPoolStr (&Screen->Title));
+    LOGPROCENTRY("'%s'", GetPoolStr (&Screen->Title));
 
     #if REFIT_DEBUG > 0
     LOG(2, LOG_THREE_STAR_SEP, L"Entering RunGenericMenu");
@@ -1123,7 +1123,7 @@ UINTN RunGenericMenu (
 
     *DefaultEntryIndex = State.CurrentSelection;
 
-    MsgLog ("] RunGenericMenu ...%d\n", MenuExit);
+    LOGPROCEXIT("...%d", MenuExit);
 
     return MenuExit;
 } // UINTN RunGenericMenu()
@@ -2302,7 +2302,7 @@ static
 BOOLEAN EditOptions (
     REFIT_MENU_ENTRY *MenuEntry
 ) {
-    MsgLog ("[ EditOptions MenuEntry:%p\n", MenuEntry);
+    LOGPROCENTRY("MenuEntry:%p", MenuEntry);
     UINTN    x_max, y_max;
     CHAR16  *EditedOptions;
     BOOLEAN  retval = FALSE;
@@ -2346,7 +2346,7 @@ BOOLEAN EditOptions (
         SwitchToGraphics();
     }
 
-    MsgLog ("] EditOptions %d\n", retval);
+    LOGPROCEXIT("%d", retval);
     return retval;
 } // VOID EditOptions()
 
@@ -2358,14 +2358,14 @@ VOID DisplaySimpleMessage (
     CHAR16 *Title,
     CHAR16 *Message
 ) {
-    MsgLog ("[ DisplaySimpleMessage\n");
+    LOGPROCENTRY();
 
     #if REFIT_DEBUG > 0
     LOG(4, LOG_THREE_STAR_MID, L"Entering DisplaySimpleMessage");
     #endif
 
     if (!Message) {
-        MsgLog ("] DisplaySimpleMessage : No Message!!\n");
+        LOGPROCEXIT(": No Message!!");
         return;
     }
 
@@ -2385,7 +2385,7 @@ VOID DisplaySimpleMessage (
 
     SimpleMessageMenu = CopyMenuScreen (&SimpleMessageMenuSrc);
     if (!SimpleMessageMenu) {
-        MsgLog ("] DisplaySimpleMessage : Copy Menu Fail!!\n");
+        LOGPROCEXIT(": Copy Menu Fail!!");
         return;
     }
 
@@ -2412,7 +2412,7 @@ VOID DisplaySimpleMessage (
     #endif
 
     FreeMenuScreen (&SimpleMessageMenu);
-    MsgLog ("] DisplaySimpleMessage\n");
+    LOGPROCEXIT();
 } // VOID DisplaySimpleMessage()
 
 // Check each filename in FilenameList to be sure it refers to a valid file. If
@@ -2507,7 +2507,7 @@ VOID SaveHiddenList (
 // Present a menu that enables the user to delete hidden tags
 //   that is, to un-hide them.
 VOID ManageHiddenTags (VOID) {
-    MsgLog ("[ ManageHiddenTags\n");
+    LOGPROCENTRY();
 
     EFI_STATUS           Status  = EFI_SUCCESS;
     CHAR16              *AllTags = NULL, *OneElement = NULL;
@@ -2537,7 +2537,7 @@ VOID ManageHiddenTags (VOID) {
 
     RestoreItemMenu = CopyMenuScreen (&RestoreItemMenuSrc);
     if (!RestoreItemMenu) {
-        MsgLog ("] ManageHiddenTags (NULL)\n");
+        LOGPROCEXIT("(NULL)");
         return;
     }
 
@@ -2643,7 +2643,7 @@ VOID ManageHiddenTags (VOID) {
     MyFreePool (&HiddenLegacy);
     MyFreePool (&HiddenFirmware);
 
-    MsgLog ("] ManageHiddenTags\n");
+    LOGPROCEXIT();
 } // VOID ManageHiddenTags()
 
 CHAR16 * ReadHiddenTags (
@@ -2876,7 +2876,7 @@ static
 VOID HideTag (
     REFIT_MENU_ENTRY *ChosenEntry
 ) {
-    MsgLog ("[ HideTag %s\n", GetPoolStr (&ChosenEntry->Title));
+    LOGPROCENTRY("%s", GetPoolStr (&ChosenEntry->Title));
     LOADER_ENTRY      *Loader        = (LOADER_ENTRY *) ChosenEntry;
     LEGACY_ENTRY      *LegacyLoader  = (LEGACY_ENTRY *) ChosenEntry;
     REFIT_MENU_SCREEN *HideItemMenu = NULL;
@@ -2887,13 +2887,13 @@ VOID HideTag (
     };
 
     if (ChosenEntry == NULL) {
-        MsgLog ("] HideTag (no menu entry)\n");
+        LOGPROCEXIT("(no menu entry)");
         return;
     }
 
     HideItemMenu = CopyMenuScreen (&HideItemMenuSrc);
     if (!HideItemMenu) {
-        MsgLog ("] HideTag (no menu screen)\n");
+        LOGPROCEXIT("(no menu screen)");
         return;
     }
 
@@ -2975,7 +2975,7 @@ VOID HideTag (
             break;
     } // switch
     FreeMenuScreen (&HideItemMenu);
-    MsgLog ("] HideTag\n");
+    LOGPROCEXIT();
 } // VOID HideTag()
 
 UINTN RunMenu (
@@ -3009,7 +3009,7 @@ UINTN RunMainMenu (
 ) {
     REFIT_MENU_SCREEN *Screen = ScreenPtr ? *ScreenPtr : NULL;
 
-    MsgLog("[ RunMainMenu '%s'\n", GetPoolStr (&Screen->Title));
+    LOGPROCENTRY("'%s'", GetPoolStr (&Screen->Title));
 
     REFIT_MENU_ENTRY   *TempChosenEntry     = NULL;
     MENU_STYLE_FUNC     Style               = TextMenuStyle;
@@ -3165,7 +3165,7 @@ UINTN RunMainMenu (
         MyFreePool (&MenuTitle);
     }
 
-    MsgLog("] RunMainMenu MenuExit:%d", MenuExit);
+    LOGPROCEXIT("MenuExit:%d", MenuExit);
     return MenuExit;
 } // UINTN RunMainMenu()
 
@@ -3180,7 +3180,7 @@ FreeMenuEntry (
     REFIT_MENU_ENTRY **Entry
 ) {
     if (Entry && *Entry) {
-        MsgLog ("[ FreeMenuEntry %p %s\n", (*Entry), GetPoolStr (&(*Entry)->Title) ? GetPoolStr (&(*Entry)->Title) : L"NULL");
+        LOGPROCENTRY("%p %s", (*Entry), GetPoolStr (&(*Entry)->Title) ? GetPoolStr (&(*Entry)->Title) : L"NULL");
         //LOGPOOLALWAYS ((*Entry));
         FreePoolStr (&(*Entry)->Title);
         FreePoolImage (&(*Entry)->BadgeImage);
@@ -3203,7 +3203,7 @@ FreeMenuEntry (
         }
 
         MyFreePool (Entry);
-        MsgLog ("] FreeMenuEntry\n");
+        LOGPROCEXIT();
     }
 } // VOID FreeMenuEntry()
 
@@ -3215,7 +3215,7 @@ BDS_COMMON_OPTION * CopyBdsOption (
     if (BdsOption) {
         LOGPOOL (BdsOption);
         NewBdsOption = AllocateCopyPool (sizeof (*BdsOption), BdsOption);
-        MsgLog ("[ CopyBdsOption %p = %p (%d)\n", NewBdsOption, BdsOption, sizeof (*BdsOption));
+        LOGPROCENTRY("%p = %p (%d)", NewBdsOption, BdsOption, sizeof (*BdsOption));
         if (NewBdsOption) {
             #define COPYBDSITEM(x,size) if (BdsOption->x) NewBdsOption->x = AllocateCopyPool (size, BdsOption->x); MsgLog ("%p " #x "\n", NewBdsOption->x);
             COPYBDSITEM(DevicePath  , GetDevicePathSize (BdsOption->DevicePath  ))
@@ -3228,7 +3228,7 @@ BDS_COMMON_OPTION * CopyBdsOption (
 
             COPYBDSITEM(StatusString,           StrSize (BdsOption->StatusString))
         }
-        MsgLog ("] CopyBdsOption\n");
+        LOGPROCEXIT();
     } // if NewBdsOption()
 
     return NewBdsOption;
@@ -3238,7 +3238,7 @@ VOID FreeBdsOption (
     BDS_COMMON_OPTION **BdsOption
 ) {
     if (BdsOption && *BdsOption) {
-        MsgLog ("[ FreeBdsOption %p -> %p Boot%04x - '%s'\n", BdsOption, *BdsOption, (*BdsOption)->BootCurrent, (*BdsOption)->Description);
+        LOGPROCENTRY("%p -> %p Boot%04x - '%s'", BdsOption, *BdsOption, (*BdsOption)->BootCurrent, (*BdsOption)->Description);
         MyFreePool (&(*BdsOption)->DevicePath);
         MyFreePool (&(*BdsOption)->OptionName);
         MyFreePool (&(*BdsOption)->Description);
@@ -3246,7 +3246,7 @@ VOID FreeBdsOption (
         MyFreePool (&(*BdsOption)->StatusString);
 
         MyFreePool (BdsOption);
-        MsgLog ("] FreeBdsOption\n");
+        LOGPROCEXIT();
     }
 } // VOID FreeBdsOption()
 
@@ -3359,7 +3359,7 @@ FreeMenuScreen (
     REFIT_MENU_SCREEN **Menu
 ) {
     if (Menu && *Menu) {
-        MsgLog ("[ FreeMenuScreen %p %s\n", *Menu, GetPoolStr(&(*Menu)->Title) ? GetPoolStr(&(*Menu)->Title) : L"NULL");
+        LOGPROCENTRY("%p %s", *Menu, GetPoolStr(&(*Menu)->Title) ? GetPoolStr(&(*Menu)->Title) : L"NULL");
 
         FreePoolStr (&(*Menu)->Title);
 
@@ -3388,7 +3388,7 @@ FreeMenuScreen (
         FreePoolStr (&(*Menu)->Hint2);
 
         MyFreePool (Menu);
-        MsgLog ("] FreeMenuScreen\n");
+        LOGPROCEXIT();
     }
 }
 
@@ -3483,11 +3483,11 @@ LEAKABLEROOTMENU (
     UINT16 LeakableObjectID,
     REFIT_MENU_SCREEN *Menu
 ) {
-    MsgLog ("[ LEAKABLEROOTMENU\n");
+    LOGPROCENTRY();
     LEAKABLEPATHINIT (LeakableObjectID);
     LEAKABLEMENU (Menu);
     LEAKABLEPATHDONE ();
-    MsgLog ("] LEAKABLEROOTMENU\n");
+    LOGPROCEXIT();
 }
 
 #endif

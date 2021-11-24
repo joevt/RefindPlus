@@ -173,7 +173,7 @@ LOADER_ENTRY * InitializeLoaderEntry (
 REFIT_MENU_SCREEN * InitializeSubScreen (
     IN LOADER_ENTRY *Entry
 ) {
-    MsgLog ("[ InitializeSubScreen\n");
+    LOGPROCENTRY();
     CHAR16              *FileName;
     REFIT_MENU_SCREEN   *SubScreen   = NULL;
     LOADER_ENTRY        *SubEntry;
@@ -248,7 +248,7 @@ REFIT_MENU_SCREEN * InitializeSubScreen (
 
     MyFreePool (&FileName);
 
-    MsgLog ("] InitializeSubScreen %p\n", SubScreen);
+    LOGPROCEXIT("%p", SubScreen);
     return SubScreen;
 } // REFIT_MENU_SCREEN *InitializeSubScreen()
 
@@ -257,6 +257,8 @@ VOID GenerateSubScreen (
     IN     REFIT_VOLUME *Volume,
     IN     BOOLEAN       GenerateReturn
 ) {
+    LOGPROCENTRY();
+
     REFIT_MENU_SCREEN  *SubScreen;
     LOADER_ENTRY       *SubEntry;
     CHAR16             *InitrdName;
@@ -265,9 +267,8 @@ VOID GenerateSubScreen (
     CHAR16              DiagsFileName[256];
     UINTN               TokenCount;
     REFIT_FILE         *File;
+
     LOG(5, LOG_LINE_FORENSIC, L"In GenerateSubScreen ... A - START MAIN");
-    
-    MsgLog ("[ GenerateSubScreen\n");
 
     // create the submenu
     if (StrLen (GetPoolStr (&Entry->Title)) == 0) {
@@ -526,7 +527,7 @@ VOID GenerateSubScreen (
         LOG(5, LOG_BLANK_LINE_SEP, L"X");
     }
 
-    MsgLog ("] GenerateSubScreen\n");
+    LOGPROCEXIT();
 } // VOID GenerateSubScreen()
 
 // Sets a few defaults for a loader entry -- mainly the icon, but also the OS type
@@ -537,7 +538,7 @@ VOID SetLoaderDefaults (
     CHAR16       *LoaderPath,
     REFIT_VOLUME *Volume
 ) {
-    MsgLog ("[ SetLoaderDefaults for '%s'\n", GetPoolStr (&Entry->me.Title));
+    LOGPROCENTRY("for '%s'", GetPoolStr (&Entry->me.Title));
 
     CHAR16  *PathOnly;
     CHAR16  *NameClues;
@@ -981,7 +982,7 @@ VOID SetLoaderDefaults (
 
     LOG(5, LOG_LINE_FORENSIC, L"In SetLoaderDefaults ... 10 - END:- VOID");
     LOG(5, LOG_BLANK_LINE_SEP, L"X");
-    MsgLog ("] SetLoaderDefaults\n");
+    LOGPROCEXIT();
 } // VOID SetLoaderDefaults()
 
 CHAR16 * GetVolumeGroupName (
@@ -1109,7 +1110,7 @@ LOADER_ENTRY * AddLoaderEntry (
     IN REFIT_VOLUME *Volume,
     IN BOOLEAN       SubScreenReturn
 ) {
-    MsgLog ("[ AddLoaderEntry\n");
+    LOGPROCENTRY();
     EFI_STATUS     Status;
     LOADER_ENTRY  *Entry;
     CHAR16        *TitleEntry  = NULL;
@@ -1119,8 +1120,8 @@ LOADER_ENTRY * AddLoaderEntry (
     Entry = InitializeLoaderEntry (NULL);
 
     if (Entry == NULL) {
+        LOGPROCEXIT("%p", Entry);
         return NULL;
-        MsgLog ("] AddLoaderEntry %p\n", Entry);
     }
 
     if (GlobalConfig.SyncAPFS && Volume->FSType == FS_TYPE_APFS) {
@@ -1141,7 +1142,7 @@ LOADER_ENTRY * AddLoaderEntry (
 
                 if (!DisplayName) {
                     // Do not display this PreBoot Volume Menu Entry
-                    MsgLog ("] AddLoaderEntry %p\n", Entry);
+                    LOGPROCEXIT("%p", Entry);
                     return NULL;
                 }
             }
@@ -1206,7 +1207,7 @@ LOADER_ENTRY * AddLoaderEntry (
     #endif
 
     MyFreePool (&DisplayName);
-    MsgLog ("] AddLoaderEntry %p\n", Entry);
+    LOGPROCEXIT("%p", Entry);
     return Entry;
 } // LOADER_ENTRY * AddLoaderEntry()
 
@@ -2849,7 +2850,7 @@ VOID ScanForTools (VOID) {
     UINT64            osind;
     UINT32            CsrValue;
 
-    MsgLog ("[ ScanForTools\n");
+    LOGPROCENTRY();
 
     #if REFIT_DEBUG > 0
     CHAR16 *ToolStr   = NULL;
@@ -2889,7 +2890,8 @@ VOID ScanForTools (VOID) {
         }
         
         if (!Skipped) {
-            MsgLog ("[ Tool Type %02d ...%s\n", i + 1, ToolName);
+            ToolTotal = ToolTotal + 1;
+            LOGBLOCKENTRY("Tool Type %02d ...%s", ToolTotal, ToolName);
         }
 
         #if REFIT_DEBUG > 0
@@ -3258,7 +3260,7 @@ VOID ScanForTools (VOID) {
                 MsgLog ("** WARN ** %s", ToolStr);
                 MyFreePool (&ToolStr);
             }
-            MsgLog ("] Tool Type %02d ...%s\n", i + 1, ToolName);
+            LOGBLOCKEXIT("Tool Type %02d ...%s", ToolTotal, ToolName);
         }
         #endif
 
@@ -3276,5 +3278,5 @@ VOID ScanForTools (VOID) {
     
     MyFreePool (&MokLocations);
 
-    MsgLog ("] ScanForTools\n");
+    LOGPROCEXIT();
 } // VOID ScanForTools

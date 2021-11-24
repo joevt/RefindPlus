@@ -289,12 +289,6 @@ VOID egFreeImage (
 
 #define LOG_ALL_LOADS 0
 
-#if LOG_ALL_LOADS
-#define LOG_PRE ""
-#else
-#define LOG_PRE "["
-#endif
-
 EFI_STATUS egLoadFile (
     IN EFI_FILE  *BaseDir,
     IN CHAR16    *FileName,
@@ -309,13 +303,17 @@ EFI_STATUS egLoadFile (
     EFI_FILE_HANDLE     FileHandle;
 
     #if LOG_ALL_LOADS
-    MsgLog ("[ egLoadFile '%s'\n", FileName);
+    LOGPROCENTRY("'%s'", FileName);
     #endif
     
     if (FileData) *FileData = NULL;
     
     if ((BaseDir == NULL) || (FileName == NULL)) {
-        MsgLog (LOG_PRE "] egLoadFile '%s' invalid parameter!!\n", FileName);
+        #if LOG_ALL_LOADS
+        LOGPROCEXIT("'%s' invalid parameter!!", FileName);
+        #else
+        MsgLog ("egLoadFile '%s' invalid parameter!!\n", FileName);
+        #endif
 
         return EFI_INVALID_PARAMETER;
     }
@@ -325,7 +323,9 @@ EFI_STATUS egLoadFile (
     LEAKABLEEXTERNALSTOP ();
     if (EFI_ERROR(Status)) {
         #if LOG_ALL_LOADS
-        MsgLog (LOG_PRE "] egLoadFile '%s' not opened (%r)\n", FileName, Status);
+        LOGPROCEXIT("'%s' not opened (%r)\n", FileName, Status);
+        #else
+        MsgLog ("egLoadFile '%s' not opened (%r)\n", FileName, Status);
         #endif
         return Status;
     }
@@ -333,7 +333,11 @@ EFI_STATUS egLoadFile (
     FileInfo = LibFileInfo (FileHandle);
     if (FileInfo == NULL) {
         REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
-        MsgLog (LOG_PRE "] egLoadFile '%s' can't get info\n", FileName);
+        #if LOG_ALL_LOADS
+        LOGPROCEXIT("'%s' can't get info\n", FileName);
+        #else
+        MsgLog ("egLoadFile '%s' can't get info\n", FileName);
+        #endif
         return EFI_NOT_FOUND;
     }
     #if REFIT_DEBUG > 0
@@ -354,7 +358,11 @@ EFI_STATUS egLoadFile (
     Buffer = (UINT8 *) AllocatePool (BufferSize);
     if (Buffer == NULL) {
         REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
-        MsgLog (LOG_PRE "] egLoadFile '%s' no memory\n", FileName);
+        #if LOG_ALL_LOADS
+        LOGPROCEXIT("'%s' no memory\n", FileName);
+        #else
+        MsgLog ("egLoadFile '%s' no memory\n", FileName);
+        #endif
 
         return EFI_OUT_OF_RESOURCES;
     }
@@ -363,7 +371,11 @@ EFI_STATUS egLoadFile (
     REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
     if (EFI_ERROR(Status)) {
         MyFreePool (&Buffer);
-        MsgLog (LOG_PRE "] egLoadFile '%s' can't read (%r)\n", FileName, Status);
+        #if LOG_ALL_LOADS
+        LOGPROCEXIT("'%s' can't read (%r)\n", FileName, Status);
+        #else
+        MsgLog ("egLoadFile '%s' can't read (%r)\n", FileName, Status);
+        #endif
 
         return Status;
     }
@@ -378,7 +390,7 @@ EFI_STATUS egLoadFile (
     }
 
     #if LOG_ALL_LOADS
-    MsgLog ("] egLoadFile '%s' loaded\n", FileName);
+    LOGPROCEXIT("'%s' loaded", FileName);
     #else
     #if REFIT_DEBUG > 0
     LOG(4, LOG_THREE_STAR_MID, L"In egLoadFile ... Loaded File:- '%s'", FileName);
@@ -655,7 +667,7 @@ EG_IMAGE * egLoadIconAnyType (
     CHAR16    *FileName;
     UINTN      i = 0;
 
-    MsgLog ("[ egLoadIconAnyType from '%s\\%s' with extensions '%s'\n",
+    LOGPROCENTRY("from '%s\\%s' with extensions '%s'\n",
         SubdirName, BaseName, ICON_EXTENSIONS
     );
     
@@ -665,7 +677,7 @@ EG_IMAGE * egLoadIconAnyType (
             L"In egLoadIconAnyType ... Skipped Loading Icon in Text Screen Mode"
         );
         #endif
-        MsgLog ("] egLoadIconAnyType\n");
+        LOGPROCEXIT();
 
         return NULL;
     }
@@ -692,7 +704,7 @@ EG_IMAGE * egLoadIconAnyType (
         (Image != NULL) ? L"Loaded Icon" : L"Could Not Load Icon!!"
     );
     #endif
-    MsgLog ("] egLoadIconAnyType %s\n", Image ? L"Success" : L"Fail" );
+    LOGPROCEXIT("%s", Image ? L"Success" : L"Fail" );
 
     return Image;
 } // EG_IMAGE *egLoadIconAnyType()

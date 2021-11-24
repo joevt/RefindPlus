@@ -431,7 +431,7 @@ extern HANDLE_INDEX_LIST mHandleList;
 VOID
 LEAKABLEHANDLES (
 ) {
-    MsgLog ("[ LEAKABLEHANDLES\n");
+    LOGPROCENTRY();
     if (mHandleList.NextIndex != 0) {
         LEAKABLEPATHINIT (kLeakableHandles);
             LEAKABLEPATHINC (); // space for Handle Index
@@ -446,7 +446,7 @@ LEAKABLEHANDLES (
             LEAKABLEPATHDEC ();
         LEAKABLEPATHDONE ();
     }
-    MsgLog ("] LEAKABLEHANDLES\n");
+    LOGPROCEXIT();
 }
 #endif
 
@@ -675,7 +675,7 @@ UINTN ScanDriverDir (
     CHAR16          *ErrMsg;
     UINTN            NumFound  = 0;
 
-    MsgLog ("[ ScanDriverDir '%s' Folder\n", Path);
+    LOGPROCENTRY("'%s' Folder", Path);
 
     CleanUpPathNameSlashes (Path);
 
@@ -702,7 +702,7 @@ UINTN ScanDriverDir (
         NumFound++;
         FileName = PoolPrint (L"%s\\%s", Path, DirEntry->FileName);
 
-        MsgLog ("[ Loading '%s'\n", FileName);
+        LOGBLOCKENTRY("Loading '%s'", FileName);
         Status = StartEFIImage (
             SelfVolume, FileName, L"",
             DirEntry->FileName, 0,
@@ -721,7 +721,7 @@ UINTN ScanDriverDir (
         MsgLog ("  - %r ... UEFI Driver:- '%s'", Status, FileName);
         #endif
 
-        MsgLog ("] Loading '%s' Result:%r\n", FileName, Status);
+        LOGBLOCKEXIT("Loading '%s' Result:%r", FileName, Status);
         MyFreePool (&FileName);
     } // while
 
@@ -732,7 +732,7 @@ UINTN ScanDriverDir (
         MyFreePool (&ErrMsg);
     }
 
-    MsgLog ("] ScanDriverDir Found:%d\n", NumFound);
+    LOGPROCEXIT("Found:%d", NumFound);
     return (NumFound);
 } // static UINTN ScanDriverDir()
 
@@ -749,7 +749,7 @@ BOOLEAN LoadDrivers (VOID) {
     UINTN    NumFound = 0;
     UINTN    CurFound = 0;
 
-    MsgLog ("[ LoadDrivers\n");
+    LOGPROCENTRY();
     #if REFIT_DEBUG > 0
     CHAR16  *MsgNotFound = L"Not Found or Empty";
 
@@ -851,6 +851,6 @@ BOOLEAN LoadDrivers (VOID) {
     // DA-TAG: Always run this
     ConnectAllDriversToAllControllers (TRUE);
 
-    MsgLog ("] LoadDrivers Found:%d\n", NumFound);
+    LOGPROCEXIT("Found:%d", NumFound);
     return (NumFound > 0);
 } // BOOLEAN LoadDrivers()

@@ -58,11 +58,11 @@ EFI_STATUS EFIAPI daConnectController (
     EFI_STATUS   Status;
     VOID        *DevicePath;
     
-    MsgLog("[ daConnectController ControllerHandle:%p Recursive:%d\n", ControllerHandle, Recursive);
+    LOGPROCENTRY("ControllerHandle:%p Recursive:%d", ControllerHandle, Recursive);
 
     if (ControllerHandle == NULL) {
         Status = EFI_INVALID_PARAMETER;
-        MsgLog("] daConnectController ControllerHandle... %r\n", Status);
+        LOGPROCEXIT("ControllerHandle... %r", Status);
         return Status;
     }
 
@@ -75,7 +75,7 @@ EFI_STATUS EFIAPI daConnectController (
     );
 
     if (EFI_ERROR(Status)) {
-        MsgLog("] daConnectController HandleProtocol... %r\n", Status);
+        LOGPROCEXIT("HandleProtocol... %r", Status);
         return EFI_NOT_STARTED;
     }
 
@@ -88,7 +88,7 @@ EFI_STATUS EFIAPI daConnectController (
     );
     LEAKABLEEXTERNALSTOP ();
 
-    MsgLog("] daConnectController ConnectController... %r\n", Status);
+    LOGPROCEXIT("ConnectController... %r", Status);
     return Status;
 } // EFI_STATUS daConnectController()
 
@@ -280,9 +280,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
 
     DetectedDevices = FALSE;
 
-    MsgLog ("[ BdsLibConnectMostlyAllEfi%s\n",
-        ReLoaded ? L" (Reconnect)" : L" (Link)"
-    );
+    LOGPROCENTRY ("%s", ReLoaded ? L"(Reconnect)" : L"(Link)");
     #if REFIT_DEBUG > 0
     LOG2(1, LOG_LINE_SEPARATOR, L"", L"...\n", L"%s Device Handles to Controllers",
         ReLoaded ? L"Reconnect" : L"Link"
@@ -642,7 +640,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
 
     MyFreePool (&AllHandleBuffer);
 
-    MsgLog ("] BdsLibConnectMostlyAllEfi\n");
+    LOGPROCEXIT();
     return Status;
 } // EFI_STATUS BdsLibConnectMostlyAllEfi()
 

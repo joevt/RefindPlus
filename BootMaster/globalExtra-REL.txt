@@ -70,3 +70,18 @@ DeepLoggger (
 #define LOGWHERE(format, ...)
 #define LOGPOOL(object)
 #define LOGPOOLALWAYS(object)
+
+//==================================
+// Log indenting functions
+
+#define LOGBLOCK0(  _i, _f, ...) MsgLog (_i " " _f "\n", ##__VA_ARGS__)
+
+#define LOGBLOCKENTRY(_f, ...) LOGBLOCK0 ("[" , _f, ##__VA_ARGS__)
+#define LOGBLOCKEXIT( _f, ...) LOGBLOCK0 ("]" , _f, ##__VA_ARGS__)
+#define LOGBLOCK(     _f, ...) LOGBLOCK0 ("[]", _f, ##__VA_ARGS__)
+
+#define LOGPROCENTRY(_f, ...) LOGBLOCKENTRY("%a%a" _f, __FUNCTION__, (sizeof("" _f) > 1) ? " " : "", ##__VA_ARGS__)
+#define LOGPROCEXIT( _f, ...) LOGBLOCKEXIT ("%a%a" _f, __FUNCTION__, (sizeof("" _f) > 1) ? " " : "", ##__VA_ARGS__)
+#define LOGPROC(     _f, ...) LOGBLOCK     ("%a%a" _f, __FUNCTION__, (sizeof("" _f) > 1) ? " " : "", ##__VA_ARGS__)
+
+//==================================

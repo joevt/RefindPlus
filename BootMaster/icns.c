@@ -96,11 +96,11 @@ PoolImage * BuiltinIcon(IN UINTN Id)
         }
 
         #if REFIT_DEBUG > 0
-            MsgLog ("[ LEAKABLEBUILTINICON %d\n", Id);
+            LOGBLOCKENTRY("LEAKABLEBUILTINICON %d", Id);
             LEAKABLEPATHINIT (kLeakableBuiltinIcons+Id);
             LEAKABLEIMAGE (GetPoolImage (&BuiltinIconTable[Id].Image));
             LEAKABLEPATHDONE ();
-            MsgLog ("] LEAKABLEBUILTINICON\n");
+            LOGBLOCKEXIT("LEAKABLEBUILTINICON");
         #endif
     } // if
 

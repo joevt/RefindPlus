@@ -301,6 +301,7 @@ VOID ForgetPartitionTables (VOID) {
 // If Volume points to a whole disk with a GPT, add it to the gPartitions
 // linked list of GPTs.
 VOID AddPartitionTable (REFIT_VOLUME *Volume) {
+    LOGPROCENTRY("%p", Volume);
     GPT_DATA    *GptData = NULL, *GptList;
     EFI_STATUS  Status;
 
@@ -322,6 +323,7 @@ VOID AddPartitionTable (REFIT_VOLUME *Volume) {
     else if (GptData != NULL) {
         ClearGptData (GptData);
     }
+    LOGPROCEXIT();
 } // VOID AddPartitionTable()
 
 #if REFIT_DEBUG > 0
@@ -329,7 +331,7 @@ VOID
 LEAKABLEPARTITIONS (
 ) {
     if (Volumes) {
-        MsgLog ("[ LEAKABLEPARTITIONS\n");
+        LOGPROCENTRY();
         LEAKABLEPATHINIT (kLeakablePartitions);
             LEAKABLEPATHINC (); // space for Partition Index
                 GPT_DATA *Partition;
@@ -343,7 +345,7 @@ LEAKABLEPARTITIONS (
                 }
             LEAKABLEPATHDEC ();
         LEAKABLEPATHDONE ();
-        MsgLog ("] LEAKABLEPARTITIONS\n");
+        LOGPROCEXIT();
     }
 }
 #endif

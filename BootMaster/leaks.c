@@ -450,7 +450,7 @@ GetStackLimits (
 ) {
     CheckStackPointer ();
     if (FramePointerAddress < StackMin || FramePointerAddress >= StackMax) {
-        MsgLog ("[ GetStackLimits\n");
+        LOGPROCENTRY();
         UINTN MemoryMapSize = 0;
         EFI_MEMORY_DESCRIPTOR *MemoryMap = NULL;
         UINTN MapKey;
@@ -502,7 +502,7 @@ GetStackLimits (
             }
             LeaksFreePool ((VOID **) &MemoryMap);
         }
-        MsgLog ("] GetStackLimits\n");
+        LOGPROCEXIT();
     }
 }
 
@@ -627,13 +627,13 @@ LoadedImageGetProtocol (
     CheckStackPointer ();
     if (LoadedImage) {
         if (!(LoadedImage->ImageFlags & ImageFlag_ProtocolLoaded)) {
-            //MsgLog ("[ gBS->HandleProtocol Handle:%p\n", LoadedImage->Handle);
+            //LOGBLOCKENTRY("gBS->HandleProtocol Handle:%p", LoadedImage->Handle);
             gBS->HandleProtocol (
                 LoadedImage->Handle,
                 &gEfiLoadedImageProtocolGuid,
                 (VOID**)&LoadedImage->Protocol
             );
-            //MsgLog ("] gBS->HandleProtocol Protocol:%p\n", LoadedImage->Protocol);
+            //LOGBLOCKEXIT("gBS->HandleProtocol Protocol:%p", LoadedImage->Protocol);
             LoadedImage->ImageFlags |= ImageFlag_ProtocolLoaded;
         }
     }
@@ -860,9 +860,9 @@ GetCallStack (
     } // if DoFullScan
 
     if (dumpit) {
-        MsgLog ("[ dumpit\n");
+        LOGBLOCKENTRY("dumpit");
         DumpCallStack (CallStack, FALSE);
-        MsgLog ("] dumpit\n");
+        LOGBLOCKEXIT("dumpit");
     }
 
     DoingAlloc--;
@@ -1017,12 +1017,13 @@ GetLoadedImages(
     BootLogPause ();
     UINTN OldInAlloc = DoingAlloc++;
     
-    if (!OldInAlloc) MsgLog ("[ GetLoadedImages\n");
+
+    if (!OldInAlloc) LOGPROCENTRY();
 
     UINTN LoadedImagesCount = 0;
     EFI_HANDLE *LoadedImagesHandles = NULL;
 
-    //if (!OldInAlloc) MsgLog ("[ LocateHandleBuffer\n");
+    //if (!OldInAlloc) LOGBLOCKENTRY("LocateHandleBuffer");
     EFI_STATUS Status = gBS->LocateHandleBuffer (
         ByProtocol,
         &gEfiLoadedImageProtocolGuid,
@@ -1030,7 +1031,7 @@ GetLoadedImages(
         &LoadedImagesCount,
         &LoadedImagesHandles
     );
-    //if (!OldInAlloc) MsgLog ("] LocateHandleBuffer\n");
+    //if (!OldInAlloc) LOGBLOCKEXIT("LocateHandleBuffer");
 
     if (!EFI_ERROR(Status) && LoadedImagesHandles) {
         UINTN LoadedImagesSize = (LoadedImagesCount + 1) * sizeof(LoadedImageRec);
@@ -1045,7 +1046,7 @@ GetLoadedImages(
         MyFreePool (&LoadedImagesHandles);
     }
 
-    if (!OldInAlloc) MsgLog ("] GetLoadedImages %p\n", LoadedImages);
+    if (!OldInAlloc) LOGPROCEXIT("%p", LoadedImages);
 
     DoingAlloc--;
     BootLogResume ();
@@ -1167,10 +1168,10 @@ DumpCallStack (
     DumpingStack++;
 
     if (Stack) {
-        MsgLog ("[ DumpCallStack %p\n", Stack);
+        LOGPROCENTRY("%p", Stack);
     }
     else {
-        MsgLog ("[ DumpCallStack CurrentStack\n");
+        LOGPROCENTRY("CurrentStack");
     }
     LoadedImageRec *LoadedImages = GetLoadedImages ();
     
@@ -1187,7 +1188,7 @@ DumpCallStack (
     if (DoFreeStack) {
         FreeCallStack (Stack);
     }
-    MsgLog ("] DumpCallStack\n");
+    LOGPROCEXIT();
 
     DumpingStack--;
     #endif
@@ -1226,7 +1227,7 @@ AdjustStackMax (
 ) {
     CheckStackPointer ();
     BootLogPause ();
-    MsgLog ("[ AdjustStackMax\n");
+    LOGPROCENTRY();
     LoadedImageRec *LoadedImages = GetLoadedImages ();
     StackFrame * Stack = GetCallStack (AsmGetStackPointerAddress (), AsmGetCurrentIpAddress (), AsmGetFramePointerAddress (), FALSE, NULL);
     if (Stack) {
@@ -1248,7 +1249,7 @@ AdjustStackMax (
         while ((VOID *)q < e) *q++ = 0x69;
     #endif
     
-    MsgLog ("] AdjustStackMax\n");
+    LOGPROCEXIT();
     BootLogResume ();
     SetStackScanType(LEAKS_FULL_SCAN);
 }
@@ -1296,7 +1297,7 @@ DumpAllocations (
     UINTN TypeIndex;
     UINTN MaxAllocationNum = NextAllocationNum;
 
-    MsgLog ("[ DumpAllocations\n");
+    LOGPROCENTRY();
 
     enum {
         atExcludedRange     = (1 << 0), // exclude
@@ -1407,14 +1408,14 @@ DumpAllocations (
     DumpLoadedImages (LoadedImages);
     FreeLoadedImages (LoadedImages);
 
-    MsgLog ("] DumpAllocations\n");
+    LOGPROCEXIT();
 }
 
 
 UINTN
 GetNextAllocationNum () {
     CheckStackPointer ();
-    MsgLog ("[] GetNextAllocationNum\n");
+    LOGPROC();
     return NextAllocationNum;
 }
 
@@ -1430,7 +1431,7 @@ AllocatePoolEx (
     CheckStackPointer ();
     EFI_STATUS Status = OrigAllocatePool (PoolType, Size, Buffer);
     
-    //MsgLog ("[ AllocatePoolEx %p (%d)\n", Buffer, Size);
+    //LOGPROCENTRY("%p (%d)", Buffer, Size);
     if (EFI_ERROR(Status)) {
         MsgLog ("Allocation Error: cannot allocate %d\n", Size);
         //DumpCallStack (NULL, FALSE);
@@ -1442,7 +1443,7 @@ AllocatePoolEx (
         MsgLog ("Allocation Error: buffer is null\n");
         //DumpCallStack (NULL, FALSE);
     }
-    //MsgLog ("] AllocatePoolEx %p\n", *Buffer);
+    //LOGPROCEXIT("%p", *Buffer);
 
     return Status;
 }
@@ -1468,7 +1469,7 @@ FreePoolEx (
     INTN aSize = -1;
     Allocation *a = NULL;
 
-    //MsgLog ("[ FreePoolEx %p\n", Buffer);
+    //LOGPROCENTRY("%p", Buffer);
     if (Buffer) {
         Allocation *prev = (Allocation *)&AllocationsList;
         a = AllocationsList;
@@ -1566,7 +1567,7 @@ FreePoolEx (
                 #endif
             }
         }
-        //MsgLog ("] FreePoolEx %p\n", Buffer);
+        //LOGPROCEXIT("%p", Buffer);
     }
     
     if (DoDumpCStack) {
@@ -1648,7 +1649,7 @@ ConnectControllerEx (
     BOOLEAN Recursive
 ) {
     CheckStackPointer ();
-    MsgLog ("[ ConnectControllerEx\n");
+    LOGPROCENTRY();
 
     // Probably shouldn't log to disk while connecting controllers
     BootLogPause ();
@@ -1657,7 +1658,7 @@ ConnectControllerEx (
         LEAKABLEEXTERNALSTOP ();
     BootLogResume ();
 
-    MsgLog ("] ConnectControllerEx ...%r\n", Status);
+    LOGPROCEXIT("...%r", Status);
     return Status;
 }
 
@@ -1894,7 +1895,7 @@ LEAKABLEEXTERNALSTART (
     }
     else {
         LEAKABLEEXTERNALSTACK[LEAKABLEEXTERNALNEXT++] = description;
-        //MsgLog ("[ LEAKABLEEXTERNAL %d:%a\n", LEAKABLEEXTERNALNEXT - 1, description);
+        //LOGBLOCKENTRY("LEAKABLEEXTERNAL %d:%a", LEAKABLEEXTERNALNEXT - 1, description);
     }
 }
 
@@ -1909,7 +1910,7 @@ LEAKABLEEXTERNALSTOP () {
         }
     }
     else {
-        //MsgLog ("] LEAKABLEEXTERNAL %d:%a\n", LEAKABLEEXTERNALNEXT - 1, LEAKABLEEXTERNALSTACK[LEAKABLEEXTERNALNEXT - 1]);
+        //LOGBLOCKEXIT("LEAKABLEEXTERNAL %d:%a", LEAKABLEEXTERNALNEXT - 1, LEAKABLEEXTERNALSTACK[LEAKABLEEXTERNALNEXT - 1]);
         --LEAKABLEEXTERNALNEXT;
     }
 }
