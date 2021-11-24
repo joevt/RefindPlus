@@ -1904,6 +1904,7 @@ EFI_STATUS EFIAPI efi_main (
 
     /* Enable Forced Native Logging */
     NativeLogger = TRUE;
+    MsgLog("NativeLogger = TRUE\n");
 
     /* Bootstrap */
     InitializeLib (ImageHandle, SystemTable);
@@ -2185,6 +2186,8 @@ EFI_STATUS EFIAPI efi_main (
     SetupScreen();
 
     /* Disable Forced Native Logging */
+    MsgLog("Disable Forced Native Logging");
+    MsgLog("NativeLogger = FALSE\n");
     NativeLogger = FALSE;
 
     // Show Secure Boot Failure Notice and Shut Down
@@ -2432,9 +2435,11 @@ EFI_STATUS EFIAPI efi_main (
     if (GlobalConfig.LogLevel > 2) {
         /* Enable Forced Native Logging */
         NativeLogger = TRUE;
+        MsgLog("NativeLogger = TRUE\n");
     }
     pdInitialize();
     /* Disable Forced Native Logging */
+    MsgLog("NativeLogger = FALSE\n");
     NativeLogger = FALSE;
 
     #if REFIT_DEBUG > 0

@@ -558,6 +558,7 @@ EFI_STATUS EfivarGetRaw (
     BOOLEAN HybridLogger = FALSE;
     if (NativeLogger) {
         HybridLogger = TRUE;
+        MsgLog("NativeLogger = FALSE\n");
         NativeLogger = FALSE;
     }
 
@@ -657,6 +658,7 @@ EFI_STATUS EfivarGetRaw (
 
     if (HybridLogger) {
         NativeLogger = TRUE;
+        MsgLog("NativeLogger = TRUE\n");
     }
 
     LOGPROCEXIT("'%s' ...'%r'", VariableName, Status);
@@ -684,6 +686,7 @@ EFI_STATUS EfivarSetRaw (
     BOOLEAN HybridLogger = FALSE;
     if (NativeLogger) {
         HybridLogger = TRUE;
+        MsgLog("NativeLogger = FALSE\n");
         NativeLogger = FALSE;
     }
 
@@ -709,6 +712,7 @@ EFI_STATUS EfivarSetRaw (
                 // Return if settings match
                 if (HybridLogger) {
                     NativeLogger = TRUE;
+                    MsgLog("NativeLogger = TRUE\n");
                 }
 
                 MyFreePool (&OldBuf);
@@ -786,6 +790,7 @@ EFI_STATUS EfivarSetRaw (
 
     if (HybridLogger) {
         NativeLogger = TRUE;
+        MsgLog("NativeLogger = TRUE\n");
     }
 
     LOGPROCEXIT("%r", Status);
@@ -1740,14 +1745,17 @@ VOID ScanVolume (
     BOOLEAN HybridLogger = FALSE;
     if (NativeLogger) {
         HybridLogger = TRUE;
+        MsgLog("NativeLogger = FALSE\n");
         NativeLogger = FALSE;
     }
 
+    //MsgLog ("DuplicateDevicePath\n");
     // get device path
     Volume->DevicePath = DuplicateDevicePath (
         DevicePathFromHandle (Volume->DeviceHandle)
     );
 
+    //MsgLog ("DumpHex\n");
     if (Volume->DevicePath != NULL) {
         #if REFIT_DEBUG >= 2
         DumpHex (1, 0, DevicePathSize (Volume->DevicePath), Volume->DevicePath);
@@ -1756,6 +1764,7 @@ VOID ScanVolume (
 
     Volume->DiskKind = DISK_KIND_INTERNAL;  // default
 
+    //MsgLog ("HandleProtocol DeviceHandle BlockIoProtocol BlockIO\n");
     // get block i/o
     Status = REFIT_CALL_3_WRAPPER(
         gBS->HandleProtocol,
@@ -1783,10 +1792,13 @@ VOID ScanVolume (
 
     // detect device type
     DevicePath = Volume->DevicePath;
+    //LOGBLOCKENTRY("DevicePaths");
     while (DevicePath != NULL && !IsDevicePathEndType (DevicePath)) {
+        //LOGBLOCKENTRY("DevicePath");
         NextDevicePath = NextDevicePathNode (DevicePath);
 
         if (DevicePathType (DevicePath) == MEDIA_DEVICE_PATH) {
+            //MsgLog ("SetPartGuidAndName\n");
             SetPartGuidAndName (Volume, DevicePath);
         }
 
@@ -1817,18 +1829,21 @@ VOID ScanVolume (
                 PartialLength + sizeof (EFI_DEVICE_PATH)
             );
 
+            //MsgLog ("CopyMem1\n");
             CopyMem (
                 DiskDevicePath,
                 Volume->DevicePath,
                 PartialLength
             );
 
+            //MsgLog ("CopyMem2\n");
             CopyMem (
                 (UINT8 *) DiskDevicePath + PartialLength,
                 EndDevicePath,
                 sizeof (EFI_DEVICE_PATH)
             );
 
+            //MsgLog ("LocateDevicePath\n");
             // get the handle for that path
             RemainingDevicePath = DiskDevicePath;
             Status = REFIT_CALL_3_WRAPPER(
@@ -1838,6 +1853,7 @@ VOID ScanVolume (
                 &WholeDiskHandle
             );
 
+            //MsgLog ("MyFreePool DiskDevicePath\n");
             MyFreePool (&DiskDevicePath);
 
             if (EFI_ERROR(Status)) {
@@ -1863,6 +1879,7 @@ VOID ScanVolume (
                 #endif
             }
             else {
+                //MsgLog ("HandleProtocol WholeDiskHandle DevicePathProtocol DiskDevicePath\n");
                 // get the device path for later
                 Status = REFIT_CALL_3_WRAPPER(
                     gBS->HandleProtocol,
@@ -1894,9 +1911,11 @@ VOID ScanVolume (
                     #endif
                 }
                 else {
+                    //MsgLog ("WholeDiskDevicePath = DuplicateDevicePath\n");
                     Volume->WholeDiskDevicePath = DuplicateDevicePath (DiskDevicePath);
                 }
 
+                //MsgLog ("HandleProtocol WholeDiskHandle BlockIoProtocol WholeDiskBlockIO\n");
                 // look at the BlockIO protocol
                 Status = REFIT_CALL_3_WRAPPER(
                     gBS->HandleProtocol,
@@ -1937,7 +1956,9 @@ VOID ScanVolume (
             } // if/else EFI_ERROR(Status)
         } // if DevicePathType
         DevicePath = NextDevicePath;
+        //LOGBLOCKEXIT("DevicePath");
     } // while
+    //LOGBLOCKEXIT("DevicePaths");
 
     // scan for bootcode and MBR table
     Bootable = FALSE;
@@ -1978,12 +1999,16 @@ VOID ScanVolume (
 
     if (HybridLogger) {
         NativeLogger = TRUE;
+        MsgLog("NativeLogger = TRUE\n");
     }
 
+    //MsgLog ("Volume->RootDir = LibOpenRoot Volume->DeviceHandle:%p\n", Volume->DeviceHandle);
     // open the root directory of the volume
     Volume->RootDir = LibOpenRoot (Volume->DeviceHandle);
 
+    //MsgLog ("SetFilesystemName\n");
     SetFilesystemName (Volume);
+    //MsgLog ("GetVolumeName\n");
     AssignPoolStr (&Volume->VolName, GetVolumeName (Volume));
     SanitiseVolumeName (&Volume);
 
@@ -1998,6 +2023,7 @@ VOID ScanVolume (
         ) {
             // VBR boot code found on NTFS, but volume is not actually bootable
             // on Mac unless there are actual boot file, so check for them.
+            //MsgLog ("HasWindowsBiosBootFiles");
             Volume->HasBootCode = HasWindowsBiosBootFiles (Volume);
         }
     }

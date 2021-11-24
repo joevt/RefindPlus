@@ -112,7 +112,7 @@ CatSPrint (
 
 extern BOOLEAN UseMsgLog;
 
-#define DONTMSG(DebugMode, Msg) (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < 0 || (!UseMsgLog && !NativeLogger && GlobalConfig.LogLevel > 0))
+#define DONTMSG(DebugMode, Msg) (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < 0 /* || (!UseMsgLog && !NativeLogger && GlobalConfig.LogLevel > 0) */)
 #define MsgLog(...)  DebugLog(REFIT_DEBUG, __VA_ARGS__)
 
 VOID
@@ -123,7 +123,7 @@ DeepLoggger (
   IN  CHAR16 **Msg
 );
 
-#define DONTLOG(DebugMode, level, Msg) (DebugMode < 1 || GlobalConfig.LogLevel < level || GlobalConfig.LogLevel < 1 || NativeLogger || MuteLogger || !(Msg))
+#define DONTLOG(DebugMode, level, Msg) (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < level || GlobalConfig.LogLevel < 1 /* || NativeLogger */ || MuteLogger)
 // NB: logTemp is freed in DeepLoggger
 #define LOG(level, type, ...) \
     do { \
