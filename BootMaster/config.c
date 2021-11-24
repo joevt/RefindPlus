@@ -1210,6 +1210,31 @@ VOID AddSubmenu (
                     }
                 }
             }
+            else if (MyStriCmp (TokenList[0], L"icon") && (TokenCount > 1)) {
+                if (!AllowGraphicsMode) {
+                    #if REFIT_DEBUG > 0
+                    LOG(4, LOG_THREE_STAR_MID,
+                        L"In AddSubmenu ... Skipped Loading Icon in Text Screen Mode"
+                    );
+                    #endif
+                }
+                else {
+                    #if REFIT_DEBUG > 0
+                    LOG(3, LOG_LINE_NORMAL, L"%s Icon for '%s'", GetPoolImage (&SubEntry->me.Image) ? L"Overriding Previous" : L"Adding", Title);
+                    #endif
+
+                    AssignPoolImage (&SubEntry->me.Image, egLoadIcon (
+                        Volume->RootDir,
+                        TokenList[1],
+                        GlobalConfig.IconSizes[ICON_SIZE_BIG]
+                    ));
+
+                    if (GetPoolImage (&SubEntry->me.Image) == NULL) {
+                        // Set dummy image if icon was not found
+                        AssignPoolImage (&SubEntry->me.Image, DummyImage (GlobalConfig.IconSizes[ICON_SIZE_BIG]));
+                    }
+                }
+            }
             else if (MyStriCmp (TokenList[0], L"initrd")) {
                 FreePoolStr (&SubEntry->InitrdPath);
                 if (TokenCount > 1) {
