@@ -194,7 +194,7 @@ REFIT_VOLUME * PickOneESP (ESP_LIST *AllESPs) {
         }
         FreeMenuScreen (&InstallMenu);
     }
-    if (!AllESPs) {
+    else if (!AllESPs) {
         DisplaySimpleMessage (L"Information", L"No Eligible ESPs Found");
 
         #if REFIT_DEBUG > 0
@@ -1192,7 +1192,7 @@ UINTN PickOneBootOption (
         }
         FreeMenuScreen (&PickOneMenu);
     }
-    if (!Entries) {
+    else if (!Entries) {
         DisplaySimpleMessage (L"Information", L"UEFI Boot Order List is Unavailable!!");
     }
 
