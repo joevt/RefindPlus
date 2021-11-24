@@ -935,21 +935,6 @@ VOID SwitchToGraphicsAndClear (
     LOGPROCEXIT();
 } // VOID SwitchToGraphicsAndClear()
 
-// DA-TAG: Permit Image->PixelData Memory Leak on Qemu
-//         Apparent Memory Conflict ... Needs Investigation.
-//         See: sf.net/p/refind/discussion/general/thread/4dfcdfdd16/
-//         Temporary ... Eliminate when no longer required
-static
-VOID egFreeImageQEMU (
-    EG_IMAGE *Image
-) {
-    if (DetectedDevices) {
-        egFreeImage (Image);
-    }
-    else {
-        MyFreePool (&Image);
-    }
-} // static VOID egFreeImageQEMU()
 
 VOID BltClearScreen (
     BOOLEAN ShowBanner
@@ -1021,10 +1006,7 @@ VOID BltClearScreen (
           } // if GlobalConfig.BannerScale else if Banner->Width
 
            if (NewBanner != NULL) {
-              // DA-TAG: Use 'egFreeImageQEMU' in place of 'egFreeImage'
-              //         See notes in 'egFreeImageQEMU'
-              //         Revert when no longer required
-              egFreeImageQEMU (Banner);
+              egFreeImage (Banner);
               Banner = NewBanner;
            } // if NewBanner
 
@@ -1084,10 +1066,7 @@ VOID BltClearScreen (
 
     GraphicsScreenDirty = FALSE;
 
-    // DA-TAG: Use 'egFreeImageQEMU' in place of 'egFreeImage'
-    //         See notes in 'egFreeImageQEMU'
-    //         Revert when no longer required
-    egFreeImageQEMU (GlobalConfig.ScreenBackground);
+    egFreeImage (GlobalConfig.ScreenBackground);
     GlobalConfig.ScreenBackground = egCopyScreen();
     MsgLog ("GlobalConfig.ScreenBackground = egCopyScreen\n");
     LEAKABLEONEIMAGE(GlobalConfig.ScreenBackground, "ScreenBackground image");
