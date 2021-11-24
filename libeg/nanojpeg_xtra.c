@@ -54,8 +54,10 @@ EG_IMAGE * egDecodeJPEG(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN Ic
 
     if (njInit()) {
         Result = njDecode((VOID *) FileData, FileDataLength);
-        if (Result != NJ_OK)
+        if (Result != NJ_OK) {
+            MsgLog("nanojpeg error:%d\n", Result);
             return NULL;
+        }
 
         Width = njGetWidth();
         Height = njGetHeight();
