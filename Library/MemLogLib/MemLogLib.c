@@ -76,20 +76,20 @@ CHAR8     mTimingTxt[32];
 
 
 UINT64 GetCurrentMS (VOID) {
-	UINT64    CurrentMS  = 0;
-	UINT64    CurrentTsc = 0;
+    UINT64    CurrentMS  = 0;
+    UINT64    CurrentTsc = 0;
 
     if (mMemLog != NULL && mMemLog->TscFreqSec != 0) {
         CurrentTsc = AsmReadTsc();
 
-		CurrentMS = DivU64x64Remainder (
+        CurrentMS = DivU64x64Remainder (
             MultU64x32 (CurrentTsc - mMemLog->TscStart, 1000),
             mMemLog->TscFreqSec,
             NULL
         );
     }
 
-	return CurrentMS;
+    return CurrentMS;
 }
 
 CHAR8 * GetTiming (VOID) {
