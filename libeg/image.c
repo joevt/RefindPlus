@@ -1334,7 +1334,7 @@ VOID egCopyPlane (
 
 VOID
 LEAKABLEIMAGE (
-    EG_IMAGE *Image
+    IN EG_IMAGE *Image
 ) {
     if (Image) {
         LEAKABLEPATHINC ();
