@@ -3517,7 +3517,7 @@ CopyMenuEntry (
             DumpCallStack (NULL, FALSE);
         }
 #endif
-        CopyPoolStr (&NewEntry->Title, Entry->Title_PS_.Str); // the source string might not be a pool str
+        CopyPoolStr (&NewEntry->Title, Entry->Title_PS_.Str); // the source string might not be a pool string
         CopyFromPoolImage (&NewEntry->BadgeImage, &Entry->BadgeImage);
         CopyFromPoolImage (&NewEntry->Image, &Entry->Image);
 
