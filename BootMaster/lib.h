@@ -158,7 +158,7 @@ VOID CleanUpPathNameSlashes (IN OUT CHAR16 *PathName);
 VOID FreeList (IN OUT VOID ***ListPtr, IN OUT UINTN *ElementCount);
 VOID FreeVolumes (IN OUT REFIT_VOLUME ***ListVolumes, IN OUT UINTN *ListCount);
 VOID FreeVolume (REFIT_VOLUME **Volume);
-VOID SanitiseVolumeName (REFIT_VOLUME **Volume);
+VOID SanitiseVolumeName (REFIT_VOLUME *Volume);
 VOID AddListElement (
     IN OUT VOID  ***ListPtr,
     IN OUT UINTN   *ElementCount,

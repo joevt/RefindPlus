@@ -868,12 +868,12 @@ VOID FreeList (
 #endif
 
 VOID SanitiseVolumeName (
-    REFIT_VOLUME **Volume
+    REFIT_VOLUME *Volume
 ) {
     CHAR16 *VolumeName = NULL;
 
-    #define SANITIZE(v) if (MyStrStrIns (GetPoolStr (&(*Volume)->VolName), v)) VolumeName = v;
-    if (Volume && *Volume && GetPoolStr (&(*Volume)->VolName)) {
+    #define SANITIZE(v) if (MyStrStrIns (GetPoolStr (&Volume->VolName), v)) VolumeName = v;
+    if (Volume && GetPoolStr (&Volume->VolName)) {
         if (0) ;
         else SANITIZE(L"EFI System Partition"        )
         else SANITIZE(L"Whole Disk Volume"           )
@@ -894,7 +894,7 @@ VOID SanitiseVolumeName (
     }
 
     if (VolumeName != NULL) {
-        AssignCachedPoolStr (&(*Volume)->VolName, VolumeName);
+        AssignCachedPoolStr (&Volume->VolName, VolumeName);
     }
 } // VOID SanitiseVolumeName()
 
@@ -2010,7 +2010,7 @@ VOID ScanVolume (
     SetFilesystemName (Volume);
     //MsgLog ("GetVolumeName\n");
     AssignPoolStr (&Volume->VolName, GetVolumeName (Volume));
-    SanitiseVolumeName (&Volume);
+    SanitiseVolumeName (Volume);
 
     if (Volume->RootDir == NULL) {
         Volume->IsReadable = FALSE;
