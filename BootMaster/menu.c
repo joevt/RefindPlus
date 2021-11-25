@@ -217,23 +217,12 @@ VOID InitScroll (
     IN UINTN          VisibleSpace
 ) {
     State->PreviousSelection = State->CurrentSelection = 0;
-    State->MaxIndex = (INTN)ItemCount - 1;
-    State->FirstVisible = 0;
-
-    if (AllowGraphicsMode) {
-        State->MaxVisible = ScreenW / (TileSizes[0] + TILE_XSPACING) - 1;
-    }
-    else {
-        State->MaxVisible = ConHeight - 4;
-    }
-
-    if ((VisibleSpace > 0) && (VisibleSpace < State->MaxVisible)) {
-        State->MaxVisible = (INTN)VisibleSpace;
-    }
-
-    State->PaintAll        = TRUE;
-    State->PaintSelection  = FALSE;
-    State->LastVisible     = State->FirstVisible + State->MaxVisible - 1;
+    State->MaxIndex          = (INTN)ItemCount - 1;
+    State->FirstVisible      = 0;
+    State->MaxVisible        = (INTN)VisibleSpace;
+    State->PaintAll          = TRUE;
+    State->PaintSelection    = FALSE;
+    State->LastVisible       = State->FirstVisible + State->MaxVisible - 1;
 }
 
 // Adjust variables relating to the scrolling of tags, for when a selected icon
@@ -2073,6 +2062,7 @@ VOID MainMenuStyle (
 ) {
            INTN   i;
            UINTN  row0Count, row1Count, row1PosX, row1PosXRunning;
+           UINTN  MainMaxVisible;
     static UINTN  row0PosX, row0PosXRunning, row1PosY, row0Loaders;
     static UINTN *itemPosX;
     static UINTN  row0PosY, textPosY;
@@ -2080,7 +2070,12 @@ VOID MainMenuStyle (
     State->ScrollMode = SCROLL_MODE_ICONS;
     switch (Function) {
         case MENU_FUNCTION_INIT:
-            InitScroll (State, Screen->EntryCount, GlobalConfig.MaxTags);
+
+            MainMaxVisible = ScreenW / (TileSizes[0] + TILE_XSPACING) - 1;
+            if (GlobalConfig.MaxTags > 0 && GlobalConfig.MaxTags < MainMaxVisible) {
+                MainMaxVisible = GlobalConfig.MaxTags;
+            }
+            InitScroll (State, Screen->EntryCount, MainMaxVisible);
 
             // layout
             row0Count = 0;
