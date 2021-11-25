@@ -1501,6 +1501,7 @@ VOID ComputeSubScreenWindowSize (
     UINTN             *LineWidth
 ) {
     UINTN i, ItemWidth, HintTop, BannerBottomEdge, TitleWidth;
+    LOGPROCENTRY();
     UINTN FontCellWidth  = egGetFontCellWidth();
     UINTN FontCellHeight = egGetFontHeight();
 
@@ -1583,6 +1584,7 @@ VOID ComputeSubScreenWindowSize (
             FontCellHeight +
             (HintTop - BannerBottomEdge - *Height) / 2;
     }
+    LOGPROCEXIT();
 } // VOID ComputeSubScreenWindowSize()
 
 // Displays sub-menus
@@ -1592,6 +1594,19 @@ VOID GraphicsMenuStyle (
     IN UINTN               Function,
     IN CHAR16             *ParamText
 ) {
+/*
+    LOGPROCENTRY("%a: Selection:%d of %d from %d View:%d-%d Viewable:%d",
+        Function == MENU_FUNCTION_INIT            ? "INIT" :
+        Function == MENU_FUNCTION_CLEANUP         ? "CLEANUP" :
+        Function == MENU_FUNCTION_PAINT_ALL       ? "PAINT_ALL" :
+        Function == MENU_FUNCTION_PAINT_SELECTION ? "PAINT_SELECTION" :
+        Function == MENU_FUNCTION_PAINT_TIMEOUT   ? "PAINT_TIMEOUT" :
+        Function == MENU_FUNCTION_PAINT_HINTS     ? "PAINT_HINTS" :
+                                                    "???",
+        State->CurrentSelection, State->MaxIndex, State->PreviousSelection,
+        State->FirstVisible, State->LastVisible, State->MaxVisible
+    );
+*/
            INTN      i;
            UINTN     ItemWidth;
     static UINTN     LineWidth, MenuWidth, MenuHeight;
@@ -1743,6 +1758,8 @@ VOID GraphicsMenuStyle (
 
             break;
     }
+
+    //LOGPROCEXIT();
 } // static VOID GraphicsMenuStyle()
 
 //

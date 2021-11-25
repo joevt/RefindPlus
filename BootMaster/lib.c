@@ -870,6 +870,7 @@ VOID FreeList (
 VOID SanitiseVolumeName (
     REFIT_VOLUME *Volume
 ) {
+    LOGPROCENTRY("Volume:%p VolName:%s", Volume, GetPoolStr (&Volume->VolName));
     CHAR16 *VolumeName = NULL;
 
     #define SANITIZE(v) if (MyStrStrIns (GetPoolStr (&Volume->VolName), v)) VolumeName = v;
@@ -895,6 +896,10 @@ VOID SanitiseVolumeName (
 
     if (VolumeName != NULL) {
         AssignCachedPoolStr (&Volume->VolName, VolumeName);
+        LOGPROCEXIT("VolName:%s", GetPoolStr (&Volume->VolName));
+    }
+    else {
+        LOGPROCEXIT();
     }
 } // VOID SanitiseVolumeName()
 
@@ -2720,6 +2725,7 @@ Done:
 
 static
 VOID GetVolumeBadgeIcons (VOID) {
+    LOGPROCENTRY();
     UINTN         i, VolumeIndex;
     BOOLEAN       FoundSysVol = FALSE;
     REFIT_VOLUME *Volume;
@@ -2736,6 +2742,7 @@ VOID GetVolumeBadgeIcons (VOID) {
         LOG(3, LOG_LINE_NORMAL, L"Skipped Loading Volume Badges ... Screen is in Text Mode");
         #endif
 
+        LOGPROCEXIT();
         return;
     }
 
@@ -2744,6 +2751,7 @@ VOID GetVolumeBadgeIcons (VOID) {
         LOG(3, LOG_LINE_NORMAL, L"Skipped Loading Volume Badges ... Config Setting is Active:- 'HideUI Badges'");
         #endif
 
+        LOGPROCEXIT();
         return;
     }
 
@@ -2794,9 +2802,11 @@ VOID GetVolumeBadgeIcons (VOID) {
             #endif
         } // if Volume->IsReadable
     } // for
+    LOGPROCEXIT();
 } // VOID GetVolumeBadgeIcons()
 
 VOID SetVolumeIcons (VOID) {
+    LOGPROCENTRY();
     UINTN         i, VolumeIndex;
     BOOLEAN       FoundSysVol = FALSE;
     REFIT_VOLUME *Volume;
@@ -2818,6 +2828,7 @@ VOID SetVolumeIcons (VOID) {
         LOG(3, LOG_LINE_NORMAL, L"Skipped Loading .VolumeIcons ... Screen is in Text Mode");
         #endif
 
+        LOGPROCEXIT();
         return;
     }
 
@@ -2826,6 +2837,7 @@ VOID SetVolumeIcons (VOID) {
         LOG(3, LOG_LINE_NORMAL, L"Skipped Loading .VolumeIcons ... Config Setting is Active:- 'IgnoreHiddenIcons'");
         #endif
 
+        LOGPROCEXIT();
         return;
     }
 
@@ -2893,6 +2905,7 @@ VOID SetVolumeIcons (VOID) {
             #endif
         } // if Volume->IsReadable
     } // for
+    LOGPROCEXIT();
 } // VOID SetVolumeIcons()
 
 //

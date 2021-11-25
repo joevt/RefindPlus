@@ -2188,6 +2188,7 @@ BOOLEAN ScanFirmwareDefined (
     IN CHAR16   *MatchThis,
     IN PoolImage *Icon_PI_
 ) {
+    LOGPROCENTRY("Row:%d Match:%s Icon:%p", Row, MatchThis, GetPoolImage(Icon));
     BOOT_ENTRY_LIST *BootEntries;
     BOOT_ENTRY_LIST *CurrentEntry;
     BOOLEAN          ScanIt;
@@ -2295,6 +2296,7 @@ BOOLEAN ScanFirmwareDefined (
     #if REFIT_DEBUG > 0
     LOG(3, LOG_LINE_NORMAL, L"Processed UEFI Firmware Defined Boot Options");
     #endif
+    LOGPROCEXIT("result:%d", result);
     return result;
 } // static VOID ScanFirmwareDefined()
 
@@ -2359,6 +2361,7 @@ LOADER_ENTRY * AddToolEntry (
 VOID ScanForBootloaders (
     BOOLEAN ShowMessage
 ) {
+    LOGPROCENTRY();
     UINTN     i;
     BOOLEAN   ScanForLegacy   = FALSE;
     BOOLEAN   DeleteItem      = FALSE;
@@ -2663,6 +2666,7 @@ VOID ScanForBootloaders (
     FinishTextScreen (FALSE);
 
     ScanningLoaders = FALSE;
+    LOGPROCEXIT();
 } // VOID ScanForBootloaders()
 
 // Checks to see if a specified file seems to be a valid tool.

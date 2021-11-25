@@ -1886,6 +1886,7 @@ EFI_STATUS EFIAPI efi_main (
     EFI_HANDLE         ImageHandle,
     EFI_SYSTEM_TABLE  *SystemTable
 ) {
+    LOGPROCENTRY();
     EFI_STATUS  Status;
 
     BOOLEAN  MainLoopRunning = TRUE;
@@ -1936,6 +1937,7 @@ EFI_STATUS EFIAPI efi_main (
     Status = InitRefitLib (ImageHandle);
 
     if (EFI_ERROR(Status)) {
+        LOGPROCEXIT("failed InitRefitLib %r", Status);
         return Status;
     }
 
@@ -2445,6 +2447,8 @@ EFI_STATUS EFIAPI efi_main (
     #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_SEPARATOR, L"Entering Main Loop");
     #endif
+
+    LOGBLOCKENTRY("Main Loop");
 
     if (GlobalConfig.DefaultSelection) {
         SelectionName = StrDuplicate (GlobalConfig.DefaultSelection);
@@ -3177,5 +3181,6 @@ EFI_STATUS EFIAPI efi_main (
     PauseForKey();
     EndlessIdleLoop();
 
+    LOGPROCEXIT();
     return EFI_SUCCESS;
 } // EFI_STATUS EFIAPI efi_main()

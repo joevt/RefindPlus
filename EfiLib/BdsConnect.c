@@ -654,15 +654,19 @@ static
 EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (
     VOID
 ) {
+    LOGPROCENTRY();
     EFI_STATUS  Status;
 
     // First Pass Driver Connection
     // DA-TAG: Limit to TianoCore
     //         Technically Not Needed
     #ifdef __MAKEWITH_TIANO
+    LOGBLOCKENTRY("OcConnectDrivers");
     OcConnectDrivers();
+    LOGBLOCKEXIT("OcConnectDrivers");
     #endif
 
+    LOGBLOCKENTRY("Connect and Dispatch");
     do {
         FoundGOP = FALSE;
 
@@ -688,6 +692,7 @@ EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (
         #endif
 
     } while (!EFI_ERROR(Status));
+    LOGBLOCKEXIT("Connect and Dispatch");
 
     #if REFIT_DEBUG > 0
     LOG2(2, LOG_THREE_STAR_SEP, L"INFO: ", L"\n", L"Processed %d Handle%s",
@@ -695,6 +700,7 @@ EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (
     );
     #endif
 
+    LOGPROCEXIT("FoundGOP:%d", FoundGOP);
     if (FoundGOP) {
         return EFI_SUCCESS;
     }
