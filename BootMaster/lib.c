@@ -2531,8 +2531,7 @@ VOID ScanVolumes (VOID) {
                 VolumeUUID, RoleStr, GetPoolStr (&Volume->VolName)
             );
 
-            LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
-            MsgLog ("%s", MsgStr);
+            LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"%s", MsgStr);
             MyFreePool (&MsgStr);
 
             MyFreePool (&PartName);
