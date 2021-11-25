@@ -1478,100 +1478,185 @@ VOID DrawTextWithTransparency (
     egFreeImage (TextBuffer);
 }
 
-// Compute the size & position of the window that will hold a subscreen's information.
+/* Compute the size & position of the window that will hold a subscreen's information.
+
+    |<-----Width-------->|
+    |IconX |TextX        |
+    |      |<-LineWidth->|
+____v____________________v___ BannerBottom
+F    ________________________ YPos
+L   |-------title--------|          ^
+L   |       ExtraLine1   |          |
+L   |++++++-infoline0-   |___ IconY |
+L   |++++++-infoline1-   |         Height <= AllowedHeight
+L   |+big++ ExtraLine2   |          |
+L   |+icon+-entry0-      |          |
+L   |++++++-entry1-      |          |
+L   |++++++-entry2-______|__        v
+F                   ________
+F         hint1              HintTop
+F         hint2
+F___________________________ ScreenH
+
+L = TextLineHeight = egGetFontHeight() + TEXT_YMARGIN * 2
+F = FontCellHeight = egGetFontHeight()
+*/
+
 static
 VOID ComputeSubScreenWindowSize (
     REFIT_MENU_SCREEN *Screen,
-    SCROLL_STATE      *State,
-    UINTN             *XPos,
-    UINTN             *YPos,
-    UINTN             *Width,
-    UINTN             *Height,
-    UINTN             *LineWidth
+    UINTN *XPos, UINTN *YPos,
+    UINTN *Width, UINTN *Height,
+    UINTN *LineWidth,
+    UINTN *IconX, UINTN *IconY, UINTN *TextX,
+    UINTN *MaxVisibleInfoLines, UINTN *MaxVisibleEntries,
+    UINTN *BannerBottomEdge, UINTN *HintTop
 ) {
-    UINTN i, ItemWidth, HintTop, BannerBottomEdge, TitleWidth;
     LOGPROCENTRY();
+    INTN i;
     UINTN FontCellWidth  = egGetFontCellWidth();
     UINTN FontCellHeight = egGetFontHeight();
+    UINTN TopBottomBorder;
+    INTN AllowedHeight;
+    UINTN ImageWidth = 0;
+    UINTN ImageHeight = 0;
 
-    *Width     = 20;
-    *Height    = 5;
-    TitleWidth = egComputeTextWidth (GetPoolStr (&Screen->Title));
-
-    for (i = 0; i < Screen->InfoLineCount; i++) {
-        ItemWidth = StrLen (GetPoolStr_PS_ (&Screen->InfoLines[i]));
-
-        if (*Width < ItemWidth) {
-            *Width = ItemWidth;
+    { // calculate the height first - we'll remove info lines if they don't fit
+        *HintTop = ScreenH - (FontCellHeight * 3); // top of hint text
+        if (GlobalConfig.BannerBottomEdge >= *HintTop) {
+            *BannerBottomEdge = 0; // probably a full-screen image; treat it as an empty banner
+        }
+        else {
+            *BannerBottomEdge = GlobalConfig.BannerBottomEdge;
         }
 
-        (*Height)++;
-    }
-
-    for (i = 0; i <= State->MaxIndex; i++) {
-        ItemWidth = StrLen (GetPoolStr (&Screen->Entries[i]->Title));
-
-        if (*Width < ItemWidth) {
-            *Width = ItemWidth;
+        TopBottomBorder = FontCellHeight;
+        for (i = 0; ; i++) {
+            AllowedHeight = *HintTop - *BannerBottomEdge - TopBottomBorder * 2;
+            if (AllowedHeight >= TextLineHeight() * 3) {
+                break;
+            }
+            if (i == 0) { // remove the banner
+                *BannerBottomEdge = 0;
+            }
+            else if (i == 1) { // remove the hints
+                *HintTop = ScreenH;
+            }
+            else if (i == 2) { // remove the border
+                TopBottomBorder = 0;
+            }
+            else {
+                break;
+            }
         }
 
-        (*Height)++;
+        *MaxVisibleEntries = Screen->EntryCount;
+        *MaxVisibleInfoLines = Screen->InfoLineCount;
+
+        for (i = 0; ; i++) {
+            INTN LinesRemaining = AllowedHeight / TextLineHeight() - 1; // subtract one for the title
+            INTN ExtraLine1 = (*MaxVisibleInfoLines) ? 1 : 0;
+            INTN NumInfoLines = *MaxVisibleInfoLines;
+            INTN ExtraLine2 = (*MaxVisibleEntries) ? 1 : 0;
+            INTN NumEntryLines = (*MaxVisibleEntries > 1 ? 2 : *MaxVisibleEntries); // minimum that we need 0, 1, or 2
+            if (LinesRemaining >= ExtraLine1 + NumInfoLines + ExtraLine2 + NumEntryLines) {
+                LinesRemaining -= ExtraLine1 + NumInfoLines + ExtraLine2; // we have room for all the infolines and a minimum number of entries
+                if (LinesRemaining < *MaxVisibleEntries) {
+                    *MaxVisibleEntries = LinesRemaining; // if there's not enough room for all the entries then reduce the max
+                }
+                break;
+            }
+
+            if (i == 0) {
+                *BannerBottomEdge = 0; // first, try removing the banner
+                AllowedHeight = *HintTop - *BannerBottomEdge - TopBottomBorder * 2;
+            }
+            else if (i == 1) { // second, try removing some info lines
+                if (LinesRemaining >= ExtraLine2 + NumEntryLines) { // can we remove some info lines to make the minimum number of entries fit?
+                    LinesRemaining -= ExtraLine2 + NumEntryLines;
+                    if (LinesRemaining > 0) LinesRemaining--;
+                    *MaxVisibleInfoLines = LinesRemaining;
+                    *MaxVisibleEntries = NumEntryLines;
+                }
+                else {
+                    *MaxVisibleInfoLines = 0;
+                    *MaxVisibleEntries = NumEntryLines;
+                }
+                break;
+            }
+        }
+
+        *Height = (1 + (*MaxVisibleInfoLines ? 1 : 0) + *MaxVisibleInfoLines + (*MaxVisibleEntries ? 1 : 0) + *MaxVisibleEntries) * TextLineHeight();
     }
 
-    *Width = (*Width + 2) * FontCellWidth;
-    *LineWidth = *Width;
+    { // calculate width second
+        UINTN MaxWidth;
+        #define CheckWidth(_str) do { CHAR16 *_s = (_str); if (_s) { UINTN ItemWidth = StrLen(_s); if (MaxWidth < ItemWidth) MaxWidth = ItemWidth; } } while (0)
+        #define CheckImageWidth(_img) do { \
+            EG_IMAGE *ImageToDraw = _img; \
+            if (ImageToDraw) { \
+                if (ImageToDraw->Width > ImageWidth) ImageWidth = ImageToDraw->Width; \
+                if (ImageToDraw->Height > ImageHeight) ImageHeight = ImageToDraw->Height; \
+            } \
+        } while (0)
 
-    if (GetPoolImage (&Screen->TitleImage)) {
-        *Width += (GetPoolImage (&Screen->TitleImage)->Width + TITLEICON_SPACING * 2 + FontCellWidth);
-    }
-    else {
-        *Width += FontCellWidth;
+        MaxWidth = 0; // calculating TitleWidth
+        CheckWidth (GetPoolStr (&Screen->Title));
+        CheckImageWidth (GetPoolImage (&Screen->TitleImage));
+        UINTN TitleWidth = (MaxWidth + 2) * FontCellWidth;
+
+        MaxWidth = 0; // calculating LineWidth
+        for (i = 0; i < *MaxVisibleInfoLines; i++) { // InfoLines is not scrollable, so only check the ones that are visible
+            CheckWidth (GetPoolStr_PS_ (&Screen->InfoLines[i]));
+        }
+        for (i = 0; i < Screen->EntryCount; i++) { // check all the entries
+            CheckWidth (GetPoolStr (&Screen->Entries[i]->Title));
+            CheckImageWidth (GetPoolImage (&Screen->Entries[i]->Image));
+        }
+        *LineWidth = (MaxWidth + 2) * FontCellWidth; // used for drawing infolines, entries, and timeout
+
+        *Width = (TitleWidth > *LineWidth) ? TitleWidth : *LineWidth;
     }
 
-    if (*Width < TitleWidth) {
-        *Width = TitleWidth + 2 * FontCellWidth;
+    // calculate width with the image
+    if (ImageWidth) {
+        UINTN WidthWithImage = ImageWidth + TITLEICON_SPACING * 2 + *LineWidth;
+        if (*Width < WidthWithImage) {
+            *Width = WidthWithImage;
+        }
     }
-
-    // Keep it within the bounds of the screen, or 2/3 of the screen's width
-    // for screens over 800 pixels wide
     if (*Width > ScreenW) {
         *Width = ScreenW;
     }
 
+    // calculate height with the image
+    if (ImageHeight) {
+        UINTN HeightWithImage = ImageHeight + TextLineHeight() * 2; // 2 lines for the title above the icon
+        if (*Height < HeightWithImage) {
+            *Height = HeightWithImage;
+        }
+    }
+    if (*Height > ScreenH) {
+        *Height = ScreenH;
+    }
+
+    // center the menu
     *XPos = (ScreenW - *Width) / 2;
+    *YPos = (ScreenH - *Height) / 2;
 
-    // top of hint text
-    HintTop  = ScreenH - (FontCellHeight * 3);
-    *Height *= TextLineHeight();
-
-    if (GetPoolImage (&Screen->TitleImage) &&
-        (*Height < (GetPoolImage (&Screen->TitleImage)->Height + TextLineHeight() * 4))
-    ) {
-        *Height = GetPoolImage (&Screen->TitleImage)->Height + TextLineHeight() * 4;
+    // if the menu obscures the banner or the hints, then center between the banner and hints
+    if (*YPos < *BannerBottomEdge || *YPos + *Height > *HintTop) {
+        *YPos = *BannerBottomEdge + TopBottomBorder + (AllowedHeight - *Height) / 2;
     }
 
-    if (GlobalConfig.BannerBottomEdge >= HintTop) {
-        // probably a full-screen image; treat it as an empty banner
-        BannerBottomEdge = 0;
+    *IconX = *XPos + TITLEICON_SPACING;
+    *IconY = *YPos + TextLineHeight() * 2; // 2 lines for the title above the icon
+    *TextX = *XPos;
+    if (ImageWidth) {
+        *TextX += ImageWidth + TITLEICON_SPACING * 2;
     }
-    else {
-        BannerBottomEdge = GlobalConfig.BannerBottomEdge;
-    }
-
-    if (*Height > (HintTop - BannerBottomEdge - FontCellHeight * 2)) {
-        BannerBottomEdge = 0;
-    }
-
-    if (*Height > (HintTop - BannerBottomEdge - FontCellHeight * 2)) {
-        // TODO: Implement scrolling in text screen.
-        *Height = (HintTop - BannerBottomEdge - FontCellHeight * 2);
-    }
-
-    *YPos = ((ScreenH - *Height) / 2);
-    if (*YPos < BannerBottomEdge) {
-        *YPos = BannerBottomEdge +
-            FontCellHeight +
-            (HintTop - BannerBottomEdge - *Height) / 2;
+    if (*TextX + *LineWidth > ScreenW) {
+        *LineWidth = ScreenW - *TextX;
     }
     LOGPROCEXIT();
 } // VOID ComputeSubScreenWindowSize()
@@ -1597,23 +1682,52 @@ VOID GraphicsMenuStyle (
     );
 */
            INTN      i;
-           UINTN     ItemWidth;
+           UINTN     ItemWidth, TextY;
     static UINTN     LineWidth, MenuWidth, MenuHeight;
     static UINTN     EntriesPosX, EntriesPosY;
     static UINTN     TitlePosX, TimeoutPosY, CharWidth;
-           EG_IMAGE *Window;
+    static UINTN     IconX, IconY, TextX;
+    static UINTN     MaxVisibleEntries, MaxVisibleInfoLines;
+    static UINTN     BannerBottomEdge, HintTop;
+    static EG_IMAGE *LastImageDrawn = NULL;
+           EG_IMAGE *ImageToDraw;
 
     CharWidth = egGetFontCellWidth();
     State->ScrollMode = SCROLL_MODE_TEXT;
 
     switch (Function) {
         case MENU_FUNCTION_INIT:
-            InitScroll (State, Screen->EntryCount, 0);
             ComputeSubScreenWindowSize (
-                Screen, State,
+                Screen,
                 &EntriesPosX, &EntriesPosY,
                 &MenuWidth, &MenuHeight,
-                &LineWidth
+                &LineWidth,
+                &IconX, &IconY, &TextX,
+                &MaxVisibleInfoLines, &MaxVisibleEntries,
+                &BannerBottomEdge, &HintTop
+            );
+            MsgLog ("(Banner:%d MenuT:%d IconT:%d MenuB:%d Hint:%d ScreenH:%d) (MenuL:%d IconX:%d TextX:%d MenuR:%d ScreenW:%d) Entries:%d Infos:%d\n",
+                BannerBottomEdge,
+                EntriesPosY,
+                IconY,
+                EntriesPosY + MenuHeight,
+                HintTop,
+                ScreenH,
+
+                EntriesPosX,
+                IconX, 
+                TextX,
+                EntriesPosX + MenuWidth,
+                ScreenW, 
+
+                MaxVisibleEntries,
+                MaxVisibleInfoLines
+            );
+
+            InitScroll (State, Screen->EntryCount, MaxVisibleEntries);
+            MsgLog ("Selection:%d of %d from %d View:%d-%d Viewable:%d\n",
+                State->CurrentSelection, State->MaxIndex, State->PreviousSelection,
+                State->FirstVisible, State->LastVisible, State->MaxVisible
             );
 
             TimeoutPosY = EntriesPosY + (Screen->EntryCount + 1) * TextLineHeight();
@@ -1621,12 +1735,54 @@ VOID GraphicsMenuStyle (
             // initial painting (this will change GlobalConfig.ScreenBackground->PixelData)
             SwitchToGraphicsAndClear (TRUE);
 
-            Window = egCreateFilledImage (MenuWidth, MenuHeight, FALSE, GlobalConfig.ScreenBackground->PixelData);
+            EG_PIXEL FillColor = {0,0,0,0};
+            #define MakeGray(x) do { FillColor.r = FillColor.g = FillColor.b = x; x -= 0x11; } while (0)
+            #define egDrawRect(x,y,w,h) \
+                do { \
+                    EG_IMAGE *Window = egCreateFilledImage (w, h, FALSE, &FillColor); \
+                    if  (Window) { \
+                        egDrawImage (Window, x, y); \
+                        egFreeImage (Window); \
+                    } \
+                } while (0)
 
-            if (Window) {
-                egDrawImage (Window, EntriesPosX, EntriesPosY);
-                egFreeImage (Window);
-            }
+            FillColor = GlobalConfig.ScreenBackground->PixelData[0];
+            egDrawRect (EntriesPosX, EntriesPosY, MenuWidth, MenuHeight);
+
+            #if 0
+                // Draw ruler marks which will show how the menu is positioned (centered) on the screen
+                // and the relationship of the menu with the hints and banner.
+                UINTN MenuRight = ((EntriesPosX + MenuWidth) <= ScreenW) ? EntriesPosX + MenuWidth : ScreenW - 5;
+                INTN NumLines = (HintTop - BannerBottomEdge) / egGetFontHeight() / 2;
+                UINTN shade;
+                shade = 0xFF;
+                for (i=1; i <= 16; i++) {
+                    MakeGray(shade);
+                    egDrawRect (0, ScreenH - egGetFontHeight() * i, EntriesPosX, egGetFontHeight()); // mark bottom lines
+                }
+                shade = 0xFF;
+                for (i=0; i < 16; i++) {
+                    MakeGray(shade);
+                    egDrawRect (0, egGetFontHeight() * i, EntriesPosX, egGetFontHeight()); // mark top lines
+                }
+                shade = 0xFF;
+                for (i=0; i < NumLines; i++) {
+                    MakeGray(shade);
+                    egDrawRect (MenuRight, BannerBottomEdge + egGetFontHeight() * i, ScreenW - MenuRight, egGetFontHeight()); // mark banner lines
+                }
+                shade = 0xFF;
+                for (i=1; i <= NumLines; i++) {
+                    MakeGray(shade);
+                    egDrawRect (MenuRight, HintTop - egGetFontHeight() * i, ScreenW - MenuRight, egGetFontHeight()); // mark bottom lines
+                }
+                shade = 0x80;
+                MakeGray(shade);
+                egDrawRect (EntriesPosX - 1, EntriesPosY - 1, MenuWidth + 2, MenuHeight + 2); // mark the menu area
+                MakeGray(shade);
+                egDrawRect (10, 0, EntriesPosX - 20, BannerBottomEdge); // Mark the banner that is allowed
+                MakeGray(shade);
+                egDrawRect (MenuRight + 10, 0, ScreenW - MenuRight - 20, GlobalConfig.BannerBottomEdge); // Mark the real banner
+            #endif
 
             ItemWidth = egComputeTextWidth (GetPoolStr (&Screen->Title));
 
@@ -1652,73 +1808,68 @@ VOID GraphicsMenuStyle (
             break;
 
         case MENU_FUNCTION_PAINT_ALL:
-            ComputeSubScreenWindowSize (
-                Screen, State,
-                &EntriesPosX, &EntriesPosY,
-                &MenuWidth, &MenuHeight,
-                &LineWidth
-            );
+            LastImageDrawn = NULL;
 
+            TextY = EntriesPosY;
             DrawText (
                 GetPoolStr (&Screen->Title),
                 FALSE,
                 (StrLen (GetPoolStr (&Screen->Title)) + 2) * CharWidth,
                 TitlePosX,
-                EntriesPosY += TextLineHeight()
+                TextY
             );
+            TextY += TextLineHeight();
 
-            if (GetPoolImage (&Screen->TitleImage)) {
-                BltImageAlpha (
-                    GetPoolImage (&Screen->TitleImage),
-                    EntriesPosX + TITLEICON_SPACING,
-                    EntriesPosY + TextLineHeight() * 2,
-                    GlobalConfig.ScreenBackground->PixelData
-                );
-                EntriesPosX += (GetPoolImage (&Screen->TitleImage)->Width + TITLEICON_SPACING * 2);
+            ImageToDraw = GetPoolImage (&Screen->Entries[State->CurrentSelection]->Image);
+            if (!ImageToDraw) ImageToDraw = GetPoolImage (&Screen->TitleImage);
+            if (ImageToDraw && ImageToDraw != LastImageDrawn) {
+                BltImageAlpha (ImageToDraw, IconX, IconY, GlobalConfig.ScreenBackground->PixelData);
+                LastImageDrawn = ImageToDraw;
             }
 
-            EntriesPosY += (TextLineHeight() * 2);
+            TextY += TextLineHeight();
 
-            if (Screen->InfoLineCount > 0) {
-                for (i = 0; i < (INTN)Screen->InfoLineCount; i++) {
+            if (MaxVisibleInfoLines > 0) {
+                for (i = 0; i < MaxVisibleInfoLines; i++) {
                     DrawText (
                         GetPoolStr_PS_ (&Screen->InfoLines[i]),
                         FALSE, LineWidth,
-                        EntriesPosX, EntriesPosY
+                        TextX, TextY
                     );
-
-                    EntriesPosY += TextLineHeight();
+                    TextY += TextLineHeight();
                 }
-
                 // also add a blank line
-                EntriesPosY += TextLineHeight();
+                TextY += TextLineHeight();
             }
 
-            for (i = 0; i <= State->MaxIndex; i++) {
+            for (i = State->FirstVisible; i <= State->MaxIndex && i <= State->LastVisible; i++) {
                 DrawText (
                     GetPoolStr (&Screen->Entries[i]->Title),
                     (i == State->CurrentSelection),
                     LineWidth,
-                    EntriesPosX,
-                    EntriesPosY + i * TextLineHeight()
+                    TextX,
+                    TextY
                 );
+                TextY += TextLineHeight();
             }
 
-            if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
-                if ((GetPoolStr (&Screen->Hint1) != NULL) && (StrLen (GetPoolStr (&Screen->Hint1)) > 0)) {
-                    DrawTextWithTransparency (
-                        GetPoolStr (&Screen->Hint1),
-                        (ScreenW - egComputeTextWidth (GetPoolStr (&Screen->Hint1))) / 2,
-                        ScreenH - (egGetFontHeight() * 3)
-                    );
-                }
+            if (HintTop < ScreenH) {
+                if (!(GlobalConfig.HideUIFlags & HIDEUI_FLAG_HINTS)) {
+                    if ((GetPoolStr (&Screen->Hint1) != NULL) && (StrLen (GetPoolStr (&Screen->Hint1)) > 0)) {
+                        DrawTextWithTransparency (
+                            GetPoolStr (&Screen->Hint1),
+                            (ScreenW - egComputeTextWidth (GetPoolStr (&Screen->Hint1))) / 2,
+                            HintTop
+                        );
+                    }
 
-                if ((GetPoolStr (&Screen->Hint2) != NULL) && (StrLen (GetPoolStr (&Screen->Hint2)) > 0)) {
-                    DrawTextWithTransparency (
-                        GetPoolStr (&Screen->Hint2),
-                        (ScreenW - egComputeTextWidth (GetPoolStr (&Screen->Hint2))) / 2,
-                        ScreenH - (egGetFontHeight() * 2)
-                    );
+                    if ((GetPoolStr (&Screen->Hint2) != NULL) && (StrLen (GetPoolStr (&Screen->Hint2)) > 0)) {
+                        DrawTextWithTransparency (
+                            GetPoolStr (&Screen->Hint2),
+                            (ScreenW - egComputeTextWidth (GetPoolStr (&Screen->Hint2))) / 2,
+                            HintTop + egGetFontHeight()
+                        );
+                    }
                 }
             }
 
@@ -1729,21 +1880,28 @@ VOID GraphicsMenuStyle (
             DrawText (
                 GetPoolStr (&Screen->Entries[State->PreviousSelection]->Title),
                 FALSE, LineWidth,
-                EntriesPosX,
-                EntriesPosY + State->PreviousSelection * TextLineHeight()
+                TextX,
+                EntriesPosY + (2 + MaxVisibleInfoLines + (MaxVisibleInfoLines ? 1 : 0) + State->PreviousSelection - State->FirstVisible) * TextLineHeight()
             );
 
             DrawText (
                 GetPoolStr (&Screen->Entries[State->CurrentSelection]->Title),
                 TRUE, LineWidth,
-                EntriesPosX,
-                EntriesPosY + State->CurrentSelection * TextLineHeight()
+                TextX,
+                EntriesPosY + (2 + MaxVisibleInfoLines + (MaxVisibleInfoLines ? 1 : 0) + State->CurrentSelection - State->FirstVisible) * TextLineHeight()
             );
+
+            ImageToDraw = GetPoolImage (&Screen->Entries[State->CurrentSelection]->Image);
+            if (!ImageToDraw) ImageToDraw = GetPoolImage (&Screen->TitleImage);
+            if (ImageToDraw && ImageToDraw != LastImageDrawn) {
+                BltImageAlpha (ImageToDraw, IconX, IconY, GlobalConfig.ScreenBackground->PixelData);
+                LastImageDrawn = ImageToDraw;
+            }
 
             break;
 
         case MENU_FUNCTION_PAINT_TIMEOUT:
-            DrawText (ParamText, FALSE, LineWidth, EntriesPosX, TimeoutPosY);
+            DrawText (ParamText, FALSE, LineWidth, TextX, TimeoutPosY);
 
             break;
     }
