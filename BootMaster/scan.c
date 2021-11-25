@@ -2369,7 +2369,7 @@ VOID ScanForBootloaders (
     EG_PIXEL  BGColor         = COLOR_LIGHTBLUE;
     CHAR16   *DontScanItem    = NULL;
     CHAR16   *HiddenTags, *HiddenLegacy;
-    CHAR16   *OrigDontScanDirs;
+    CHAR16   *OrigDontScanDirs = NULL;
     CHAR16   *OrigDontScanFiles;
     CHAR16   *OrigDontScanVolumes;
     CHAR16    ShortCutKey;
