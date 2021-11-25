@@ -115,60 +115,36 @@ BOOLEAN MyStrBegins (
  *
  * Arguments:
  *
- *  String      - Null-terminated string to search.
- *  StrCharSet  - Null-terminated string to search for.
+ *  String  - Null-terminated string to search.
+ *  SubStr  - Null-terminated string to search for.
  *
  * Returns:
  *  The address of the first occurrence of the matching substring if successful, or NULL otherwise.
  * --*/
 CHAR16 * MyStrStr (
     IN CHAR16  *String,
-    IN CHAR16  *StrCharSet
+    IN CHAR16  *SubStr
 ) {
-    CHAR16 *Src;
-    CHAR16 *Sub;
-
-    LOG(5, LOG_BLANK_LINE_SEP, L"X");
-    LOG(5, LOG_LINE_FORENSIC,
-        L"In MyStrStr ... 1 - START:- Find '%s' in '%s'",
-        StrCharSet ? StrCharSet : L"NULL",
-        String     ? String     : L"NULL"
-    );
-    if ((String == NULL) || (StrCharSet == NULL)) {
-        LOG(5, LOG_LINE_FORENSIC, L"In MyStrStr ... 1a - END:- NULL INPUT");
-        LOG(5, LOG_BLANK_LINE_SEP, L"X");
-        return NULL;
-    }
-
-    //LOG(5, LOG_LINE_FORENSIC, L"In MyStrStr ... 2");
-    Src = String;
-    Sub = StrCharSet;
-
-    //LOG(5, LOG_LINE_FORENSIC, L"In MyStrStr ... 3 - WHILE LOOP:- START/ENTER");
-    while ((*String != L'\0') && (*StrCharSet != L'\0')) {
-        if (*String++ != *StrCharSet) {
-            String     = ++Src;
-            StrCharSet = Sub;
+    //LOGPROCENTRY("'%s' '%s'", String, SubStr);
+    CHAR16 *Result = NULL;
+    if (String && SubStr) {
+        CHAR16 *Src = String;
+        CHAR16 *Sub = SubStr;
+        while ((*String != L'\0') && (*SubStr != L'\0')) {
+            if (*String++ != *SubStr) {
+                String = ++Src;
+                SubStr = Sub;
+            }
+            else {
+                SubStr++;
+            }
+        } // while
+        if (*SubStr == L'\0') {
+            Result = Src;
         }
-        else {
-            StrCharSet++;
-        }
-    } // while
-    //LOG(5, LOG_LINE_FORENSIC, L"In MyStrStr ... 4 - WHILE LOOP:- END/EXIT");
-
-    if (*StrCharSet == L'\0') {
-        LOG(5, LOG_LINE_FORENSIC,
-            L"In MyStrStr ... 4a - END:- return CHAR16 *Src (Substring Found)"
-        );
-        LOG(5, LOG_BLANK_LINE_SEP, L"X");
-        return Src;
     }
-
-    LOG(5, LOG_LINE_FORENSIC,
-        L"In MyStrStr ... 5 - END:- return NULL (Substring not Found)"
-    );
-    LOG(5, LOG_BLANK_LINE_SEP, L"X");
-    return NULL;
+    //LOGPROCEXIT("result:'%s'", Result);
+    return Result;
 } // CHAR16 * MyStrStr()
 
 /*++
