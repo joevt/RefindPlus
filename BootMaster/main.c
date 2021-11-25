@@ -779,7 +779,6 @@ VOID preBootKicker (VOID) {
     INTN               DefaultEntry   = 1;
     MENU_STYLE_FUNC    Style          = GraphicsMenuStyle;
     REFIT_MENU_ENTRY  *ChosenEntry;
-    CHAR16            *MenuInfo       = L"A tool to kick in the Apple Boot Screen";
     static REFIT_MENU_SCREEN *BootKickerMenu = NULL;
     static REFIT_MENU_SCREEN BootKickerMenuSrc = {
         CACHEDPS(L"BootKicker"),
@@ -802,30 +801,24 @@ VOID preBootKicker (VOID) {
             return;
         }
         CopyFromPoolImage_PI_ (&BootKickerMenu->TitleImage_PI_, BuiltinIcon (BUILTIN_ICON_TOOL_BOOTKICKER));
-        AddMenuInfoLineCached (BootKickerMenu, MenuInfo);
+        AddMenuInfoLineCached (BootKickerMenu, L"A tool to kick in the Apple Boot Screen");
         AddMenuInfoLineCached (BootKickerMenu, L"Needs GOP Capable Fully Compatible GPUs on Apple Firmware");
         AddMenuInfoLineCached (BootKickerMenu, L"(Fully Compatible GPUs provide native Apple Boot Screen)");
         AddMenuInfoLineCached (BootKickerMenu, L"NB: Hangs and needs physical reboot with other GPUs");
         AddMenuInfoLineCached (BootKickerMenu, L"");
         AddMenuInfoLineCached (BootKickerMenu, L"BootKicker is from OpenCore and Copyright Acidanthera");
-        AddMenuInfoLineCached (BootKickerMenu, L"Requires at least one of the files below:");
-
+        AddMenuInfoLineCached (BootKickerMenu, L"You can get the BootKicker efi file here:");
+        AddMenuInfoLineCached (BootKickerMenu, L"https://github.com/acidanthera/OpenCorePkg/releases");
+        AddMenuInfoLineCached (BootKickerMenu, L"https://github.com/dakanji/RefindPlus/tree/GOPFix/BootMaster/tools_x64");
+        AddMenuInfoLineCached (BootKickerMenu, L"");
+        AddMenuInfoLineCached (BootKickerMenu, L"Requires at least one of the files below.");
+        AddMenuInfoLineCached (BootKickerMenu, L"The first file found in the order listed will be used");
+        AddMenuInfoLineCached (BootKickerMenu, L"You will be returned to the main menu if not found");
         UINTN k = 0;
         CHAR16 *FilePath = NULL;
         while ((FilePath = FindCommaDelimited (BOOTKICKER_FILES, k++)) != NULL) {
             AddMenuInfoLinePool (BootKickerMenu, FilePath);
         }
-
-        AddMenuInfoLineCached (BootKickerMenu, L"");
-        AddMenuInfoLineCached (BootKickerMenu, L"The first file found in the order listed will be used");
-        AddMenuInfoLineCached (BootKickerMenu, L"You will be returned to the main menu if not found");
-        AddMenuInfoLineCached (BootKickerMenu, L"");
-        AddMenuInfoLineCached (BootKickerMenu, L"");
-        AddMenuInfoLineCached (BootKickerMenu, L"You can get the BootKicker efi file here:");
-        AddMenuInfoLineCached (BootKickerMenu, L"https://github.com/acidanthera/OpenCorePkg/releases");
-        AddMenuInfoLineCached (BootKickerMenu, L"https://github.com/dakanji/RefindPlus/tree/GOPFix/BootMaster/tools_x64");
-        AddMenuInfoLineCached (BootKickerMenu, L"");
-        AddMenuInfoLineCached (BootKickerMenu, L"");
 
         AddMenuEntryCopy (BootKickerMenu, &TagMenuEntry[TAG_LOAD_BOOTKICKER]);
         AddMenuEntryCopy (BootKickerMenu, &TagMenuEntry[TAG_RETURN]);
@@ -842,11 +835,9 @@ VOID preBootKicker (VOID) {
     MsgLog ("User Input Received:\n");
     #endif
 
-    if (MyStriCmp (GetPoolStr (&ChosenEntry->Title), L"Load BootKicker") &&
-        MenuExit == MENU_EXIT_ENTER
-    ) {
-        UINTN        i = 0;
-        UINTN        k = 0;
+    if (MyStriCmp (GetPoolStr (&ChosenEntry->Title), L"Load BootKicker") && MenuExit == MENU_EXIT_ENTER) {
+        UINTN         i = 0;
+        UINTN         k = 0;
 
         CHAR16       *FilePath       = NULL;
         BOOLEAN       FoundTool      = FALSE;
@@ -924,15 +915,15 @@ VOID preBootKicker (VOID) {
         // Log Return to Main Screen
         MsgLog ("  - %s\n\n", GetPoolStr (&ChosenEntry->Title));
         #endif
-    }
+    } // if MyStriCmp ChosenEntry->Title
 } // VOID preBootKicker()
+
 
 VOID preCleanNvram (VOID) {
     UINTN              MenuExit;
     INTN               DefaultEntry   = 1;
     MENU_STYLE_FUNC    Style          = GraphicsMenuStyle;
     REFIT_MENU_ENTRY  *ChosenEntry;
-    CHAR16            *MenuInfo       = L"A Tool to Clean/Reset Nvram on Macs";
     static REFIT_MENU_SCREEN *CleanNvramMenu = NULL;
     static REFIT_MENU_SCREEN CleanNvramMenuSrc = {
         CACHEDPS(L"Clean NVRAM"),
@@ -955,28 +946,22 @@ VOID preCleanNvram (VOID) {
             return;
         }
         CopyFromPoolImage_PI_ (&CleanNvramMenu->TitleImage_PI_, BuiltinIcon (BUILTIN_ICON_TOOL_NVRAMCLEAN));
-        AddMenuInfoLineCached (CleanNvramMenu, MenuInfo);
+        AddMenuInfoLineCached (CleanNvramMenu, L"A tool to Clean/Reset Nvram on Macs");
         AddMenuInfoLineCached (CleanNvramMenu, L"Requires Apple Firmware");
         AddMenuInfoLineCached (CleanNvramMenu, L"");
         AddMenuInfoLineCached (CleanNvramMenu, L"CleanNvram is from OpenCore and Copyright Acidanthera");
-        AddMenuInfoLineCached (CleanNvramMenu, L"Requires at least one of the files below:");
-
+        AddMenuInfoLineCached (CleanNvramMenu, L"You can get the CleanNvram efi file here:");
+        AddMenuInfoLineCached (CleanNvramMenu, L"https://github.com/acidanthera/OpenCorePkg/releases");
+        AddMenuInfoLineCached (CleanNvramMenu, L"https://github.com/dakanji/RefindPlus/tree/GOPFix/BootMaster/tools_x64");
+        AddMenuInfoLineCached (CleanNvramMenu, L"");
+        AddMenuInfoLineCached (CleanNvramMenu, L"Requires at least one of the files below.");
+        AddMenuInfoLineCached (CleanNvramMenu, L"The first file found in the order listed will be used");
+        AddMenuInfoLineCached (CleanNvramMenu, L"You will be returned to the main menu if not found");
         UINTN k = 0;
         CHAR16 *FilePath = NULL;
         while ((FilePath = FindCommaDelimited (NVRAMCLEAN_FILES, k++)) != NULL) {
             AddMenuInfoLinePool (CleanNvramMenu, FilePath);
         }
-
-        AddMenuInfoLineCached (CleanNvramMenu, L"");
-        AddMenuInfoLineCached (CleanNvramMenu, L"The first file found in the order listed will be used");
-        AddMenuInfoLineCached (CleanNvramMenu, L"You will be returned to the main menu if not found");
-        AddMenuInfoLineCached (CleanNvramMenu, L"");
-        AddMenuInfoLineCached (CleanNvramMenu, L"");
-        AddMenuInfoLineCached (CleanNvramMenu, L"You can get the CleanNvram efi file here:");
-        AddMenuInfoLineCached (CleanNvramMenu, L"https://github.com/acidanthera/OpenCorePkg/releases");
-        AddMenuInfoLineCached (CleanNvramMenu, L"https://github.com/dakanji/RefindPlus/tree/GOPFix/BootMaster/tools_x64");
-        AddMenuInfoLineCached (CleanNvramMenu, L"");
-        AddMenuInfoLineCached (CleanNvramMenu, L"");
 
         AddMenuEntryCopy (CleanNvramMenu, &TagMenuEntry[TAG_LOAD_NVRAMCLEAN]);
         AddMenuEntryCopy (CleanNvramMenu, &TagMenuEntry[TAG_RETURN]);
@@ -990,19 +975,16 @@ VOID preCleanNvram (VOID) {
         L"Returned '%d' (%s) from RunGenericMenu Call on '%s' in 'preCleanNvram'",
         MenuExit, MenuExitInfo (MenuExit), GetPoolStr (&ChosenEntry->Title)
     );
-    #endif
-
-    #if REFIT_DEBUG > 0
     MsgLog ("User Input Received:\n");
     #endif
 
-    if (MyStriCmp (GetPoolStr (&ChosenEntry->Title), L"Load CleanNvram") && (MenuExit == MENU_EXIT_ENTER)) {
-        UINTN i = 0;
-        UINTN k = 0;
+    if (MyStriCmp (GetPoolStr (&ChosenEntry->Title), L"Load CleanNvram") && MenuExit == MENU_EXIT_ENTER) {
+        UINTN         i = 0;
+        UINTN         k = 0;
 
-        CHAR16        *FilePath        = NULL;
-        BOOLEAN        FoundTool       = FALSE;
-        LOADER_ENTRY  *ourLoaderEntry  = NULL;
+        CHAR16       *FilePath        = NULL;
+        BOOLEAN       FoundTool       = FALSE;
+        LOADER_ENTRY *ourLoaderEntry  = NULL;
 
         #if REFIT_DEBUG > 0
         // Log Load CleanNvram
@@ -1011,7 +993,6 @@ VOID preCleanNvram (VOID) {
 
         k = 0;
         while ((FilePath = FindCommaDelimited (NVRAMCLEAN_FILES, k++)) != NULL) {
-
             #if REFIT_DEBUG > 0
             MsgLog ("    * Seek %s:\n", FilePath);
             #endif
