@@ -2214,7 +2214,7 @@ VOID VetSyncAPFS (VOID) {
         LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
 
         if (SystemVolumesCount == 0) {
-            MsgLog ("\n                   ") ;
+            MsgLog ("\n...................") ;
         }
         else {
             MsgLog ("\n\n");
@@ -2416,13 +2416,13 @@ VOID ScanVolumes (VOID) {
             }
 
             if (!DoneHeadings) {
-                MsgLog ("\n\n                   ");
+                MsgLog ("\n\n...................");
             }
             else if (ScannedOnce) {
                 if (!SkipSpacing && (HandleIndex % 4) == 0 && (HandleCount - HandleIndex) > 2) {
                     if (!SkipSpacing && (HandleIndex % 28) == 0 && (HandleCount - HandleIndex) > 14) {
                         DoneHeadings = FALSE;
-                        MsgLog ("\n\n                   ");
+                        MsgLog ("\n\n...................");
                     }
                     else {
                         MsgLog ("\n\n");
@@ -2584,7 +2584,7 @@ VOID ScanVolumes (VOID) {
             ITEMVOLA, ITEMVOLB, ITEMVOLC, ITEMVOLD, ITEMVOLE, ITEMVOLF
         );
         LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("\n                   ");
+        MsgLog ("\n...................");
         MsgLog ("%s", MsgStr);
         MsgLog ("\n\n");
         MyFreePool (&MsgStr);
