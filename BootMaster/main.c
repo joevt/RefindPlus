@@ -3105,6 +3105,7 @@ EFI_STATUS EFIAPI efi_main (
 
                 break;
         } // switch
+        MyFreePool (&ChosenEntry);
         LOGBLOCKEXIT("%a", TheTagName);
     } // while
     LOGBLOCKEXIT("Main Loop");
