@@ -2535,7 +2535,6 @@ VOID ScanVolumes (VOID) {
             MsgLog ("%s", MsgStr);
             MyFreePool (&MsgStr);
 
-
             MyFreePool (&PartName);
             MyFreePool (&PartGUID);
             MyFreePool (&PartTypeGUID);

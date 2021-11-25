@@ -2581,7 +2581,6 @@ VOID ScanForBootloaders (
         if (GlobalConfig.SyncAPFS && AmendedDontScan) {
             MyFreePool (&GlobalConfig.DontScanDirs);
             GlobalConfig.DontScanDirs = OrigDontScanDirs;
-
         }
         else {
             MyFreePool (&OrigDontScanDirs);
@@ -2847,7 +2846,6 @@ VOID ScanForTools (VOID) {
     CHAR16 *ToolStr   = NULL;
     UINTN   ToolTotal = 0;
     #endif
-
 
     #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_SEPARATOR, L"Scan for UEFI Tools");
