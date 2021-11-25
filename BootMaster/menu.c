@@ -982,6 +982,7 @@ UINTN RunGenericMenu (
                     break;
             } // switch
 
+            #if 0
             #if REFIT_DEBUG > 0
             CHAR16 *KeyTxt = GetScanCodeText (key.ScanCode);
             if (MyStriCmp (KeyTxt, L"KEY_UNKNOWN")) {
@@ -999,6 +1000,7 @@ UINTN RunGenericMenu (
                 L"Processing Keystroke: UnicodeChar = 0x%02X ... ScanCode = 0x%02X - %s",
                 key.UnicodeChar, key.ScanCode, KeyTxt
             );
+            #endif
             #endif
         }
         else {
