@@ -3261,10 +3261,8 @@ VOID ScanForTools (VOID) {
     #if REFIT_DEBUG > 0
     ToolStr = PoolPrint (L"Processed %d Tool Types", ToolTotal);
     LOG(3, LOG_THREE_STAR_SEP, L"%s", ToolStr);
-    LOG(3, LOG_BLANK_LINE_SEP, L"%s", ToolStr);
-    MsgLog ("\n\n");
-    MsgLog ("INFO: %s", ToolStr);
-    MsgLog ("\n\n");
+    LOG2(3, LOG_BLANK_LINE_SEP, L"\n\nINFO: ", L"\n\n", L"%s", ToolStr);
+    MyFreePool (&ToolStr);
     #endif
 
     MyFreePool (&MokLocations);
