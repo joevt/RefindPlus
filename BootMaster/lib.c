@@ -2857,6 +2857,7 @@ VOID SetVolumeIcons (VOID) {
             else {
                 LOG(4, LOG_THREE_STAR_MID, L"%s", MsgStr);
             }
+            MyFreePool (&MsgStr);
             #endif
 
             // load custom volume icon for internal disks if present
