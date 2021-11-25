@@ -690,8 +690,7 @@ EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (
     } while (!EFI_ERROR(Status));
 
     #if REFIT_DEBUG > 0
-    LOG2(2, LOG_THREE_STAR_SEP, !FoundGOP && DetectedDevices ? "\n      " : "INFO: ", L"\n", L"%s",
-        L"Processed %d Handle%s",
+    LOG2(2, LOG_THREE_STAR_SEP, L"INFO: ", L"\n", L"Processed %d Handle%s",
         AllHandleCount, (AllHandleCount == 1) ? L"" : L"s"
     );
     #endif
