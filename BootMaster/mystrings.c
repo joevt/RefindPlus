@@ -155,52 +155,32 @@ CHAR16 * MyStrStr (
  *
  * Arguments:
  *
- *  RawString      - Null-terminated string to search.
- *  RawStrCharSet  - Null-terminated string to search for.
+ *  String  - Null-terminated string to search.
+ *  SubStr  - Null-terminated string to search for.
  *
  * Returns:
  *  The address of the first occurrence of the matching substring if successful, or NULL otherwise.
  * --*/
 CHAR16 * MyStrStrIns (
-    IN CHAR16  *RawString,
-    IN CHAR16  *RawStrCharSet
+    IN CHAR16  *String,
+    IN CHAR16  *SubStr
 ) {
-    if ((RawString == NULL) || (RawStrCharSet == NULL)) {
-        return NULL;
-    }
-
-    CHAR16 *Src;
-    CHAR16 *Sub;
-    CHAR16 *String     = StrDuplicate (RawString);
-    CHAR16 *StrCharSet = StrDuplicate (RawStrCharSet);
-
-    ToLower (String);
-    ToLower (StrCharSet);
-
-    Src = String;
-    Sub = StrCharSet;
-
-    while ((*String != L'\0') && (*StrCharSet != L'\0')) {
-        if (*String++ != *StrCharSet) {
-            String = ++Src;
-            StrCharSet = Sub;
+    //LOGPROCENTRY("'%s' '%s'", String, SubStr);
+    CHAR16 *Result = NULL;
+    if (String && SubStr) {
+        CHAR16 *LowString = StrDuplicate (String);
+        CHAR16 *LowSubStr = StrDuplicate (SubStr);
+        ToLower (LowString);
+        ToLower (LowSubStr);
+        Result = MyStrStr(LowString, LowSubStr);
+        if (Result) {
+            Result = (CHAR16 *)((VOID *)Result - (VOID *)LowString + (VOID *)String);
         }
-        else {
-            StrCharSet++;
-        }
+        MyFreePool (&LowString);
+        MyFreePool (&LowSubStr);
     }
-
-    if (*StrCharSet == L'\0') {
-        MyFreePool (&String);
-        MyFreePool (&StrCharSet);
-
-        return Src;
-    }
-
-    MyFreePool (&String);
-    MyFreePool (&StrCharSet);
-
-    return NULL;
+    //LOGPROCEXIT("result:'%s'", Result);
+    return Result;
 } // CHAR16 * MyStrStrIns()
 
 

@@ -61,8 +61,8 @@ BOOLEAN MyStrBegins (
 );
 
 CHAR16 * GetTimeString (VOID);
-CHAR16 * MyStrStrIns (IN CHAR16 *RawString, IN CHAR16 *RawStrCharSet);
 CHAR16 * MyStrStr (IN CHAR16 *String, IN CHAR16 *SubStr);
+CHAR16 * MyStrStrIns (IN CHAR16 *String, IN CHAR16 *SubStr);
 CHAR16 * FindNumbers (IN CHAR16 *InString);
 CHAR16 * GuidAsString (EFI_GUID *GuidData);
 CHAR16 * FindCommaDelimited (IN CHAR16 *InString, IN UINTN Index);
