@@ -35,6 +35,7 @@ typedef struct _esp_list {
     struct _esp_list *NextESP;
 } ESP_LIST;
 
+
 /***********************
  *
  * Functions related to management of ESP data.
@@ -43,7 +44,9 @@ typedef struct _esp_list {
 
 // Delete the linked-list ESP_LIST data structure passed as an argument.
 static
-VOID DeleteESPList (ESP_LIST *AllESPs) {
+VOID DeleteESPList (
+    ESP_LIST *AllESPs
+) {
     ESP_LIST *Temp;
 
     #if REFIT_DEBUG > 0
@@ -54,7 +57,7 @@ VOID DeleteESPList (ESP_LIST *AllESPs) {
         Temp = AllESPs;
         FreeVolume (&Temp->Volume);
         AllESPs = AllESPs->NextESP;
-        MyFreePool (&Temp);
+        MY_FREE_POOL(Temp);
     } // while
 } // VOID DeleteESPList()
 
@@ -105,7 +108,9 @@ ESP_LIST * FindAllESPs (VOID) {
 // after some types of disk cloning operations), the returned value may
 // not be accurate.
 static
-REFIT_VOLUME * PickOneESP (ESP_LIST *AllESPs) {
+REFIT_VOLUME * PickOneESP (
+    ESP_LIST *AllESPs
+) {
     ESP_LIST            *CurrentESP;
     REFIT_VOLUME        *ChosenVolume  = NULL;
     CHAR16              *Temp          = NULL, *GuidStr, *PartName, *FsName, *VolName;
@@ -143,8 +148,10 @@ REFIT_VOLUME * PickOneESP (ESP_LIST *AllESPs) {
             PartName      = GetPoolStr (&CurrentESP->Volume->PartName);
             FsName        = GetPoolStr (&CurrentESP->Volume->FsName);
             VolName       = GetPoolStr (&CurrentESP->Volume->VolName);
-            if (PartName && (StrLen (PartName) > 0) && FsName && (StrLen (FsName) > 0) &&
-                !MyStriCmp (FsName, PartName)) {
+            if (PartName && (StrLen (PartName) > 0) &&
+                FsName && (StrLen (FsName) > 0) &&
+                !MyStriCmp (FsName, PartName)
+            ) {
                 Temp = PoolPrint (L"%s - '%s', AKA '%s'", GuidStr, PartName, FsName);
             }
             else if (FsName && (StrLen (FsName) > 0)) {
@@ -164,7 +171,7 @@ REFIT_VOLUME * PickOneESP (ESP_LIST *AllESPs) {
             LOG(3, LOG_LINE_NORMAL, L"Adding '%s' to UI List of ESPs");
             #endif
 
-            MyFreePool (&GuidStr);
+            MY_FREE_POOL(GuidStr);
             AssignPoolStr (&MenuEntryItem->Title, Temp);
             MenuEntryItem->Tag = TAG_RETURN;
             MenuEntryItem->Row = i++;
@@ -189,7 +196,7 @@ REFIT_VOLUME * PickOneESP (ESP_LIST *AllESPs) {
                     AssignVolume (&ChosenVolume, CurrentESP->Volume);
                 }
                 CurrentESP = CurrentESP->NextESP;
-                MyFreePool (&Temp);
+                MY_FREE_POOL(Temp);
             } // while
         }
         FreeMenuScreen (&InstallMenu);
@@ -252,9 +259,9 @@ EFI_STATUS RenameFile (
                 (VOID *) NewInfo
             );
 
-            MyFreePool (&NewInfo);
-            MyFreePool (&FilePtr);
-            MyFreePool (&Buffer);
+            MY_FREE_POOL(NewInfo);
+            MY_FREE_POOL(FilePtr);
+            MY_FREE_POOL(Buffer);
         }
         else {
             Status = EFI_BUFFER_TOO_SMALL;
@@ -288,14 +295,16 @@ EFI_STATUS BackupOldFile (
     if (!FileExists (BaseDir, NewName)) {
         Status = RenameFile (BaseDir, FileName, NewName);
     }
-    MyFreePool (&NewName);
+    MY_FREE_POOL(NewName);
 
     return (Status);
 } // EFI_STATUS BackupOldFile()
 
 // Create directories in which RefindPlus will reside.
 static
-EFI_STATUS CreateDirectories (IN EFI_FILE *BaseDir) {
+EFI_STATUS CreateDirectories (
+    IN EFI_FILE *BaseDir
+) {
     EFI_STATUS  Status   = EFI_SUCCESS;
     EFI_FILE   *TheDir   = NULL;
     CHAR16     *FileName = NULL;
@@ -315,8 +324,8 @@ EFI_STATUS CreateDirectories (IN EFI_FILE *BaseDir) {
 
         Status = REFIT_CALL_1_WRAPPER(TheDir->Close, TheDir);
 
-        MyFreePool (&FileName);
-        MyFreePool (&TheDir);
+        MY_FREE_POOL(FileName);
+        MY_FREE_POOL(TheDir);
     } // while
 
     return (Status);
@@ -348,7 +357,7 @@ EFI_STATUS CopyOneFile (
             return EFI_NO_RESPONSE;
         }
         FileSize = FileInfo->FileSize;
-        MyFreePool (&FileInfo);
+        MY_FREE_POOL(FileInfo);
     }
 
     if (Status == EFI_SUCCESS) {
@@ -387,9 +396,9 @@ EFI_STATUS CopyOneFile (
         Status = REFIT_CALL_1_WRAPPER(DestFile->Close, DestFile);
     }
 
-    MyFreePool (&SourceFile);
-    MyFreePool (&DestFile);
-    MyFreePool (&Buffer);
+    MY_FREE_POOL(SourceFile);
+    MY_FREE_POOL(DestFile);
+    MY_FREE_POOL(Buffer);
 
     #if REFIT_DEBUG > 0
     if (EFI_ERROR(Status)) {
@@ -425,9 +434,9 @@ EFI_STATUS CopyDirectory (
             DestDirPtr, DestFileName
         );
 
-        MyFreePool (&DestFileName);
-        MyFreePool (&SourceFileName);
-        MyFreePool (&DirEntry);
+        MY_FREE_POOL(DestFileName);
+        MY_FREE_POOL(SourceFileName);
+        MY_FREE_POOL(DirEntry);
     } // while
 
     return (Status);
@@ -552,8 +561,8 @@ EFI_STATUS CopyDrivers (
                 WorstStatus = Status;
             }
 
-            MyFreePool (&SourceFileName);
-            MyFreePool (&DestFileName);
+            MY_FREE_POOL(SourceFileName);
+            MY_FREE_POOL(DestFileName);
         } // if DriverNam
     } // for
 
@@ -562,7 +571,9 @@ EFI_STATUS CopyDrivers (
 
 // Copy all the files from the source to *TargetDir
 static
-EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
+EFI_STATUS CopyFiles (
+    IN EFI_FILE *TargetDir
+) {
     REFIT_VOLUME    *SourceVolume = NULL; // reference counted
     CHAR16          *SourceFile   = NULL, *SourceDir, *ConfFile;
     CHAR16          *SourceDriversDir, *TargetDriversDir, *RefindPlusName;
@@ -582,8 +593,8 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
         TargetDir, RefindPlusName
     );
 
-    MyFreePool (&SourceFile);
-    MyFreePool (&RefindPlusName);
+    MY_FREE_POOL(SourceFile);
+    MY_FREE_POOL(RefindPlusName);
     if (EFI_ERROR(Status)) {
         #if REFIT_DEBUG > 0
         LOG(3, LOG_LINE_NORMAL,
@@ -608,7 +619,7 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
             SourceFile = PoolPrint (L"%s\\config.conf", SourceDir);
         }
 
-        MyFreePool (&ConfFile);
+        MY_FREE_POOL(ConfFile);
 
         // Note: CopyOneFile() logs errors if they occur
         if (FileExists (TargetDir, L"\\EFI\\refindplus\\config.conf")) {
@@ -631,7 +642,7 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
         if (EFI_ERROR(Status)) {
             WorstStatus = Status;
         }
-        MyFreePool (&SourceFile);
+        MY_FREE_POOL(SourceFile);
 
         // Now copy icons.
         SourceFile = PoolPrint (L"%s\\icons", SourceDir);
@@ -649,7 +660,7 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
 
             WorstStatus = Status;
         }
-        MyFreePool (&SourceFile);
+        MY_FREE_POOL(SourceFile);
 
         // Now copy drivers.
         SourceDriversDir = PoolPrint (L"%s\\%s", SourceDir, INST_DRIVERS_SUBDIR);
@@ -666,10 +677,11 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
             WorstStatus = Status;
         }
 
-        MyFreePool (&SourceDriversDir);
-        MyFreePool (&TargetDriversDir);
+        MY_FREE_POOL(SourceDriversDir);
+        MY_FREE_POOL(TargetDriversDir);
     }
-    MyFreePool (&SourceDir);
+    MY_FREE_POOL(SourceDir);
+
     // since SourceVolume started as NULL, free it if it is not NULL
     FreeVolume (&SourceVolume);
 
@@ -679,7 +691,9 @@ EFI_STATUS CopyFiles (IN EFI_FILE *TargetDir) {
 // Create the BOOT.CSV file used by the fallback.efi/fbx86.efi program.
 // Success is not critical, so we do not return a Status value.
 static
-VOID CreateFallbackCSV (IN EFI_FILE *TargetDir) {
+VOID CreateFallbackCSV (
+    IN EFI_FILE *TargetDir
+) {
     CHAR16   *Contents = NULL;
     UINTN     FileSize, Status;
     EFI_FILE *FilePtr;
@@ -706,10 +720,10 @@ VOID CreateFallbackCSV (IN EFI_FILE *TargetDir) {
             if (Status == EFI_SUCCESS) {
                 REFIT_CALL_1_WRAPPER(FilePtr->Close, FilePtr);
             }
-            MyFreePool (&FilePtr);
+            MY_FREE_POOL(FilePtr);
         }
 
-        MyFreePool (&Contents);
+        MY_FREE_POOL(Contents);
     }
 
     #if REFIT_DEBUG > 0
@@ -720,7 +734,9 @@ VOID CreateFallbackCSV (IN EFI_FILE *TargetDir) {
 } // VOID CreateFallbackCSV()
 
 static
-BOOLEAN CopyRefindFiles (IN EFI_FILE *TargetDir) {
+ BOOLEAN CopyRefindPlusFiles (
+     IN EFI_FILE *TargetDir
+ ) {
     EFI_STATUS Status = EFI_SUCCESS, Status2;
 
     if (FileExists (TargetDir, L"\\EFI\\refindplus\\icons")) {
@@ -758,7 +774,7 @@ BOOLEAN CopyRefindFiles (IN EFI_FILE *TargetDir) {
     CreateFallbackCSV (TargetDir);
 
     return Status;
-} // BOOLEAN CopyRefindFiles()
+} // BOOLEAN CopyRefindPlusFiles()
 
 /***********************
  *
@@ -820,7 +836,7 @@ UINTN FindBootNum (
         ) {
             *AlreadyExists = TRUE;
         }
-        MyFreePool (&VarName);
+        MY_FREE_POOL(VarName);
     } while ((Status == EFI_SUCCESS) && (*AlreadyExists == FALSE));
 
     if (i > 0x10000) {
@@ -876,7 +892,7 @@ EFI_STATUS ConstructBootEntry (
     else {
         Status = EFI_OUT_OF_RESOURCES;
     }
-    MyFreePool (&DevicePath);
+    MY_FREE_POOL(DevicePath);
 
     return Status;
 } // EFI_STATUS ConstructBootEntry()
@@ -885,7 +901,9 @@ EFI_STATUS ConstructBootEntry (
 // duplicates of BootNum in the boot order list (but NOT duplicates among
 // the Boot#### variables).
 static
-EFI_STATUS SetBootDefault (UINTN BootNum) {
+EFI_STATUS SetBootDefault (
+    UINTN BootNum
+) {
     UINTN    Status, VarSize, ListSize, i, j;
     UINT16   *BootOrder, *NewBootOrder;
     BOOLEAN  IsAlreadyFirst = FALSE;
@@ -906,7 +924,9 @@ EFI_STATUS SetBootDefault (UINTN BootNum) {
 
         if (!IsAlreadyFirst) {
             NewBootOrder = AllocateZeroPool ((ListSize + 1) * sizeof (UINT16));
+            if (NewBootOrder) {
             NewBootOrder[0] = BootNum;
+
             j = 1;
             for (i = 0; i < ListSize; i++) {
                 if (BootOrder[i] != BootNum) {
@@ -921,10 +941,12 @@ EFI_STATUS SetBootDefault (UINTN BootNum) {
                j * sizeof (UINT16),
                TRUE
             );
-            MyFreePool (&NewBootOrder);
+
+                MY_FREE_POOL(NewBootOrder);
+            }
         }
 
-        MyFreePool (&BootOrder);
+        MY_FREE_POOL(BootOrder);
     }
 
     return Status;
@@ -935,7 +957,9 @@ EFI_STATUS SetBootDefault (UINTN BootNum) {
 // exists, it may be used instead; see the comments before the FindBootNum()
 // function for details and caveats.)
 static
-EFI_STATUS CreateNvramEntry (EFI_HANDLE DeviceHandle) {
+EFI_STATUS CreateNvramEntry (
+    EFI_HANDLE DeviceHandle
+) {
     CHAR16           *VarName = NULL, *ProgName;
     UINTN            Status, Size, BootNum = 0;
     VOID             *Entry;
@@ -947,7 +971,7 @@ EFI_STATUS CreateNvramEntry (EFI_HANDLE DeviceHandle) {
         L"RefindPlus Boot Manager",
         &Entry, &Size
     );
-    MyFreePool (&ProgName);
+    MY_FREE_POOL(ProgName);
 
     if (Status == EFI_SUCCESS) {
         BootNum = FindBootNum (Entry, Size, &AlreadyExists);
@@ -956,9 +980,9 @@ EFI_STATUS CreateNvramEntry (EFI_HANDLE DeviceHandle) {
     if ((Status == EFI_SUCCESS) && (AlreadyExists == FALSE)) {
         VarName = PoolPrint (L"Boot%04x", BootNum);
         Status = EfivarSetRaw (&GlobalGuid, VarName, Entry, Size, TRUE);
-        MyFreePool (&VarName);
+        MY_FREE_POOL(VarName);
     }
-    MyFreePool (&Entry);
+    MY_FREE_POOL(Entry);
 
     if (Status == EFI_SUCCESS) {
         Status = SetBootDefault (BootNum);
@@ -988,7 +1012,7 @@ VOID InstallRefindPlus (VOID) {
     SelectedESP = PickOneESP (AllESPs);
 
     if (SelectedESP) {
-        Status = CopyRefindFiles (SelectedESP->RootDir);
+        Status = CopyRefindPlusFiles (SelectedESP->RootDir);
 
         if (Status == EFI_SUCCESS) {
             Status = CreateNvramEntry (SelectedESP->DeviceHandle);
@@ -1071,27 +1095,96 @@ BOOT_ENTRY_LIST * FindBootOrderEntries (VOID) {
             }
         }
 
-        MyFreePool (&VarName);
-        MyFreePool (&Contents);
+        MY_FREE_POOL(VarName);
+        MY_FREE_POOL(Contents);
     } // for
 
-    MyFreePool (&BootOrder);
+    MY_FREE_POOL(BootOrder);
 
     return ListStart;
 } // BOOT_ENTRY_LIST * FindBootOrderEntries()
 
 // Delete a linked-list BOOT_ENTRY_LIST data structure
-VOID DeleteBootOrderEntries (BOOT_ENTRY_LIST *Entries) {
+VOID DeleteBootOrderEntries (
+    BOOT_ENTRY_LIST *Entries
+) {
     BOOT_ENTRY_LIST *Current;
 
     while (Entries != NULL) {
         Current = Entries;
-        MyFreePool (&Current->BootEntry.Label);
-        MyFreePool (&Current->BootEntry.DevPath);
+        MY_FREE_POOL(Current->BootEntry.Label);
+        MY_FREE_POOL(Current->BootEntry.DevPath);
         Entries = Entries->NextBootEntry;
-        MyFreePool (&Current);
-    }
+        MY_FREE_POOL(Current);
+    } // while
 } // VOID DeleteBootOrderEntries()
+
+static
+UINTN ConfirmBootOptionOperation (
+    UINTN   Operation,
+    CHAR16 *BootOptionString
+) {
+    INTN               DefaultEntry = 1;
+    UINTN              MenuExit;
+    CHAR16            *CheckString = NULL;
+    MENU_STYLE_FUNC    Style;
+    REFIT_MENU_ENTRY  *ChosenOption;
+
+    if (Operation == EFI_BOOT_OPTION_MAKE_DEFAULT || Operation == EFI_BOOT_OPTION_DELETE) {
+        #if REFIT_DEBUG > 0
+        LOG(1, LOG_LINE_THIN_SEP, L"Showing Confirm Boot Option Operation Screen");
+        #endif
+
+        REFIT_MENU_SCREEN *ConfirmBootOptionMenu = NULL;
+        REFIT_MENU_SCREEN ConfirmBootOptionMenuSrc = {
+            CACHEDPS(L"Confirm Boot Option Operation"), NULLPI, 0, NULL, 0, NULL, 0, NULLPS,
+            CACHEDPS(L"Select an Option and Press 'Enter' or"),
+            CACHEDPS(L"Press 'Esc' to Return to Main Menu (Without Changes)")
+        };
+        ConfirmBootOptionMenu = CopyMenuScreen (&ConfirmBootOptionMenuSrc);
+        if (!ConfirmBootOptionMenu) {
+            return EFI_BOOT_OPTION_DO_NOTHING;
+        }
+
+        if (AllowGraphicsMode) {
+            Style = GraphicsMenuStyle;
+        }
+        else {
+            Style = TextMenuStyle;
+        }
+
+        CopyFromPoolImage_PI_ (&ConfirmBootOptionMenu->TitleImage_PI_, BuiltinIcon (BUILTIN_ICON_FUNC_BOOTORDER));
+        AddMenuInfoLineCached (ConfirmBootOptionMenu, BootOptionString); // since the menu is temporary
+        if (Operation == EFI_BOOT_OPTION_MAKE_DEFAULT) {
+            CheckString = L"Set This Boot Option as Default?";
+        }
+        else if (Operation == EFI_BOOT_OPTION_DELETE) {
+            CheckString = L"Delete This Boot Option?";
+        }
+        AddMenuInfoLineCached (ConfirmBootOptionMenu, CheckString);
+
+        AddMenuEntryCopy (ConfirmBootOptionMenu, &TagMenuEntry[TAG_YES]);
+        AddMenuEntryCopy (ConfirmBootOptionMenu, &TagMenuEntry[TAG_NO]);
+
+        MenuExit = RunGenericMenu (ConfirmBootOptionMenu, Style, &DefaultEntry, &ChosenOption);
+
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_LINE_NORMAL,
+            L"Returned '%d' (%s) from RunGenericMenu Call on 'Selection = %s' in 'ConfirmBootOptionOperation'",
+            MenuExit, MenuExitInfo (MenuExit), GetPoolStr (&ChosenOption->Title)
+        );
+        #endif
+
+        if (MyStriCmp (GetPoolStr (&ChosenOption->Title), L"No") || (MenuExit != MENU_EXIT_ENTER)) {
+            Operation = EFI_BOOT_OPTION_DO_NOTHING;
+        }
+
+        FreeMenuScreen (&ConfirmBootOptionMenu);
+    }
+
+    return Operation;
+} // UINTN ConfirmBootOptionOperation()
+
 
 // Enable the user to pick one boot option to move to the top of the boot
 // order list (via Enter) or delete (via Delete or '-'). This function does
@@ -1114,25 +1207,28 @@ UINTN PickOneBootOption (
     REFIT_MENU_ENTRY    *ChosenOption  = NULL;
     REFIT_MENU_ENTRY    *MenuEntryItem = NULL;
 
-    CHAR16 *MenuInfo = L"Select an option and press 'Enter' to make it the default or '-' to delete it";
+    CHAR16 *MenuInfo = L"Promote or Remove Firmware BootOrder Variables";
     REFIT_MENU_SCREEN   *PickOneMenu   = NULL;
     REFIT_MENU_SCREEN    PickOneMenuSrc = {
-        CACHEDPS(L"Manage UEFI Boot Order"), NULLPI, 0, NULL, 0, NULL, 0, NULLPS,
+        CACHEDPS(L"Manage Firmware Boot Order"), NULLPI, 0, NULL, 0, NULL, 0, NULLPS,
         CACHEDPS(L"Select an option and press 'Enter' to make it the default, press '-' or"),
-        CACHEDPS(L"'Delete' to delete it, or 'Esc' to return to the main menu without changes")
+        CACHEDPS(L"'Delete' to delete it, or 'Esc' to return to Main Menu (without changes)")
     };
     if (AllowGraphicsMode) {
         Style = GraphicsMenuStyle;
     }
 
-    if (Entries) {
+    if (!Entries) {
+        DisplaySimpleMessage (L"Information", L"Firmware BootOrder List is Unavailable!!");
+    }
+    else  {
         PickOneMenu = CopyMenuScreen (&PickOneMenuSrc);
     }
 
-    if (Entries && PickOneMenu) {
+    if (PickOneMenu) {
         CopyFromPoolImage_PI_ (&PickOneMenu->TitleImage_PI_, BuiltinIcon (BUILTIN_ICON_FUNC_BOOTORDER));
         AddMenuInfoLineCached (PickOneMenu, MenuInfo);
-        while (Entries != NULL) {
+        do {
             CHAR16 *Temp = NULL;
             CHAR16 *Filename = NULL;
             REFIT_VOLUME *Volume = NULL; // reference counted
@@ -1164,14 +1260,16 @@ UINTN PickOneBootOption (
                 );
             }
 
-            MyFreePool (&Filename);
+            AssignPoolStr (&MenuEntryItem->Title, Temp);
+            MenuEntryItem->Row   = Entries->BootEntry.BootNum; // Not really the row but the Boot#### number
+            AddMenuEntry (PickOneMenu, MenuEntryItem);
+
             // since Volume started as NULL, free it if it is not NULL
             FreeVolume (&Volume);
-            AssignPoolStr (&MenuEntryItem->Title, Temp);
-            MenuEntryItem->Row = Entries->BootEntry.BootNum; // Not really the row; the Boot#### number
-            AddMenuEntry (PickOneMenu, MenuEntryItem);
+            MY_FREE_POOL(Filename);
+
             Entries = Entries->NextBootEntry;
-        } // while
+        } while (Entries != NULL);
 
         MenuExit = RunGenericMenu (PickOneMenu, Style, &DefaultEntry, &ChosenOption);
         #if REFIT_DEBUG > 0
@@ -1185,15 +1283,14 @@ UINTN PickOneBootOption (
             Operation = EFI_BOOT_OPTION_MAKE_DEFAULT;
             *BootOrderNum = ChosenOption->Row;
         }
-
-        if (MenuExit == MENU_EXIT_HIDE) {
+        else if (MenuExit == MENU_EXIT_HIDE) {
             Operation = EFI_BOOT_OPTION_DELETE;
             *BootOrderNum = ChosenOption->Row;
         }
+        
+        Operation = ConfirmBootOptionOperation (Operation, GetPoolStr (&ChosenOption->Title));
+        
         FreeMenuScreen (&PickOneMenu);
-    }
-    else if (!Entries) {
-        DisplaySimpleMessage (L"Information", L"UEFI Boot Order List is Unavailable!!");
     }
 
     return Operation;
@@ -1218,16 +1315,18 @@ EFI_STATUS DeleteInvalidBootEntries (VOID) {
     if (Status == EFI_SUCCESS) {
         ListSize = VarSize / sizeof (UINT16);
         NewBootOrder = AllocateZeroPool (VarSize);
+
         for (i = 0; i < ListSize; i++) {
             VarName = PoolPrint (L"Boot%04x", BootOrder[i]);
-            Status = EfivarGetRaw (&GlobalGuid, VarName, (VOID **) &Contents, &VarSize);
-            MyFreePool (&VarName);
+            Status  = EfivarGetRaw (&GlobalGuid, VarName, (VOID **) &Contents, &VarSize);
+            MY_FREE_POOL(VarName);
 
             if (Status == EFI_SUCCESS) {
                 NewBootOrder[j++] = BootOrder[i];
-                MyFreePool (&Contents);
+                MY_FREE_POOL(Contents);
             }
         } // for
+
         if (j < ListSize) {
             #if REFIT_DEBUG > 0
             LOG(3, LOG_LINE_NORMAL, L"Deleting %d invalid boot entries from internal BootOrder list", ListSize - j);
@@ -1245,8 +1344,9 @@ EFI_STATUS DeleteInvalidBootEntries (VOID) {
             LOG(3, LOG_LINE_NORMAL, L"There are no invalid boot entries to delete from internal BootOrder list");
             #endif
         }
-        MyFreePool (&NewBootOrder);
-        MyFreePool (&BootOrder);
+        
+        MY_FREE_POOL(NewBootOrder);
+        MY_FREE_POOL(BootOrder);
     }
 
     LOGPROCEXIT();
@@ -1260,26 +1360,29 @@ VOID ManageBootorder (VOID) {
 
     LOGPROCENTRY();
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, L"Managing Boot Order List");
+    LOG(1, LOG_LINE_THIN_SEP, L"Showing Manage Boot Order Screen");
     #endif
 
     Entries = FindBootOrderEntries();
     Operation = PickOneBootOption (Entries, &BootNum);
+
     if (Operation == EFI_BOOT_OPTION_DELETE) {
         Name = PoolPrint (L"Boot%04x", BootNum);
         EfivarSetRaw (&GlobalGuid, Name, NULL, 0, TRUE);
         DeleteInvalidBootEntries();
         Message = PoolPrint (L"Boot%04x has been Deleted.", BootNum);
         DisplaySimpleMessage (L"Information", Message);
-        MyFreePool (&Name);
-        MyFreePool (&Message);
+        MY_FREE_POOL(Name);
+        MY_FREE_POOL(Message);
     }
+
     if (Operation == EFI_BOOT_OPTION_MAKE_DEFAULT) {
         SetBootDefault (BootNum);
         Message = PoolPrint (L"Boot%04x is Now the Default EFI Boot Option.", BootNum);
         DisplaySimpleMessage (L"Information", Message);
-        MyFreePool (&Message);
+        MY_FREE_POOL(Message);
     }
+
     DeleteBootOrderEntries (Entries);
 
     LOGPROCEXIT();

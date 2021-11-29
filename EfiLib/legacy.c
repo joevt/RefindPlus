@@ -32,11 +32,11 @@
 #include "../include/tiano_includes.h"
 #endif
 #include "legacy.h"
-#include "lib.h"
-#include "leaks.h"
 #include "GenericBdsLib.h"
 #include "../BootMaster/global.h"
+#include "../BootMaster/my_free_pool.h"
 #include "../include/refit_call_wrapper.h"
+#include "../BootMaster/leaks.h"
 
 BOOT_OPTION_BBS_MAPPING  *mBootOptionBbsMapping      = NULL;
 UINTN                     mBootOptionBbsMappingCount = 0;
@@ -237,21 +237,21 @@ BOOLEAN BdsFindLegacyBootOptionByDevTypeAndName (
 
         // Skip Non-legacy boot option
         if (!BdsIsLegacyBootOption (BootOptionVar, &BbsEntry, BbsIndex)) {
-            MyFreePool (&BootOptionVar);
+            MY_FREE_POOL(BootOptionVar);
             continue;
         }
 
         if ((BbsEntry->DeviceType != DevType) ||
             (StrCmp (DevName, (CHAR16*)(BootOptionVar + sizeof (UINT32) + sizeof (UINT16))) != 0)
         ) {
-            MyFreePool (&BootOptionVar);
+            MY_FREE_POOL(BootOptionVar);
             continue;
         }
 
         *Attribute    = *(UINT32 *) BootOptionVar;
         *OptionNumber = BootOrder[Index];
         Found         = TRUE;
-        MyFreePool (&BootOptionVar);
+        MY_FREE_POOL(BootOptionVar);
 
         break;
     } // for
@@ -355,7 +355,7 @@ EFI_STATUS BdsCreateLegacyBootOption (
     );
 
     if (CurrentBbsDevPath == NULL) {
-        MyFreePool (&NewBbsDevPathNode);
+        MY_FREE_POOL(NewBbsDevPathNode);
         return EFI_OUT_OF_RESOURCES;
     }
 
@@ -370,8 +370,8 @@ EFI_STATUS BdsCreateLegacyBootOption (
 
     Buffer = AllocateZeroPool (BufferSize);
     if (Buffer == NULL) {
-        MyFreePool (&NewBbsDevPathNode);
-        MyFreePool (&CurrentBbsDevPath);
+        MY_FREE_POOL(NewBbsDevPathNode);
+        MY_FREE_POOL(CurrentBbsDevPath);
 
         return EFI_OUT_OF_RESOURCES;
     }
@@ -416,21 +416,21 @@ EFI_STATUS BdsCreateLegacyBootOption (
         Buffer
     );
 
-    MyFreePool (&Buffer);
+    MY_FREE_POOL(Buffer);
 
     Buffer = NULL;
 
     NewBootOrderList = AllocateZeroPool (*BootOrderListSize + sizeof (UINT16));
     if (NULL == NewBootOrderList) {
-        MyFreePool (&NewBbsDevPathNode);
-        MyFreePool (&CurrentBbsDevPath);
+        MY_FREE_POOL(NewBbsDevPathNode);
+        MY_FREE_POOL(CurrentBbsDevPath);
 
         return EFI_OUT_OF_RESOURCES;
     }
 
     if (*BootOrderList != NULL) {
         CopyMem (NewBootOrderList, *BootOrderList, *BootOrderListSize);
-        MyFreePool (BootOrderList);
+        MY_FREE_POOL(*BootOrderList);
     }
 
     BootOrderLastIndex                    = (UINTN) (*BootOrderListSize / sizeof (UINT16));
@@ -438,8 +438,8 @@ EFI_STATUS BdsCreateLegacyBootOption (
     *BootOrderListSize += sizeof (UINT16);
     *BootOrderList = NewBootOrderList;
 
-    MyFreePool (&NewBbsDevPathNode);
-    MyFreePool (&CurrentBbsDevPath);
+    MY_FREE_POOL(NewBbsDevPathNode);
+    MY_FREE_POOL(CurrentBbsDevPath);
 
     return Status;
 } // EFI_STATUS BdsCreateLegacyBootOption()
@@ -494,7 +494,7 @@ EFI_STATUS BdsCreateOneLegacyBootOption (
     );
     BbsItem->BootPriority = 0x00;
 
-    MyFreePool (&DevPath);
+    MY_FREE_POOL(DevPath);
 
     return Status;
 } // EFI_STATUS BdsCreateOneLegacyBootOption()
@@ -618,7 +618,7 @@ EFI_STATUS EfiLibDeleteVariable (
 
         ASSERT (!EFI_ERROR(Status));
 
-        MyFreePool (&VarBuf);
+        MY_FREE_POOL(VarBuf);
     }
 
     return Status;
@@ -633,9 +633,7 @@ or they are already in boot options.
 @retval EFI_OUT_OF_RESOURCE  No enough memory.
 @return Other value          LegacyBoot options are not added.
 **/
-EFI_STATUS BdsAddNonExistingLegacyBootOptions (
-    VOID
-) {
+EFI_STATUS BdsAddNonExistingLegacyBootOptions (VOID) {
     UINT16                   *BootOrder;
     UINTN                     BootOrderSize;
     EFI_STATUS                Status;
@@ -663,7 +661,7 @@ EFI_STATUS BdsAddNonExistingLegacyBootOptions (
     }
 
     if (mBootOptionBbsMapping != NULL) {
-        MyFreePool (&mBootOptionBbsMapping);
+        MY_FREE_POOL(mBootOptionBbsMapping);
 
         mBootOptionBbsMapping      = NULL;
         mBootOptionBbsMappingCount = 0;
@@ -764,7 +762,7 @@ EFI_STATUS BdsAddNonExistingLegacyBootOptions (
     }
 
     if (BootOrder != NULL) {
-        MyFreePool (&BootOrder);
+        MY_FREE_POOL(BootOrder);
     }
 
     return Status;
@@ -825,9 +823,7 @@ Delete all the invalid legacy boot options.
 @retval EFI_OUT_OF_RESOURCES    Fail to allocate necessary memory.
 @retval EFI_NOT_FOUND           Fail to retrive variable of boot order.
 **/
-EFI_STATUS BdsDeleteAllInvalidLegacyBootOptions (
-    VOID
-) {
+EFI_STATUS BdsDeleteAllInvalidLegacyBootOptions (VOID) {
     UINT16                   *BootOrder;
     UINT8                    *BootOptionVar;
     UINTN                     BootOrderSize;
@@ -910,7 +906,7 @@ EFI_STATUS BdsDeleteAllInvalidLegacyBootOptions (
                 continue;
             }
             else {
-                MyFreePool (&BootOrder);
+                MY_FREE_POOL(BootOrder);
 
                 return EFI_OUT_OF_RESOURCES;
             }
@@ -919,7 +915,7 @@ EFI_STATUS BdsDeleteAllInvalidLegacyBootOptions (
         // Skip Non-Legacy boot option
         if (!BdsIsLegacyBootOption (BootOptionVar, &BbsEntry, &BbsIndex)) {
             if (BootOptionVar!= NULL) {
-                MyFreePool (&BootOptionVar);
+                MY_FREE_POOL(BootOptionVar);
             }
             Index++;
 
@@ -953,7 +949,7 @@ EFI_STATUS BdsDeleteAllInvalidLegacyBootOptions (
         }
 
         if (BootOptionVar != NULL) {
-            MyFreePool (&BootOptionVar);
+            MY_FREE_POOL(BootOptionVar);
         }
 
         // should delete
@@ -980,7 +976,7 @@ EFI_STATUS BdsDeleteAllInvalidLegacyBootOptions (
     }
 
     if (BootOrder != NULL) {
-        MyFreePool (&BootOrder);
+        MY_FREE_POOL(BootOrder);
     }
 
     return Status;

@@ -15,9 +15,7 @@
 /**
   @retval EFI_INCOMPATIBLE_VERSION  Not running on compatible TianoCore compiled version
 **/
-EFI_STATUS AcquireGOP (
-    VOID
-) {
+EFI_STATUS AcquireGOP (VOID) {
     // NOOP if not compiled using EDK II
     return EFI_INCOMPATIBLE_VERSION;
 }
@@ -163,7 +161,7 @@ EFI_STATUS ReloadOptionROM (
                                         ImageLength = DestinationSize;
                                     }
 
-                                    MyFreePool (&Scratch);
+                                    MY_FREE_POOL(Scratch);
                                 }
                             }
                         } // if !EFI_ERROR Status = REFIT_CALL_5_WRAPPER
@@ -195,10 +193,10 @@ EFI_STATUS ReloadOptionROM (
                     }
                     MsgLog("Loaded Option ROM '%s'...%r\n", RomFileName, Status);
 
-                    MyFreePool (&RomFileName);
+                     MY_FREE_POOL(RomFileName);
                 }
 
-                MyFreePool (&DecompressedImageBuffer);
+                MY_FREE_POOL(DecompressedImageBuffer);
             } // if InitializationSize
         } // if Pcir->CodeType
 
@@ -222,9 +220,7 @@ EFI_STATUS ReloadOptionROM (
   @retval EFI_NOT_FOUND             Failed to Locate Suitable Option ROM.
   @retval Other value               Unknown error.
 **/
-EFI_STATUS AcquireGOP (
-    VOID
-) {
+EFI_STATUS AcquireGOP (VOID) {
     UINTN                 Index                = 0;
     UINTN                 HandleIndex          = 0;
     UINTN                 HandleArrayCount     = 0;
@@ -302,10 +298,10 @@ EFI_STATUS AcquireGOP (
 
                         MsgLog("Loading option ROM result:%r\n", Status);
 
-                        MyFreePool (&RomFileName);
+                        MY_FREE_POOL(RomFileName);
                     }
 
-                    MyFreePool (&BindingHandleBuffer);
+                    MY_FREE_POOL(BindingHandleBuffer);
                 }
             }
 
@@ -313,7 +309,7 @@ EFI_STATUS AcquireGOP (
                 ReturnStatus = Status;
             }
         } // for
-        MyFreePool (&HandleArray);
+        MY_FREE_POOL(HandleArray);
     } // if/else EFI_ERROR Status
 
     return ReturnStatus;

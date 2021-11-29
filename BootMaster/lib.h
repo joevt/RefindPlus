@@ -62,8 +62,8 @@
 #endif
 
 #include "global.h"
-
 #include "../libeg/libeg.h"
+#include "my_free_pool.h"
 
 //
 // lib module
@@ -125,9 +125,6 @@ VOID ScanVolumes (VOID);
 VOID ReinitVolumes (VOID);
 VOID UninitRefitLib (VOID);
 VOID SetVolumeIcons (VOID);
-
-VOID MyFreePoolProc (IN OUT VOID **Pointer);
-#define MyFreePool(a) do { MyFreePoolProc((VOID **)(a)); if (sizeof((a)) != sizeof(VOID *) || sizeof(*(a)) != sizeof(VOID *) || sizeof(**(a)) == 0) MsgLog ("What!!??\n"); } while (0)
 
 VOID RetainVolume (REFIT_VOLUME *Volume);
 REFIT_VOLUME * AllocateVolume (REFIT_VOLUME **Volume);

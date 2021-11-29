@@ -100,9 +100,8 @@ typedef enum {
 #define DISCOVERY_TYPE_MANUAL    2
 
 #ifdef __MAKEWITH_GNUEFI
-//
+
 // define BBS Device Types
-//
 #define BBS_FLOPPY             0x01
 #define BBS_HARDDISK           0x02
 #define BBS_CDROM              0x03
@@ -121,7 +120,7 @@ typedef enum {
 #define DEVICE_TYPE_BIOS       0x05 /* returned by legacy (BIOS) boot loaders */
 #define DEVICE_TYPE_END        0x75 /* end of path */
 
-// Filesystem type identifiers. Not all are yet used.
+// Filesystem type identifiers ... Not all are used.
 #define FS_TYPE_UNKNOWN           0
 #define FS_TYPE_WHOLEDISK         1
 #define FS_TYPE_FAT               2
@@ -154,8 +153,9 @@ typedef enum {
 #define ICON_SIZE_BIG             2
 #define ICON_SIZE_MOUSE           3
 
-// Minimum vertical resolution for a screen to be considered High-DPI
-#define HIDPI_MIN 1601
+// Minimum resolutions for a screen to be considered High-DPI
+#define HIDPI_LONG 2560
+#define HIDPI_SHORT 1600
 
 #ifndef EFI_OS_INDICATIONS_BOOT_TO_FW_UI
 #define EFI_OS_INDICATIONS_BOOT_TO_FW_UI 0x0000000000000001ULL
@@ -187,24 +187,30 @@ typedef enum {
 // Note that SelfDir is searched in addition to these locations.
 #define MOK_LOCATIONS \
 L"\\EFI\\tools,\\EFI\\fedora,\\EFI\\redhat,\\EFI\\ubuntu,\\EFI\\suse,\\EFI\\opensuse,\\EFI\\altlinux"
+
 // Directories to search for memtest86.
 // Warning: These are also used for DontScanDirs so don't add EFI here.
-#define MEMTEST_LOCATIONS_BASE "\\EFI\\tools,\\EFI\\tools\\memtest86,\\EFI\\tools\\memtest,\\EFI\\memtest86,\\EFI\\memtest,\\EFI\\tools"
+#define MEMTEST_LOCATIONS_BASE "\\EFI\\tools\\memtest86,\\EFI\\tools\\memtest,\\EFI\\memtest86,\\EFI\\memtest,\\EFI\\BOOT\\tools,\\EFI\\tools"
 #if defined (EFIX64)
-#define MEMTEST_LOCATIONS L"\\EFI\\BOOT\\x64_tools,\\EFI\\BOOT\\tools_x64,\\EFI\\tools_x64" MEMTEST_LOCATIONS_BASE
+#define MEMTEST_LOCATIONS L"\\EFI\\BOOT\\tools_x64,\\EFI\\tools_x64"   MEMTEST_LOCATIONS_BASE
 #elif defined (EFI32)
-#define MEMTEST_LOCATIONS                      L"\\EFI\\BOOT\\tools_ia32,\\EFI\\tools_ia32" MEMTEST_LOCATIONS_BASE
+#define MEMTEST_LOCATIONS L"\\EFI\\BOOT\\tools_ia32,\\EFI\\tools_ia32" MEMTEST_LOCATIONS_BASE
 #elif defined (EFIAARCH64)
-#define MEMTEST_LOCATIONS                      L"\\EFI\\BOOT\\tools_aa64,\\EFI\\tools_aa64" MEMTEST_LOCATIONS_BASE
+#define MEMTEST_LOCATIONS L"\\EFI\\BOOT\\tools_aa64,\\EFI\\tools_aa64" MEMTEST_LOCATIONS_BASE
 else
-#define MEMTEST_LOCATIONS                                                                   MEMTEST_LOCATIONS_BASE
+#define MEMTEST_LOCATIONS                                              MEMTEST_LOCATIONS_BASE
 #endif
-#define MEMTEST_LOCATIONS2 L",\\EFI"
+#define MEMTEST_LOCATIONS2                                                                    L",\\EFI"
+
 // Files that may be Windows recovery files
-#if defined (EFI32)
-#define WINDOWS_RECOVERY_FILES L"\\EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootia32.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
+#if defined (EFIX64)
+#define WINDOWS_RECOVERY_FILES L"\\EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootx64.efi," "Recovery:\\EFI\\BOOT\\boot.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
+#elif defined(EFI32)
+#define WINDOWS_RECOVERY_FILES L"\\EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootia32.efi,""Recovery:\\EFI\\BOOT\\boot.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
+#elif defined(EFIAARCH64)
+#define WINDOWS_RECOVERY_FILES L"\\EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootaa64.efi,""Recovery:\\EFI\\BOOT\\boot.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
 #else
-#define WINDOWS_RECOVERY_FILES L"\\EFI\\Microsoft\\Boot\\LrsBootmgr.efi,Recovery:\\EFI\\BOOT\\bootx64.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
+#define WINDOWS_RECOVERY_FILES L"\\EFI\\Microsoft\\Boot\\LrsBootmgr.efi,"                                   "Recovery:\\EFI\\BOOT\\boot.efi,\\EFI\\OEM\\Boot\\bootmgfw.efi"
 #endif
 // Files that may be Mac OS recovery files
 #define MACOS_RECOVERY_FILES    L"com.apple.recovery.boot\\boot.efi"

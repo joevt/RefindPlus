@@ -22,9 +22,10 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #else
 #include "gnuefi-helper.h"
 #endif
+
+#include "../BootMaster/my_free_pool.h"
 #include "../include/refit_call_wrapper.h"
 
-#include "../BootMaster/lib.h"
 #include "../BootMaster/leaks.h"
 
 /**
@@ -199,7 +200,7 @@ VOID * EfiReallocatePool (
             CopyMem (NewPool, OldPool, OldSize < NewSize ? OldSize : NewSize);
         }
 
-        MyFreePool (&OldPool);
+        MY_FREE_POOL(OldPool);
     }
 
     return NewPool;

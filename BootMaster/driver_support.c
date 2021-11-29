@@ -407,18 +407,18 @@ EFI_STATUS LibScanHandleDatabase (
                         }
                     }
 
-                    MyFreePool (&OpenInfo);
+                    MY_FREE_POOL(OpenInfo);
                 }
             }
-            MyFreePool (&ProtocolGuidArray);
+            MY_FREE_POOL(ProtocolGuidArray);
         }
     }
 
     return EFI_SUCCESS;
 
 Error:
-    MyFreePool (HandleType);
-    MyFreePool (HandleBuffer);
+    MY_FREE_POOL(*HandleType);
+    MY_FREE_POOL(*HandleBuffer);
 
     *HandleCount  = 0;
 
@@ -527,10 +527,10 @@ EFI_STATUS ConnectAllDriversToAllControllers (
             }
         }
 
-        MyFreePool (&HandleBuffer);
-        MyFreePool (&HandleType);
+        MY_FREE_POOL(HandleBuffer);
+        MY_FREE_POOL(HandleType);
     }
-    MyFreePool (&AllHandleBuffer);
+    MY_FREE_POOL(AllHandleBuffer);
 
     return Status;
 #endif
@@ -656,10 +656,10 @@ VOID ConnectFilesystemDriver (
             }
         } // for
 
-        MyFreePool (&OpenInfo);
+        MY_FREE_POOL(OpenInfo);
     }
 
-    MyFreePool (&Handles);
+    MY_FREE_POOL(Handles);
 } // VOID ConnectFilesystemDriver()
 
 // Scan a directory for drivers.
@@ -691,7 +691,7 @@ UINTN ScanDriverDir (
     while (DirIterNext (&DirIter, 2, LOADER_MATCH_PATTERNS, &DirEntry)) {
         if (DirEntry->FileName[0] == '.') {
             // skip this
-            MyFreePool (&DirEntry);
+            MY_FREE_POOL(DirEntry);
             continue;
         }
 
@@ -705,21 +705,21 @@ UINTN ScanDriverDir (
             FALSE, TRUE
         );
 
-        MyFreePool (&DirEntry);
+        MY_FREE_POOL(DirEntry);
 
         #if REFIT_DEBUG > 0
         MsgLog ("  - %r ... UEFI Driver:- '%s'\n", Status, FileName);
         #endif
 
         LOGBLOCKEXIT("Loading '%s' Result:%r", FileName, Status);
-        MyFreePool (&FileName);
+        MY_FREE_POOL(FileName);
     } // while
 
     Status = DirIterClose (&DirIter);
     if (Status != EFI_NOT_FOUND) {
         ErrMsg = PoolPrint (L"While Scanning the '%s' Directory", Path);
         CheckError (Status, ErrMsg);
-        MyFreePool (&ErrMsg);
+        MY_FREE_POOL(ErrMsg);
     }
 
     LOGPROCEXIT("Found:%d", NumFound);
@@ -775,8 +775,8 @@ BOOLEAN LoadDrivers (VOID) {
             #endif
         }
 
-        MyFreePool (&Directory);
-        MyFreePool (&SelfDirectory);
+        MY_FREE_POOL(Directory);
+        MY_FREE_POOL(SelfDirectory);
     } // while
 
     // Scan additional user-specified driver directories.
@@ -794,7 +794,7 @@ BOOLEAN LoadDrivers (VOID) {
                 CleanUpPathNameSlashes (SelfDirectory);
 
                 if (MyStrBegins (SelfDirectory, Directory)) {
-                    MyFreePool (&SelfDirectory);
+                    MY_FREE_POOL(SelfDirectory);
                     SelfDirectory = StrDuplicate (Directory);
                 }
                 else {
@@ -816,8 +816,8 @@ BOOLEAN LoadDrivers (VOID) {
                 }
             }
 
-            MyFreePool (&Directory);
-            MyFreePool (&SelfDirectory);
+            MY_FREE_POOL(Directory);
+            MY_FREE_POOL(SelfDirectory);
         } // while
     }
 
@@ -832,7 +832,7 @@ BOOLEAN LoadDrivers (VOID) {
         NumFound, (NumFound == 1) ? L"" : L"s"
     );
     LOG(2, LOG_THREE_STAR_SEP, L"%s", MsgStr);
-    MyFreePool (&MsgStr);
+    MY_FREE_POOL(MsgStr);
     #endif
 
     // connect all devices

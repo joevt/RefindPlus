@@ -271,8 +271,8 @@ BOOLEAN line_edit (CHAR16 *line_in, CHAR16 **line_out, UINTN x_max) {
         ST->ConOut,
         FALSE
     );
-    MyFreePool (&print);
-    MyFreePool (&line);
+    MY_FREE_POOL(print);
+    MY_FREE_POOL(line);
 
     LOGPROCEXIT("%p:'%s'", *line_out, *line_out);
     return enter;

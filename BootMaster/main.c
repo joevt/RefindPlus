@@ -382,7 +382,7 @@ VOID FilterCSR (VOID) {
         LOG(4, LOG_THREE_STAR_MID, L"%s", MsgStr);
         MsgLog ("\n");
         MsgLog ("    * %s", MsgStr);
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
         #endif
     }
 } // static VOID FilterCSR()
@@ -552,9 +552,9 @@ VOID SetBootArgs (VOID) {
                     AsciiStrSize (DataNVRAM),
                     TRUE
                 );
-                MyFreePool (&DataNVRAM);
+                MY_FREE_POOL(DataNVRAM);
             }
-            MyFreePool (&BootArg);
+            MY_FREE_POOL(BootArg);
         }
     }
 
@@ -601,9 +601,9 @@ VOID DisableAMFI (VOID) {
     }
 
     #if REFIT_DEBUG > 0
-    LOG2(3, LOG_LINE_NORMAL, L"\n    * ", L"", L"Disable AMFI ... %r", Status);
+    LOG2(3, LOG_LINE_NORMAL, L"\n    * ", L"\n", L"Disable AMFI ... %r", Status);
     if (GlobalConfig.DisableCompatCheck) {
-        LOG(3, LOG_LINE_NORMAL, L"\n    * ", L"" L"Disable Compat Check ... %r", Status);
+        LOG2(3, LOG_LINE_NORMAL, L"\n    * ", L"\n", L"Disable Compat Check ... %r", Status);
     }
     #endif
 } // VOID DisableAMFI()
@@ -624,7 +624,7 @@ VOID DisableCompatCheck (VOID) {
     );
 
     #if REFIT_DEBUG > 0
-    LOG2(3, LOG_LINE_NORMAL, L"\n    * ", L"", L"Disable Compat Check ... %r", Status);
+    LOG2(3, LOG_LINE_NORMAL, L"\n    * ", L"\n", L"Disable Compat Check ... %r", Status);
     #endif
 } // VOID DisableCompatCheck()
 
@@ -644,7 +644,7 @@ VOID ForceTRIM (VOID) {
     );
 
     #if REFIT_DEBUG > 0
-    LOG2(3, LOG_LINE_NORMAL, L"\n    * ", L"", L"Forcibly Enable TRIM ... %r", Status);
+    LOG2(3, LOG_LINE_NORMAL, L"\n    * ", L"\n", L"Forcibly Enable TRIM ... %r", Status);
     #endif
 } // VOID ForceTRIM()
 
@@ -728,7 +728,7 @@ EFI_STATUS EFIAPI OpenProtocolEx (
                     }
                     Status = EFI_UNSUPPORTED;
                 }
-                MyFreePool (&HandleBuffer);
+                MY_FREE_POOL(HandleBuffer);
             } // If GOPDraw != NULL
             LOGPROCEXIT("gEfiGraphicsOutputProtocolGuid");
         } // if GuidsAreEqual
@@ -877,7 +877,7 @@ VOID preBootKicker (VOID) {
                 break;
             }
             else {
-                MyFreePool (&FilePath);
+                MY_FREE_POOL(FilePath);
             }
         } // while
 
@@ -908,7 +908,7 @@ VOID preBootKicker (VOID) {
             #endif
         }
 
-        MyFreePool (&FilePath);
+        MY_FREE_POOL(FilePath);
     }
     else {
         #if REFIT_DEBUG > 0
@@ -1020,7 +1020,7 @@ VOID preCleanNvram (VOID) {
                 break;
             }
             else {
-                MyFreePool (&FilePath);
+                MY_FREE_POOL(FilePath);
             }
         } // while
 
@@ -1053,7 +1053,7 @@ VOID preCleanNvram (VOID) {
             #endif
         }
 
-        MyFreePool (&FilePath);
+        MY_FREE_POOL(FilePath);
     }
     else {
         #if REFIT_DEBUG > 0
@@ -1139,7 +1139,7 @@ VOID AboutRefindPlus (VOID) {
 
         CHAR16 *MsgStr = egScreenDescription();
         AddMenuInfoLinePool (AboutMenu, PoolPrint(L"Screen Output: %s", MsgStr));
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
 
         AddMenuInfoLineCached (AboutMenu, L"");
         AddMenuInfoLineCached (AboutMenu, L"RefindPlus is a variant of rEFInd");
@@ -1149,7 +1149,7 @@ VOID AboutRefindPlus (VOID) {
         AddMenuInfoLineCached (AboutMenu, L"http://www.rodsbooks.com/refind");
 
         AddMenuEntryCopy (AboutMenu, &TagMenuEntry[TAG_RETURN]);
-        MyFreePool (&FirmwareVendor);
+        MY_FREE_POOL(FirmwareVendor);
 
         LEAKABLEROOTMENU (kLeakableMenuAbout, AboutMenu);
     }
@@ -1196,7 +1196,7 @@ AssignPoolStr_PS_ (
     if (object) {
         if (str != object->Str) {
             if (!object->Cached) {
-                MyFreePool (&object->Str);
+                MY_FREE_POOL(object->Str);
             }
             LOGPOOL (str);
             object->Str = str;
@@ -1214,7 +1214,7 @@ AssignCachedPoolStr_PS_ (
     if (object) {
         if (str != object->Str) {
             if (!object->Cached) {
-                MyFreePool (&object->Str);
+                MY_FREE_POOL(object->Str);
             }
             object->Str = str;
             object->Cached = TRUE;
@@ -1261,7 +1261,7 @@ FreePoolStr_PS_ (
 ) {
     if (object && object->Str) {
         if (!object->Cached) {
-            MyFreePool (&object->Str);
+            MY_FREE_POOL(object->Str);
         }
     }
 }
@@ -1522,7 +1522,7 @@ VOID SetConfigFilename (
                 #endif
                 PrintUglyText (MsgStr, NEXTLINE);
 
-                MsgStr = StrDuplicate (L"Try Default:- 'config.conf / refind.conf'");
+                MsgStr = L"Try Default:- 'config.conf / refind.conf'";
                 PrintUglyText (MsgStr, NEXTLINE);
 
                 #if REFIT_DEBUG > 0
@@ -1534,7 +1534,7 @@ VOID SetConfigFilename (
                 PauseSeconds (9);
             } // if/else FileExists (SelfDir, FileName
 
-            MyFreePool (&FileName);
+            MY_FREE_POOL(FileName);
         } // if SubString
         LOGPROCEXIT();
     } // if (Status == EFI_SUCCESS) && Info->LoadOptionsSize
@@ -1576,7 +1576,7 @@ VOID AdjustDefaultSelection (VOID) {
                     NULL
                 );
 
-                MyFreePool (&Element);
+                MY_FREE_POOL(Element);
                 if (Status == EFI_SUCCESS) {
                     Element = PreviousBoot;
                 }
@@ -1587,10 +1587,10 @@ VOID AdjustDefaultSelection (VOID) {
             MergeStrings (&NewCommaDelimited, Element, L',');
         }
 
-        MyFreePool (&Element);
+        MY_FREE_POOL(Element);
     } // while
 
-    MyFreePool (&GlobalConfig.DefaultSelection);
+    MY_FREE_POOL(GlobalConfig.DefaultSelection);
     GlobalConfig.DefaultSelection = NewCommaDelimited;
     LEAKABLE (GlobalConfig.DefaultSelection, "DefaultSelection");
 } // AdjustDefaultSelection()
@@ -1690,7 +1690,7 @@ VOID LogBasicInfo (VOID) {
         case  2: MsgStr = L"UEFI"   ; break;
         default: MsgStr = L"Unknown";
     }
-    MyFreePool (&TestPool);
+    MY_FREE_POOL(TestPool);
     MsgLog ("Pool type:- '%s'\n", MsgStr);
     MsgLog ("\n\n");
 #endif
@@ -1771,7 +1771,7 @@ VOID LogBasicInfo (VOID) {
     if (!QVInfoSupport) {
         // QueryVariableInfo is not supported on Apple or EFI 1.x Firmware
         MsgLog ("\n");
-        MsgLog (" ** QueryVariableInfo is not Available");
+        MsgLog (" ** QueryVariableInfo is Unavailable");
         // DA-TAG: Leave preceeding single space above intact
     }
     MsgLog ("\n\n");
@@ -1831,7 +1831,7 @@ VOID LogBasicInfo (VOID) {
     AppleFramebuffers = HandleCount;
     MsgLog ("Apple Framebuffers:- '%d'", AppleFramebuffers);
     MsgLog ("\n");
-    MyFreePool (&HandleBuffer);
+    MY_FREE_POOL(HandleBuffer);
 
     /* CSM Type */
     switch (GlobalConfig.LegacyType) {
@@ -1982,14 +1982,28 @@ EFI_STATUS EFIAPI efi_main (
     MsgLog ("\n");
 
     /* TimeStamp */
-    CHAR16 *CurDateStr = PoolPrint (
-        L"%d-%02d-%02d %02d:%02d:%02d",
-        NowYear, NowMonth,
-        NowDay, NowHour,
-        NowMinute, NowSecond
-    );
+    CHAR16 *CurDateStr = NULL;
+    if (Now.TimeZone == EFI_UNSPECIFIED_TIMEZONE) {
+        CurDateStr = PoolPrint (
+            L"%d-%02d-%02d %02d:%02d:%02d (GMT)",
+            NowYear, NowMonth,
+            NowDay, NowHour,
+            NowMinute, NowSecond
+        );
+    }
+    else {
+        CurDateStr = PoolPrint (
+            L"%d-%02d-%02d %02d:%02d:%02d (GMT%s%02d:%02d)",
+            NowYear, NowMonth,
+            NowDay, NowHour,
+            NowMinute, NowSecond,
+            (Now.TimeZone > 0 ? L"-" : L"+"),
+            ((ABS(Now.TimeZone)) / 60),
+            ((ABS(Now.TimeZone)) % 60)
+        );
+    }
     MsgLog ("Timestamp:- '%s (GMT)'\n\n", CurDateStr);
-    MyFreePool (&CurDateStr);
+    MY_FREE_POOL(CurDateStr);
     #endif
 
     //MyPrint("DumpCallStack\n");
@@ -2126,7 +2140,7 @@ EFI_STATUS EFIAPI efi_main (
         LOG(1, LOG_STAR_SEPARATOR, L"%s", MsgStr);
         MsgLog ("\n");
         MsgLog ("      %s", MsgStr);
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
         #endif
     }
 
@@ -2148,7 +2162,7 @@ EFI_STATUS EFIAPI efi_main (
     LOG(1, LOG_LINE_SEPARATOR, L"%s", MsgStr);
     MsgLog ("%s...", MsgStr);
     MsgLog ("\n");
-    MyFreePool (&MsgStr);
+    MY_FREE_POOL(MsgStr);
     #endif
 
     InitScreen();
@@ -2179,7 +2193,7 @@ EFI_STATUS EFIAPI efi_main (
         MsgStr = StrDuplicate (L"Secure Boot Failure");
         LOG(1, LOG_LINE_SEPARATOR, L"Display %s Warning", MsgStr);
         MsgLog ("INFO: User Warning:- '%s ... Forcing Shutdown'\n\n", MsgStr);
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
         #endif
 
         SwitchToText (FALSE);
@@ -2212,7 +2226,7 @@ EFI_STATUS EFIAPI efi_main (
             CHAR16 *PartMsg = PoolPrint (L"%s ... Please Wait", MsgStr);
             egDisplayMessage (PartMsg, &BGColor, CENTER);
 
-            MyFreePool (&PartMsg);
+            MY_FREE_POOL(PartMsg);
         }
 
         #if REFIT_DEBUG > 0
@@ -2221,7 +2235,7 @@ EFI_STATUS EFIAPI efi_main (
         MsgLog ("%s:\n", MsgStr);
         #endif
 
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
 
         for (i = 0; i < GlobalConfig.ScanDelay; ++i) {
             #if REFIT_DEBUG > 0
@@ -2239,7 +2253,7 @@ EFI_STATUS EFIAPI efi_main (
         MsgStr = PoolPrint (L"Resuming After a %d Second Pause", i);
         LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
         MsgLog ("  - %s\n", MsgStr);
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
         #endif
 
         if (GlobalConfig.ScanDelay > Trigger) {
@@ -2265,7 +2279,7 @@ EFI_STATUS EFIAPI efi_main (
         MsgStr = StrDuplicate (L"Inconsistent EFI Versions");
         LOG(1, LOG_LINE_SEPARATOR, L"Display %s Warning", MsgStr);
         MsgLog ("INFO: User Warning:- '%s'\n\n", MsgStr);
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
         #endif
 
         SwitchToText (FALSE);
@@ -2286,7 +2300,7 @@ EFI_STATUS EFIAPI efi_main (
         LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
         LOG(3, LOG_BLANK_LINE_SEP, L"X");
         MsgLog ("INFO: %s ... ", MsgStr);
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
         #endif
         if (AllowGraphicsMode) {
             #if REFIT_DEBUG > 0
@@ -2313,7 +2327,7 @@ EFI_STATUS EFIAPI efi_main (
         MsgStr = StrDuplicate (L"Inconsistent UEFI 2.x Implementation");
         LOG(1, LOG_LINE_SEPARATOR, L"Display %s Warning", MsgStr);
         MsgLog ("INFO: User Warning:- '%s'\n\n", MsgStr);
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
         #endif
 
         SwitchToText (FALSE);
@@ -2334,7 +2348,7 @@ EFI_STATUS EFIAPI efi_main (
         LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
         LOG(3, LOG_BLANK_LINE_SEP, L"X");
         MsgLog ("      %s ...", MsgStr);
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
         #endif
 
         if (AllowGraphicsMode) {
@@ -2369,7 +2383,7 @@ EFI_STATUS EFIAPI efi_main (
         MsgStr = StrDuplicate (L"Missing Config File");
         LOG(1, LOG_LINE_SEPARATOR, L"Display %s Warning", MsgStr);
         MsgLog ("INFO: User Warning:- '%s'\n\n", MsgStr);
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
         #endif
 
         SwitchToText (FALSE);
@@ -2396,7 +2410,7 @@ EFI_STATUS EFIAPI efi_main (
         LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
         LOG(3, LOG_BLANK_LINE_SEP, L"X");
         MsgLog ("      %s ...", MsgStr);
-        MyFreePool (&MsgStr);
+        MY_FREE_POOL(MsgStr);
         #endif
 
         if (AllowGraphicsMode) {
@@ -2458,7 +2472,7 @@ EFI_STATUS EFIAPI efi_main (
             MsgStr = StrDuplicate (L"FlushFailedTag is Set ... Ignore MenuExit");
             LOG(2, LOG_STAR_SEPARATOR, L"%s", MsgStr);
             MsgLog ("INFO: %s\n\n", MsgStr);
-            MyFreePool (&MsgStr);
+            MY_FREE_POOL(MsgStr);
             #endif
 
             FlushFailedTag = FALSE;
@@ -2475,26 +2489,6 @@ EFI_STATUS EFIAPI efi_main (
 
             RescanAll (TRUE, TRUE);
             continue;
-        }
-
-        // Sync APFS infrastrcture is no longer required ... Free Associated Volume Lists
-        if ((GlobalConfig.SyncAPFS) &&
-            (PreBootVolumes || SystemVolumes || DataVolumes)
-        ) {
-            FreeVolumes (
-                &PreBootVolumes,
-                &PreBootVolumesCount
-            );
-
-            FreeVolumes (
-                &SystemVolumes,
-                &SystemVolumesCount
-            );
-
-            FreeVolumes (
-                &DataVolumes,
-                &DataVolumesCount
-            );
         }
 
         if (!ChosenEntry) {
@@ -2795,15 +2789,20 @@ EFI_STATUS EFIAPI efi_main (
                             EFI_GUID            ContainerGuid;
                             APPLE_APFS_VOLUME_ROLE VolumeRole;
 
+                            #ifdef __MAKEWITH_GNUEFI
+                            Status = EFI_NOT_FOUND;
+                            #else
+                            // DA-TAG: Limit to TianoCore
                             Status = RP_GetApfsVolumeInfo (
                                 ourLoaderEntry->Volume->DeviceHandle,
                                 &ContainerGuid,
                                 &VolumeGuid,
                                 &VolumeRole
                             );
+                            #endif
 
                             if (!EFI_ERROR(Status)) {
-                                if ((VolumeRole & APPLE_APFS_VOLUME_ROLE_PREBOOT) != 0) {
+                                if (VolumeRole == APPLE_APFS_VOLUME_ROLE_PREBOOT) {
                                     DisplayName = GetVolumeGroupName (
                                         GetPoolStr (&ourLoaderEntry->LoaderPath),
                                         ourLoaderEntry->Volume
@@ -2819,7 +2818,7 @@ EFI_STATUS EFIAPI efi_main (
                                 : GetPoolStr (&ourLoaderEntry->Volume->VolName)
                         );
                     }
-                    MyFreePool (&DisplayName);
+                    MY_FREE_POOL(DisplayName);
                     #endif
 
                     // Enable TRIM on non-Apple SSDs if configured to
@@ -2927,15 +2926,14 @@ EFI_STATUS EFIAPI efi_main (
                     );
                     LOG(1, LOG_LINE_THIN_SEP, L"%s", MsgStr);
                     MsgLog ("  - %s", MsgStr);
-                    MyFreePool (&MsgStr);
+                    MY_FREE_POOL(MsgStr);
                     #endif
                 }
                 else {
                     #if REFIT_DEBUG > 0
-                    MsgStr = StrDuplicate (L"Boot 'Mac-Style' Legacy (BIOS) OS");
+                    MsgStr = L"Boot 'Mac-Style' Legacy (BIOS) OS";
                     LOG(1, LOG_LINE_THIN_SEP, L"%s", MsgStr);
                     MsgLog ("  - %s:- '%s'", MsgStr, GetPoolStr (&ourLegacyEntry->Volume->OSName));
-                    MyFreePool (&MsgStr);
                     #endif
                 }
 
@@ -2963,7 +2961,7 @@ EFI_STATUS EFIAPI efi_main (
                     MsgStr,
                     ourLegacyEntry->Volume ? GetPoolStr (&ourLegacyEntry->Volume->OSName) : L"NULL Volume"
                 );
-                MyFreePool (&MsgStr);
+                MY_FREE_POOL(MsgStr);
 
                 if (egIsGraphicsModeEnabled()) {
                     MsgLog ("\n-----------------\n\n");
@@ -3093,23 +3091,23 @@ EFI_STATUS EFIAPI efi_main (
 
                 #if REFIT_DEBUG > 0
                 MsgLog ("User Input Received:\n");
-                MsgLog ("  - Manage Boot Order\n\n");
+                MsgLog ("  - Manage Firmware Boot Order\n\n");
                 #endif
 
                 ManageBootorder();
 
                 #if REFIT_DEBUG > 0
                 MsgLog ("User Input Received:\n");
-                MsgLog ("  - Exit Manage Boot Order Page\n\n");
+                MsgLog ("  - Exit Manage Firmware Boot Order Page\n\n");
                 #endif
 
                 break;
         } // switch
-        MyFreePool (&ChosenEntry);
+        MY_FREE_POOL(ChosenEntry);
         LOGBLOCKEXIT("%a", TheTagName);
     } // while
     LOGBLOCKEXIT("Main Loop");
-    // MyFreePool (&SelectionName); // this should never happen - don't do it since it may be from a menu entry
+    // MY_FREE_POOL(SelectionName); // this should never happen - don't do it since it may be from a menu entry
 
     // If we end up here, things have gone wrong. Try to reboot, and if that
     // fails, go into an endless loop.

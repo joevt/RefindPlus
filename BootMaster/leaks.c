@@ -372,7 +372,7 @@ LeaksFreePool (
                 MsgLog ("Allocation Error: OrigFreePool is not set yet\n");
                 //DumpCallStack (NULL, FALSE);
             }
-            MyFreePool (Buffer);
+            MY_FREE_POOL(*Buffer);
         }
     }
 }
@@ -1042,7 +1042,7 @@ GetLoadedImages(
                 LoadedImages[LoadedImageIndex].Handle = LoadedImagesHandles[LoadedImageIndex];
             }
         }
-        MyFreePool (&LoadedImagesHandles);
+        MY_FREE_POOL(LoadedImagesHandles);
     }
 
     if (!OldInAlloc) LOGPROCEXIT("%p", LoadedImages);
@@ -1095,7 +1095,7 @@ FreeLoadedImages (
         LoadedImageRec *LoadedImage;
         for (LoadedImage = LoadedImages; LoadedImage->Handle; LoadedImage++) {
             if (LoadedImage->Name) {
-                MyFreePool (&LoadedImage->Name);
+                MY_FREE_POOL(LoadedImage->Name);
             }
         } // for LoadedImage
         LeaksFreePool ((VOID **) &LoadedImages);

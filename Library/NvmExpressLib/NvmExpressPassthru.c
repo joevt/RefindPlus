@@ -15,8 +15,8 @@
 **/
 
 #include "NvmExpress.h"
+#include "../../BootMaster/my_free_pool.h"
 #include "../../include/refit_call_wrapper.h"
-#include "../../BootMaster/lib.h"
 
 /**
   Create PRP lists for data transfer which is larger than 2 memory pages.
@@ -205,7 +205,7 @@ EFI_STATUS AbortAsyncPassThruTasks (
 
         RemoveEntryList (Link);
         REFIT_CALL_1_WRAPPER(gBS->SignalEvent, AsyncRequest->CallerEvent);
-        MyFreePool (&AsyncRequest);
+        MY_FREE_POOL(AsyncRequest);
     }
 
     if (IsListEmpty (&Private->AsyncPassThruQueue) &&
@@ -817,7 +817,7 @@ EFI_STATUS EFIAPI NvmExpressGetNextNamespace (
     }
 
 Done:
-    MyFreePool (&NamespaceData);
+    MY_FREE_POOL(NamespaceData);
 
     return Status;
 }
@@ -975,11 +975,11 @@ EFI_STATUS EFIAPI NvmExpressBuildDevicePath (
     } while (0);
 
     if (NamespaceData != NULL) {
-        MyFreePool (&NamespaceData);
+        MY_FREE_POOL(NamespaceData);
     }
 
     if (EFI_ERROR (Status)) {
-        MyFreePool (&Node);
+        MY_FREE_POOL(Node);
     }
 
     return Status;

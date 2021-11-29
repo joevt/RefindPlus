@@ -222,31 +222,27 @@ EFI_STATUS ScanDeviceHandles (
                         }
                     } // for OpenInfoIndex = 0
 
-                    MyFreePool (&OpenInfo);
+                    MY_FREE_POOL(OpenInfo);
                 }
             } // for for ProtocolIndex = 0
 
-            MyFreePool (&ProtocolGuidArray);
+            MY_FREE_POOL(ProtocolGuidArray);
         } // if !EFI_ERROR Status
     } // for k = 0
 
     return EFI_SUCCESS;
 
     Error:
-    MyFreePool (HandleType);
-    MyFreePool (HandleBuffer);
+    MY_FREE_POOL(*HandleType);
+    MY_FREE_POOL(*HandleBuffer);
 
     *HandleCount  = 0;
-    *HandleBuffer = NULL;
-    *HandleType   = NULL;
 
     return Status;
 } // EFI_STATUS ScanDeviceHandles()
 
 
-EFI_STATUS BdsLibConnectMostlyAllEfi (
-    VOID
-) {
+EFI_STATUS BdsLibConnectMostlyAllEfi (VOID) {
     EFI_STATUS            XStatus;
     EFI_STATUS            Status          = EFI_SUCCESS;
     EFI_HANDLE           *AllHandleBuffer = NULL;
@@ -490,8 +486,8 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                                     )
                                 );
 
-                                MyFreePool (&Buses);
-                                MyFreePool (&OptionRom);
+                                MY_FREE_POOL(Buses);
+                                MY_FREE_POOL(OptionRom);
 
                                 #endif
                             } // if/else EFI_ERROR(XStatus) // is readable PCI device
@@ -539,12 +535,12 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                         if (StrCmp (GopDevicePathStr, DevicePathStr) == 0) {
                             CHAR16 *oldDeviceData = DeviceData;
                             DeviceData = PoolPrint (L"%s : 1st GOP", DeviceData);
-                            MyFreePool (&oldDeviceData);
+                            MY_FREE_POOL(oldDeviceData);
                         }
                         else if (StrStr (GopDevicePathStr, DevicePathStr)) {
                             CHAR16 *oldDeviceData = DeviceData;
                             DeviceData = PoolPrint ( L"%s : Parent of 1st GOP", DeviceData);
-                            MyFreePool (&oldDeviceData);
+                            MY_FREE_POOL(oldDeviceData);
                         }
                     }
 
@@ -553,7 +549,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                             if (GOPArray[m] == AllHandleBuffer[i]) {
                                 CHAR16 *oldDeviceData = DeviceData;
                                 DeviceData = PoolPrint ( L"%s : GOP%d", DeviceData, m);
-                                MyFreePool (&oldDeviceData);
+                                MY_FREE_POOL(oldDeviceData);
                             }
                         }
                     }
@@ -561,7 +557,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                     if (gST->ConsoleOutHandle == AllHandleBuffer[i]) {
                         CHAR16 *oldDeviceData = DeviceData;
                         DeviceData = PoolPrint ( L"%s : ConsoleOut", DeviceData);
-                        MyFreePool (&oldDeviceData);
+                        MY_FREE_POOL(oldDeviceData);
                     }
 
                     #endif
@@ -624,21 +620,21 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
                 MsgLog ("\n");
             }
 
-            MyFreePool (&DevicePathStr);
-            MyFreePool (&DeviceData);
+            MY_FREE_POOL(DevicePathStr);
+            MY_FREE_POOL(DeviceData);
             #endif
 
-            MyFreePool (&HandleBuffer);
-            MyFreePool (&HandleType);
+            MY_FREE_POOL(HandleBuffer);
+            MY_FREE_POOL(HandleType);
         }  // for
 
         #if REFIT_DEBUG > 0
-        MyFreePool (&GopDevicePathStr);
-        MyFreePool (&GOPArray);
+        MY_FREE_POOL(GopDevicePathStr);
+        MY_FREE_POOL(GOPArray);
         #endif
     } // if !EFI_ERROR(Status)
 
-    MyFreePool (&AllHandleBuffer);
+    MY_FREE_POOL(AllHandleBuffer);
 
     LOGPROCEXIT();
     return Status;
@@ -651,9 +647,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (
   sure all the system controllers have driver to manage it if have.
 **/
 static
-EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (
-    VOID
-) {
+EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (VOID) {
     LOGPROCENTRY();
     EFI_STATUS  Status;
 
@@ -713,9 +707,7 @@ EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (
 // to the GPU's GOP drivers failing to install on not detecting UEFI 2.x. This function
 // amends SystemTable Revision information, provides the missing CreateEventEx capability
 // then reloads the GPU's ROM from RAM (If Present) which will install GOP (If Available).
-EFI_STATUS ApplyGOPFix (
-    VOID
-) {
+EFI_STATUS ApplyGOPFix (VOID) {
     EFI_STATUS Status;
 
     // Update Boot Services to permit reloading GPU OptionROM

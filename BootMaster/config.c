@@ -111,7 +111,7 @@ EFI_STATUS RefitReadFile (
 
     Message = PoolPrint (L"While Loading File:- '%s'", FileName);
     if (CheckError (Status, Message)) {
-        MyFreePool (&Message);
+        MY_FREE_POOL(Message);
 
         return Status;
     }
@@ -123,7 +123,7 @@ EFI_STATUS RefitReadFile (
         return EFI_LOAD_ERROR;
     }
     ReadSize = FileInfo->FileSize;
-    MyFreePool (&FileInfo);
+    MY_FREE_POOL(FileInfo);
 
     File->BufferSize = (UINTN) ReadSize;
     File->Buffer = AllocatePool (File->BufferSize);
@@ -137,14 +137,13 @@ EFI_STATUS RefitReadFile (
 
     Status = REFIT_CALL_3_WRAPPER(FileHandle->Read, FileHandle, &File->BufferSize, File->Buffer);
     if (CheckError (Status, Message)) {
-        MyFreePool (&Message);
-        MyFreePool (&File->Buffer);
-        File->Buffer = NULL;
+        MY_FREE_POOL(Message);
+        MY_FREE_POOL(File->Buffer);
         REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
 
         return Status;
     }
-    MyFreePool (&Message);
+    MY_FREE_POOL(Message);
 
     REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
 
@@ -305,7 +304,7 @@ BOOLEAN KeepReading (
             Temp = StrDuplicate (&p[1]);
             if (Temp != NULL) {
                 StrCpy (p, Temp);
-                MyFreePool (&Temp);
+            MY_FREE_POOL(Temp);
             }
             MoreToRead = TRUE;
         }
@@ -375,7 +374,7 @@ UINTN ReadTokenLine (
             AddListElement ((VOID ***)TokenList, &TokenCount, (VOID *)StrDuplicate (Token));
         } // while
 
-        MyFreePool (&Line);
+        MY_FREE_POOL(Line);
     }
 
     return TokenCount;
@@ -431,7 +430,7 @@ VOID HandleString (
     OUT CHAR16  **Target
 ) {
     if ((TokenCount == 2) && Target) {
-        MyFreePool (Target);
+        MY_FREE_POOL(*Target);
         *Target = StrDuplicate (TokenList[1]);
     } // if
 } // static VOID HandleString()
@@ -463,7 +462,7 @@ VOID HandleStrings (
     }
 
     if ((*Target != NULL) && !AddMode) {
-        MyFreePool (Target);
+        MY_FREE_POOL(*Target);
     }
 
     for (i = 1; i < TokenCount; i++) {
@@ -639,7 +638,7 @@ VOID SetDefaultByTime (
         }
 
         if (SetIt) {
-            MyFreePool (Default);
+            MY_FREE_POOL(*Default);
             *Default = StrDuplicate (TokenList[1]);
         }
     } // if ((StartTime <= LAST_MINUTE) && (EndTime <= LAST_MINUTE))
@@ -672,10 +671,10 @@ VOID ReadConfig (
 
     // Set a few defaults only if we are loading the default file.
     if (MyStriCmp (FileName, GlobalConfig.ConfigFilename)) {
-        MyFreePool (&GlobalConfig.AlsoScan);
+        MY_FREE_POOL(GlobalConfig.AlsoScan);
         GlobalConfig.AlsoScan = StrDuplicate (ALSO_SCAN_DIRS);
 
-        MyFreePool (&GlobalConfig.DontScanDirs);
+        MY_FREE_POOL(GlobalConfig.DontScanDirs);
         if (SelfVolume) {
             TempStr = GuidAsString (&(SelfVolume->PartGuid));
         }
@@ -683,25 +682,25 @@ VOID ReadConfig (
         MergeStrings (&TempStr, MEMTEST_LOCATIONS, L',');
         GlobalConfig.DontScanDirs = TempStr;
 
-        MyFreePool (&GlobalConfig.DontScanFiles);
+        MY_FREE_POOL(GlobalConfig.DontScanFiles);
         GlobalConfig.DontScanFiles = StrDuplicate (DONT_SCAN_FILES);
 
-        MyFreePool (&GlobalConfig.DontScanTools);
+        MY_FREE_POOL(GlobalConfig.DontScanTools);
 
-        MyFreePool (&GlobalConfig.DontScanFirmware);
+        MY_FREE_POOL(GlobalConfig.DontScanFirmware);
         MergeStrings (&(GlobalConfig.DontScanFiles), MOK_NAMES, L',');
         MergeStrings (&(GlobalConfig.DontScanFiles), FWUPDATE_NAMES, L',');
 
-        MyFreePool (&GlobalConfig.DontScanVolumes);
+        MY_FREE_POOL(GlobalConfig.DontScanVolumes);
         GlobalConfig.DontScanVolumes = StrDuplicate (DONT_SCAN_VOLUMES);
 
-        MyFreePool (&GlobalConfig.WindowsRecoveryFiles);
+        MY_FREE_POOL(GlobalConfig.WindowsRecoveryFiles);
         GlobalConfig.WindowsRecoveryFiles = StrDuplicate (WINDOWS_RECOVERY_FILES);
 
-        MyFreePool (&GlobalConfig.MacOSRecoveryFiles);
+        MY_FREE_POOL(GlobalConfig.MacOSRecoveryFiles);
         GlobalConfig.MacOSRecoveryFiles = StrDuplicate (MACOS_RECOVERY_FILES);
 
-        MyFreePool (&GlobalConfig.DefaultSelection);
+        MY_FREE_POOL(GlobalConfig.DefaultSelection);
         GlobalConfig.DefaultSelection = StrDuplicate (L"+");
 
         LEAKABLE (GlobalConfig.AlsoScan, "AlsoScan");
@@ -791,7 +790,7 @@ VOID ReadConfig (
                     #endif
 
                     PauseForKey();
-                    MyFreePool (&MsgStr);
+                    MY_FREE_POOL(MsgStr);
                 }
             }
         }
@@ -851,8 +850,7 @@ VOID ReadConfig (
         }
         else if (MyStriCmp (TokenList[0], L"don't_scan_volumes") || MyStriCmp (TokenList[0], L"dont_scan_volumes")) {
             // Note: Do not use HandleStrings() because it modifies slashes, which might be present in volume name
-            MyFreePool (&GlobalConfig.DontScanVolumes);
-            GlobalConfig.DontScanVolumes = NULL;
+            MY_FREE_POOL(GlobalConfig.DontScanVolumes);
             for (i = 1; i < TokenCount; i++) {
                 MergeStrings (&GlobalConfig.DontScanVolumes, TokenList[i], L',');
             }
@@ -867,7 +865,7 @@ VOID ReadConfig (
             LEAKABLE(GlobalConfig.DriverDirs, "DriverDirs");
         }
         else if (MyStriCmp (TokenList[0], L"showtools")) {
-            SetMem (GlobalConfig.ShowTools, NUM_TOOLS * sizeof (UINTN), 0);
+            SetMem (GlobalConfig.ShowTools, NUM_TOOLS * sizeof (UINTN), TAG_NONE);
             for (i = 1; (i < TokenCount) && (i < NUM_TOOLS); i++) {
                 Flag = TokenList[i];
                 CHAR16 *OneFlag = PoolPrint (L",%s,", Flag);
@@ -875,7 +873,7 @@ VOID ReadConfig (
                 UINTN TheTag;
                 #define TAGS_FLAG_TO_TAG
                 #include "tags.include"
-                MyFreePool (&OneFlag);
+                MY_FREE_POOL(OneFlag);
 
                 if (TheTag == TAG_NONE) {
                     #if REFIT_DEBUG > 0
@@ -909,7 +907,7 @@ VOID ReadConfig (
                 #endif
 
                 PauseForKey();
-                MyFreePool (&MsgStr);
+                MY_FREE_POOL(MsgStr);
             } // if/else MyStriCmp TokenList[0]
         }
         else if (MyStriCmp (TokenList[0], L"small_icon_size") && (TokenCount == 2)) {
@@ -1132,20 +1130,34 @@ VOID ReadConfig (
     } // for
     FreeTokenLine (&TokenList, &TokenCount);
 
-    // Check show_tools for hidden_tags tool
+    // Loop through GlobalConfig.ShowTools list to check for "hidden_tags" tool
     GlobalConfig.HiddenTags = FALSE;
     for (i = 0; i < NUM_TOOLS; i++) {
         if (GlobalConfig.ShowTools[i] == TAG_HIDDEN) {
+            // Tag to end search ... "hidden_tags" tool is already set
             GlobalConfig.HiddenTags = TRUE;
             break;
+        } else if (GlobalConfig.ShowTools[i] == TAG_NONE) {
+            // end search ... "TAG_NONE" is beyond last tool set
+            if (GlobalConfig.TagsHelp) {
+                // "TagHelp" feature is active
+                // Setup help needed ... "hidden_tags" tool is not set
+                GlobalConfig.ShowTools[i] = TAG_HIDDEN;
+                GlobalConfig.HiddenTags   = TRUE;
+
+                // end search ... "hidden_tags" tool is now set
+            }
+            break;
+        } else {
+            // Continue checking
         }
-    }
+    } // for
 
     if ((GlobalConfig.DontScanFiles) && (GlobalConfig.WindowsRecoveryFiles)) {
         MergeStrings (&(GlobalConfig.DontScanFiles), GlobalConfig.WindowsRecoveryFiles, L',');
         LEAKABLE (GlobalConfig.DontScanFiles, "DontScanFiles");
     }
-    MyFreePool (&File.Buffer);
+    MY_FREE_POOL(File.Buffer);
 
     if (!FileExists (SelfDir, L"icons") && !FileExists (SelfDir, GlobalConfig.IconsDir)) {
         #if REFIT_DEBUG > 0
@@ -1178,12 +1190,15 @@ VOID AddSubmenu (
     BOOLEAN              TitleVolume = FALSE;
 
     SubScreen = InitializeSubScreen (Entry);
+    if (SubScreen == NULL) {
+        return;
+    }
 
     // Set defaults for the new entry
     // Will be modified based on lines read from the config file
     SubEntry = InitializeLoaderEntry (Entry);
-
-    if ((SubEntry == NULL) || (SubScreen == NULL)) {
+    if (SubEntry == NULL) {
+        FreeMenuScreen (&SubScreen);
         return;
     }
 
@@ -1428,7 +1443,7 @@ LOADER_ENTRY * AddStanzaEntries (
                 LOG(3, LOG_LINE_NORMAL, L"Adding Options for '%s'", GetPoolStr (&Entry->Title));
                 #endif
 
-                MyFreePool (&LoadOptions);
+                MY_FREE_POOL(LoadOptions);
                 LoadOptions = StrDuplicate (TokenList[1]);
             }
             else if (MyStriCmp (TokenList[0], L"ostype") && (TokenCount > 1)) {
@@ -1472,7 +1487,7 @@ LOADER_ENTRY * AddStanzaEntries (
 
                 DefaultsSet      = TRUE;
                 FirmwareBootNum  = TRUE;
-                MyFreePool (&OurEfiBootNumber);
+                MY_FREE_POOL(OurEfiBootNumber);
                 OurEfiBootNumber = StrDuplicate (TokenList[1]);
             }
             else if (MyStriCmp (TokenList[0], L"submenuentry") && (TokenCount > 1)) {
@@ -1498,7 +1513,7 @@ LOADER_ENTRY * AddStanzaEntries (
         if (FirmwareBootNum) {
             // Clear potentially wrongly set items
             FreePoolStr (&Entry->LoaderPath);
-            MyFreePool (&Entry->EfiLoaderPath);
+            MY_FREE_POOL (Entry->EfiLoaderPath);
             FreePoolStr (&Entry->LoadOptions);
             FreePoolStr (&Entry->InitrdPath);
 
@@ -1557,8 +1572,8 @@ LOADER_ENTRY * AddStanzaEntries (
         }
     } // if Entry->Enabled
 
-    MyFreePool (&OurEfiBootNumber);
-    MyFreePool (&LoadOptions);
+    MY_FREE_POOL(OurEfiBootNumber);
+    MY_FREE_POOL(LoadOptions);
 
     // since these started as NULL, free them if they are not NULL
     FreeVolume (&CurrentVolume);
@@ -1632,7 +1647,7 @@ VOID ScanUserConfigured (
 
             FreeTokenLine (&TokenList, &TokenCount);
             LOGBLOCKEXIT("ScanUserConfigured loop");
-            MyFreePool (&File.Buffer);
+            MY_FREE_POOL(File.Buffer);
         }
     } // if FileExists
 
@@ -1680,14 +1695,14 @@ REFIT_FILE * GenerateOptionsFromEtcFstab (
             LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4a 1");
             if (Options != NULL) {
                 LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4a 1a 1");
-                MyFreePool (&Options);
+                MY_FREE_POOL(Options);
                 LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4a 1a 2");
             }
 
             LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4a 2");
             if (Fstab != NULL) {
                 LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4a 2a 1");
-                MyFreePool (&Fstab);
+                MY_FREE_POOL(Fstab);
                 LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4a 2a 2");
             }
 
@@ -1752,7 +1767,7 @@ REFIT_FILE * GenerateOptionsFromEtcFstab (
                         MergeStrings ((CHAR16 **) &(Options->Buffer), Line, 0);
 
                         LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4b 2a 1a 2a 4");
-                        MyFreePool (&Line);
+                        MY_FREE_POOL(Line);
 
                         LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4b 2a 1a 2a 5");
                         Line = PoolPrint (L"\"Boot into Single User Mode\"  \"ro root=%s single\"\n", Root);
@@ -1761,7 +1776,7 @@ REFIT_FILE * GenerateOptionsFromEtcFstab (
                         MergeStrings ((CHAR16**) &(Options->Buffer), Line, 0);
 
                         LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4b 2a 1a 2a 7");
-                        MyFreePool (&Line);
+                        MY_FREE_POOL(Line);
 
                         LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4b 2a 1a 2a 8");
                         Options->BufferSize = StrLen ((CHAR16*) Options->Buffer) * sizeof(CHAR16);
@@ -1770,8 +1785,7 @@ REFIT_FILE * GenerateOptionsFromEtcFstab (
                     } // if
 
                     LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4b 2a 1a 3");
-                    MyFreePool (&Root);
-                    Root = NULL;
+                    MY_FREE_POOL(Root);
 
                     LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4b 2a 1a 4");
                  } // if
@@ -1797,14 +1811,13 @@ REFIT_FILE * GenerateOptionsFromEtcFstab (
             }
             else {
                 LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4b 3b 1");
-                MyFreePool (&Options);
-                Options = NULL;
+                MY_FREE_POOL(Options);
                 LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4b 3b 2");
             }
 
             LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4b 4");
-            MyFreePool (&Fstab->Buffer);
-            MyFreePool (&Fstab);
+            MY_FREE_POOL(Fstab->Buffer);
+            MY_FREE_POOL(Fstab);
             LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 4b 5");
         } // if/else file read error
         LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromEtcFstab ... 1a 5");
@@ -1862,7 +1875,7 @@ REFIT_FILE * GenerateOptionsFromPartTypes (VOID) {
                 MergeStrings ((CHAR16 **) &(Options->Buffer), Line, 0);
 
                 LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromPartTypes ... 1a 2a 5a 3");
-                MyFreePool (&Line);
+                MY_FREE_POOL(Line);
 
                 LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromPartTypes ... 1a 2a 5a 4");
                 Line = PoolPrint (
@@ -1874,8 +1887,8 @@ REFIT_FILE * GenerateOptionsFromPartTypes (VOID) {
                 MergeStrings ((CHAR16**) &(Options->Buffer), Line, 0);
 
                 LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromPartTypes ... 1a 2a 5a 6");
-                MyFreePool (&Line);
-                MyFreePool (&GuidString);
+                MY_FREE_POOL(Line);
+                MY_FREE_POOL(GuidString);
 
                 LOG(5, LOG_LINE_FORENSIC, L"In GenerateOptionsFromPartTypes ... 1a 2a 5a 7");
             } // if (GuidString)
@@ -1951,8 +1964,7 @@ REFIT_FILE * ReadLinuxOptionsFile (
                     LOG(5, LOG_LINE_FORENSIC, L"In ReadLinuxOptionsFile ... 2a 3a 2a 3a 1");
                     if (File != NULL) {
                         LOG(5, LOG_LINE_FORENSIC, L"In ReadLinuxOptionsFile ... 2a 3a 2a 3a 1a 1");
-                        MyFreePool (&File);
-                        File = NULL;
+                        MY_FREE_POOL(File);
                         LOG(5, LOG_LINE_FORENSIC, L"In ReadLinuxOptionsFile ... 2a 3a 2a 3a 1a 2");
                     }
                     LOG(5, LOG_LINE_FORENSIC, L"In ReadLinuxOptionsFile ... 2a 3a 2a 3a 2");
@@ -1974,8 +1986,8 @@ REFIT_FILE * ReadLinuxOptionsFile (
         } // if/else
 
         LOG(5, LOG_LINE_FORENSIC, L"In ReadLinuxOptionsFile ... 2a 4");
-        MyFreePool (&OptionsFilename);
-        MyFreePool (&FullFilename);
+        MY_FREE_POOL(OptionsFilename);
+        MY_FREE_POOL(FullFilename);
 
         LOG(5, LOG_LINE_FORENSIC, L"In ReadLinuxOptionsFile ... 2a 5");
         OptionsFilename = FullFilename = NULL;
@@ -2035,7 +2047,7 @@ CHAR16 * GetFirstOptionsFromFile (
         FreeTokenLine (&TokenList, &TokenCount);
 
         LOG(5, LOG_LINE_FORENSIC, L"In GetFirstOptionsFromFile ... 2a 3");
-        MyFreePool (&File);
+        MY_FREE_POOL(File);
 
         LOG(5, LOG_LINE_FORENSIC, L"In GetFirstOptionsFromFile ... 2a 4");
     } // if

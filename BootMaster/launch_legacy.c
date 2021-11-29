@@ -418,7 +418,7 @@ VOID ExtractLegacyLoaderPaths (
 
         PathList[PathCount++] = AppendDevicePath (DevicePath, LegacyLoaderMediaPath);
     }
-    MyFreePool (&Handles);
+    MY_FREE_POOL(Handles);
 
     if (HardcodedPathList) {
         for (HardcodedIndex = 0; HardcodedPathList[HardcodedIndex] && PathCount < MaxPaths; HardcodedIndex++) {
@@ -540,7 +540,7 @@ bailout_unload:
     REFIT_CALL_1_WRAPPER(gBS->UnloadImage, ChildImageHandle);
 
 bailout:
-    MyFreePool (&FullLoadOptions);
+    MY_FREE_POOL(FullLoadOptions);
 
     return ReturnStatus;
 } // EFI_STATUS StartLegacyImageList()
@@ -693,8 +693,8 @@ VOID StartLegacyUEFI (
     Print(L"%s", MsgStrC);
     PauseForKey();
 
-    MyFreePool (&MsgStrB);
-    MyFreePool (&MsgStrC);
+    MY_FREE_POOL(MsgStrB);
+    MY_FREE_POOL(MsgStrC);
 
     FinishExternalScreen();
     LOGPROCEXIT();
@@ -734,7 +734,7 @@ VOID AddLegacyEntry (
     LegacyTitle = PoolPrint (L"Boot %s from %s", LoaderTitle, VolDesc);
 
     if (IsInSubstring (LegacyTitle, GlobalConfig.DontScanVolumes)) {
-        MyFreePool (&LegacyTitle);
+       MY_FREE_POOL(LegacyTitle);
 
         return;
     }
@@ -752,7 +752,7 @@ VOID AddLegacyEntry (
     Entry = AllocateZeroPool (sizeof (LEGACY_ENTRY));
 
     if (!Entry) {
-        MyFreePool (&LegacyTitle);
+        MY_FREE_POOL(LegacyTitle);
 
         return;
     }
@@ -897,7 +897,7 @@ VOID AddLegacyEntryUEFI (
     MsgLog ("\n");
     MsgLog ("  - Found 'UEFI-Style' Legacy (BIOS) OS on '%s'\n", LegacyDescription);
     #endif
-    MyFreePool (&LegacyDescription);
+    MY_FREE_POOL(LegacyDescription);
 } // static VOID AddLegacyEntryUEFI()
 
 /**
@@ -980,9 +980,9 @@ VOID ScanLegacyUEFI (
             if (StrCmp (DevicePathText3, DevicePathText2) && StrCmp (DevicePathText3, DevicePathText1)) {
                 MsgLog (" = %s", DevicePathText3);
             }
-            MyFreePool (&DevicePathText1);
-            MyFreePool (&DevicePathText2);
-            MyFreePool (&DevicePathText3);
+            MY_FREE_POOL(DevicePathText1);
+            MY_FREE_POOL(DevicePathText2);
+            MY_FREE_POOL(DevicePathText3);
             MsgLog ("\n");
 
             BbsDevicePath = (BBS_BBS_DEVICE_PATH *) BdsOption->DevicePath;
@@ -1019,7 +1019,7 @@ VOID ScanLegacyUEFI (
         Index++;
     } // while
 
-    MyFreePool (&BootOrder);
+    MY_FREE_POOL(BootOrder);
 } // static VOID ScanLegacyUEFI()
 
 static

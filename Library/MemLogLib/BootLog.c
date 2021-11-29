@@ -207,7 +207,7 @@ EFI_FILE_PROTOCOL * GetDebugLogFile (VOID) {
         LogFile = NULL;
     }
 
-    MyFreePool (&ourDebugLog);
+    MY_FREE_POOL(ourDebugLog);
 
     return LogFile;
 } // static EFI_FILE_PROTOCOL * GetDebugLogFile()
@@ -231,7 +231,7 @@ UINTN SaveMessageToDebugLogFile (
             // Write out this message
             LogFile->Write (LogFile, &TextLen, LastMessage);
             BytesWritten = TextLen;
-            MyFreePool (&Info);
+            MY_FREE_POOL(Info);
         }
 
         LogFile->Close (LogFile);
@@ -297,14 +297,14 @@ VOID EFIAPI DeepLoggger (
 
 #if REFIT_DEBUG < 1
     // FreePool and return in RELEASE builds
-    MyFreePool (Msg);
+    MY_FREE_POOL(*Msg);
 
     return;
 #endif
 
     // Make sure we are able to write
     if (DONTLOG(DebugMode, level, *Msg)) {
-        MyFreePool (Msg);
+        MY_FREE_POOL(*Msg);
 
         return;
     }
@@ -312,7 +312,7 @@ VOID EFIAPI DeepLoggger (
     // Truncate message at Log Levels 4 and lower (if required)
     if (GlobalConfig.LogLevel < 5 && TruncateString (*Msg, Limit)) {
         CHAR16 *StoreMsg = PoolPrint (L"%s ... Snipped!!", *Msg);
-        MyFreePool (Msg);
+        MY_FREE_POOL(*Msg);
         *Msg = StoreMsg;
     }
 
@@ -356,9 +356,9 @@ VOID EFIAPI DeepLoggger (
         }
     }
 
-    MyFreePool (Msg);
-    MyFreePool (&Tmp);
-    MyFreePool (&FormatMsg);
+    MY_FREE_POOL(*Msg);
+    MY_FREE_POOL(Tmp);
+    MY_FREE_POOL(FormatMsg);
 } // VOID EFIAPI DeepLoggger()
 
 VOID EFIAPI DebugLog (

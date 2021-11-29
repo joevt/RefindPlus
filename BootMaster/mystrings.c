@@ -176,8 +176,8 @@ CHAR16 * MyStrStrIns (
         if (Result) {
             Result = (CHAR16 *)((VOID *)Result - (VOID *)LowString + (VOID *)String);
         }
-        MyFreePool (&LowString);
-        MyFreePool (&LowSubStr);
+        MY_FREE_POOL(LowString);
+        MY_FREE_POOL(LowSubStr);
     }
     //LOGPROCEXIT("result:'%s'", Result);
     return Result;
@@ -301,7 +301,7 @@ VOID MergeStrings (
 ) {
     if (First) {
         CHAR16* NewString = MergeStringsNew(*First, Second, AddChar);
-        MyFreePool (First);
+        MY_FREE_POOL(*First);
         *First = NewString;
     }
 } // VOID MergeStrings()
@@ -382,7 +382,7 @@ VOID MergeUniqueStrings (
         //LOG(5, LOG_LINE_FORENSIC, L"In MergeUniqueStrings ... 5a 1");
         if ((*First != NULL) && (Length1 == 0)) {
             //LOG(5, LOG_LINE_FORENSIC, L"In MergeUniqueStrings ... 5a 1a 1");
-            MyFreePool (First);
+            MY_FREE_POOL(*First);
 
             //LOG(5, LOG_LINE_FORENSIC, L"In MergeUniqueStrings ... 5a 1a 2");
         }
@@ -427,7 +427,7 @@ VOID MergeUniqueStrings (
                         SkipMerge = TRUE;
                     }
 
-                    MyFreePool (&TestStr);
+                    MY_FREE_POOL(TestStr);
                 } // while
                 LOG(5, LOG_LINE_FORENSIC,
                     L"In MergeUniqueStrings ... 5a 4a 2a 2 - WHILE LOOP:- END/EXIT"
@@ -453,7 +453,7 @@ VOID MergeUniqueStrings (
         }
 
         //LOG(5, LOG_LINE_FORENSIC, L"In MergeUniqueStrings ... 5a 5");
-        MyFreePool (First);
+        MY_FREE_POOL(*First);
         *First = NewString;
 
         //LOG(5, LOG_LINE_FORENSIC, L"In MergeUniqueStrings ... 5a 6");
@@ -506,7 +506,7 @@ VOID MergeWords (
             p++;
         } // while
 
-        MyFreePool (&Temp);
+        MY_FREE_POOL(Temp);
     }
 } // VOID MergeWords()
 
@@ -548,7 +548,7 @@ VOID MergeUniqueWords (
             p++;
         } // while
 
-        MyFreePool (&Temp);
+        MY_FREE_POOL(Temp);
     }
 } // VOID MergeUniqueWords()
 
@@ -591,7 +591,7 @@ CHAR16 * SanitiseString (
             p++;
         } // while
 
-        MyFreePool (&Temp);
+        MY_FREE_POOL(Temp);
     }
 
     if (!OutString) {
@@ -636,7 +636,7 @@ BOOLEAN LimitStringLength (
             }
             else {
                 StrCpy (&SubString[1], TempString);
-                MyFreePool (&TempString);
+                MY_FREE_POOL(TempString);
                 HasChanged = TRUE;
             }
         }
@@ -696,7 +696,7 @@ CHAR16 * FindNumbers (
             EndOfElement   = StartOfElement + StrLen (LookFor) - 1;
         }
 
-        MyFreePool (&LookFor);
+        MY_FREE_POOL(LookFor);
     } // while
 
     // Find start & end of target element
@@ -857,7 +857,7 @@ BOOLEAN IsIn (
             Found = TRUE;
         }
 
-        MyFreePool (&OneElement);
+        MY_FREE_POOL(OneElement);
     } // while
 
    return Found;
@@ -892,7 +892,7 @@ BOOLEAN IsInSubstring (
         ) {
             Found = TRUE;
         }
-        MyFreePool (&OneElement);
+        MY_FREE_POOL(OneElement);
     } // while
 
     return Found;
@@ -951,7 +951,7 @@ BOOLEAN ReplaceSubstring (
             MergeStrings (&NewString, EndString, L'\0');
 
             //LOG(5, LOG_LINE_FORENSIC, L"In ReplaceSubstring ... 2a 2a 6");
-            MyFreePool (&MainString);
+            MY_FREE_POOL(MainString);
             *MainString = NewString;
 
             //LOG(5, LOG_LINE_FORENSIC, L"In ReplaceSubstring ... 2a 2a 7 - WasReplaced = TRUE");
@@ -1157,10 +1157,10 @@ VOID DeleteStringList (
     STRING_LIST *Current  = StringList;
 
     while (Current != NULL) {
-        MyFreePool (&(Current->Value));
+        MY_FREE_POOL(Current->Value);
         Previous = Current;
         Current  = Current->Next;
-        MyFreePool (&Previous);
+        MY_FREE_POOL(Previous);
     }
 } // VOID DeleteStringList()
 

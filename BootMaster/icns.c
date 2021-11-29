@@ -135,8 +135,8 @@ EG_IMAGE * LoadOSIcon(
     ) {
         BaseName = PoolPrint (L"%s_%s", BootLogo ? L"boot" : L"os", CutoutName);
         Image    = egFindIcon (BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
-        MyFreePool (&CutoutName);
-        MyFreePool (&BaseName);
+       MY_FREE_POOL(CutoutName);
+       MY_FREE_POOL(BaseName);
     }
 
     // If that fails, try again using the FallbackIconName.
@@ -148,7 +148,7 @@ EG_IMAGE * LoadOSIcon(
         #endif
 
         Image = egFindIcon (BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
-        MyFreePool (&BaseName);
+       MY_FREE_POOL(BaseName);
     }
 
     // If that fails and if BootLogo was set, try again using the "os_" start of the name.
@@ -160,7 +160,7 @@ EG_IMAGE * LoadOSIcon(
         #endif
 
         Image = egFindIcon (BaseName, GlobalConfig.IconSizes[ICON_SIZE_BIG]);
-        MyFreePool (&BaseName);
+       MY_FREE_POOL(BaseName);
     }
 
     // If all of these fail, return the dummy image.

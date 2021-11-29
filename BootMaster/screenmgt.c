@@ -65,8 +65,11 @@ CHAR16 *BlankLine = NULL;
 
 // UGA defines and variables
 
-UINTN   ScreenW;
-UINTN   ScreenH;
+UINTN   ScreenW        = 0;
+UINTN   ScreenH        = 0;
+UINTN   ScreenLongest  = 0;
+UINTN   ScreenShortest = 0;
+
 
 BOOLEAN AllowGraphicsMode = FALSE;
 BOOLEAN ClearedBuffer     = FALSE;
@@ -86,7 +89,7 @@ static
 VOID PrepareBlankLine (VOID) {
     UINTN i;
 
-    MyFreePool (&BlankLine);
+    MY_FREE_POOL(BlankLine);
     // make a buffer for a whole text line
     BlankLine = AllocatePool ((ConWidth + 1) * sizeof (CHAR16));
     LEAKABLE(BlankLine, "PrepareBlankLine");
@@ -213,6 +216,10 @@ VOID SetupScreen (VOID) {
         #endif
     }
 
+    // Get longest and shortest edge dimensions
+    ScreenLongest  = (ScreenW >= ScreenH) ? ScreenW : ScreenH;
+    ScreenShortest = (ScreenW <= ScreenH) ? ScreenW : ScreenH;
+
     // Set text mode. If this requires increasing the size of the graphics mode, do so.
     if (egSetTextMode (GlobalConfig.RequestedTextMode)) {
 
@@ -226,10 +233,14 @@ VOID SetupScreen (VOID) {
             ScreenH = NewHeight;
         }
 
+        // Get longest and shortest edge dimensions
+        ScreenLongest  = (ScreenW >= ScreenH) ? ScreenW : ScreenH;
+        ScreenShortest = (ScreenW <= ScreenH) ? ScreenW : ScreenH;
+
         #if REFIT_DEBUG > 0
         LOG(3, LOG_LINE_NORMAL,
             L"After Setting Text Mode ... Recording *NEW* Current Resolution as '%d x %d'",
-            ScreenW, ScreenH
+            ScreenLongest, ScreenShortest
         );
         #endif
 
@@ -274,7 +285,7 @@ VOID SetupScreen (VOID) {
         if (!gotGraphics || !BannerLoaded) {
             #if REFIT_DEBUG > 0
             LOG2(3, LOG_LINE_NORMAL, L"", L":\n", L"%s", gotGraphics ? L"Prepare Placeholder Display" : L"Prepare Graphics Mode Switch");
-            LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n", L"Graphics Mode Resolution:- '%d x %d'", ScreenW, ScreenH);
+            LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n", L"Graphics Mode Resolution:- '%d x %d'", ScreenLongest, ScreenShortest);
             #endif
 
             // scale icons up for HiDPI graphics if required
@@ -283,8 +294,23 @@ VOID SetupScreen (VOID) {
                 LOG2(3, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"UI Scaling Disabled ... Maintain Icon Scale");
                 #endif
             }
-            else if ((GlobalConfig.ScaleUI == 1) || ScreenH >= HIDPI_MIN) {
-                if (!ScaledIcons) {
+            else if (
+                (GlobalConfig.ScaleUI == 1)
+                || (ScreenShortest >= HIDPI_SHORT && ScreenLongest >= HIDPI_LONG)
+            ) {
+                #if REFIT_DEBUG > 0
+                CHAR16 *TmpStr = (GlobalConfig.ScaleUI == 1) ? L"HiDPI Flag" : L"HiDPI Mode";
+                #endif
+
+                if (ScaledIcons) {
+                    #if REFIT_DEBUG > 0
+                    MsgStr = PoolPrint (L"%s ... Maintain Upscaled Icons", TmpStr);
+                    #endif
+                }
+                else {
+                    #if REFIT_DEBUG > 0
+                    MsgStr = PoolPrint (L"%s ... Scale Icons Up", TmpStr);
+                    #endif
 
                     GlobalConfig.IconSizes[ICON_SIZE_BADGE] *= 2;
                     GlobalConfig.IconSizes[ICON_SIZE_SMALL] *= 2;
@@ -295,10 +321,10 @@ VOID SetupScreen (VOID) {
                 }
 
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"%s ... %s",
-                    ScreenH >= HIDPI_MIN ? L"HiDPI Mode" : L"HiDPI Flag",
-                    ScaledIcons ? L"Maintain Upscaled Icons" : L"Scale Icons Up"
-                );
+                LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+                MsgLog ("    * %s", MsgStr);
+                MsgLog ("\n\n");
+                MY_FREE_POOL(MsgStr);
                 #endif
             }
             else {
@@ -341,7 +367,7 @@ VOID SetupScreen (VOID) {
             BannerLoaded = TRUE;
 
             #if REFIT_DEBUG > 0
-            MyFreePool (&MsgStr);
+            MY_FREE_POOL(MsgStr);
             (NativeLogger && GlobalConfig.LogLevel > 0)
                 ? MsgLog ("\n")
                 : MsgLog ("\n\n");
@@ -612,7 +638,7 @@ BOOLEAN ReadAllKeyStrokes (VOID) {
     CHAR16 *MsgStr = PoolPrint (L"Clear Keystroke Buffer ... %r", Status);
     MsgLog ("INFO: %s\n\n", MsgStr);
     LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
-    MyFreePool (&MsgStr);
+    MY_FREE_POOL(MsgStr);
     #endif
 
     // Flag device error and proceed if present
@@ -853,7 +879,7 @@ BOOLEAN CheckFatalError (
     LOG(1, LOG_STAR_SEPARATOR, Temp);
     #endif
 
-    MyFreePool (&Temp);
+    MY_FREE_POOL(Temp);
 
     return TRUE;
 } // BOOLEAN CheckFatalError()
@@ -903,7 +929,7 @@ BOOLEAN CheckError (
     LOG(1, LOG_STAR_SEPARATOR, Temp);
     #endif
 
-    MyFreePool (&Temp);
+    MY_FREE_POOL(Temp);
 
     return haveError;
 } // BOOLEAN CheckError()

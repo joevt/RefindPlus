@@ -207,7 +207,7 @@ EFI_STATUS daCheckAltGop (VOID) {
 
                     for (Mode = 0; Mode < MaxMode; Mode++) {
                         // Free Info if set
-                        MyFreePool (&Info);
+                        MY_FREE_POOL(Info);
 
                         Status = Gop->QueryMode (Gop, Mode, &SizeOfInfo, &Info);
                         if (!EFI_ERROR(Status)) {
@@ -246,8 +246,8 @@ EFI_STATUS daCheckAltGop (VOID) {
             } // if HandleBuffer[i]
         } // for i = 0
 
-        MyFreePool (&Info);
-        MyFreePool (&HandleBuffer);
+        MY_FREE_POOL(Info);
+        MY_FREE_POOL(HandleBuffer);
 
         #if REFIT_DEBUG > 0
         MsgLog ("\n\n");
@@ -348,7 +348,7 @@ EFI_STATUS egDumpGOPVideoModes (VOID) {
                 );
                 #endif
 
-                MyFreePool (&Info);
+                MY_FREE_POOL(Info);
             }
             else {
                 #if REFIT_DEBUG > 0
@@ -516,7 +516,7 @@ EFI_STATUS egSetMaxResolution (VOID) {
                 Width = Info->HorizontalResolution;
                 Height = Info->VerticalResolution;
             }
-            MyFreePool (&Info);
+            MY_FREE_POOL(Info);
         }
     }
 
@@ -685,7 +685,7 @@ VOID egInitScreen (VOID) {
                     break;
                 }
             }
-            MyFreePool (&HandleBuffer);
+            MY_FREE_POOL(HandleBuffer);
         }
     }
 
@@ -794,7 +794,7 @@ VOID egInitScreen (VOID) {
                     }
                 } // if !EFI_ERROR(Status)
             } // for
-            MyFreePool (&HandleBuffer);
+            MY_FREE_POOL(HandleBuffer);
 
         } // if !EFI_ERROR(Status)
     } // if EFI_ERROR(Status
@@ -903,13 +903,13 @@ VOID egInitScreen (VOID) {
                                 #endif
                             }
 
-                            MyFreePool (&Info);
+                            MY_FREE_POOL(Info);
                         }
                     } // for GOPMode = 0
                 }
             } // for
 
-            MyFreePool (&HandleBuffer);
+            MY_FREE_POOL(HandleBuffer);
         }
         else {
             if (EFI_ERROR(Status)) {
@@ -1104,7 +1104,7 @@ VOID egInitScreen (VOID) {
 
             if (!EFI_ERROR(Status)) {
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"GOP not Available ... Fall Back on UGA");
+                LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n", L"GOP Not Available ... Fall Back on UGA");
                 #endif
 
                 egHasGraphics  = TRUE;
@@ -1117,7 +1117,7 @@ VOID egInitScreen (VOID) {
                 GlobalConfig.TextOnly = TRUE;
 
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Graphics not Available ... Fall Back on Text Mode");
+                LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Graphics Not Available ... Fall Back on Text Mode");
                 #endif
             }
         }
@@ -1187,7 +1187,7 @@ BOOLEAN egGetResFromMode (
             *ModeWidth = Info->HorizontalResolution;
             *Height    = Info->VerticalResolution;
 
-            MyFreePool (&Info);
+            MY_FREE_POOL(Info);
 
             return TRUE;
         }
@@ -1311,7 +1311,7 @@ BOOLEAN egSetScreenSize (
                     PrintUglyText (MsgStr, NEXTLINE);
                 }
 
-                MyFreePool (&Info);
+                MY_FREE_POOL(Info);
             } while ((++ModeNum < GOPDraw->Mode->MaxMode) && !ModeSet);
         } // if/else *ScreenHeight == 0
 
@@ -1416,7 +1416,7 @@ BOOLEAN egSetScreenSize (
 
             #endif
 
-            MyFreePool (&MsgStr);
+            MY_FREE_POOL(MsgStr);
         }
     } // if/else if (UGADraw != NULL)
 
@@ -1489,7 +1489,7 @@ BOOLEAN egSetTextMode (
                     LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"%s", MsgStr);
                     #endif
 
-                    MyFreePool (&MsgStr);
+                    MY_FREE_POOL(MsgStr);
                 }
             } while (++i < gST->ConOut->Mode->MaxMode);
 
@@ -1502,7 +1502,7 @@ BOOLEAN egSetTextMode (
 
             PauseForKey();
             SwitchToGraphicsAndClear (TRUE);
-            MyFreePool (&MsgStr);
+            MY_FREE_POOL(MsgStr);
         } // if/else successful change
     } // if need to change mode
 
@@ -1546,7 +1546,7 @@ CHAR16 * egScreenDescription (VOID) {
         );
     }
 
-    MyFreePool (&TextInfo);
+    MY_FREE_POOL(TextInfo);
 
     return GraphicsInfo;
 } // CHAR16 * egScreenDescription()
@@ -1972,11 +1972,11 @@ VOID egScreenShot (VOID) {
                     }
                 }
             }
-            MyFreePool (&Handles);
+            MY_FREE_POOL(Handles);
         }
     }
 
-    MyFreePool (&FileData);
+    MY_FREE_POOL(FileData);
 
     if (CheckError (Status, L"in egSaveFile")) {
         goto bailout_wait;
@@ -1987,7 +1987,7 @@ VOID egScreenShot (VOID) {
     MsgLog ("\n\n");
     #endif
 
-    MyFreePool (&FileName);
+    MY_FREE_POOL(FileName);
     LOGPROCEXIT();
     return;
 

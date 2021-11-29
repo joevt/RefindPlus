@@ -58,11 +58,19 @@ VOID egPrepareFont() {
 
     egGetScreenSize(&ScreenW, &ScreenH);
 
+    // Get longest and shortest edge dimensions
+    UINTN ScreenLongest  = (ScreenW >= ScreenH) ? ScreenW : ScreenH;
+    UINTN ScreenShortest = (ScreenW <= ScreenH) ? ScreenW : ScreenH;
+
+
     if (BaseFontImage == NULL) {
         if (GlobalConfig.ScaleUI == -1) {
             BaseFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
         }
-        else if ((GlobalConfig.ScaleUI == 1) || (ScreenH >= HIDPI_MIN)) {
+        else if (
+            (GlobalConfig.ScaleUI == 1)
+            || (ScreenShortest >= HIDPI_SHORT && ScreenLongest >= HIDPI_LONG)
+        ) {
             BaseFontImage = egPrepareEmbeddedImage(&egemb_font_large, TRUE);
         }
         else {

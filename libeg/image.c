@@ -279,8 +279,8 @@ VOID egFreeImage (
         return;
     }
 
-    MyFreePool (&Image->PixelData);
-    MyFreePool (&Image);
+    MY_FREE_POOL(Image->PixelData);
+    MY_FREE_POOL(Image);
 }
 
 //
@@ -352,7 +352,7 @@ EFI_STATUS egLoadFile (
         ReadSize = MAX_FILE_SIZE;
     }
 
-    MyFreePool (&FileInfo);
+    MY_FREE_POOL(FileInfo);
 
     BufferSize = (UINTN)ReadSize;   // was limited to 1 GB above, so this is safe
     Buffer = (UINT8 *) AllocatePool (BufferSize);
@@ -370,7 +370,8 @@ EFI_STATUS egLoadFile (
     Status = REFIT_CALL_3_WRAPPER(FileHandle->Read, FileHandle, &BufferSize, Buffer);
     REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
     if (EFI_ERROR(Status)) {
-        MyFreePool (&Buffer);
+        MY_FREE_POOL(Buffer);
+
         #if LOG_ALL_LOADS
         LOGPROCEXIT("'%s' can't read (%r)\n", FileName, Status);
         #else
@@ -383,7 +384,7 @@ EFI_STATUS egLoadFile (
     if (FileData) {
         *FileData       = Buffer;
     } else {
-        MyFreePool (&Buffer);
+        MY_FREE_POOL(Buffer);
     }
     if (FileDataLength) {
         *FileDataLength = BufferSize;
@@ -416,7 +417,7 @@ EFI_STATUS egFindESP (
             Status = EFI_NOT_FOUND;
         }
 
-        MyFreePool (&Handles);
+        MY_FREE_POOL(Handles);
     }
 
     return Status;
@@ -483,7 +484,7 @@ EFI_STATUS egSaveFileNumbered (
     // Search for existing screen shot files; increment number to an unused value...
     UINTN i = 0;
     do {
-        MyFreePool (&FileName);
+        MY_FREE_POOL(FileName);
         FileName = PoolPrint (FileNamePattern, i++);
     } while (FileExists (BaseDir, FileName));
 
@@ -497,7 +498,7 @@ EFI_STATUS egSaveFileNumbered (
         if (OutFileName) {
             *OutFileName = NULL;
         }
-        MyFreePool (&FileName);
+        MY_FREE_POOL(FileName);
     }
 
     return Status;
@@ -558,7 +559,7 @@ EG_IMAGE * egLoadImage (
     // decode it
     // '128' can be any arbitrary value
     NewImage = egDecodeAny (FileData, FileDataLength, 128, WantAlpha);
-    MyFreePool (&FileData);
+    MY_FREE_POOL(FileData);
 
     return NewImage;
 }
@@ -611,8 +612,7 @@ EG_IMAGE * egLoadIcon (
     // decode it
     LOGPOOL (FileData);
     Image = egDecodeAny (FileData, FileDataLength, IconSize, TRUE);
-    LOGPOOL (FileData);
-    MyFreePool (&FileData);
+    MY_FREE_POOL(FileData);
 
     // return null if unable to decode
     if (Image == NULL) {
@@ -660,7 +660,7 @@ EG_IMAGE * egLoadIcon (
 
             Print(MsgStr);
 
-            MyFreePool (&MsgStr);
+            MY_FREE_POOL(MsgStr);
         }
     }
 
@@ -710,8 +710,8 @@ EG_IMAGE * egLoadIconAnyType (
         FileName = PoolPrint (L"%s\\%s.%s", SubdirName, BaseName, Extension);
         Image    = egLoadIcon (BaseDir, FileName, IconSize);
 
-        MyFreePool (&Extension);
-        MyFreePool (&FileName);
+        MY_FREE_POOL(Extension);
+        MY_FREE_POOL(FileName);
     } // while
 
     #if REFIT_DEBUG > 0
@@ -1053,7 +1053,7 @@ VOID egSeedFillImage (
         } while (0)
 
     #define SpanStackFree() \
-        MyFreePool (&st)
+        MY_FREE_POOL(st)
 
     #define SpanStackPush(_x1, _x2, _dy, _ps) \
         do { \
@@ -1163,7 +1163,7 @@ skip:
     //printicon(Image, f, sp, st);
     SpanStackFree ();
 
-    MyFreePool (&f);
+    MY_FREE_POOL(f);
 } // egSeedFillImage
 
 VOID egRawCopy (
