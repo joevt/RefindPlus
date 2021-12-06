@@ -980,7 +980,7 @@ VOID BltClearScreen (
 
     #if REFIT_DEBUG > 0
     if (!IsBoot) {
-        MsgLog ("Refresh Screen:");
+        MsgLog ("Refresh Screen:\n");
     }
     #endif
 
@@ -991,7 +991,7 @@ VOID BltClearScreen (
         if (Banner == NULL) {
             #if REFIT_DEBUG > 0
             MsgLog ("\n");
-            MsgLog ("  - Get Banner");
+            MsgLog ("  - Get Banner\n");
             #endif
 
             if (GlobalConfig.BannerFileName) {
@@ -1017,7 +1017,7 @@ VOID BltClearScreen (
         if (Banner) {
             #if REFIT_DEBUG > 0
             MsgLog ("\n");
-            MsgLog ("  - Scale Banner");
+            MsgLog ("  - Scale Banner\n");
             #endif
 
            if (GlobalConfig.BannerScale == BANNER_FILLSCREEN) {
@@ -1044,7 +1044,7 @@ VOID BltClearScreen (
         // clear and draw banner
         #if REFIT_DEBUG > 0
         MsgLog ("\n");
-        MsgLog ("  - Clear Screen");
+        MsgLog ("  - Clear Screen\n");
         #endif
 
         if (GlobalConfig.ScreensaverTime != -1) {
@@ -1057,7 +1057,7 @@ VOID BltClearScreen (
         if (Banner != NULL) {
             #if REFIT_DEBUG > 0
             MsgLog ("\n");
-            MsgLog ("  - Show Banner");
+            MsgLog ("  - Show Banner\n");
             #endif
 
             BannerPosX = (Banner->Width < ScreenW) ? ((ScreenW - Banner->Width) / 2) : 0;
@@ -1077,7 +1077,7 @@ VOID BltClearScreen (
         #if REFIT_DEBUG > 0
         if (!IsBoot) {
             MsgLog ("\n");
-            MsgLog ("  - Clear Screen");
+            MsgLog ("  - Clear Screen\n");
         }
         #endif
 

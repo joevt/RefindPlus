@@ -559,6 +559,7 @@ VOID IdentifyRows (
 // mode and dynamic images.
 static
 VOID SaveScreen (VOID) {
+    LOGPROCENTRY();
     UINTN  retval;
     UINTN  ColourIndex;
     UINT64 TimeWait;
@@ -606,6 +607,7 @@ VOID SaveScreen (VOID) {
 
     // Start with BaseTimeWait
     TimeWait = BaseTimeWait;
+    LOGBLOCKENTRY("SaveScreen loop");
     for (;;) {
         ColourIndex = ColourIndex + 1;
 
@@ -667,9 +669,10 @@ VOID SaveScreen (VOID) {
             break;
         }
     } // for
+    LOGBLOCKEXIT("SaveScreen loop");
 
     #if REFIT_DEBUG > 0
-    LOG2(3, LOG_LINE_NORMAL, L"      ", L" ... ", L"Detected Keypress");
+    LOG2(3, LOG_LINE_NORMAL, L"", L" ...\n", L"Detected Keypress");
     LOG2(3, LOG_THREE_STAR_END, L"", L"\n\n", L"Ending Screensaver");
     #endif
 
@@ -678,6 +681,7 @@ VOID SaveScreen (VOID) {
     }
 
     ReadAllKeyStrokes();
+    LOGPROCEXIT();
 } // VOID SaveScreen()
 
 //
@@ -1717,10 +1721,10 @@ VOID GraphicsMenuStyle (
                 ScreenH,
 
                 EntriesPosX,
-                IconX, 
+                IconX,
                 TextX,
                 EntriesPosX + MenuWidth,
-                ScreenW, 
+                ScreenW,
 
                 MaxVisibleEntries,
                 MaxVisibleInfoLines
@@ -2403,6 +2407,7 @@ UINTN FindMainMenuItem (
 
 VOID GenerateWaitList(VOID) {
     if (WaitList == NULL) {
+        LOGPROCENTRY();
         UINTN PointerCount = pdCount();
 
         WaitListLength = 2 + PointerCount;
@@ -2415,12 +2420,14 @@ VOID GenerateWaitList(VOID) {
         for (Index = 0; Index < PointerCount; Index++) {
             WaitList[Index + 1] = pdWaitEvent (Index);
         }
+        LOGPROCEXIT("WaitList: %p");
     }
 } // VOID GenerateWaitList()
 
 UINTN WaitForInput (
     UINTN Timeout
 ) {
+    //LOGPROCENTRY("timeout:%d", Timeout);
     EFI_STATUS  Status;
     UINTN       Length;
     UINTN       Index      = INPUT_TIMEOUT;
@@ -2443,6 +2450,7 @@ UINTN WaitForInput (
     else {
         if (EFI_ERROR(Status)) {
             REFIT_CALL_1_WRAPPER(gBS->Stall, 100000); // Pause for 100 ms
+            //LOGPROCEXIT("INPUT_TIMER_ERROR 1");
             return INPUT_TIMER_ERROR;
         }
         else {
@@ -2451,21 +2459,31 @@ UINTN WaitForInput (
         }
     }
 
+    //LOGBLOCKENTRY("WaitForEvent");
     LEAKABLEEXTERNALSTART("WaitForEvent");
     Status = REFIT_CALL_3_WRAPPER(gBS->WaitForEvent, Length, WaitList, &Index);
     LEAKABLEEXTERNALSTOP("WaitForEvent");
+    //LOGBLOCKEXIT("WaitForEvent");
+    //LOGBLOCKENTRY("CloseEvent");
     REFIT_CALL_1_WRAPPER(gBS->CloseEvent, TimerEvent);
+    //LOGBLOCKEXIT("CloseEvent");
 
     if (EFI_ERROR(Status)) {
+        //LOGBLOCKENTRY("Stall");
         REFIT_CALL_1_WRAPPER(gBS->Stall, 100000); // Pause for 100 ms
+        //LOGBLOCKEXIT("Stall");
+        //LOGPROCEXIT("INPUT_TIMER_ERROR 2");
         return INPUT_TIMER_ERROR;
     }
     else if (Index == 0) {
+        //LOGPROCEXIT("INPUT_KEY");
         return INPUT_KEY;
     }
     else if (Index < Length - 1) {
+        //LOGPROCEXIT("INPUT_POINTER");
         return INPUT_POINTER;
     }
+    //LOGPROCEXIT("INPUT_TIMEOUT");
     return INPUT_TIMEOUT;
 } // UINTN WaitForInput()
 
@@ -2852,11 +2870,13 @@ CHAR16 * ReadHiddenTags (
 // Add PathName to the hidden tags variable specified by *VarName.
 static
 VOID AddToHiddenTags (CHAR16 *VarName, CHAR16 *Pathname) {
+    LOGPROCENTRY("Var:%s Path:%s", VarName, Pathname);
     EFI_STATUS  Status;
     CHAR16     *HiddenTags;
 
     if (Pathname && (StrLen (Pathname) > 0)) {
         HiddenTags = ReadHiddenTags (VarName);
+        MsgLog ("old HiddenTags: %s\n", HiddenTags);
         if (!HiddenTags) {
             // Prevent NULL dererencing
             HiddenTags = StrDuplicate (Pathname);
@@ -2864,6 +2884,7 @@ VOID AddToHiddenTags (CHAR16 *VarName, CHAR16 *Pathname) {
         else {
             MergeStrings (&HiddenTags, Pathname, L',');
         }
+        MsgLog ("new HiddenTags: %s\n", HiddenTags);
 
         Status = EfivarSetRaw (
             &RefindPlusGuid,
@@ -2876,6 +2897,7 @@ VOID AddToHiddenTags (CHAR16 *VarName, CHAR16 *Pathname) {
         CheckError (Status, L"in 'AddToHiddenTags'!!");
         MY_FREE_POOL(HiddenTags);
     }
+    LOGPROCEXIT();
 } // VOID AddToHiddenTags()
 
 // Adds a filename, specified by the *Loader variable, to the *VarName UEFI variable,

@@ -899,7 +899,7 @@ VOID SanitiseVolumeName (
         LOGPROCEXIT("VolName:%s", GetPoolStr (&Volume->VolName));
     }
     else {
-        LOGPROCEXIT();
+        LOGPROCEXIT("unchanged");
     }
 } // VOID SanitiseVolumeName()
 
@@ -1268,12 +1268,11 @@ VOID ScanVolumeBootcode (
                     MediaCheck = TRUE;
                 }
                 ScannedOnce = FALSE;
-                CHAR16 *MsgStr = StrDuplicate (L"Error While Reading Boot Sector");
+                CHAR16 *MsgStr = L"Error While Reading Boot Sector";
                 MsgLog ("\n\n");
                 MsgLog ("** WARN: '%r' %s", Status, MsgStr);
                 MsgLog ("\n");
                 CheckError (Status, MsgStr);
-                MY_FREE_POOL(MsgStr);
             }
             #endif
 
@@ -2133,15 +2132,8 @@ VOID VetSyncAPFS (VOID) {
         GlobalConfig.SyncAPFS = FALSE;
 
         #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (
-            L"Could Not Positively Identify APFS Partition Types ... Disabling SyncAFPS"
-        );
         LOG(3, LOG_BLANK_LINE_SEP, L"X");
-        LOG(1, LOG_STAR_SEPARATOR, L"%s", MsgStr);
-        MsgLog ("\n\n");
-        MsgLog ("INFO: %s", MsgStr);
-        MsgLog ("\n\n");
-        MY_FREE_POOL(MsgStr);
+        LOG2(1, LOG_STAR_SEPARATOR, L"INFO: ", L"\n\n", L"Could Not Positively Identify APFS Partition Types ... Disabling SyncAFPS");
         #endif
     }
     else {
@@ -2150,18 +2142,9 @@ VOID VetSyncAPFS (VOID) {
         CHAR16 *TweakName = NULL;
 
         #if REFIT_DEBUG > 0
-        MsgStr = StrDuplicate (L"ReMap APFS Volumes");
-        LOG(1, LOG_LINE_THIN_SEP, L"%s", MsgStr);
-        MsgLog ("\n\n");
-        MsgLog ("%s:", MsgStr);
-        MY_FREE_POOL(MsgStr);
-
+        LOG2(1, LOG_LINE_THIN_SEP, L"\n", L":\n", L"ReMap APFS Volumes");
         for (i = 0; i < SystemVolumesCount; i++) {
-            MsgStr = PoolPrint (L"System Volume:- '%s'", GetPoolStr (&SystemVolumes[i]->VolName));
-            LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
-            MsgLog ("\n");
-            MsgLog ("  - %s", MsgStr);
-            MY_FREE_POOL(MsgStr);
+            LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n", L"System Volume:- '%s'", GetPoolStr (&SystemVolumes[i]->VolName));
         } // for
         #endif
 
@@ -2408,14 +2391,10 @@ VOID ScanVolumes (VOID) {
                 MsgLog (" on Volume Below");
             }
 
-            if (!DoneHeadings) {
-                MsgLog ("\n\n...................");
-            }
             else if (ScannedOnce) {
                 if (!SkipSpacing && (HandleIndex % 4) == 0 && (HandleCount - HandleIndex) > 2) {
                     if (!SkipSpacing && (HandleIndex % 28) == 0 && (HandleCount - HandleIndex) > 14) {
                         DoneHeadings = FALSE;
-                        MsgLog ("\n\n...................");
                     }
                     else {
                         MsgLog ("\n\n");
@@ -2790,13 +2769,12 @@ VOID GetVolumeBadgeIcons (VOID) {
 
             #if REFIT_DEBUG > 0
             if (GetPoolImage (&Volume->VolBadgeImage) == NULL) {
-                MsgStr = StrDuplicate (L"VolumeBadge Not Found");
+                MsgStr = L"VolumeBadge Not Found";
             }
             else {
-                MsgStr = StrDuplicate (L"VolumeBadge Found");
+                MsgStr = L"VolumeBadge Found";
             }
             LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
-            MY_FREE_POOL(MsgStr);
 
             LoopOnce = TRUE;
             #endif

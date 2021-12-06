@@ -2092,6 +2092,7 @@ EFI_STATUS EFIAPI efi_main (
     MsgLog ("      NormaliseCSR:- %s",       GlobalConfig.NormaliseCSR       ? L"'Active'" : L"'Inactive'");
     MsgLog ("\n");
     MsgLog ("      IgnorePreviousBoot:- %s", GlobalConfig.IgnorePreviousBoot ? L"'Active'" : L"'Inactive'");
+    MsgLog ("\n");
 
     // Prime Status for SupplyAPFS
     Status = EFI_NOT_STARTED;
@@ -2781,7 +2782,7 @@ EFI_STATUS EFIAPI efi_main (
 
                     CHAR16 *DisplayName = NULL;
                     if (!GetPoolStr (&ourLoaderEntry->Volume->VolName)) {
-                        MsgLog (":- '%s'", GetPoolStr (&ourLoaderEntry->LoaderPath));
+                        MsgLog (":- '%s'\n", GetPoolStr (&ourLoaderEntry->LoaderPath));
                     }
                     else {
                         if (GlobalConfig.SyncAPFS && ourLoaderEntry->Volume->FSType == FS_TYPE_APFS) {
@@ -2812,7 +2813,7 @@ EFI_STATUS EFIAPI efi_main (
                         } // if GlobalConfig.SyncAFPS
 
                         MsgLog (
-                            " from '%s'",
+                            " from '%s'\n",
                             DisplayName
                                 ? DisplayName
                                 : GetPoolStr (&ourLoaderEntry->Volume->VolName)

@@ -1606,9 +1606,11 @@ VOID egSetGraphicsModeEnabled (
 VOID egClearScreen (
     IN EG_PIXEL *Color
 ) {
+    LOGPROCENTRY("color: %02X %02X %02X", Color->r, Color->g, Color->b);
     EFI_UGA_PIXEL FillColor;
 
     if (!egHasGraphics) {
+        LOGPROCEXIT("not in graphics mode");
         return;
     }
 
@@ -1645,6 +1647,7 @@ VOID egClearScreen (
             egScreenWidth, egScreenHeight, 0
         );
     }
+    LOGPROCEXIT();
 } // VOID egClearScreen()
 
 VOID egDrawImage (
