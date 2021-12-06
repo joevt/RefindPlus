@@ -3380,11 +3380,10 @@ BOOLEAN SplitVolumeAndFilename (
     UINTN   Length, i = 0;
     CHAR16 *Filename;
 
+    *VolName = NULL;
     if (*Path == NULL) {
         return FALSE;
     }
-
-    MY_FREE_POOL(*VolName);
 
     Length = StrLen (*Path);
     while ((i < Length) && ((*Path)[i] != L':')) {
