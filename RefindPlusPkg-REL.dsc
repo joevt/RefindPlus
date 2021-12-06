@@ -95,6 +95,10 @@
   # Added by dakanji (sf.net/u/dakanji/profile) for SupplyNVME
     NvmExpressLib|RefindPlusPkg/Library/NvmExpressLib/NvmExpressLib.inf
 
+  # Added by joevt for DumpHex
+    ShellLib|ShellPkg/Library/UefiShellLib/UefiShellLib.inf
+    ShellCommandLib|ShellPkg/Library/UefiShellCommandLib/UefiShellCommandLib.inf
+
 [LibraryClasses.AARCH64]
   CompilerIntrinsicsLib|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
 

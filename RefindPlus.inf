@@ -112,6 +112,8 @@
   RP_ApfsLib
 # Added by dakanji (sf.net/u/dakanji/profile) from EDK2 Repo
   NvmExpressLib
+# Added by joevt for DumpHex
+  ShellCommandLib
 
 [LibraryClasses.AARCH64]
   BaseStackCheckLib
