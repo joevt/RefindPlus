@@ -1,94 +1,103 @@
 
 
 #ifdef TAGS_DEFAULT_SHOWTOOL
-    #define ONETAG1(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) _tag,
+    #define ONETAG1(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) _tag,
     #define ONETAG0(...)
-    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) \
-        ONETAG ## _show(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon)
+    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) \
+        ONETAG ## _show(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon)
 #endif
 
+
 #ifdef TAGS_DEFAULT_NOT_SHOWTOOL
-    #define ONETAG0(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) 0,
+    #define ONETAG0(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) 0,
     #define ONETAG1(...)
-    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) \
-        ONETAG ## _show(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon)
+    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) \
+        ONETAG ## _show(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon)
+#endif
+
+
+#ifdef TAGS_BUILTIN
+    #define ONETAG1(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) case _tag:
+    #define ONETAG0(...)
+    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) \
+        ONETAG ## _builtin(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon)
 #endif
 
 
 #ifdef TAGS_TAG
-    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) _tag,
+    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) _tag,
 #endif
 
 
 #ifdef TAGS_FLAG_TO_TAG
     TheTag = TAG_NONE;
     if (FALSE) {}
-    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) else if (MyStrStr (L"," _flags L",", OneFlag)) TheTag = _tag;
+    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) else if (MyStrStr (L"," _flags L",", OneFlag)) TheTag = _tag;
 #endif
 
 
 #ifdef TAGS_TAG_TO_TOOL_AND_ICON_AND_SHORTCUT
-    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) case _tag: ToolName = _tool; TheIcon = _icon; TheShortcut = _shortcut; break;
+    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) case _tag: ToolName = _tool; TheIcon = _icon; TheShortcut = _shortcut; break;
 #endif
 
 
 #ifdef TAGS_TAG_TO_ENTRY_TYPE
-    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) case _tag: EntryType = _type; break;
+    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) case _tag: EntryType = _type; break;
 #endif
 
 
 #ifdef TAGS_MENU
-    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) { CACHEDPS(L"" _menu), _tag, 1, 0, _shortcut, NULLPI, NULLPI, NULL },
+    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) { CACHEDPS(L"" _menu), _tag, 1, 0, _shortcut, NULLPI, NULLPI, NULL },
 #endif
 
 
 #ifdef TAGS_TAG_NAME
-    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_shortcut,_icon) case _tag: TheTagName = #_tag; break;
+    #define ONETAG(_tag,_flags,_tool,_menu,_type,_show,_builtin,_shortcut,_icon) case _tag: TheTagName = #_tag; break;
 #endif
 
-
-//===============================================================================================================================================================================
-//                                                                                                                                          Default  Shortcut
-//     Tag Enum                  Flags List             Tool Name               Menu Title                      Entry Type                  Show     Key      Icon
-//===============================================================================================================================================================================
-ONETAG(TAG_NONE                ,                      , NULL                  ,                               , EntryTypeRefitMenuEntry   , 0      , 0      , 0                                )
-ONETAG(TAG_SHELL               , L"shell"             , L"UEFI Shell"         , L"UEFI Shell"                 , EntryTypeRefitMenuEntry   , 1      , 'S'    , BUILTIN_ICON_TOOL_SHELL          ) // AddToolEntry
-ONETAG(TAG_MEMTEST             , L"memtest86,memtest" , L"Memtest"            , L"Memory Test Utility"        , EntryTypeRefitMenuEntry   , 1      , 0      , BUILTIN_ICON_TOOL_MEMTEST        ) // FindTool
-ONETAG(TAG_GDISK               , L"gdisk"             , L"GDisk"              , L"Partition Disks"            , EntryTypeRefitMenuEntry   , 1      , 'G'    , BUILTIN_ICON_TOOL_PART           ) // AddToolEntry
-ONETAG(TAG_APPLE_RECOVERY      , L"apple_recovery"    , L"Mac Recovery"       ,                               , EntryTypeRefitMenuEntry   , 1      , 'R'    , BUILTIN_ICON_TOOL_APPLE_RESCUE   ) // AddToolEntry
-ONETAG(TAG_WINDOWS_RECOVERY    , L"windows_recovery"  , L"Windows Recovery"   ,                               , EntryTypeRefitMenuEntry   , 1      , 'R'    , BUILTIN_ICON_TOOL_WINDOWS_RESCUE ) // AddToolEntry
-ONETAG(TAG_MOK_TOOL            , L"mok_tool"          , L"MOK Protocol"       , L"MOK Utility"                , EntryTypeRefitMenuEntry   , 1      , 0      , BUILTIN_ICON_TOOL_MOK_TOOL       ) // FindTool
-ONETAG(TAG_ABOUT               , L"about"             , L"About RefindPlus"   , L"About RefindPlus"           , EntryTypeRefitMenuEntry   , 1      , 'A'    , BUILTIN_ICON_FUNC_ABOUT          ) // TagAddMenuEntry
-ONETAG(TAG_HIDDEN              , L"hidden_tags"       , L"Hidden Tags"        , L"Manage Hidden Tags"         , EntryTypeRefitMenuEntry   , 1      , 0      , BUILTIN_ICON_FUNC_HIDDEN         ) // TagAddMenuEntry
-ONETAG(TAG_SHUTDOWN            , L"shutdown"          , L"System Shutdown"    , L"System Shutdown"            , EntryTypeRefitMenuEntry   , 1      , 'U'    , BUILTIN_ICON_FUNC_SHUTDOWN       ) // TagAddMenuEntry
-ONETAG(TAG_REBOOT              , L"reboot"            , L"System Restart"     , L"System Restart"             , EntryTypeRefitMenuEntry   , 1      , 'R'    , BUILTIN_ICON_FUNC_RESET          ) // TagAddMenuEntry
-ONETAG(TAG_FIRMWARE            , L"firmware"          , L"Firmware Reboot"    , L"Reboot into Firmware"       , EntryTypeRefitMenuEntry   , 1      , 0      , BUILTIN_ICON_FUNC_FIRMWARE       ) // TagAddMenuEntry
-ONETAG(TAG_FWUPDATE_TOOL       , L"fwupdate"          , L"Firmware Update"    , L"Firmware Update Utility"    , EntryTypeRefitMenuEntry   , 1      , 0      , BUILTIN_ICON_TOOL_FWUPDATE       ) // FindTool
-ONETAG(TAG_EXIT                , L"exit"              , L"Exit RefindPlus"    , L"Exit RefindPlus"            , EntryTypeRefitMenuEntry   , 0      , 0      , BUILTIN_ICON_FUNC_EXIT           ) // TagAddMenuEntry
-ONETAG(TAG_GPTSYNC             , L"gptsync"           , L"GPT Sync"           , L"Hybrid MBR tool"            , EntryTypeRefitMenuEntry   , 0      , 'P'    , BUILTIN_ICON_TOOL_PART           ) // AddToolEntry
-ONETAG(TAG_NETBOOT             , L"netboot"           , L"Net Boot"           , L"Netboot"                    , EntryTypeRefitMenuEntry   , 0      , 'N'    , BUILTIN_ICON_TOOL_NETBOOT        ) // AddToolEntry
-ONETAG(TAG_CSR_ROTATE          , L"csr_rotate"        , L"Toggle CSR"         , L"Toggle CSR Policy"          , EntryTypeRefitMenuEntry   , 0      , 0      , BUILTIN_ICON_FUNC_CSR_ROTATE     ) // TagAddMenuEntry
-ONETAG(TAG_INSTALL             , L"install"           , L"Install RefindPlus" , L"Install RefindPlus"         , EntryTypeRefitMenuEntry   , 0      , 0      , BUILTIN_ICON_FUNC_INSTALL        ) // TagAddMenuEntry
-ONETAG(TAG_BOOTORDER           , L"bootorder"         , L"Manage Boot Order"  , L"Manage Firmware Boot Order" , EntryTypeRefitMenuEntry   , 0      , 0      , BUILTIN_ICON_FUNC_BOOTORDER      ) // TagAddMenuEntry
-ONETAG(TAG_PRE_BOOTKICKER      , L"show_bootscreen"   , L"Show Bootscreen"    , L"Show Bootscreen"            , EntryTypeRefitMenuEntry   , 0      , 0      , BUILTIN_ICON_TOOL_BOOTKICKER     ) // TagAddMenuEntry
-ONETAG(TAG_PRE_NVRAMCLEAN      , L"clean_nvram"       , L"Clean Nvram"        , L"Clean NVRAM"                , EntryTypeRefitMenuEntry   , 0      , 0      , BUILTIN_ICON_TOOL_NVRAMCLEAN     ) // TagAddMenuEntry
-ONETAG(TAG_TOOL                ,                      , NULL                  ,                               , EntryTypeLoaderEntry      , 0      , 0      , 0                                )
-ONETAG(TAG_LOADER              ,                      , NULL                  ,                               , EntryTypeLoaderEntry      , 0      , 0      , 0                                )
-ONETAG(TAG_LEGACY              ,                      , NULL                  ,                               , EntryTypeLegacyEntry      , 0      , 0      , 0                                )
-ONETAG(TAG_LEGACY_UEFI         ,                      , NULL                  ,                               , EntryTypeLegacyEntry      , 0      , 0      , 0                                )
-ONETAG(TAG_FIRMWARE_LOADER     ,                      , NULL                  ,                               , EntryTypeLoaderEntry      , 0      , 0      , 0                                )
-ONETAG(TAG_SHOW_BOOTKICKER     ,                      , NULL                  ,                               , EntryTypeLoaderEntry      , 0      , 0      , 0                                )
-ONETAG(TAG_NVRAMCLEAN          ,                      , NULL                  ,                               , EntryTypeLoaderEntry      , 0      , 0      , 0                                )
-ONETAG(TAG_LOAD_BOOTKICKER     ,                      , NULL                  , L"Load BootKicker"            , EntryTypeRefitMenuEntry   , 0      , 0      , 0                                )
-ONETAG(TAG_LOAD_NVRAMCLEAN     ,                      , NULL                  , L"Load CleanNvram"            , EntryTypeRefitMenuEntry   , 0      , 0      , 0                                )
-ONETAG(TAG_RETURN              ,                      , NULL                  , L"Return to Main Menu"        , EntryTypeRefitMenuEntry   , 0      , 0      , 0                                )
-ONETAG(TAG_YES                 ,                      , NULL                  , L"Yes"                        , EntryTypeRefitMenuEntry   , 0      , 0      , 0                                )
-ONETAG(TAG_NO                  ,                      , NULL                  , L"No"                         , EntryTypeRefitMenuEntry   , 0      , 0      , 0                                )
-//===============================================================================================================================================================================
+//======================================================================================================================================================================================================
+//                                                                                                                                          Default  Builtin  Shortcut
+//     Tag Enum                  Flags List             Tool Name               Menu Title                      Entry Type                  Show     Tool     Key      Icon
+//======================================================================================================================================================================================================
+ONETAG(TAG_NONE                ,                      , NULL                  ,                               , EntryTypeRefitMenuEntry   , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_SHELL               , L"shell"             , L"UEFI Shell"         , L"UEFI Shell"                 , EntryTypeRefitMenuEntry   , 1      , 0      , 'S'    , BUILTIN_ICON_TOOL_SHELL          ) // AddToolEntry
+ONETAG(TAG_MEMTEST             , L"memtest86,memtest" , L"Memtest"            , L"Memory Test Utility"        , EntryTypeRefitMenuEntry   , 1      , 0      , 0      , BUILTIN_ICON_TOOL_MEMTEST        ) // FindTool -> AddToolEntry
+ONETAG(TAG_GDISK               , L"gdisk"             , L"GDisk"              , L"Partition Disks"            , EntryTypeRefitMenuEntry   , 1      , 0      , 'G'    , BUILTIN_ICON_TOOL_PART           ) // AddToolEntry
+ONETAG(TAG_APPLE_RECOVERY      , L"apple_recovery"    , L"Mac Recovery"       ,                               , EntryTypeRefitMenuEntry   , 1      , 0      , 'R'    , BUILTIN_ICON_TOOL_APPLE_RESCUE   ) // AddToolEntry
+ONETAG(TAG_WINDOWS_RECOVERY    , L"windows_recovery"  , L"Windows Recovery"   ,                               , EntryTypeRefitMenuEntry   , 1      , 0      , 'R'    , BUILTIN_ICON_TOOL_WINDOWS_RESCUE ) // AddToolEntry
+ONETAG(TAG_MOK_TOOL            , L"mok_tool"          , L"MOK Protocol"       , L"MOK Utility"                , EntryTypeRefitMenuEntry   , 1      , 0      , 0      , BUILTIN_ICON_TOOL_MOK_TOOL       ) // FindTool -> AddToolEntry
+ONETAG(TAG_ABOUT               , L"about"             , L"About RefindPlus"   , L"About RefindPlus"           , EntryTypeRefitMenuEntry   , 1      , 1      , 'A'    , BUILTIN_ICON_FUNC_ABOUT          ) // TagAddMenuEntry
+ONETAG(TAG_HIDDEN              , L"hidden_tags"       , L"Hidden Tags"        , L"Manage Hidden Tags"         , EntryTypeRefitMenuEntry   , 1      , 1      , 0      , BUILTIN_ICON_FUNC_HIDDEN         ) // TagAddMenuEntry
+ONETAG(TAG_SHUTDOWN            , L"shutdown"          , L"System Shutdown"    , L"System Shutdown"            , EntryTypeRefitMenuEntry   , 1      , 1      , 'U'    , BUILTIN_ICON_FUNC_SHUTDOWN       ) // TagAddMenuEntry
+ONETAG(TAG_REBOOT              , L"reboot"            , L"System Restart"     , L"System Restart"             , EntryTypeRefitMenuEntry   , 1      , 1      , 'R'    , BUILTIN_ICON_FUNC_RESET          ) // TagAddMenuEntry
+ONETAG(TAG_FIRMWARE            , L"firmware"          , L"Firmware Reboot"    , L"Reboot into Firmware"       , EntryTypeRefitMenuEntry   , 1      , 1      , 0      , BUILTIN_ICON_FUNC_FIRMWARE       ) // TagAddMenuEntry
+ONETAG(TAG_FWUPDATE_TOOL       , L"fwupdate"          , L"Firmware Update"    , L"Firmware Update Utility"    , EntryTypeRefitMenuEntry   , 1      , 0      , 0      , BUILTIN_ICON_TOOL_FWUPDATE       ) // FindTool -> AddToolEntry
+ONETAG(TAG_EXIT                , L"exit"              , L"Exit RefindPlus"    , L"Exit RefindPlus"            , EntryTypeRefitMenuEntry   , 0      , 1      , 0      , BUILTIN_ICON_FUNC_EXIT           ) // TagAddMenuEntry
+ONETAG(TAG_GPTSYNC             , L"gptsync"           , L"GPT Sync"           , L"Hybrid MBR tool"            , EntryTypeRefitMenuEntry   , 0      , 0      , 'P'    , BUILTIN_ICON_TOOL_PART           ) // AddToolEntry
+ONETAG(TAG_NETBOOT             , L"netboot"           , L"Net Boot"           , L"Netboot"                    , EntryTypeRefitMenuEntry   , 0      , 0      , 'N'    , BUILTIN_ICON_TOOL_NETBOOT        ) // AddToolEntry
+ONETAG(TAG_CSR_ROTATE          , L"csr_rotate"        , L"Toggle CSR"         , L"Toggle CSR Policy"          , EntryTypeRefitMenuEntry   , 0      , 1      , 0      , BUILTIN_ICON_FUNC_CSR_ROTATE     ) // TagAddMenuEntry
+ONETAG(TAG_INSTALL             , L"install"           , L"Install RefindPlus" , L"Install RefindPlus"         , EntryTypeRefitMenuEntry   , 0      , 1      , 0      , BUILTIN_ICON_FUNC_INSTALL        ) // TagAddMenuEntry
+ONETAG(TAG_BOOTORDER           , L"bootorder"         , L"Manage Boot Order"  , L"Manage Firmware Boot Order" , EntryTypeRefitMenuEntry   , 0      , 1      , 0      , BUILTIN_ICON_FUNC_BOOTORDER      ) // TagAddMenuEntry
+ONETAG(TAG_PRE_BOOTKICKER      , L"show_bootscreen"   , L"Show Bootscreen"    , L"Show Bootscreen"            , EntryTypeRefitMenuEntry   , 0      , 1      , 0      , BUILTIN_ICON_TOOL_BOOTKICKER     ) // TagAddMenuEntry
+ONETAG(TAG_PRE_NVRAMCLEAN      , L"clean_nvram"       , L"Clean Nvram"        , L"Clean NVRAM"                , EntryTypeRefitMenuEntry   , 0      , 1      , 0      , BUILTIN_ICON_TOOL_NVRAMCLEAN     ) // TagAddMenuEntry
+ONETAG(TAG_TOOL                ,                      , NULL                  ,                               , EntryTypeLoaderEntry      , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_LOADER              ,                      , NULL                  ,                               , EntryTypeLoaderEntry      , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_LEGACY              ,                      , NULL                  ,                               , EntryTypeLegacyEntry      , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_LEGACY_UEFI         ,                      , NULL                  ,                               , EntryTypeLegacyEntry      , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_FIRMWARE_LOADER     ,                      , NULL                  ,                               , EntryTypeLoaderEntry      , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_SHOW_BOOTKICKER     ,                      , NULL                  ,                               , EntryTypeLoaderEntry      , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_NVRAMCLEAN          ,                      , NULL                  ,                               , EntryTypeLoaderEntry      , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_LOAD_BOOTKICKER     ,                      , NULL                  , L"Load BootKicker"            , EntryTypeRefitMenuEntry   , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_LOAD_NVRAMCLEAN     ,                      , NULL                  , L"Load CleanNvram"            , EntryTypeRefitMenuEntry   , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_RETURN              ,                      , NULL                  , L"Return to Main Menu"        , EntryTypeRefitMenuEntry   , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_YES                 ,                      , NULL                  , L"Yes"                        , EntryTypeRefitMenuEntry   , 0      , 0      , 0      , 0                                )
+ONETAG(TAG_NO                  ,                      , NULL                  , L"No"                         , EntryTypeRefitMenuEntry   , 0      , 0      , 0      , 0                                )
+//======================================================================================================================================================================================================
 // Notes:
 // - Only tools with a Tool Name are scanned for by ScanForTools.
 // - Tools added by AddToolEntry or FindTool will have "Load " prepended to the menu title.
-//===============================================================================================================================================================================
+// - Why are there multiple items with the same shortcut key?
+//======================================================================================================================================================================================================
 
 
 #undef ONETAG
@@ -96,6 +105,7 @@ ONETAG(TAG_NO                  ,                      , NULL                  , 
 #undef ONETAG1
 #undef TAGS_DEFAULT_SHOWTOOL
 #undef TAGS_DEFAULT_NOT_SHOWTOOL
+#undef TAGS_BUILTIN
 #undef TAGS_TAG
 #undef TAGS_FLAG_TO_TAG
 #undef TAGS_TAG_TO_TOOL_AND_ICON

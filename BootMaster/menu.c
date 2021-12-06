@@ -3099,14 +3099,8 @@ VOID HideTag (
             }
             break;
 
-        case TAG_ABOUT:
-        case TAG_REBOOT:
-        case TAG_SHUTDOWN:
-        case TAG_EXIT:
-        case TAG_FIRMWARE:
-        case TAG_CSR_ROTATE:
-        case TAG_INSTALL:
-        case TAG_HIDDEN:
+        #define TAGS_BUILTIN
+        #include "tags.include"
             DisplaySimpleMessage (
                 L"Unable to Comply",
                 L"To hide an internal tool, edit the 'showtools' line in config.conf"
