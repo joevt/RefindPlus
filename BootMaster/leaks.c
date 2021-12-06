@@ -208,6 +208,7 @@ LogPoolProc (
         UINTN head1size = head1->Size - sizeof(POOL_TAIL1) - SIZE_OF_POOL_HEAD1;
         UINTN head2size = head2->Size - sizeof(POOL_TAIL2) - SIZE_OF_POOL_HEAD2;
         result = PoolVersion(Pointer);
+        if (type) *type = result;
         switch (result) {
             case 1:
                 if (always) {
@@ -218,7 +219,6 @@ LogPoolProc (
                 }
                 if (head) *head = head1;
                 if (tail) *tail = tail1;
-                if (type) *type = 1;
                 result = head1size;
                 break;
             case 2:
@@ -230,7 +230,6 @@ LogPoolProc (
                 }
                 if (head) *head = head2;
                 if (tail) *tail = tail2;
-                if (type) *type = 2;
                 result = head2size;
                 break;
             case -1: case -2: case -3: case -5: case -7: case -9: case -10:
@@ -322,7 +321,8 @@ EFI_CONNECT_CONTROLLER OrigConnectController = NULL;
 #define LEAKS_DUMP_STACK 1
 #define LEAKS_SHOW_PATHS 0
 #define LEAKS_DO_CLEANUP 1
-
+#define LEAKS_LOG_FREEING 0
+#define LEAKS_LOG_UNALLOCATED 0 // the object is allocated but we didn't keep trak of it.
 
 VOID
 CheckStackPointer () {
@@ -1466,11 +1466,14 @@ FreePoolEx (
     BOOLEAN DoDumpCStack = FALSE;
 
     UINTN Type;
-    POOL_HEAD1 *head1;
-    POOL_TAIL1 *tail1;
+    POOL_HEAD2 *head;
+    POOL_TAIL2 *tail;
     INTN size;
-    INTN aSize = -1;
     Allocation *a = NULL;
+    POOL_HEAD2 headbefore = {0,0,0,0};
+    POOL_TAIL2 tailbefore = {0,0,0};
+    POOL_HEAD2 headafter = {0,0,0,0};
+    POOL_TAIL2 tailafter = {0,0,0};
 
     //LOGPROCENTRY("%p", Buffer);
     if (Buffer) {
@@ -1483,10 +1486,11 @@ FreePoolEx (
 
         if (a) {
             RemoveAllocation (prev, a);
-            aSize = a->Size;
         }
 
-        size = LogPoolProc(Buffer, &Buffer, "Buffer", &Type, (VOID **)&head1, (VOID **)&tail1, __FILE__, __LINE__, FALSE, FALSE);
+        size = LogPoolProc(Buffer, &Buffer, "Buffer", &Type, (VOID **)&head, (VOID **)&tail, __FILE__, __LINE__, FALSE, FALSE);
+        if (head) headbefore = *head;
+        if (tail) tailbefore = *tail;
 
         if (size >= 0) {
             if (a) {
@@ -1506,8 +1510,12 @@ FreePoolEx (
                     while ((VOID *)q < e) *q++ = 0x65;
                 }
             #endif
-            if (tail1->Signature != POOL_TAIL_SIGNATURE) {
-                MsgLog ("Allocation Error: tail mismatch %p (pool:%d allocated:%d tail:%X)\n", Buffer, size, aSize, tail1->Signature);
+            if (tailbefore.Signature != POOL_TAIL_SIGNATURE) {
+                MsgLog ("Allocation Error: tail mismatch %p (pool:%d allocated:%d type:%d head:%08X %08X %016lX %016lX tail:%08X %08X %016lX)\n",
+                    Buffer, size, a->Size, Type,
+                    headbefore.Signature, headbefore.Reserved, headbefore.Type, headbefore.Size,
+                    tailbefore.Signature, tailbefore.Reserved, tailbefore.Size
+                );
                 DoDumpCStack = TRUE;
             }
         }
@@ -1517,7 +1525,7 @@ FreePoolEx (
         }
 
         if (a) {
-            if (a->What && !(a->AllocFlags & kAllocFlagExternal)) {
+            if (a->What && !(a->AllocFlags & kAllocFlagExternal) && LEAKS_LOG_FREEING) {
                 ReportingFree++;
                 if (ReportingFree == 1) {
                     if (
@@ -1538,19 +1546,24 @@ FreePoolEx (
                 }
                 ReportingFree--;
             }
-            AddFreeAllocation (a);
         }
     }
 
     EFI_STATUS Status = OrigFreePool (Buffer);
     if (Buffer && size >= 0) {
-        if (tail1->Signature != POOL_TAIL_SIGNATURE) {
-            MsgLog ("Allocation Error: tail mismatch %p (pool:%d allocated:%d tail:%X)\n", Buffer, size, aSize, tail1->Signature);
+        if (head) headafter = *head;
+        if (tail) tailafter = *tail;
+        if (tailafter.Signature != POOL_TAIL_SIGNATURE) {
+            MsgLog ("Allocation Error: tail mismatch %p (pool:%d allocated:%d type:%d head:%08X %08X %016lX %016lX tail:%08X %08X %016lX)\n",
+                Buffer, size, a ? a->Size : -1, Type,
+                headafter.Signature, headafter.Reserved, headafter.Type, headafter.Size,
+                tailafter.Signature, tailafter.Reserved, tailafter.Size
+            );
             DoDumpCStack = TRUE;
         }
         else {
             #if LEAKS_INVALIDATE_TAIL
-                tail1->Signature = EFI_SIGNATURE_32('d','t','a','l'); // change the 'p' to a 'd' for "deleted"
+                tail->Signature = EFI_SIGNATURE_32('d','t','a','l'); // change the 'p' to a 'd' for "deleted"
             #endif
         }
     }
@@ -1564,8 +1577,8 @@ FreePoolEx (
         }
         else if (!a) {
             if (!LEAKABLEEXTERNALNEXT && !DoingAlloc) {
-                #if 1
-                MsgLog ("Allocation Error: attempt to free unallocated %p\n", Buffer);
+                #if LEAKS_LOG_UNALLOCATED
+                MsgLog ("Allocation Error: attempt to free unallocated %p pool:%d\n", Buffer, size);
                 DoDumpCStack = TRUE;
                 #endif
             }
@@ -1575,6 +1588,13 @@ FreePoolEx (
 
     if (DoDumpCStack) {
         DumpCallStack (NULL, FALSE);
+        if (a) {
+            DumpCallStack (a->Stack, FALSE);
+        }
+    }
+
+    if (a) {
+        AddFreeAllocation (a);
     }
 
     BootLogResume ();
