@@ -2123,10 +2123,6 @@ VOID ScanExtendedPartition (
 // Ensure SyncAPFS can be used.
 static
 VOID VetSyncAPFS (VOID) {
-    #if REFIT_DEBUG > 0
-    CHAR16 *MsgStr = NULL;
-    #endif
-
     if (PreBootVolumesCount == 0) {
         // Disable SyncAPFS if we do not have, or could not identify, any PreBoot volume
         GlobalConfig.SyncAPFS = FALSE;
@@ -2137,9 +2133,8 @@ VOID VetSyncAPFS (VOID) {
         #endif
     }
     else {
-        UINTN   i, j;
-        CHAR16 *CheckName = NULL;
-        CHAR16 *TweakName = NULL;
+        UINTN i, j;
+        UINTN numRemapped = 0;
 
         #if REFIT_DEBUG > 0
         LOG2(1, LOG_LINE_THIN_SEP, L"\n", L":\n", L"ReMap APFS Volumes");
@@ -2150,55 +2145,19 @@ VOID VetSyncAPFS (VOID) {
 
         // Filter '- Data' string tag out of Volume Group name if present
         for (i = 0; i < DataVolumesCount; i++) {
-            if (MyStrStr (GetPoolStr (&DataVolumes[i]->VolName), L"- Data") != NULL) {
-                for (j = 0; j < SystemVolumesCount; j++) {
-                    MY_FREE_POOL(TweakName);
-                    TweakName = SanitiseString (GetPoolStr (&SystemVolumes[j]->VolName));
-
-                    MY_FREE_POOL(CheckName);
-                    CheckName = PoolPrint (L"%s - Data", TweakName);
-
-                    if (MyStriCmp (GetPoolStr (&DataVolumes[i]->VolName), CheckName)) {
-                        CopyFromPoolStr (&DataVolumes[i]->VolName, &SystemVolumes[j]->VolName);
-
-                        break;
-                    }
-
-                    // Check against raw name string if apporpriate
-                    if (!MyStriCmp (GetPoolStr (&SystemVolumes[j]->VolName), TweakName)) {
-                        MY_FREE_POOL(CheckName);
-                        CheckName = PoolPrint (L"%s - Data", GetPoolStr (&SystemVolumes[j]->VolName));
-
-                        if (MyStriCmp (GetPoolStr (&DataVolumes[i]->VolName), CheckName)) {
-                            CopyFromPoolStr (&DataVolumes[i]->VolName, &SystemVolumes[j]->VolName);
-
-                            break;
-                        }
-                    }
-                } // for j = 0
-
-                MY_FREE_POOL(TweakName);
-                MY_FREE_POOL(CheckName);
-            }
+            LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n", L"Data Volume:- '%s'", GetPoolStr (&DataVolumes[i]->VolName));
+            for (j = 0; j < SystemVolumesCount; j++) {
+                if (GuidsAreEqual (&DataVolumes[i]->VolGroup, &SystemVolumes[j]->VolGroup)) {
+                    CopyFromPoolStr (&DataVolumes[i]->VolName, &SystemVolumes[j]->VolName);
+                    LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n", L"            > '%s'", GetPoolStr (&DataVolumes[i]->VolName));
+                    numRemapped++;
+                    break;
+                }
+            } // for j = 0
         } // for i = 0
 
         #if REFIT_DEBUG > 0
-        MsgStr = PoolPrint (
-            L"ReMapped %d APFS Volume%s",
-            SystemVolumesCount, (SystemVolumesCount == 1) ? L"" : L"s"
-        );
-        LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
-
-        if (SystemVolumesCount == 0) {
-            MsgLog ("\n...................") ;
-        }
-        else {
-            MsgLog ("\n\n");
-            MsgLog ("INFO: ");
-        }
-        MsgLog ("%s", MsgStr);
-        MsgLog ("\n\n");
-        MY_FREE_POOL(MsgStr);
+        LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"ReMapped %d of %d APFS Data Volume%s", numRemapped, DataVolumesCount, (DataVolumesCount == 1) ? L"" : L"s");
         #endif
     } // if/else PreBootVolumesCount == 0
 } // VOID VetSyncAPFS()
@@ -2242,24 +2201,26 @@ VOID ScanVolumes (VOID) {
     BOOLEAN             DupFlag;
     EFI_GUID           *UuidList;
     EFI_GUID            VolumeGuid;
+    EFI_GUID            VolumeGroup;
     EFI_GUID            ContainerGuid;
     APPLE_APFS_VOLUME_ROLE VolumeRole;
 
     LOGPROCENTRY();
 
     #if REFIT_DEBUG > 0
-    CHAR16  *MsgStr       = NULL;
-    CHAR16  *PartName     = NULL;
-    CHAR16  *PartGUID     = NULL;
-    CHAR16  *PartTypeGUID = NULL;
-    CHAR16  *VolumeUUID   = NULL;
+    CHAR16  *PartName      = NULL;
+    CHAR16  *PartGUID      = NULL;
+    CHAR16  *PartTypeGUID  = NULL;
+    CHAR16  *VolumeUUID    = NULL;
+    CHAR16  *VolumeGroupID = NULL;
 
     const CHAR16 *ITEMVOLA = L"PARTITION TYPE GUID";
     const CHAR16 *ITEMVOLB = L"PARTITION GUID";
     const CHAR16 *ITEMVOLC = L"PARTITION TYPE";
     const CHAR16 *ITEMVOLD = L"VOLUME UUID";
-    const CHAR16 *ITEMVOLE = L"VOLUME ROLE";
-    const CHAR16 *ITEMVOLF = L"VOLUME NAME";
+    const CHAR16 *ITEMVOLE = L"VOLUME GROUP";
+    const CHAR16 *ITEMVOLF = L"VOLUME ROLE";
+    const CHAR16 *ITEMVOLG = L"VOLUME NAME";
 
     LOG(1, LOG_LINE_SEPARATOR, L"Scan Readable Volumes");
     #endif
@@ -2426,8 +2387,8 @@ VOID ScanVolumes (VOID) {
 
             if (!DoneHeadings) {
                 MsgLog (
-                    "%-41s%-41s%-20s%-41s%-22s%s\n",
-                    ITEMVOLA, ITEMVOLB, ITEMVOLC, ITEMVOLD, ITEMVOLE, ITEMVOLF
+                    "%-41s%-41s%-20s%-41s%-41s%-22s%s\n",
+                    ITEMVOLA, ITEMVOLB, ITEMVOLC, ITEMVOLD, ITEMVOLE, ITEMVOLF, ITEMVOLG
                 );
                 DoneHeadings = TRUE;
 
@@ -2465,15 +2426,18 @@ VOID ScanVolumes (VOID) {
                     Volume->DeviceHandle,
                     &ContainerGuid,
                     &VolumeGuid,
-                    &VolumeRole
+                    &VolumeRole,
+                    &VolumeGroup
                 );
                 #endif
 
                 if (!EFI_ERROR(Status)) {
-                    PartType        = L"APFS";
-                    Volume->FSType  = FS_TYPE_APFS;
-                    Volume->VolUuid = VolumeGuid;
-                    RoleStr         = GetApfsRoleString (VolumeRole);
+                    PartType         = L"APFS";
+                    Volume->FSType   = FS_TYPE_APFS;
+                    Volume->VolUuid  = VolumeGuid;
+                    Volume->VolGroup = VolumeGroup;
+                    Volume->Role     = VolumeRole;
+                    RoleStr          = GetApfsRoleString (VolumeRole);
 
                     if (VolumeRole == APPLE_APFS_VOLUME_ROLE_PREBOOT) {
                         // Create or add to a list of APFS PreBoot Volumes
@@ -2494,28 +2458,24 @@ VOID ScanVolumes (VOID) {
 
             #if REFIT_DEBUG > 0
             // Allocate Pools for Log Details
-            PartName     = StrDuplicate (PartType);
-            PartGUID     = GuidAsString (&(Volume->PartGuid));
-            PartTypeGUID = GuidAsString (&(Volume->PartTypeGuid));
-            VolumeUUID   = GuidAsString (&(Volume->VolUuid));
+            PartName      = StrDuplicate (PartType);
+            PartGUID      = GuidAsString (&(Volume->PartGuid));
+            PartTypeGUID  = GuidAsString (&(Volume->PartTypeGuid));
+            VolumeUUID    = GuidAsString (&(Volume->VolUuid));
+            VolumeGroupID = GuidAsString (&(Volume->VolGroup));
 
             // Control PartName Length
             LimitStringLength (PartName, 15);
 
-            MsgStr = PoolPrint (
-                L"%-36s  :  %-36s  :  %-15s  :  %-36s  :  %-17s  :  %s",
+            LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"%-36s  :  %-36s  :  %-15s  :  %-36s  :  %-36s  :  %-17s  :  %s",
                 PartTypeGUID, PartGUID, PartType,
-                VolumeUUID, RoleStr, GetPoolStr (&Volume->VolName)
-            );
+                VolumeUUID, VolumeGroupID, RoleStr, GetPoolStr (&Volume->VolName));
 
-            LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"%s", MsgStr);
-            MY_FREE_POOL(MsgStr);
-            
-            
             MY_FREE_POOL(PartName);
             MY_FREE_POOL(PartGUID);
             MY_FREE_POOL(PartTypeGUID);
             MY_FREE_POOL(VolumeUUID);
+            MY_FREE_POOL(VolumeGroupID);
             #endif
         }
 
@@ -2557,15 +2517,8 @@ VOID ScanVolumes (VOID) {
     }
     else {
         #if REFIT_DEBUG > 0
-        MsgStr = PoolPrint (
-            L"%-41s%-41s%-20s%-41s%-22s%s",
-            ITEMVOLA, ITEMVOLB, ITEMVOLC, ITEMVOLD, ITEMVOLE, ITEMVOLF
-        );
-        LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
-        MsgLog ("\n...................");
-        MsgLog ("%s", MsgStr);
-        MsgLog ("\n\n");
-        MY_FREE_POOL(MsgStr);
+        LOG2(3, LOG_LINE_NORMAL, L"", L"\n\n", L"%-41s%-41s%-20s%-41s%-41s%-22s%s",
+            ITEMVOLA, ITEMVOLB, ITEMVOLC, ITEMVOLD, ITEMVOLE, ITEMVOLF, ITEMVOLG);
         #endif
     }
 
@@ -2751,10 +2704,22 @@ VOID GetVolumeBadgeIcons (VOID) {
 
         if (Volume->IsReadable) {
             #if REFIT_DEBUG > 0
-            MsgStr = PoolPrint (
-                L"Trying to Set VolumeBadge for '%s'",
-                GetPoolStr (&Volume->VolName)
-            );
+            if (Volume->FSType == FS_TYPE_APFS) {
+                CHAR16 *volUUID = GuidAsString (&Volume->VolUuid);
+                MsgStr = PoolPrint (
+                    L"Trying to Set VolumeBadge for '%s' (Role: %s UUID:%s)",
+                    GetPoolStr (&Volume->VolName),
+                    GetApfsRoleString (Volume->Role),
+                    volUUID
+                );
+                MY_FREE_POOL(volUUID);
+            }
+            else {
+                MsgStr = PoolPrint (
+                    L"Trying to Set VolumeBadge for '%s'",
+                    GetPoolStr (&Volume->VolName)
+                );
+            }
             if (LoopOnce) {
                 LOG(2, LOG_STAR_HEAD_SEP, L"%s", MsgStr);
             }
@@ -2786,7 +2751,6 @@ VOID GetVolumeBadgeIcons (VOID) {
 VOID SetVolumeIcons (VOID) {
     LOGPROCENTRY();
     UINTN         i, VolumeIndex;
-    BOOLEAN       FoundSysVol = FALSE;
     REFIT_VOLUME *Volume;
 
     #if REFIT_DEBUG > 0
@@ -2822,28 +2786,24 @@ VOID SetVolumeIcons (VOID) {
     for (VolumeIndex = 0; VolumeIndex < VolumesCount; VolumeIndex++) {
         Volume = Volumes[VolumeIndex];
 
-        if (GlobalConfig.SyncAPFS && Volume->FSType == FS_TYPE_APFS) {
-            FoundSysVol = FALSE;
-            for (i = 0; i < SystemVolumesCount; i++) {
-                if (GuidsAreEqual (&(SystemVolumes[i]->VolUuid), &(Volume->VolUuid))) {
-                FoundSysVol = TRUE;
-                break;
-            }
-            }
-
-            // Skip APFS system volumes when SyncAPFS is active
-            if (FoundSysVol) {
-                continue;
-            }
-        }
-
         if (Volume->IsReadable) {
             #if REFIT_DEBUG > 0
-            MsgStr = PoolPrint (
-                L"Trying to Set VolumeIcon for '%s'",
-                GetPoolStr (&Volume->VolName)
-            );
-
+            if (Volume->FSType == FS_TYPE_APFS) {
+                CHAR16 *volUUID = GuidAsString (&Volume->VolUuid);
+                MsgStr = PoolPrint (
+                    L"Trying to Set VolumeIcon for '%s' (Role: %s UUID:%s)",
+                    GetPoolStr (&Volume->VolName),
+                    GetApfsRoleString (Volume->Role),
+                    volUUID
+                );
+                MY_FREE_POOL(volUUID);
+            }
+            else {
+                MsgStr = PoolPrint (
+                    L"Trying to Set VolumeIcon for '%s'",
+                    GetPoolStr (&Volume->VolName)
+                );
+            }
             if (LoopOnce) {
                 LOG(2, LOG_STAR_HEAD_SEP, L"%s", MsgStr);
             }

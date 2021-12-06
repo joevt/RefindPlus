@@ -185,29 +185,11 @@ REFIT_MENU_SCREEN * InitializeSubScreen (
         if (SubScreen) {
             CHAR16 *DisplayName = NULL;
 
-            if (GlobalConfig.SyncAPFS) {
-                EFI_STATUS                 Status;
-                EFI_GUID               VolumeGuid;
-                EFI_GUID            ContainerGuid;
-                APPLE_APFS_VOLUME_ROLE VolumeRole;
-
-                #ifdef __MAKEWITH_GNUEFI
-                Status = EFI_NOT_FOUND;
-                #else
-                // DA-TAG: Limit to TianoCore
-                Status = RP_GetApfsVolumeInfo (
-                    Entry->Volume->DeviceHandle,
-                    &ContainerGuid,
-                    &VolumeGuid,
-                    &VolumeRole
-                );
-                #endif
-
-                if (!EFI_ERROR(Status)) {
-                    if (VolumeRole == APPLE_APFS_VOLUME_ROLE_PREBOOT) {
-                        DisplayName = GetVolumeGroupName (GetPoolStr (&Entry->LoaderPath), Entry->Volume);
-                    }
-                }
+            if (GlobalConfig.SyncAPFS
+                && Entry->Volume->FSType == FS_TYPE_APFS
+                && Entry->Volume->Role   == APPLE_APFS_VOLUME_ROLE_PREBOOT
+            ) {
+                DisplayName = GetVolumeGroupName (GetPoolStr (&Entry->LoaderPath), Entry->Volume);
             } // if GlobalConfig.SyncAFPS
 
             AssignPoolStr (&SubScreen->Title, PoolPrint (
@@ -573,18 +555,26 @@ VOID SetLoaderDefaults (
         else {
             if (!GetPoolImage (&Entry->me.Image) && !GlobalConfig.IgnoreHiddenIcons && GlobalConfig.PreferHiddenIcons) {
                 #if REFIT_DEBUG > 0
-                LOG(3, LOG_LINE_NORMAL, L"Trying to Display '.VolumeIcon' Image");
+                LOG(3, LOG_LINE_NORMAL, L"Checking for '.VolumeIcon' Image");
                 #endif
+
+                PoolImage * volGroupIcon = NULL;
+                if (GlobalConfig.SyncAPFS
+                    && Volume->FSType == FS_TYPE_APFS
+                    && Volume->Role   == APPLE_APFS_VOLUME_ROLE_PREBOOT
+                ) {
+                    volGroupIcon = GetVolumeGroupIcon (LoaderPath, Volume);
+                }
 
                 // use a ".VolumeIcon" image icon for the loader
                 // Takes precedence all over options
-                CopyFromPoolImage (&Entry->me.Image, &Volume->VolIconImage);
+                CopyFromPoolImage_PI_ (&Entry->me.Image_PI_, volGroupIcon ? volGroupIcon : &Volume->VolIconImage_PI_);
             }
 
             if (!GetPoolImage (&Entry->me.Image)) {
                 #if REFIT_DEBUG > 0
                 if (!GlobalConfig.IgnoreHiddenIcons && GlobalConfig.PreferHiddenIcons) {
-                    LOG(3, LOG_LINE_NORMAL, L"Could Not Display '.VolumeIcon' Image!!");
+                    LOG(3, LOG_LINE_NORMAL, L"No '.VolumeIcon' Image!!");
                 }
                 #endif
 
@@ -593,7 +583,11 @@ VOID SetLoaderDefaults (
                     MacFlag = TRUE;
                 }
 
-                if (!GlobalConfig.SyncAPFS || !MacFlag) {
+                if (!GlobalConfig.SyncAPFS || !MacFlag || (
+                     //allow boot.icns for Preboot in case T2 chip read protects Data and System volumes
+                        Volume->FSType == FS_TYPE_APFS
+                     && Volume->Role == APPLE_APFS_VOLUME_ROLE_PREBOOT
+                )) {
                     CHAR16 *NoExtension = StripEfiExtension (NameClues);
                     if (NoExtension != NULL) {
                         // locate a custom icon for the loader
@@ -667,29 +661,11 @@ VOID SetLoaderDefaults (
                     if (GetPoolStr (&Volume->VolName) && (GetPoolStr (&Volume->VolName)[0] != L'\0')) {
                         CHAR16 *DisplayName = NULL;
 
-                        if (GlobalConfig.SyncAPFS) {
-                            EFI_STATUS                 Status;
-                            EFI_GUID               VolumeGuid;
-                            EFI_GUID            ContainerGuid;
-                            APPLE_APFS_VOLUME_ROLE VolumeRole;
-
-                            #ifdef __MAKEWITH_GNUEFI
-                            Status = EFI_NOT_FOUND;
-                            #else
-                            // DA-TAG: Limit to TianoCore
-                            Status = RP_GetApfsVolumeInfo (
-                                Volume->DeviceHandle,
-                                &ContainerGuid,
-                                &VolumeGuid,
-                                &VolumeRole
-                            );
-                            #endif
-
-                            if (!EFI_ERROR(Status)) {
-                                if (VolumeRole == APPLE_APFS_VOLUME_ROLE_PREBOOT) {
-                                    DisplayName = GetVolumeGroupName (GetPoolStr (&Entry->LoaderPath), Volume);
-                                }
-                            }
+                        if (GlobalConfig.SyncAPFS
+                            && Volume->FSType == FS_TYPE_APFS
+                            && Volume->Role   == APPLE_APFS_VOLUME_ROLE_PREBOOT
+                        ) {
+                            DisplayName = GetVolumeGroupName (GetPoolStr (&Entry->LoaderPath), Volume);
                         } // if GlobalConfig.SyncAFPS
 
                         // Do not free TargetName
@@ -874,35 +850,80 @@ CHAR16 * GetVolumeGroupName (
 ) {
     UINTN   i;
     CHAR16 *VolumeGroupName = NULL;
+    CHAR16 *VolUuidStr;
 
-    for (i = 0; i < SystemVolumesCount; i++) {
-        if (
-            MyStrStrIns (
-                LoaderPath,
-                GuidAsString (&(SystemVolumes[i]->VolUuid))
-            )
-        ) {
+    // Volume Group is non-0 only for Catalina and later.
+    // Volume Group always matches Data volume UUID.
+
+    // For Big Sur, Monterey, and later, Preboot folder name matches volume group
+    for (i = 0; !VolumeGroupName && i < SystemVolumesCount; i++) {
+        VolUuidStr = GuidAsString (&(SystemVolumes[i]->VolGroup));
+        if (MyStrStrIns (LoaderPath, VolUuidStr)) {
             VolumeGroupName = StrDuplicate (GetPoolStr (&SystemVolumes[i]->VolName));
-            break;
+            MsgLog ("GetVolumeGroupName: Match Group '%s'\n", VolumeGroupName);
         }
+        MY_FREE_POOL(VolUuidStr);
     } // for
 
-    if (!VolumeGroupName) {
-        for (i = 0; i < DataVolumesCount; i++) {
-            if (
-                MyStrStrIns (
-                    LoaderPath,
-                    GuidAsString (&(DataVolumes[i]->VolUuid))
-                )
-            ) {
-                VolumeGroupName = StrDuplicate (GetPoolStr (&DataVolumes[i]->VolName));
-                break;
-            }
-        } // for
-    }
+    // For Sierra, High Sierra, Mojave, and Catalina, Preboot folder name matches system volume UUID
+    for (i = 0; !VolumeGroupName && i < SystemVolumesCount; i++) {
+        VolUuidStr = GuidAsString (&(SystemVolumes[i]->VolUuid));
+        if (MyStrStrIns (LoaderPath, VolUuidStr)) {
+            VolumeGroupName = StrDuplicate (GetPoolStr (&SystemVolumes[i]->VolName));
+            MsgLog ("GetVolumeGroupName: Match System '%s'\n", VolumeGroupName);
+        }
+        MY_FREE_POOL(VolUuidStr);
+    } // for
+
+    // The following is redundant if System volume is readable and the Volume Group was retrieved
+    // Otherwise look for the data volume
+    for (i = 0; !VolumeGroupName && i < DataVolumesCount; i++) {
+        VolUuidStr = GuidAsString (&(DataVolumes[i]->VolUuid));
+        if (MyStrStrIns (LoaderPath, VolUuidStr)) {
+            VolumeGroupName = StrDuplicate (GetPoolStr (&DataVolumes[i]->VolName));
+            MsgLog ("GetVolumeGroupName: Match Data '%s'\n", VolumeGroupName);
+        }
+        MY_FREE_POOL(VolUuidStr);
+    } // for
 
     return VolumeGroupName;
 } // CHAR16 * GetVolumeGroupName()
+
+PoolImage * GetVolumeGroupIcon (
+    IN CHAR16       *LoaderPath,
+    IN REFIT_VOLUME *Volume
+) {
+    UINTN   i;
+    PoolImage *VolumeGroupIcon = NULL;
+    CHAR16 *VolUuidStr;
+
+    // Volume Group is non-0 only for Catalina and later.
+    // Volume Group always matches Data volume UUID.
+
+    // For Big Sur, Monterey, and later, Preboot folder name matches volume group
+    // Get the icon from the Data volume since we did not load icons for the System volume
+    // and the icon on System volume for Big Sur and later is just a firm link anyway.
+    for (i = 0; !VolumeGroupIcon && i < DataVolumesCount; i++) {
+        VolUuidStr = GuidAsString (&(DataVolumes[i]->VolUuid));
+        if (MyStrStrIns (LoaderPath, VolUuidStr) && GetPoolImage(&DataVolumes[i]->VolIconImage)) {
+            VolumeGroupIcon = &DataVolumes[i]->VolIconImage_PI_;
+            MsgLog ("GetVolumeGroupIcon: Match Group '%s'\n", GetPoolStr(&DataVolumes[i]->VolName));
+        }
+        MY_FREE_POOL(VolUuidStr);
+    } // for
+
+    // For Sierra, High Sierra, Mojave, and Catalina, Preboot folder name matches system volume UUID
+    for (i = 0; !VolumeGroupIcon && i < SystemVolumesCount; i++) {
+        VolUuidStr = GuidAsString (&(SystemVolumes[i]->VolUuid));
+        if (MyStrStrIns (LoaderPath, VolUuidStr) && GetPoolImage(&SystemVolumes[i]->VolIconImage)) {
+            VolumeGroupIcon = &SystemVolumes[i]->VolIconImage_PI_;
+            MsgLog ("GetVolumeGroupIcon: Match System '%s'\n", GetPoolStr(&SystemVolumes[i]->VolName));
+        }
+        MY_FREE_POOL(VolUuidStr);
+    } // for
+
+    return VolumeGroupIcon;
+} // PoolImage * GetVolumeGroupIcon()
 
 // Add an NVRAM-based EFI boot loader entry to the menu.
 static
@@ -994,48 +1015,31 @@ LOADER_ENTRY * AddLoaderEntry (
     IN BOOLEAN       SubScreenReturn
 ) {
     LOGPROCENTRY();
-    EFI_STATUS     Status;
     LOADER_ENTRY  *Entry;
     CHAR16        *TitleEntry  = NULL;
     CHAR16        *DisplayName = NULL;
 
     CleanUpPathNameSlashes (LoaderPath);
+
+    if (GlobalConfig.SyncAPFS
+        && Volume->FSType == FS_TYPE_APFS
+        && Volume->Role   == APPLE_APFS_VOLUME_ROLE_PREBOOT
+    ) {
+        DisplayName = GetVolumeGroupName (LoaderPath, Volume);
+
+        if (!DisplayName) {
+            // Do not display this PreBoot Volume Menu Entry
+            LOGPROCEXIT("no name for PreBoot found");
+            return NULL;
+        }
+    } // if GlobalConfig.SyncAFPS
+
     Entry = InitializeLoaderEntry (NULL);
 
     if (Entry == NULL) {
         LOGPROCEXIT("null entry");
         return NULL;
     }
-
-    if (GlobalConfig.SyncAPFS && Volume->FSType == FS_TYPE_APFS) {
-        EFI_GUID               VolumeGuid;
-        EFI_GUID            ContainerGuid;
-        APPLE_APFS_VOLUME_ROLE VolumeRole;
-
-        #ifdef __MAKEWITH_GNUEFI
-        Status = EFI_NOT_FOUND;
-        #else
-        // DA-TAG: Limit to TianoCore
-        Status = RP_GetApfsVolumeInfo (
-            Volume->DeviceHandle,
-            &ContainerGuid,
-            &VolumeGuid,
-            &VolumeRole
-        );
-        #endif
-
-        if (!EFI_ERROR(Status)) {
-            if (VolumeRole == APPLE_APFS_VOLUME_ROLE_PREBOOT) {
-                DisplayName = GetVolumeGroupName (LoaderPath, Volume);
-
-                if (!DisplayName) {
-                    // Do not display this PreBoot Volume Menu Entry
-                    LOGPROCEXIT("%p", Entry);
-                    return NULL;
-                }
-            }
-        }
-    } // if GlobalConfig.SyncAFPS
 
     Entry->DiscoveryType = DISCOVERY_TYPE_AUTO;
     TitleEntry   = (LoaderTitle) ? LoaderTitle : LoaderPath;
@@ -1220,42 +1224,24 @@ BOOLEAN ShouldScan (
     }
 
     if (GlobalConfig.SyncAPFS && Volume->FSType == FS_TYPE_APFS) {
-        EFI_STATUS                 Status;
         CHAR16       *TmpVolNameA  = NULL;
         CHAR16       *TmpVolNameB  = NULL;
-        EFI_GUID               VolumeGuid;
-        EFI_GUID            ContainerGuid;
-        APPLE_APFS_VOLUME_ROLE VolumeRole;
 
-        #ifdef __MAKEWITH_GNUEFI
-        Status = EFI_NOT_FOUND;
-        #else
-        // DA-TAG: Limit to TianoCore
-        Status = RP_GetApfsVolumeInfo (
-            Volume->DeviceHandle,
-            &ContainerGuid,
-            &VolumeGuid,
-            &VolumeRole
-        );
-        #endif
-
-        if (!EFI_ERROR(Status)) {
-            TmpVolNameB = PoolPrint (L"%s - DATA", GetPoolStr (&Volume->VolName));
-            if (IsIn (TmpVolNameB, GlobalConfig.DontScanVolumes)) {
-                ScanIt = FALSE;
-            }
-            MY_FREE_POOL(TmpVolNameB);
-            if (!ScanIt) return FALSE;
-
-            TmpVolNameA = SanitiseString (GetPoolStr (&Volume->VolName));
-            TmpVolNameB = PoolPrint (L"%s - DATA", TmpVolNameA);
-            if (IsIn (TmpVolNameB, GlobalConfig.DontScanVolumes)) {
-                ScanIt = FALSE;
-            }
-            MY_FREE_POOL(TmpVolNameA);
-            MY_FREE_POOL(TmpVolNameB);
-            if (!ScanIt) return FALSE;
+        TmpVolNameB = PoolPrint (L"%s - DATA", GetPoolStr (&Volume->VolName));
+        if (IsIn (TmpVolNameB, GlobalConfig.DontScanVolumes)) {
+            ScanIt = FALSE;
         }
+        MY_FREE_POOL(TmpVolNameB);
+        if (!ScanIt) return FALSE;
+
+        TmpVolNameA = SanitiseString (GetPoolStr (&Volume->VolName));
+        TmpVolNameB = PoolPrint (L"%s - DATA", TmpVolNameA);
+        if (IsIn (TmpVolNameB, GlobalConfig.DontScanVolumes)) {
+            ScanIt = FALSE;
+        }
+        MY_FREE_POOL(TmpVolNameA);
+        MY_FREE_POOL(TmpVolNameB);
+        if (!ScanIt) return FALSE;
     } // if GlobalConfig.SyncAFPS
 
     VolGuid = GuidAsString (&(Volume->PartGuid));
@@ -1779,30 +1765,12 @@ VOID ScanEfiFiles (
     }
 
     if (Volume->FSType == FS_TYPE_APFS) {
-        EFI_GUID               VolumeGuid;
-        EFI_GUID            ContainerGuid;
-        APPLE_APFS_VOLUME_ROLE VolumeRole = 0;
-
-        #ifdef __MAKEWITH_GNUEFI
-        Status = EFI_NOT_FOUND;
-        #else
-        // DA-TAG: Limit to TianoCore
-        Status = RP_GetApfsVolumeInfo (
-            Volume->DeviceHandle,
-            &ContainerGuid,
-            &VolumeGuid,
-            &VolumeRole
-        );
-        #endif
-
-        if (!EFI_ERROR(Status)) {
-            if (VolumeRole != APPLE_APFS_VOLUME_ROLE_PREBOOT &&
-                VolumeRole != APPLE_APFS_VOLUME_ROLE_SYSTEM &&
-                VolumeRole != APPLE_APFS_VOLUME_ROLE_UNDEFINED
-            ) {
-                // Early Return on APFS Support Volume
-                return;
-            }
+        if (Volume->Role != APPLE_APFS_VOLUME_ROLE_PREBOOT &&
+            Volume->Role != APPLE_APFS_VOLUME_ROLE_SYSTEM &&
+            Volume->Role != APPLE_APFS_VOLUME_ROLE_UNDEFINED
+        ) {
+            // Early Return on APFS Support Volume
+            return;
         }
 
         if (GlobalConfig.SyncAPFS) {

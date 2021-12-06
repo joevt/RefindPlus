@@ -2786,31 +2786,14 @@ EFI_STATUS EFIAPI efi_main (
                         MsgLog (":- '%s'\n", GetPoolStr (&ourLoaderEntry->LoaderPath));
                     }
                     else {
-                        if (GlobalConfig.SyncAPFS && ourLoaderEntry->Volume->FSType == FS_TYPE_APFS) {
-                            EFI_GUID               VolumeGuid;
-                            EFI_GUID            ContainerGuid;
-                            APPLE_APFS_VOLUME_ROLE VolumeRole;
-
-                            #ifdef __MAKEWITH_GNUEFI
-                            Status = EFI_NOT_FOUND;
-                            #else
-                            // DA-TAG: Limit to TianoCore
-                            Status = RP_GetApfsVolumeInfo (
-                                ourLoaderEntry->Volume->DeviceHandle,
-                                &ContainerGuid,
-                                &VolumeGuid,
-                                &VolumeRole
+                        if (GlobalConfig.SyncAPFS
+                            && ourLoaderEntry->Volume->FSType == FS_TYPE_APFS
+                            && ourLoaderEntry->Volume->Role   == APPLE_APFS_VOLUME_ROLE_PREBOOT
+                        ) {
+                            DisplayName = GetVolumeGroupName (
+                                GetPoolStr (&ourLoaderEntry->LoaderPath),
+                                ourLoaderEntry->Volume
                             );
-                            #endif
-
-                            if (!EFI_ERROR(Status)) {
-                                if (VolumeRole == APPLE_APFS_VOLUME_ROLE_PREBOOT) {
-                                    DisplayName = GetVolumeGroupName (
-                                        GetPoolStr (&ourLoaderEntry->LoaderPath),
-                                        ourLoaderEntry->Volume
-                                    );
-                                }
-                            }
                         } // if GlobalConfig.SyncAFPS
 
                         MsgLog (
