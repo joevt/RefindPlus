@@ -59,6 +59,9 @@ typedef struct {
 
 enum {
     kLeakableVolumes = 1000,
+    kLeakablePreBootVolumes,
+    kLeakableDataVolumes,
+    kLeakableSystemVolumes,
     kLeakablePartitions = 2000,
     kLeakableHandles = 3000,
     kLeakableBuiltinIcons = 4000,
