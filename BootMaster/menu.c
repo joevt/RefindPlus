@@ -2411,7 +2411,6 @@ VOID GenerateWaitList(VOID) {
         UINTN PointerCount = pdCount();
 
         WaitListLength = 2 + PointerCount;
-        MY_FREE_POOL(WaitList);
         WaitList       = AllocatePool (sizeof (EFI_EVENT) * WaitListLength);
         LEAKABLE(WaitList, "GenerateWaitList WaitList");
         WaitList[0]    = gST->ConIn->WaitForKey;
