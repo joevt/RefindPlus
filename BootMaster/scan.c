@@ -2128,7 +2128,8 @@ BOOLEAN ScanFirmwareDefined (
     }
     #endif
 
-    if (GlobalConfig.DontScanFirmware != NULL || DontScanFirmware != NULL) {
+    if (GlobalConfig.DontScanFirmware && *GlobalConfig.DontScanFirmware) {
+        // merge GlobalConfig.DontScanFirmware only if it is not empty
         MergeStrings (&DontScanFirmware, GlobalConfig.DontScanFirmware, L',');
     }
 
