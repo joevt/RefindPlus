@@ -32,6 +32,7 @@
 #include "apple.h"
 #include "mystrings.h"
 #include "../include/refit_call_wrapper.h"
+#include "../../ShellPkg/Include/Library/ShellCommandLib.h"
 
 PoolStr    gCsrStatus_PS_ = NULLPS;
 BOOLEAN    MuteLogger     = FALSE;
@@ -574,17 +575,28 @@ EFI_STATUS RP_GetApfsSpecialFileInfo (
         return EFI_INVALID_PARAMETER;
     }
 
+    UINTN RealVolumeInfoSize;
+    UINTN RealContainerInfoSize;
+
     if (VolumeInfo != NULL) {
         *VolumeInfo = RP_GetFileInfo (
             Root,
             &AppleApfsVolumeInfoGuid,
-            sizeof (**VolumeInfo),
-            NULL
+            sizeof (**VolumeInfo) - sizeof((*VolumeInfo)->VolumeGroup),
+            &RealVolumeInfoSize
         );
 
         if (*VolumeInfo == NULL) {
             return EFI_NOT_FOUND;
         }
+
+        #if REFIT_DEBUG > 0
+        if (RealVolumeInfoSize > sizeof (**VolumeInfo)) {
+            CHAR16* hex = CatSDumpHex(NULL, 0, 0, RealVolumeInfoSize, *VolumeInfo);
+            MsgLog ("VolumeInfo:\n%s\n", hex);
+            MY_FREE_POOL(hex);
+        }
+        #endif
     }
 
     if (ContainerInfo != NULL) {
@@ -592,7 +604,7 @@ EFI_STATUS RP_GetApfsSpecialFileInfo (
             Root,
             &AppleApfsContainerInfoGuid,
             sizeof (**ContainerInfo),
-            NULL
+            &RealContainerInfoSize
         );
 
         if (*ContainerInfo == NULL) {
@@ -600,6 +612,14 @@ EFI_STATUS RP_GetApfsSpecialFileInfo (
 
             return EFI_NOT_FOUND;
         }
+
+        #if REFIT_DEBUG > 0
+        if (RealContainerInfoSize > sizeof (**ContainerInfo)) {
+            CHAR16* hex = CatSDumpHex(NULL, 0, 0, RealContainerInfoSize, *ContainerInfo);
+            MsgLog ("ContainerInfo:\n%s\n", *ContainerInfo);
+            MY_FREE_POOL(hex);
+        }
+        #endif
     }
 
     return EFI_SUCCESS;
@@ -655,9 +675,10 @@ CHAR16 * RP_GetBootPathName (
 
 EFI_STATUS RP_GetApfsVolumeInfo (
     IN  EFI_HANDLE               Device,
-    OUT EFI_GUID                *ContainerGuid,
-    OUT EFI_GUID                *VolumeGuid,
-    OUT APPLE_APFS_VOLUME_ROLE  *VolumeRole
+    OUT EFI_GUID                *ContainerGuid OPTIONAL,
+    OUT EFI_GUID                *VolumeGuid    OPTIONAL,
+    OUT APPLE_APFS_VOLUME_ROLE  *VolumeRole    OPTIONAL,
+    OUT EFI_GUID                *VolumeGroup   OPTIONAL
 ) {
     EFI_STATUS                       Status;
     EFI_FILE_PROTOCOL               *Root;
@@ -695,11 +716,16 @@ EFI_STATUS RP_GetApfsVolumeInfo (
         &ApfsVolumeInfo->Uuid
     );
 
-    *VolumeRole = ApfsVolumeInfo->Role;
+    if (VolumeRole) *VolumeRole = ApfsVolumeInfo->Role;
 
-    CopyGuid (
+    if (ContainerGuid) CopyGuid (
         ContainerGuid,
         &ApfsContainerInfo->Uuid
+    );
+
+    if (VolumeGroup) CopyGuid (
+        VolumeGroup,
+        &ApfsVolumeInfo->VolumeGroup
     );
 
     MY_FREE_POOL(ApfsVolumeInfo);
