@@ -869,7 +869,7 @@ EFI_STATUS ConstructBootEntry (
     VOID            *Working;
 
     DevicePath  = FileDevicePath (TargetVolume, Loader);
-    DevPathSize = DevicePathSize (DevicePath);
+    DevPathSize = GetDevicePathSize (DevicePath);
     *Size       = sizeof (UINT32) + sizeof (UINT16) + StrSize (Label) + DevPathSize + 2;
     *Entry      = Working = AllocateZeroPool (*Size);
 

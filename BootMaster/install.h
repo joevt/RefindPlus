@@ -44,10 +44,6 @@
 #define EFI_BOOT_OPTION_MAKE_DEFAULT 1
 #define EFI_BOOT_OPTION_DELETE       2
 
-#ifdef __MAKEWITH_TIANO
-#define DevicePathSize GetDevicePathSize
-#endif
-
 typedef struct {
     UINT16           BootNum;
     UINT32           Options;
