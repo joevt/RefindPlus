@@ -279,7 +279,7 @@ static ush mask_bits[] =
   0x01ff, 0x03ff, 0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff, 0xffff
 };
 
-// DA-TAG: Make conditional to remove Mac OS Clang compile warning 
+// DA-TAG: Make conditional to remove Mac OS Clang compile warning
 #if !defined(__has_warning) || __has_warning("-Wunsafe-loop-optimizations")
 #pragma GCC diagnostic ignored "-Wunsafe-loop-optimizations"
 #endif

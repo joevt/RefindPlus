@@ -1287,9 +1287,9 @@ UINTN PickOneBootOption (
             Operation = EFI_BOOT_OPTION_DELETE;
             *BootOrderNum = ChosenOption->Row;
         }
-        
+
         Operation = ConfirmBootOptionOperation (Operation, GetPoolStr (&ChosenOption->Title));
-        
+
         FreeMenuScreen (&PickOneMenu);
     }
 
@@ -1344,7 +1344,7 @@ EFI_STATUS DeleteInvalidBootEntries (VOID) {
             LOG(3, LOG_LINE_NORMAL, L"There are no invalid boot entries to delete from internal BootOrder list");
             #endif
         }
-        
+
         MY_FREE_POOL(NewBootOrder);
         MY_FREE_POOL(BootOrder);
     }

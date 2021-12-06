@@ -2759,9 +2759,9 @@ VOID GetVolumeBadgeIcons (VOID) {
             FoundSysVol = FALSE;
             for (i = 0; i < SystemVolumesCount; i++) {
                 if (GuidsAreEqual (&(SystemVolumes[i]->VolUuid), &(Volume->VolUuid))) {
-                FoundSysVol = TRUE;
-                break;
-            }
+                    FoundSysVol = TRUE;
+                    break;
+                }
             }
 
             // Skip APFS system volumes when SyncAPFS is active
@@ -3751,7 +3751,7 @@ LEAKABLEVOLUMES (
                 LEAKABLEVOLUME (Volumes[VolumeIndex]);
             }
             LEAKABLEPATHDEC ();
-            LEAKABLEWITHPATH( Volumes, "Volumes");
+            LEAKABLEWITHPATH (Volumes, "Volumes");
         LEAKABLEPATHDONE ();
         LOGPROCEXIT();
     }
