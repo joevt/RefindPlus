@@ -2414,10 +2414,12 @@ VOID GenerateWaitList(VOID) {
         WaitList       = AllocatePool (sizeof (EFI_EVENT) * WaitListLength);
         LEAKABLE(WaitList, "GenerateWaitList WaitList");
         WaitList[0]    = gST->ConIn->WaitForKey;
+        MsgLog("%p gST->ConIn->WaitForKey\n", WaitList[0]);
 
         UINTN Index;
-        for (Index = 0; Index < PointerCount; Index++) {
-            WaitList[Index + 1] = pdWaitEvent (Index);
+        for (Index = 1; Index <= PointerCount; Index++) {
+            WaitList[Index] = pdWaitEvent (Index);
+            MsgLog("%p pdWaitEvent (%d)\n", WaitList[Index], Index);
         }
         LOGPROCEXIT("WaitList: %p");
     }
