@@ -2615,8 +2615,7 @@ VOID DisplaySimpleMessage (
 // Returns TRUE if any files were deleted, FALSE otherwise.
 static
 BOOLEAN RemoveInvalidFilenames (
-    CHAR16 *FilenameList,
-    CHAR16 *VarName
+    CHAR16 *FilenameList
 ) {
     EFI_STATUS       Status;
     UINTN            i = 0;
@@ -2700,19 +2699,9 @@ VOID SaveHiddenList (
 VOID ManageHiddenTags (VOID) {
     LOGPROCENTRY();
 
-    EFI_STATUS           Status  = EFI_SUCCESS;
-    CHAR16              *AllTags = NULL, *OneElement = NULL;
-    CHAR16              *HiddenLegacy, *HiddenFirmware, *HiddenTags, *HiddenTools;
     INTN                 DefaultEntry  = 0;
-    UINTN                i             = 0;
-    UINTN                MenuExit      = 0;
-    BOOLEAN              SaveTags      = FALSE;
-    BOOLEAN              SaveTools     = FALSE;
-    BOOLEAN              SaveLegacy    = FALSE;
-    BOOLEAN              SaveFirmware  = FALSE;
     MENU_STYLE_FUNC      Style         = TextMenuStyle;
-    REFIT_MENU_ENTRY    *ChosenOption;
-    REFIT_MENU_ENTRY    *MenuEntryItem;
+    UINTN                i;
 
     CHAR16             *MenuInfo     = L"Select a Tag and Press 'Enter' to Restore";
     REFIT_MENU_SCREEN  *RestoreItemMenu = NULL;
@@ -2737,46 +2726,42 @@ VOID ManageHiddenTags (VOID) {
         Style = GraphicsMenuStyle;
     }
 
-    HiddenTags = ReadHiddenTags (L"HiddenTags");
-    if (HiddenTags) {
-        SaveTags = RemoveInvalidFilenames (HiddenTags, L"HiddenTags");
-        if (HiddenTags && (HiddenTags[0] != L'\0')) {
-            AllTags = StrDuplicate (HiddenTags);
+    CHAR16 * AllNames[] = {L"HiddenTags", L"HiddenTools", L"HiddenLegacy", L"HiddenFirmware"};
+    CONST UINTN HiddenTypeTool = 1; // the second hidden type is HiddenTools
+    CONST UINTN NumHiddenTypesWithFilenames = 2; // the first two hidden types have file names to be checked
+    CONST UINTN NumHiddenTypes = sizeof(AllNames)/sizeof(*AllNames);
+    BOOLEAN AllSaves[NumHiddenTypes];
+    CHAR16 * AllTags[NumHiddenTypes];
+
+    for (i = 0; i < NumHiddenTypes; i++) {
+        AllSaves[i] = FALSE;
+        AllTags[i] = ReadHiddenTags (AllNames[i]);
+        if (i < NumHiddenTypesWithFilenames && AllTags[i]) {
+            AllSaves[i] = RemoveInvalidFilenames (AllTags[i]);
         }
+        CHAR16 *OneElement;
+        for (UINTN j = 0; (OneElement = FindCommaDelimited (AllTags[i], j)); j++) {
+            if (*OneElement) {
+                REFIT_MENU_ENTRY *MenuEntryItem = AllocateZeroPool (sizeof (REFIT_MENU_ENTRY));
+                AssignPoolStr (&MenuEntryItem->Title, OneElement);
+                MenuEntryItem->Tag = TAG_RETURN;
+                MenuEntryItem->Row = i;
+                AddMenuEntry (RestoreItemMenu, MenuEntryItem);
+            }
+            else {
+                MY_FREE_POOL (OneElement);
+            }
+        } // for
     }
 
-    HiddenTools = ReadHiddenTags (L"HiddenTools");
-    if (HiddenTools) {
-        SaveTools = RemoveInvalidFilenames (HiddenTools, L"HiddenTools");
-        if (HiddenTools && (HiddenTools[0] != L'\0')) {
-            MergeStrings (&AllTags, HiddenTools, L',');
-        }
-    }
-
-    HiddenLegacy = ReadHiddenTags (L"HiddenLegacy");
-    if (HiddenLegacy && (HiddenLegacy[0] != L'\0')) {
-        MergeStrings (&AllTags, HiddenLegacy, L',');
-    }
-
-    HiddenFirmware = ReadHiddenTags (L"HiddenFirmware");
-    if (HiddenFirmware && (HiddenFirmware[0] != L'\0')) {
-        MergeStrings (&AllTags, HiddenFirmware, L',');
-    }
-
-    if (!AllTags || StrLen (AllTags) < 1) {
+    if (!RestoreItemMenu->EntryCount) {
         DisplaySimpleMessage (L"Information", L"No Hidden Tags Found");
     }
     else {
         AddMenuInfoLineCached (RestoreItemMenu, MenuInfo);
-        while ((OneElement = FindCommaDelimited (AllTags, i++)) != NULL) {
-            MenuEntryItem = AllocateZeroPool (sizeof (REFIT_MENU_ENTRY)); // do not free
-            AssignPoolStr (&MenuEntryItem->Title, OneElement);
-            MenuEntryItem->Tag   = TAG_RETURN;
-            MenuEntryItem->Row   = 1;
-            AddMenuEntry (RestoreItemMenu, MenuEntryItem);
-        } // while
 
-        MenuExit = RunGenericMenu (RestoreItemMenu, Style, &DefaultEntry, &ChosenOption);
+        REFIT_MENU_ENTRY *ChosenOption;
+        UINTN MenuExit = RunGenericMenu (RestoreItemMenu, Style, &DefaultEntry, &ChosenOption);
 
         #if REFIT_DEBUG > 0
         LOG(3, LOG_LINE_NORMAL,
@@ -2786,54 +2771,27 @@ VOID ManageHiddenTags (VOID) {
         #endif
 
         if (MenuExit == MENU_EXIT_ENTER) {
-            SaveTags     |= DeleteItemFromCsvList (GetPoolStr (&ChosenOption->Title), HiddenTags);
-            SaveTools    |= DeleteItemFromCsvList (GetPoolStr (&ChosenOption->Title), HiddenTools);
-            SaveFirmware |= DeleteItemFromCsvList (GetPoolStr (&ChosenOption->Title), HiddenFirmware);
-            SaveLegacy   |= DeleteItemFromCsvList (GetPoolStr (&ChosenOption->Title), HiddenLegacy);
-
-            if (DeleteItemFromCsvList (GetPoolStr (&ChosenOption->Title), HiddenLegacy)) {
-                i = HiddenLegacy ? StrSize (HiddenLegacy) : 0;
-                Status = EfivarSetRaw (
-                    &RefindPlusGuid,
-                    L"HiddenLegacy",
-                    HiddenLegacy,
-                    i * (i > 2),
-                    TRUE
-                );
-                SaveLegacy = TRUE;
-                CheckError (Status, L"in ManageHiddenTags!!");
-            }
-        }
-
-        if (SaveTags) {
-            SaveHiddenList (HiddenTags, L"HiddenTags");
-        }
-
-        if (SaveLegacy) {
-            SaveHiddenList (HiddenLegacy, L"HiddenLegacy");
-        }
-
-        if (SaveTools) {
-            SaveHiddenList (HiddenTools, L"HiddenTools");
-            MY_FREE_POOL(gHiddenTools);
-        }
-
-        if (SaveFirmware) {
-            SaveHiddenList (HiddenFirmware, L"HiddenFirmware");
-        }
-
-        if (SaveTags || SaveTools || SaveLegacy || SaveFirmware) {
-            RescanAll (FALSE, FALSE);
+            AllSaves[ChosenOption->Row] |= DeleteItemFromCsvList (GetPoolStr (&ChosenOption->Title), AllTags[ChosenOption->Row]);
         }
     } // if !AllTags
 
     FreeMenuScreen (&RestoreItemMenu);
 
-    MY_FREE_POOL(AllTags);
-    MY_FREE_POOL(HiddenTags);
-    MY_FREE_POOL(HiddenTools);
-    MY_FREE_POOL(HiddenLegacy);
-    MY_FREE_POOL(HiddenFirmware);
+    BOOLEAN doRescanAll = FALSE;
+    for (i = 0; i < NumHiddenTypes; i++) {
+        if (AllSaves[i]) {
+            SaveHiddenList (AllTags[i], AllNames[i]);
+            if (i == HiddenTypeTool) {
+                MY_FREE_POOL(gHiddenTools);
+            }
+            doRescanAll = TRUE;
+        }
+        MY_FREE_POOL(AllTags[i]);
+    }
+
+    if (doRescanAll) {
+        RescanAll (FALSE, FALSE);
+    }
 
     LOGPROCEXIT();
 } // VOID ManageHiddenTags()
