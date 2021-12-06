@@ -2798,7 +2798,7 @@ VOID SetVolumeIcons (VOID) {
     GetVolumeBadgeIcons();
 
     #if REFIT_DEBUG > 0
-    LOG(1, LOG_LINE_THIN_SEP, L"Set '.VolumeIcon' Icons for Internal Volumes");
+    LOG(1, LOG_LINE_THIN_SEP, L"Set '.VolumeIcon' Icons for %s Volumes", GlobalConfig.AllHiddenIcons ? L"All" : L"Internal" );
     #endif
 
     if (!AllowGraphicsMode) {
@@ -2812,7 +2812,7 @@ VOID SetVolumeIcons (VOID) {
 
     if (GlobalConfig.IgnoreHiddenIcons) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"Skipped Loading .VolumeIcons ... Config Setting is Active:- 'IgnoreHiddenIcons'");
+        LOG(3, LOG_LINE_NORMAL, L"Skipped Loading .VolumeIcons ... Config Setting is Active:- 'ignore_hidden_icons'");
         #endif
 
         LOGPROCEXIT();
@@ -2855,7 +2855,7 @@ VOID SetVolumeIcons (VOID) {
 
             // load custom volume icon for internal disks if present
             if (!GetPoolImage (&Volume->VolIconImage)) {
-                if (Volume->DiskKind == DISK_KIND_INTERNAL) {
+                if (GlobalConfig.AllHiddenIcons || Volume->DiskKind == DISK_KIND_INTERNAL) {
                     AssignPoolImage (&Volume->VolIconImage, egLoadIconAnyType (
                         Volume->RootDir,
                         L"",
@@ -2866,7 +2866,7 @@ VOID SetVolumeIcons (VOID) {
                 else {
                     #if REFIT_DEBUG > 0
                     LOG(3, LOG_LINE_NORMAL,
-                        L"Skipped '%s' ... Not Internal Volume",
+                        L"Skipped '%s' ... Not Internal Volume ... Config Setting is Not Active:- 'all_hidden_icons'",
                         GetPoolStr (&Volume->VolName)
                     );
                     #endif

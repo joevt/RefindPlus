@@ -412,6 +412,7 @@ typedef struct {
    BOOLEAN           UseNvram;
    BOOLEAN           IgnorePreviousBoot;
    BOOLEAN           IgnoreHiddenIcons;
+   BOOLEAN           AllHiddenIcons;
    BOOLEAN           PreferHiddenIcons;
    BOOLEAN           TextRenderer;
    BOOLEAN           UgaPassThrough;

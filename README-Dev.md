@@ -57,6 +57,7 @@ disable_amfi          |Disables AMFI Checks on Mac OS if required
 disable_compat_check  |Disables Mac version compatibility checks if required
 force_trim            |Forces `TRIM` with non-Apple SSDs on Macs if required
 ignore_hidden_icons   |Disables scanning for `.VolumeIcon` image icons if not required
+all_hidden_icons      |Scan for `.VolumeIcon` image icons even if they are not on an internal volume
 ignore_previous_boot  |Disables saving the last booted loader if not required
 normalise_csr         |Removes the `APPLE_INTERNAL` bit, when present, to permit OTA updates
 prefer_hidden_icons   |Prioritises `.VolumeIcon` image icons when available
