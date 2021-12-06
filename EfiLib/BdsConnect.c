@@ -272,10 +272,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (VOID) {
 
 
     #if REFIT_DEBUG > 0
-    UINTN   HexIndex         = 0;
     CHAR16 *GopDevicePathStr = NULL;
-    CHAR16 *DevicePathStr    = NULL;
-    CHAR16 *DeviceData       = NULL;
     #endif
 
     DetectedDevices = FALSE;
@@ -315,13 +312,27 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (VOID) {
             MakeConnection = TRUE;
 
             #if REFIT_DEBUG > 0
-            HexIndex   = ConvertHandleToHandleIndex (AllHandleBuffer[i]);
-            DeviceData = NULL;
+            CHAR16 *DevicePathStr    = NULL;
+            CHAR16 *DevicePathHexStr = NULL;
 
-            DevicePathStr = ConvertDevicePathToText (
-                DevicePathFromHandle (AllHandleBuffer[i]),
-                FALSE, FALSE
-            );
+            UINTN HexIndex = ConvertHandleToHandleIndex (AllHandleBuffer[i]);
+            CHAR16 *DeviceData = NULL;
+
+            VOID *DevicePath = DevicePathFromHandle (AllHandleBuffer[i]);
+            if (DevicePath) {
+                UINTN DevicePathSize = GetDevicePathSize(DevicePath);
+                UINTN DevicePathHexSize = DevicePathSize * 2 * sizeof(*DevicePathHexStr) + 1;
+                DevicePathHexStr = AllocatePool (DevicePathHexSize);
+                if (DevicePathHexStr) {
+                    DevicePathHexStr[0] = 0;
+                    for (UINTN j = 0; j < DevicePathSize; j++) {
+                        UnicodeSPrint(DevicePathHexStr + j * 2, 6, L"%02X", ((UINT8*)DevicePath)[j]);
+                    }
+                }
+
+                LOG2(1, LOG_LINE_NORMAL, L"", L"\n", L"%3X %s", HexIndex, DevicePathHexStr);
+                DevicePathStr = ConvertDevicePathToText (DevicePath, FALSE, FALSE);
+            }
 
             LOG2(1, LOG_LINE_NORMAL, L"", L"\n", L"%3X %s", HexIndex, DevicePathStr);
             #endif
@@ -624,6 +635,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (VOID) {
                 MsgLog ("\n");
             }
 
+            MY_FREE_POOL(DevicePathHexStr);
             MY_FREE_POOL(DevicePathStr);
             MY_FREE_POOL(DeviceData);
             #endif
