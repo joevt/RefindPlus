@@ -1656,6 +1656,7 @@ VOID egDrawImage (
     IN UINTN     ScreenPosY
 ) {
     EG_IMAGE *CompImage = NULL;
+    BOOLEAN newImage = FALSE;
 
     // NOTE: Weird seemingly redundant tests because some placement code can "wrap around" and
     //   send "negative" values, which of course become very large unsigned ints that can then
@@ -1691,6 +1692,7 @@ VOID egDrawImage (
 
             return;
         }
+        newImage = TRUE;
 
         egComposeImage (CompImage, Image, 0, 0);
     }
@@ -1715,7 +1717,7 @@ VOID egDrawImage (
             CompImage->Width, CompImage->Height, 0
         );
     }
-    if ((CompImage != GlobalConfig.ScreenBackground) && (CompImage != Image)) {
+    if (newImage) {
         egFreeImage (CompImage);
     }
 } // VOID egDrawImage()
