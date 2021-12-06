@@ -836,7 +836,9 @@ VOID EndlessIdleLoop (VOID) {
 
     for (;;) {
         ReadAllKeyStrokes();
+        LEAKABLEEXTERNALSTART("WaitForEvent");
         REFIT_CALL_3_WRAPPER(gBS->WaitForEvent, 1, &gST->ConIn->WaitForKey, &index);
+        LEAKABLEEXTERNALSTOP("WaitForEvent");
     }
 } // VOID EndlessIdleLoop()
 

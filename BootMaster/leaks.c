@@ -628,11 +628,13 @@ LoadedImageGetProtocol (
     if (LoadedImage) {
         if (!(LoadedImage->ImageFlags & ImageFlag_ProtocolLoaded)) {
             //LOGBLOCKENTRY("gBS->HandleProtocol Handle:%p", LoadedImage->Handle);
+            LEAKABLEEXTERNALSTART("HandleProtocol");
             gBS->HandleProtocol (
                 LoadedImage->Handle,
                 &gEfiLoadedImageProtocolGuid,
                 (VOID**)&LoadedImage->Protocol
             );
+            LEAKABLEEXTERNALSTOP();
             //LOGBLOCKEXIT("gBS->HandleProtocol Protocol:%p", LoadedImage->Protocol);
             LoadedImage->ImageFlags |= ImageFlag_ProtocolLoaded;
         }
@@ -1023,6 +1025,7 @@ GetLoadedImages(
     EFI_HANDLE *LoadedImagesHandles = NULL;
 
     //if (!OldInAlloc) LOGBLOCKENTRY("LocateHandleBuffer");
+    LEAKABLEEXTERNALSTART("LocateHandleBuffer");
     EFI_STATUS Status = gBS->LocateHandleBuffer (
         ByProtocol,
         &gEfiLoadedImageProtocolGuid,
@@ -1030,6 +1033,7 @@ GetLoadedImages(
         &LoadedImagesCount,
         &LoadedImagesHandles
     );
+    LEAKABLEEXTERNALSTOP();
     //if (!OldInAlloc) LOGBLOCKEXIT("LocateHandleBuffer");
 
     if (!EFI_ERROR(Status) && LoadedImagesHandles) {

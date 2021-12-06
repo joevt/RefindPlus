@@ -1468,6 +1468,7 @@ BOOLEAN DuplicatesFallback (
         return FALSE;
     }
 
+    LEAKABLEEXTERNALSTART("Volume->RootDir->Open FileName");
     Status = REFIT_CALL_5_WRAPPER(
         Volume->RootDir->Open,
         Volume->RootDir,
@@ -1476,6 +1477,7 @@ BOOLEAN DuplicatesFallback (
         EFI_FILE_MODE_READ,
         0
     );
+    LEAKABLEEXTERNALSTOP();
 
     if (Status == EFI_SUCCESS) {
         FileInfo = LibFileInfo (FileHandle);
@@ -1487,6 +1489,7 @@ BOOLEAN DuplicatesFallback (
 
     MY_FREE_POOL(FileInfo);
 
+    LEAKABLEEXTERNALSTART("Volume->RootDir->Open FALLBACK_FULLNAME");
     Status = REFIT_CALL_5_WRAPPER(
         Volume->RootDir->Open,
         Volume->RootDir,
@@ -1495,13 +1498,16 @@ BOOLEAN DuplicatesFallback (
         EFI_FILE_MODE_READ,
         0
     );
+    LEAKABLEEXTERNALSTOP();
 
     if (Status == EFI_SUCCESS) {
         FallbackInfo = LibFileInfo (FallbackHandle);
         FallbackSize = FallbackInfo->FileSize;
     }
     else {
+        LEAKABLEEXTERNALSTART("FileHandle->Close");
         REFIT_CALL_1_WRAPPER(FileHandle->Close, FileHandle);
+        LEAKABLEEXTERNALSTOP();
         return FALSE;
     }
 

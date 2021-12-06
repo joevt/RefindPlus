@@ -36,6 +36,7 @@
 #include "global.h"
 #include "screenmgt.h"
 #include "lib.h"
+#include "leaks.h"
 #include "../include/refit_call_wrapper.h"
 
 static
@@ -116,7 +117,9 @@ BOOLEAN line_edit (CHAR16 *line_in, CHAR16 **line_out, UINTN x_max) {
         REFIT_CALL_2_WRAPPER(ST->ConOut->OutputString, ST->ConOut, print);
         REFIT_CALL_3_WRAPPER(ST->ConOut->SetCursorPosition, ST->ConOut, cursor, y_pos);
 
+        LEAKABLEEXTERNALSTART("WaitForEvent");
         REFIT_CALL_3_WRAPPER(BS->WaitForEvent, 1, &ST->ConIn->WaitForKey, &index);
+        LEAKABLEEXTERNALSTOP("WaitForEvent");
         err = REFIT_CALL_2_WRAPPER(ST->ConIn->ReadKeyStroke, ST->ConIn, &key);
         if (EFI_ERROR(err)) {
             continue;

@@ -2451,7 +2451,9 @@ UINTN WaitForInput (
         }
     }
 
+    LEAKABLEEXTERNALSTART("WaitForEvent");
     Status = REFIT_CALL_3_WRAPPER(gBS->WaitForEvent, Length, WaitList, &Index);
+    LEAKABLEEXTERNALSTOP("WaitForEvent");
     REFIT_CALL_1_WRAPPER(gBS->CloseEvent, TimerEvent);
 
     if (EFI_ERROR(Status)) {

@@ -3742,8 +3742,8 @@ LEAKABLEVOLUME (
 VOID
 LEAKABLEVOLUMES (
 ) {
+    LOGPROCENTRY();
     if (Volumes) {
-        LOGPROCENTRY();
         LEAKABLEPATHINIT (kLeakableVolumes);
             UINTN VolumeIndex;
             LEAKABLEPATHINC (); // space for VolumeIndex
@@ -3753,7 +3753,25 @@ LEAKABLEVOLUMES (
             LEAKABLEPATHDEC ();
             LEAKABLEWITHPATH (Volumes, "Volumes");
         LEAKABLEPATHDONE ();
-        LOGPROCEXIT();
     }
+
+    // The volumes in these lists should already exist in Volumes
+    if (PreBootVolumes) {
+        LEAKABLEPATHINIT (kLeakablePreBootVolumes);
+            LEAKABLEWITHPATH (PreBootVolumes, "PreBootVolumes");
+        LEAKABLEPATHDONE ();
+    }
+    if (DataVolumes) {
+        LEAKABLEPATHINIT (kLeakableDataVolumes);
+            LEAKABLEWITHPATH (DataVolumes, "DataVolumes");
+        LEAKABLEPATHDONE ();
+    }
+    if (SystemVolumes) {
+        LEAKABLEPATHINIT (kLeakableSystemVolumes);
+            LEAKABLEWITHPATH (SystemVolumes, "SystemVolumes");
+        LEAKABLEPATHDONE ();
+    }
+
+    LOGPROCEXIT();
 }
 #endif

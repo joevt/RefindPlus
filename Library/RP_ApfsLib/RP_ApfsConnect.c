@@ -161,6 +161,7 @@ EFI_STATUS ApfsStartDriver (
         if (!EFI_ERROR(Status)) {
             if (mNullSystemTable == NULL) {
                 mNullSystemTable = AllocateNullTextOutSystemTable (gST);
+                LEAKABLE (mNullSystemTable, "mNullSystemTable");
             }
             if (mNullSystemTable != NULL) {
                 LoadedImage->SystemTable = mNullSystemTable;

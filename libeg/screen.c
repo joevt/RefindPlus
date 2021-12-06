@@ -1996,10 +1996,12 @@ bailout_wait:
     LOGPROCEXIT("bailout");
     i = 0;
     egSetGraphicsModeEnabled (FALSE);
+    LEAKABLEEXTERNALSTART("WaitForEvent");
     REFIT_CALL_3_WRAPPER(
         gBS->WaitForEvent, 1,
         &gST->ConIn->WaitForKey, &i
     );
+    LEAKABLEEXTERNALSTOP("WaitForEvent");
     return;
 
 error_exit:

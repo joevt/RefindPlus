@@ -136,11 +136,13 @@ EFI_STATUS ScanDeviceHandles (
         (*HandleType)[k] = EFI_HANDLE_TYPE_UNKNOWN;
 
         // Retrieve a list of all the protocols on each handle
+        LEAKABLEEXTERNALSTART("ProtocolsPerHandle");
         Status = gBS->ProtocolsPerHandle (
             (*HandleBuffer)[k],
             &ProtocolGuidArray,
             &ArrayCount
         );
+        LEAKABLEEXTERNALSTOP("ProtocolsPerHandle");
 
         if (!EFI_ERROR(Status)) {
             for (ProtocolIndex = 0; ProtocolIndex < ArrayCount; ProtocolIndex++) {
@@ -173,12 +175,14 @@ EFI_STATUS ScanDeviceHandles (
                 }
 
                 // Retrieve the list of agents that have opened each protocol
+                LEAKABLEEXTERNALSTART("OpenProtocolInformation");
                 Status = gBS->OpenProtocolInformation (
                     (*HandleBuffer)[k],
                     ProtocolGuidArray[ProtocolIndex],
                     &OpenInfo,
                     &OpenInfoCount
                 );
+                LEAKABLEEXTERNALSTOP("OpenProtocolInformation");
 
                 if (!EFI_ERROR(Status)) {
                     for (OpenInfoIndex = 0; OpenInfoIndex < OpenInfoCount; OpenInfoIndex++) {
