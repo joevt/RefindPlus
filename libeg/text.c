@@ -53,6 +53,7 @@ static UINTN FontCellWidth = 7;
 // Text rendering
 //
 
+static EG_PIXEL TextFontColor = { 0x00, 0x00, 0x00, 0 };
 static
 VOID egPrepareFont (VOID) {
     UINTN ScreenW, ScreenH;
@@ -66,16 +67,16 @@ VOID egPrepareFont (VOID) {
 
     if (BaseFontImage == NULL) {
         if (GlobalConfig.ScaleUI == -1) {
-            BaseFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
+            BaseFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE, &TextFontColor);
         }
         else if (
             (GlobalConfig.ScaleUI == 1) ||
             (ScreenShortest >= HIDPI_SHORT && ScreenLongest >= HIDPI_LONG)
         ) {
-            BaseFontImage = egPrepareEmbeddedImage(&egemb_font_large, TRUE);
+            BaseFontImage = egPrepareEmbeddedImage(&egemb_font_large, TRUE, &TextFontColor);
         }
         else {
-            BaseFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
+            BaseFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE, &TextFontColor);
         }
         if (BaseFontImage) {
             LEAKABLEONEIMAGE(BaseFontImage, "BaseFontImage");

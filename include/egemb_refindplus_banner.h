@@ -1,6 +1,8 @@
 #ifndef _RP_DEFAULT_BANNER_H
 #define _RP_DEFAULT_BANNER_H
 
+#include "egemb_rp_banner_dark.h"
+
 #include "egemb_rp_banner_black.h"
 #include "egemb_rp_banner_white.h"
 

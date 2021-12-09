@@ -113,7 +113,7 @@ EG_IMAGE * egLoadImage(IN EFI_FILE* BaseDir, IN CHAR16 *FileName, IN BOOLEAN Wan
 EG_IMAGE * egLoadIcon(IN EFI_FILE* BaseDir, IN CHAR16 *FileName, IN UINTN IconSize);
 EG_IMAGE * egLoadIconAnyType(IN EFI_FILE *BaseDir, IN CHAR16 *SubdirName, IN CHAR16 *BaseName, IN UINTN IconSize);
 EG_IMAGE * egFindIcon(IN CHAR16 *BaseName, IN UINTN IconSize);
-EG_IMAGE * egPrepareEmbeddedImage(IN EG_EMBEDDED_IMAGE *EmbeddedImage, IN BOOLEAN WantAlpha);
+EG_IMAGE * egPrepareEmbeddedImage(IN EG_EMBEDDED_IMAGE *EmbeddedImage, IN BOOLEAN WantAlpha, IN EG_PIXEL *ForegroundColor);
 
 EG_IMAGE * egEnsureImageSize(IN EG_IMAGE *Image, IN UINTN Width, IN UINTN Height, IN EG_PIXEL *Color);
 

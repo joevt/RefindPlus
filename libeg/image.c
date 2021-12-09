@@ -782,7 +782,8 @@ VOID egInvertPlane (
 
 EG_IMAGE * egPrepareEmbeddedImage (
     IN EG_EMBEDDED_IMAGE *EmbeddedImage,
-    IN BOOLEAN            WantAlpha
+    IN BOOLEAN            WantAlpha,
+    IN EG_PIXEL          *ForegroundColor
 ) {
     EG_IMAGE  *NewImage;
     UINT8     *CompData;
@@ -807,6 +808,7 @@ EG_IMAGE * egPrepareEmbeddedImage (
         return NULL;
     }
 
+    UINT8 *CompStart;
     CompData   = (UINT8 *) EmbeddedImage->Data;   // drop const
     CompLen    = EmbeddedImage->DataLength;
     PixelCount = EmbeddedImage->Width * EmbeddedImage->Height;
@@ -818,7 +820,9 @@ EG_IMAGE * egPrepareEmbeddedImage (
     ) {
         // copy grayscale plane and expand
         if (EmbeddedImage->CompressMode == EG_EICOMPMODE_RLE) {
+            CompStart = CompData;
             egDecompressIcnsRLE (&CompData, &CompLen, PLPTR(NewImage, r), PixelCount);
+            MsgLog ("gray plane size %d\n", CompData - CompStart);
         }
         else {
             egInsertPlane (CompData, PLPTR(NewImage, r), PixelCount);
@@ -833,9 +837,15 @@ EG_IMAGE * egPrepareEmbeddedImage (
     ) {
         // copy color planes
         if (EmbeddedImage->CompressMode == EG_EICOMPMODE_RLE) {
+            CompStart = CompData;
             egDecompressIcnsRLE (&CompData, &CompLen, PLPTR(NewImage, r), PixelCount);
+            MsgLog ("red plane size %d\n", CompData - CompStart);
+            CompStart = CompData;
             egDecompressIcnsRLE (&CompData, &CompLen, PLPTR(NewImage, g), PixelCount);
+            MsgLog ("green plane size %d\n", CompData - CompStart);
+            CompStart = CompData;
             egDecompressIcnsRLE (&CompData, &CompLen, PLPTR(NewImage, b), PixelCount);
+            MsgLog ("blue plane size %d\n", CompData - CompStart);
         }
         else {
             egInsertPlane (CompData, PLPTR(NewImage, r), PixelCount);
@@ -847,10 +857,15 @@ EG_IMAGE * egPrepareEmbeddedImage (
         }
     }
     else {
-        // set color planes to black
-        egSetPlane (PLPTR(NewImage, r), 0, PixelCount);
-        egSetPlane (PLPTR(NewImage, g), 0, PixelCount);
-        egSetPlane (PLPTR(NewImage, b), 0, PixelCount);
+        // set color planes to ForegroundColor or black
+        MsgLog ("ForegroundColor of image set to (%02X,%02X,%02X)\n",
+            ForegroundColor ? ForegroundColor->r : 0,
+            ForegroundColor ? ForegroundColor->g : 0,
+            ForegroundColor ? ForegroundColor->b : 0
+        );
+        egSetPlane (PLPTR(NewImage, r), ForegroundColor ? ForegroundColor->r : 0, PixelCount);
+        egSetPlane (PLPTR(NewImage, g), ForegroundColor ? ForegroundColor->g : 0, PixelCount);
+        egSetPlane (PLPTR(NewImage, b), ForegroundColor ? ForegroundColor->b : 0, PixelCount);
     }
 
     // Handle Alpha
@@ -865,7 +880,9 @@ EG_IMAGE * egPrepareEmbeddedImage (
         // Alpha is Required and Available
         // Add Alpha Mask if Available and Required
         if (EmbeddedImage->CompressMode == EG_EICOMPMODE_RLE) {
+            CompStart = CompData;
             egDecompressIcnsRLE (&CompData, &CompLen, PLPTR(NewImage, a), PixelCount);
+            MsgLog ("alpha plane size %d\n", CompData - CompStart);
         }
         else {
             egInsertPlane (CompData, PLPTR(NewImage, a), PixelCount);

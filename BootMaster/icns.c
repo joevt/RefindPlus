@@ -85,10 +85,10 @@ PoolImage * BuiltinIcon(IN UINTN Id)
         ));
         if (!GetPoolImage (&BuiltinIconTable[Id].Image)) {
             if (Id == BUILTIN_ICON_TOOL_BOOTKICKER) {
-                AssignCachedPoolImage (&BuiltinIconTable[Id].Image, egPrepareEmbeddedImage(&egemb_tool_bootscreen, FALSE));
+                AssignCachedPoolImage (&BuiltinIconTable[Id].Image, egPrepareEmbeddedImage(&egemb_tool_bootscreen, FALSE, NULL));
             }
             else if (Id == BUILTIN_ICON_TOOL_NVRAMCLEAN) {
-                AssignCachedPoolImage (&BuiltinIconTable[Id].Image, egPrepareEmbeddedImage(&egemb_tool_clean_nvram, FALSE));
+                AssignCachedPoolImage (&BuiltinIconTable[Id].Image, egPrepareEmbeddedImage(&egemb_tool_clean_nvram, FALSE, NULL));
             }
             if (!GetPoolImage (&BuiltinIconTable[Id].Image)) {
                 AssignCachedPoolImage (&BuiltinIconTable[Id].Image, DummyImage(GlobalConfig.IconSizes[BuiltinIconTable[Id].IconSize]));
