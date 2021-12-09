@@ -67,9 +67,9 @@ CHAR16 *BlankLine = NULL;
 
 UINTN   ScreenW        = 0;
 UINTN   ScreenH        = 0;
+UINTN      ScreenAveLum           = 0;
 UINTN   ScreenLongest  = 0;
 UINTN   ScreenShortest = 0;
-
 
 BOOLEAN AllowGraphicsMode = FALSE;
 BOOLEAN ClearedBuffer     = FALSE;
@@ -110,7 +110,7 @@ VOID InitScreen (VOID) {
 
     if (egHasGraphicsMode()) {
         #if REFIT_DEBUG > 0
-        LOG(4, LOG_THREE_STAR_MID, L"Graphics Mode Detected ... Getting Resolution");
+        LOG(3, LOG_THREE_STAR_MID, L"Graphics Mode Detected ... Getting Resolution");
         #endif
 
         egGetScreenSize (&ScreenW, &ScreenH);
@@ -118,7 +118,7 @@ VOID InitScreen (VOID) {
     }
     else {
         #if REFIT_DEBUG > 0
-        LOG(4, LOG_THREE_STAR_MID, L"Graphics Mode *NOT* Detected ... Setting Text Mode");
+        LOG(3, LOG_THREE_STAR_MID, L"Graphics Mode *NOT* Detected ... Setting Text Mode");
         #endif
 
         AllowGraphicsMode = FALSE;
@@ -209,7 +209,7 @@ VOID SetupScreen (VOID) {
             : GlobalConfig.RequestedScreenHeight;
 
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL,
+        LOG(2, LOG_LINE_NORMAL,
             L"Recording Current Resolution as %d x %d",
             ScreenW, ScreenH
         );
@@ -238,7 +238,7 @@ VOID SetupScreen (VOID) {
         ScreenShortest = (ScreenW <= ScreenH) ? ScreenW : ScreenH;
 
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL,
+        LOG(2, LOG_LINE_NORMAL,
             L"After Setting Text Mode ... Recording *NEW* Current Resolution as '%d x %d'",
             ScreenLongest, ScreenShortest
         );
@@ -248,7 +248,7 @@ VOID SetupScreen (VOID) {
             (ScreenH > GlobalConfig.RequestedScreenHeight)
         ) {
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n", L"Match Requested Resolution to Actual Resolution");
+            LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n", L"Match Requested Resolution to Actual Resolution");
             #endif
 
             // Requested text mode forces us to use a bigger graphics mode
@@ -277,21 +277,21 @@ VOID SetupScreen (VOID) {
         SwitchToText (FALSE);
 
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"INFO: ", (GlobalConfig.LogLevel == 0) ? L"\n\n" : L"\n", L"Screen is in Text Mode");
+        LOG2(2, LOG_LINE_NORMAL, L"INFO: ", (GlobalConfig.LogLevel == 0) ? L"\n\n" : L"\n", L"Screen is in Text Mode");
         #endif
     }
     else if (AllowGraphicsMode) {
         gotGraphics = egIsGraphicsModeEnabled();
         if (!gotGraphics || !BannerLoaded) {
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"", L":\n", L"%s", gotGraphics ? L"Prepare Placeholder Display" : L"Prepare Graphics Mode Switch");
-            LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n", L"Graphics Mode Resolution:- '%d x %d'", ScreenLongest, ScreenShortest);
+            LOG2(2, LOG_LINE_NORMAL, L"", L":\n", L"%s", gotGraphics ? L"Prepare Placeholder Display" : L"Prepare Graphics Mode Switch");
+            LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n", L"Graphics Mode Resolution:- '%d x %d'", ScreenLongest, ScreenShortest);
             #endif
 
             // scale icons up for HiDPI graphics if required
             if (GlobalConfig.ScaleUI == -1) {
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"UI Scaling Disabled ... Maintain Icon Scale");
+                LOG2(2, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"UI Scaling Disabled ... Maintain Icon Scale");
                 #endif
             }
             else if (
@@ -321,7 +321,7 @@ VOID SetupScreen (VOID) {
                 }
 
                 #if REFIT_DEBUG > 0
-                LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+                LOG(2, LOG_LINE_NORMAL, L"%s", MsgStr);
                 MsgLog ("    * %s", MsgStr);
                 MsgLog ("\n\n");
                 MY_FREE_POOL(MsgStr);
@@ -329,13 +329,13 @@ VOID SetupScreen (VOID) {
             }
             else {
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"LoDPI Mode ... Maintain Icon Scale");
+                LOG2(2, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"LoDPI Mode ... Maintain Icon Scale");
                 #endif
             } // if GlobalConfig.ScaleUI
 
             if (!gotGraphics) {
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Running Graphics Mode Switch");
+                LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Running Graphics Mode Switch");
                 #endif
 
                 // clear screen and show banner
@@ -344,7 +344,7 @@ VOID SetupScreen (VOID) {
             }
             else {
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Loading Placeholder Display");
+                LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Loading Placeholder Display");
                 #endif
             }
 
@@ -352,13 +352,13 @@ VOID SetupScreen (VOID) {
                 BltClearScreen (TRUE);
 
                 #if REFIT_DEBUG > 0
-                LOG2(4, LOG_THREE_STAR_MID, L"INFO: ", L"\n\n", L"%s", gotGraphics ? L"Displayed Placeholder" : L"Switch to Graphics Mode ... Success");
+                LOG2(3, LOG_THREE_STAR_MID, L"INFO: ", L"\n\n", L"%s", gotGraphics ? L"Displayed Placeholder" : L"Switch to Graphics Mode ... Success");
                 #endif
             }
             else {
                 #if REFIT_DEBUG > 0
                 MsgLog ("INFO: Changing to Screensaver Display");
-                LOG2(4, LOG_THREE_STAR_MID, L"      ", L"", L"Configured to Start with Screensaver");
+                LOG2(3, LOG_THREE_STAR_MID, L"      ", L"", L"Configured to Start with Screensaver");
                 #endif
 
                 // start with screen blanked
@@ -376,7 +376,7 @@ VOID SetupScreen (VOID) {
     }
     else {
         #if REFIT_DEBUG > 0
-        LOG2(4, LOG_THREE_STAR_MID, L"WARN: ", L"\n\n", L"Invalid Screen Mode ... Switching to Text Mode");
+        LOG2(3, LOG_THREE_STAR_MID, L"WARN: ", L"\n\n", L"Invalid Screen Mode ... Switching to Text Mode");
         #endif
 
         AllowGraphicsMode     = FALSE;
@@ -528,14 +528,14 @@ VOID BeginExternalScreen (
 
     if (UseGraphicsMode) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"Beginning Child Display with Screen Mode:- 'Graphics'");
+        LOG(2, LOG_LINE_NORMAL, L"Beginning Child Display with Screen Mode:- 'Graphics'");
         #endif
 
         SwitchToGraphicsAndClear (FALSE);
     }
     else {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"Beginning Child Display with Screen Mode:- 'Text'");
+        LOG(2, LOG_LINE_NORMAL, L"Beginning Child Display with Screen Mode:- 'Text'");
         #endif
 
         SwitchToText (UseGraphicsMode);
@@ -637,7 +637,7 @@ BOOLEAN ReadAllKeyStrokes (VOID) {
 
     CHAR16 *MsgStr = PoolPrint (L"Clear Keystroke Buffer ... %r", Status);
     MsgLog ("INFO: %s\n\n", MsgStr);
-    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+    LOG(2, LOG_LINE_NORMAL, L"%s", MsgStr);
     MY_FREE_POOL(MsgStr);
     #endif
 
@@ -665,7 +665,7 @@ VOID PrintUglyText (
 
     if (Text) {
         if (AllowGraphicsMode &&
-            MyStrStr (L"Apple", gST->FirmwareVendor) != NULL &&
+            MyStrStr (L"Apple", gST->FirmwareVendor) &&
             egIsGraphicsModeEnabled()
         ) {
             egDisplayMessage (Text, &BGColor, PositionCode);
@@ -705,21 +705,21 @@ VOID PauseForKey (VOID) {
 
     if (GlobalConfig.ContinueOnWarning) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"Paused for Error/Warning ... Waiting 9 Seconds");
+        LOG(2, LOG_LINE_NORMAL, L"Paused for Error/Warning ... Waiting 9 Seconds");
         #endif
 
         for (i = 0; i < 9; ++i) {
             WaitOut = WaitForInput (1000);
             if (WaitOut == INPUT_KEY) {
                 #if REFIT_DEBUG > 0
-                LOG(3, LOG_LINE_NORMAL, L"Pause Terminated by Keypress");
+                LOG(2, LOG_LINE_NORMAL, L"Pause Terminated by Keypress");
                 #endif
 
                 Breakout = TRUE;
             }
             else if (WaitOut == INPUT_TIMER_ERROR) {
                 #if REFIT_DEBUG > 0
-                LOG(3, LOG_LINE_NORMAL, L"Pause Terminated by Timer Error!!");
+                LOG(2, LOG_LINE_NORMAL, L"Pause Terminated by Timer Error!!");
                 #endif
 
                 Breakout = TRUE;
@@ -732,27 +732,27 @@ VOID PauseForKey (VOID) {
 
         #if REFIT_DEBUG > 0
         if (!Breakout) {
-            LOG(3, LOG_LINE_NORMAL, L"Pause Terminated on Timeout");
+            LOG(2, LOG_LINE_NORMAL, L"Pause Terminated on Timeout");
         }
         #endif
     }
     else {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"Paused for Error/Warning ... Keypress Required");
+        LOG(2, LOG_LINE_NORMAL, L"Paused for Error/Warning ... Keypress Required");
         #endif
 
         for (;;) {
             WaitOut = WaitForInput (1000);
             if (WaitOut == INPUT_KEY) {
                 #if REFIT_DEBUG > 0
-                LOG(3, LOG_LINE_NORMAL, L"Pause Terminated by Keypress");
+                LOG(2, LOG_LINE_NORMAL, L"Pause Terminated by Keypress");
                 #endif
 
                 Breakout = TRUE;
             }
             else if (WaitOut == INPUT_TIMER_ERROR) {
                 #if REFIT_DEBUG > 0
-                LOG(3, LOG_LINE_NORMAL, L"Pause Terminated by Timer Error!!");
+                LOG(2, LOG_LINE_NORMAL, L"Pause Terminated by Timer Error!!");
                 #endif
 
                 Breakout = TRUE;
@@ -770,7 +770,7 @@ VOID PauseForKey (VOID) {
     GraphicsScreenDirty = TRUE;
 
     #if REFIT_DEBUG > 0
-    LOG(2, LOG_THREE_STAR_SEP, L"Resuming After Pause");
+    LOG(1, LOG_THREE_STAR_SEP, L"Resuming After Pause");
     #endif
 } // VOID PauseForKey
 
@@ -785,21 +785,21 @@ VOID PauseSeconds (
     ReadAllKeyStrokes();
 
     #if REFIT_DEBUG > 0
-    LOG(4, LOG_THREE_STAR_MID, L"Pausing for %d Seconds", Seconds);
+    LOG(3, LOG_THREE_STAR_MID, L"Pausing for %d Seconds", Seconds);
     #endif
 
     for (i = 0; i < Seconds; ++i) {
         WaitOut = WaitForInput (1000);
         if (WaitOut == INPUT_KEY) {
             #if REFIT_DEBUG > 0
-            LOG(3, LOG_LINE_NORMAL, L"Pause Terminated by Keypress");
+            LOG(2, LOG_LINE_NORMAL, L"Pause Terminated by Keypress");
             #endif
 
             Breakout = TRUE;
         }
         else if (WaitOut == INPUT_TIMER_ERROR) {
             #if REFIT_DEBUG > 0
-            LOG(3, LOG_LINE_NORMAL, L"Pause Terminated by Timer Error!!");
+            LOG(2, LOG_LINE_NORMAL, L"Pause Terminated by Timer Error!!");
             #endif
 
             Breakout = TRUE;
@@ -812,7 +812,7 @@ VOID PauseSeconds (
 
     #if REFIT_DEBUG > 0
     if (!Breakout) {
-        LOG(3, LOG_LINE_NORMAL, L"Pause Terminated on Timeout");
+        LOG(2, LOG_LINE_NORMAL, L"Pause Terminated on Timeout");
     }
     #endif
 
@@ -918,8 +918,8 @@ BOOLEAN CheckError (
     REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
     // Defeat need to "Press a Key to Continue" in debug mode
-    if (MyStrStr (where, L"While Reading Boot Sector") != NULL ||
-        MyStrStr (where, L"in ReadHiddenTags") != NULL
+    if (MyStrStr (where, L"While Reading Boot Sector") ||
+        MyStrStr (where, L"in ReadHiddenTags")
     ) {
         haveError = FALSE;
     }
@@ -964,15 +964,70 @@ VOID SwitchToGraphicsAndClear (
 } // VOID SwitchToGraphicsAndClear()
 
 
+// DA-TAG: Permit Image->PixelData Memory Leak on Qemu
+//         Apparent Memory Conflict ... Needs Investigation.
+//         See: sf.net/p/refind/discussion/general/thread/4dfcdfdd16/
+//         Temporary ... Eliminate when no longer required
+// UPDATE: Disabled for v0.13.2.AK ... Watch for issue reports
+#if 0
+static
+VOID egFreeImageQEMU (
+    EG_IMAGE *Image
+) {
+    if (DetectedDevices) {
+        MY_FREE_IMAGE(Image);
+    }
+    else {
+        MY_FREE_POOL(Image);
+    }
+} // static VOID egFreeImageQEMU()
+#endif
+
+
+#if REFIT_DEBUG > 0
+// DA-TAG: Limit to debug build
+static
+CHAR16 * GetBannerName (
+    UINTN BannerType
+) {
+    CHAR16 *BannerName = NULL;
+
+    switch (BannerType) {
+        case BANNER_RED_MID:     BannerName = L"Red (Mid)";      break;
+        case BANNER_RED_DARK:    BannerName = L"Red (Dark)";     break;
+        case BANNER_RED_LIGHT:   BannerName = L"Red (Light)";    break;
+        case BANNER_GREEN_MID:   BannerName = L"Green (Mid)";    break;
+        case BANNER_GREEN_DARK:  BannerName = L"Green (Dark)";   break;
+        case BANNER_GREEN_LIGHT: BannerName = L"Green (Light)";  break;
+        case BANNER_BLUE_MID:    BannerName = L"Blue (Mid)";     break;
+        case BANNER_BLUE_DARK:   BannerName = L"Blue (Dark)";    break;
+        case BANNER_BLUE_LIGHT:  BannerName = L"Blue (Light)";   break;
+        case BANNER_BLACK:       BannerName = L"Black";          break;
+        case BANNER_WHITE:       BannerName = L"White";          break;
+        case BANNER_GREY_MID:    BannerName = L"Grey (Mid)";     break;
+        case BANNER_GREY_DARK:   BannerName = L"Grey (Dark)";    break;
+        default:                 BannerName = L"Grey (Light)";   break;
+    } // switch
+
+    return BannerName;
+} // CHAR16 * GetBannerName()
+#endif
+
+
 VOID BltClearScreen (
     BOOLEAN ShowBanner
 ) {
     LOGPROCENTRY("ShowBanner:%d", ShowBanner);
 
-    static EG_IMAGE *Banner    = NULL;
-           EG_IMAGE *NewBanner = NULL;
-           EG_PIXEL  Black     = { 0x0, 0x0, 0x0, 0 };
-           INTN      BannerPosX, BannerPosY;
+    static BOOLEAN    FirstCall   = TRUE;
+    static EG_IMAGE *Banner       = NULL;
+           EG_IMAGE *NewBanner    = NULL;
+           EG_PIXEL  Black        = { 0x0, 0x0, 0x0, 0 };
+           INTN       BannerPosX  = 0;
+           INTN       BannerPosY  = 0;
+           UINT8      BackgroundR = 191;
+           UINT8      BackgroundG = 191;
+           UINT8      BackgroundB = 191;
 
     #if REFIT_DEBUG > 0
     static BOOLEAN LoggedBanner;
@@ -987,7 +1042,7 @@ VOID BltClearScreen (
     if (!IsBoot
         || (ShowBanner && !(GlobalConfig.HideUIFlags & HIDEUI_FLAG_BANNER))
     ) {
-        // load banner on first call
+        // Load banner on first call
         if (Banner == NULL) {
             #if REFIT_DEBUG > 0
             MsgLog ("\n");
@@ -1004,17 +1059,162 @@ VOID BltClearScreen (
 
             #if REFIT_DEBUG > 0
             if (!LoggedBanner) {
-                LOG2(3, LOG_LINE_NORMAL, L"    * ", L"\n", L"Using %s", Banner ? L"Custom Title Banner" : L"Default Title Banner");
+                LOG2(2, LOG_LINE_NORMAL, L"    * ", L"\n", L"Using %s", Banner ? L"Custom Title Banner" : L"Default Title Banner");
                 LoggedBanner = TRUE;
             }
             #endif
             if (Banner == NULL) {
-                Banner = egPrepareEmbeddedImage (&egemb_refindplus_banner, FALSE);
+                Banner = egPrepareEmbeddedImage (&egemb_rp_banner_grey_light, FALSE);
+                GlobalConfig.EmbeddedBanner = (Banner) ? TRUE : FALSE;
             }
             LEAKABLEONEIMAGE (Banner, "Banner");
-        }
+            
+            if (Banner != NULL) {
+                if (GlobalConfig.CustomScreenBG || GlobalConfig.EmbeddedBanner) {
+                    if (GlobalConfig.CustomScreenBG) {
+                        // Override Default Values
+                        BackgroundR = (UINT8) GlobalConfig.ScreenR;
+                        BackgroundG = (UINT8) GlobalConfig.ScreenG;
+                        BackgroundB = (UINT8) GlobalConfig.ScreenB;
+                    }
+                    
+                    // DA-TAG: Use BGR here
+                    EG_PIXEL PixelInfo = {
+                        BackgroundB, BackgroundG, BackgroundR, 0
+                    };
+                    Banner->PixelData[0] = MenuBackgroundPixel = PixelInfo;
+                }
+            }
+        } // if Banner == NULL
 
-        if (Banner) {
+        if (FirstCall) {
+            // Run once
+            FirstCall = FALSE;
+            
+            // Get (Weighted) Average Screen Luminance
+            UINTN SumRGB = (
+                (1 * (UINTN) MenuBackgroundPixel.b) +
+                (2 * (UINTN) MenuBackgroundPixel.r) +
+                (3 * (UINTN) MenuBackgroundPixel.g)
+            );
+            ScreenAveLum = (SumRGB > 5) ? (SumRGB / 6) : 0;
+            
+            // DA-TAG: The aim here can be reached by using two transparent background images
+            //         Consider this later ... after sorting any issues with Alpha rendering
+            //         Actually like the current but increased file size cost is significant
+            //         Can consider reducing image sizes but now gives very good resolution
+            if (GlobalConfig.EmbeddedBanner) {
+                // Already set up for Grey High Average Screen Luminosity (Default)
+                // Figure whether one colour dominates and skew towards that colour
+                // Revert to grey if more than one colour meets dominance threshold
+                BOOLEAN DominatorX = FALSE;
+                BOOLEAN DominatorR = FALSE;
+                BOOLEAN DominatorG = FALSE;
+                UINTN   BannerType = BANNER_GREY_LIGHT;
+                if ((4 * BackgroundR) >= (3 * (BackgroundG + BackgroundB))) {
+                    // Dominant Red
+                    BannerType = BANNER_RED_LIGHT;
+                    DominatorR = TRUE;
+                }
+                if ((4 * BackgroundG) >= (3 * (BackgroundR + BackgroundB))) {
+                    // Dominant Green
+                    DominatorX = (DominatorR) ? TRUE : FALSE;
+                    BannerType = (DominatorX) ? BANNER_GREY_LIGHT : BANNER_GREEN_LIGHT;
+                    DominatorG = TRUE;
+                }
+                if ((4 * BackgroundB) >= (3 * (BackgroundR + BackgroundG))) {
+                    // Dominant Blue
+                    DominatorX = (DominatorR) ? TRUE : (DominatorG) ? TRUE : FALSE;
+                    BannerType = (DominatorX) ? BANNER_GREY_LIGHT : BANNER_BLUE_LIGHT;
+                }
+                
+                // Adjust for Average Screen Luminance as required
+                // Apply a one (1) step variance if a dominant colour is preseent
+                if (ScreenAveLum < 170) {
+                    if (ScreenAveLum < 31) {
+                        if (ScreenAveLum < 16) { // Definitively Black
+                            BannerType = BANNER_BLACK;
+                        }
+                        else { // Basically Black
+                                 if (BannerType == BANNER_GREY_LIGHT)   BannerType = BANNER_BLACK;
+                            else if (BannerType == BANNER_RED_LIGHT)    BannerType = BANNER_RED_DARK;
+                            else if (BannerType == BANNER_GREEN_LIGHT)  BannerType = BANNER_GREEN_DARK;
+                            else if (BannerType == BANNER_BLUE_LIGHT)   BannerType = BANNER_BLUE_DARK;
+                        }
+                    }
+                    else if (ScreenAveLum < 85) { // Low Average Luminosity
+                             if (BannerType == BANNER_GREY_LIGHT)   BannerType = BANNER_GREY_DARK;
+                        else if (BannerType == BANNER_RED_LIGHT)    BannerType = BANNER_RED_MID;
+                        else if (BannerType == BANNER_GREEN_LIGHT)  BannerType = BANNER_GREEN_MID;
+                        else if (BannerType == BANNER_BLUE_LIGHT)   BannerType = BANNER_BLUE_MID;
+                    }
+                    else { // Medium Average Luminosity
+                        if (BannerType == BANNER_GREY_LIGHT)   BannerType = BANNER_GREY_MID;
+                        /* Others are already one step above */
+                    }
+                }
+                else if (ScreenAveLum > 225) {
+                    if (ScreenAveLum > 240) { // Definitively White
+                        BannerType = BANNER_WHITE;
+                    }
+                    else { // Basically White
+                        if (BannerType == BANNER_GREY_LIGHT)   BannerType = BANNER_WHITE;
+                        /* Others are already one step below */
+                    }
+                }
+                
+                // Match Dominant Colour and Average Screen Luminance
+                if (BannerType != BANNER_GREY_LIGHT) {
+                    // DA-TAG: See notes in 'egFreeImageQEMU'
+                    MY_FREE_IMAGE(Banner);
+                    
+                    switch (BannerType) {
+                        case BANNER_BLACK:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_black,       FALSE);  break;
+                        case BANNER_WHITE:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_white,       FALSE);  break;
+                        case BANNER_GREY_MID:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_grey_mid,    FALSE);  break;
+                        case BANNER_GREY_DARK:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_grey_dark,   FALSE);  break;
+                        case BANNER_RED_MID:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_red_mid,     FALSE);  break;
+                        case BANNER_RED_DARK:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_red_dark,    FALSE);  break;
+                        case BANNER_RED_LIGHT:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_red_light,   FALSE);  break;
+                        case BANNER_GREEN_MID:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_green_mid,   FALSE);  break;
+                        case BANNER_GREEN_DARK:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_green_dark,  FALSE);  break;
+                        case BANNER_GREEN_LIGHT:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_green_light, FALSE);  break;
+                        case BANNER_BLUE_MID:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_blue_mid,    FALSE);  break;
+                        case BANNER_BLUE_DARK:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_blue_dark,   FALSE);  break;
+                        case BANNER_BLUE_LIGHT:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_blue_light,  FALSE);  break;
+                        default:
+                            Banner = egPrepareEmbeddedImage (&egemb_rp_banner_grey_light,  FALSE);  break;
+                    } // switch
+                    
+                    // Align with Current MenuBackgroundPixel
+                    Banner->PixelData[0] = MenuBackgroundPixel;
+                } // if BannerType != BANNER_GREY_LIGHT
+                
+#if REFIT_DEBUG > 0
+                if (GlobalConfig.CustomScreenBG) {
+                    MsgLog (
+                            " ... Matched to Primary Colour Group:- '%s'",
+                            GetBannerName (BannerType)
+                            );
+                }
+#endif
+            } // if GlobalConfig.EmbeddedBanner
+        } // if FirstCall
+        
+        if (Banner != NULL) {
             #if REFIT_DEBUG > 0
             MsgLog ("\n");
             MsgLog ("  - Scale Banner\n");
@@ -1031,15 +1231,16 @@ VOID BltClearScreen (
                   (Banner->Width  > ScreenW) ? ScreenW : Banner->Width,
                   (Banner->Height > ScreenH) ? ScreenH : Banner->Height
               );
-          } // if GlobalConfig.BannerScale else if Banner->Width
+            }
 
            if (NewBanner != NULL) {
-              egFreeImage (Banner);
+                // DA-TAG: See notes in 'egFreeImageQEMU'
+                MY_FREE_IMAGE(Banner);
               Banner = NewBanner;
-           } // if NewBanner
+            }
 
            MenuBackgroundPixel = Banner->PixelData[0];
-        } // if Banner
+        } // if Banner != NULL
 
         // clear and draw banner
         #if REFIT_DEBUG > 0
@@ -1094,7 +1295,8 @@ VOID BltClearScreen (
 
     GraphicsScreenDirty = FALSE;
 
-    egFreeImage (GlobalConfig.ScreenBackground);
+    // DA-TAG: See notes in 'egFreeImageQEMU'
+    MY_FREE_IMAGE(GlobalConfig.ScreenBackground);
     GlobalConfig.ScreenBackground = egCopyScreen();
     MsgLog ("GlobalConfig.ScreenBackground = egCopyScreen\n");
     LEAKABLEONEIMAGE(GlobalConfig.ScreenBackground, "ScreenBackground image");
@@ -1132,7 +1334,7 @@ VOID BltImageAlpha (
 
     // blit to screen and clean up
     egDrawImage (CompImage, XPos, YPos);
-    egFreeImage (CompImage);
+    MY_FREE_IMAGE(CompImage);
 
     GraphicsScreenDirty = TRUE;
 } // VOID BltImageAlpha()
@@ -1166,7 +1368,7 @@ VOID BltImageAlpha (
 //
 //    // blit to screen and clean up
 //    egDrawImage (CompImage, XPos, YPos);
-//    egFreeImage (CompImage);
+//    MY_FREE_IMAGE(CompImage);
 //    GraphicsScreenDirty = TRUE;
 //} // VOID BltImageComposite()
 
@@ -1234,7 +1436,7 @@ VOID BltImageCompositeBadge (
             egDrawImage (CompImage, XPos, YPos);
         }
 
-        egFreeImage (CompImage);
+        MY_FREE_IMAGE(CompImage);
         GraphicsScreenDirty = TRUE;
     }
 } // VOID BltImageCompositeBadge()

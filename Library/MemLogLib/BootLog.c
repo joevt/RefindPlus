@@ -10,15 +10,22 @@
 #include "BootLog.h"
 #include "../../include/tiano_includes.h"
 #include "MemLogLib.h"
+#include "../../BootMaster/global.h"
+#include "../../BootMaster/leaks.h"
+
+INTN Debug1BooterLogCallbackIndex = -1;
+INTN Debug2BooterLogCallbackIndex = -1;
+
+#if REFIT_DEBUG > 0
+// DBG Build Only - START
+
 #include <Protocol/SimpleFileSystem.h>
 #include <Protocol/LoadedImage.h>
 #include <Guid/FileInfo.h>
 #include <Library/UefiBootServicesTableLib.h>
-#include "../../BootMaster/global.h"
 #include "../../BootMaster/lib.h"
 #include "../../BootMaster/mystrings.h"
 #include "../../include/refit_call_wrapper.h"
-#include "../../BootMaster/leaks.h"
 
 extern  EFI_GUID  gEfiMiscSubClassGuid;
 
@@ -28,9 +35,6 @@ extern  INT16  NowDay;
 extern  INT16  NowHour;
 extern  INT16  NowMinute;
 extern  INT16  NowSecond;
-
-INTN Debug1BooterLogCallbackIndex = -1;
-INTN Debug2BooterLogCallbackIndex = -1;
 
 BOOLEAN  TimeStamp = TRUE;
 BOOLEAN  UseMsgLog = FALSE;
@@ -241,49 +245,6 @@ UINTN SaveMessageToDebugLogFile (
     return BytesWritten;
 } // static VOID SaveMessageToDebugLogFile()
 
-UINTN EFIAPI Debug2BootLogMemLogCallback (
-    IN INTN DebugMode,
-    IN CHAR8 *LastMessage
-) {
-    UINTN BytesWritten = 0;
-    // Print message to console
-    if (DebugMode >= 2) {
-        LEAKABLEEXTERNALSTART ("Debug2BootLogMemLogCallback AsciiPrint");
-        BytesWritten = AsciiPrint ("%a", LastMessage);
-        LEAKABLEEXTERNALSTOP ();
-    }
-    return BytesWritten;
-}
-
-UINTN EFIAPI Debug1BootLogMemLogCallback (
-    IN INTN DebugMode,
-    IN CHAR8 *LastMessage
-) {
-    UINTN BytesWritten = 0;
-    if ( (DebugMode >= 1) ) {
-        BytesWritten = SaveMessageToDebugLogFile (LastMessage);
-    }
-    return BytesWritten;
-}
-
-
-BOOLEAN BootLogIsPaused (
-) {
- return MemLogCallbackIsPaused (Debug1BooterLogCallbackIndex);
-}
-
-
-INTN BootLogPause (
-) {
-  return PauseMemLogCallback (Debug1BooterLogCallbackIndex);
-}
-
-
-VOID BootLogResume (
-) {
-  ResumeMemLogCallback (Debug1BooterLogCallbackIndex);
-}
-
 VOID EFIAPI DeepLoggger (
     IN INTN     DebugMode,
     IN INTN     level,
@@ -295,13 +256,6 @@ VOID EFIAPI DeepLoggger (
     CHAR16 *Tmp       = NULL;
 
 
-#if REFIT_DEBUG < 1
-    // FreePool and return in RELEASE builds
-    MY_FREE_POOL(*Msg);
-
-    return;
-#endif
-
     // Make sure we are able to write
     if (DONTLOG(DebugMode, level, *Msg)) {
         MY_FREE_POOL(*Msg);
@@ -309,8 +263,8 @@ VOID EFIAPI DeepLoggger (
         return;
     }
 
-    // Truncate message at Log Levels 4 and lower (if required)
-    if (GlobalConfig.LogLevel < 5 && TruncateString (*Msg, Limit)) {
+    // Truncate message at Log Levels 3 and lower (if required)
+    if (GlobalConfig.LogLevel < 4 && TruncateString (*Msg, Limit)) {
         CHAR16 *StoreMsg = PoolPrint (L"%s ... Snipped!!", *Msg);
         MY_FREE_POOL(*Msg);
         *Msg = StoreMsg;
@@ -366,10 +320,6 @@ VOID EFIAPI DebugLog (
     IN const CHAR8 *FormatString,
     ...
 ) {
-#if REFIT_DEBUG < 1
-    // Just return in RELEASE builds
-    return;
-#else
     // Make sure writing is allowed/possible
     // Abort on higher log levels if not forcing
     if (DONTMSG(DebugMode, FormatString)) {
@@ -387,10 +337,56 @@ VOID EFIAPI DebugLog (
     VA_END(Marker);
 
     TimeStamp = TRUE;
-#endif
 } // VOID EFIAPI DebugLog()
 
+UINTN EFIAPI Debug1BootLogMemLogCallback (
+    IN INTN DebugMode,
+    IN CHAR8 *LastMessage
+) {
+    UINTN BytesWritten = 0;
+    if ( (DebugMode >= 1) ) {
+        BytesWritten = SaveMessageToDebugLogFile (LastMessage);
+    }
+    return BytesWritten;
+}
+
+// DBG Build Only - END
+#endif
+
+// Allow REL Build to access this ... without output
+
+UINTN EFIAPI Debug2BootLogMemLogCallback (
+    IN INTN DebugMode,
+    IN CHAR8 *LastMessage
+) {
+    UINTN BytesWritten = 0;
+    // Print message to console
+    if (DebugMode >= 2) {
+        LEAKABLEEXTERNALSTART ("Debug2BootLogMemLogCallback AsciiPrint");
+        BytesWritten = AsciiPrint ("%a", LastMessage);
+        LEAKABLEEXTERNALSTOP ();
+    }
+    return BytesWritten;
+}
+
+BOOLEAN BootLogIsPaused (
+) {
+    return MemLogCallbackIsPaused (Debug1BooterLogCallbackIndex);
+}
+
+INTN BootLogPause (
+) {
+    return PauseMemLogCallback (Debug1BooterLogCallbackIndex);
+}
+
+VOID BootLogResume (
+) {
+    ResumeMemLogCallback (Debug1BooterLogCallbackIndex);
+}
+
 VOID InitBooterLog (VOID) {
-  Debug2BooterLogCallbackIndex = SetMemLogCallback (Debug2BootLogMemLogCallback);
-  Debug1BooterLogCallbackIndex = SetMemLogCallback (Debug1BootLogMemLogCallback);
+    #if REFIT_DEBUG > 0
+    Debug2BooterLogCallbackIndex = SetMemLogCallback (Debug2BootLogMemLogCallback);
+    Debug1BooterLogCallbackIndex = SetMemLogCallback (Debug1BootLogMemLogCallback);
+    #endif
 } // VOID InitBooterLog()

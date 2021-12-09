@@ -36,6 +36,7 @@
 
 #include "libegint.h"
 #include "../BootMaster/global.h"
+#include "../BootMaster/rp_funcs.h"
 #include "../BootMaster/leaks.h"
 
 #include "egemb_font.h"
@@ -53,7 +54,7 @@ static UINTN FontCellWidth = 7;
 //
 
 static
-VOID egPrepareFont() {
+VOID egPrepareFont (VOID) {
     UINTN ScreenW, ScreenH;
 
     egGetScreenSize(&ScreenW, &ScreenH);
@@ -68,21 +69,19 @@ VOID egPrepareFont() {
             BaseFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
         }
         else if (
-            (GlobalConfig.ScaleUI == 1)
-            || (ScreenShortest >= HIDPI_SHORT && ScreenLongest >= HIDPI_LONG)
+            (GlobalConfig.ScaleUI == 1) ||
+            (ScreenShortest >= HIDPI_SHORT && ScreenLongest >= HIDPI_LONG)
         ) {
             BaseFontImage = egPrepareEmbeddedImage(&egemb_font_large, TRUE);
         }
         else {
             BaseFontImage = egPrepareEmbeddedImage(&egemb_font, TRUE);
         }
-        if (BaseFontImage == NULL) {
-            return;
+        if (BaseFontImage) {
+            LEAKABLEONEIMAGE(BaseFontImage, "BaseFontImage");
         }
-
-        LEAKABLEONEIMAGE(BaseFontImage, "BaseFontImage");
     }
-    FontCellWidth = BaseFontImage->Width / FONT_NUM_CHARS;
+    if (BaseFontImage != NULL) FontCellWidth = BaseFontImage->Width / FONT_NUM_CHARS;
 } // VOID egPrepareFont();
 
 UINTN egGetFontHeight(VOID) {
@@ -92,24 +91,28 @@ UINTN egGetFontHeight(VOID) {
 
 UINTN egGetFontCellWidth(VOID) {
     return FontCellWidth;
-}
+} // UINTN egGetFontCellWidth()
 
-UINTN egComputeTextWidth(IN CHAR16 *Text) {
+UINTN egComputeTextWidth (
+    IN CHAR16 *Text
+) {
     UINTN Width = 0;
 
     egPrepareFont();
-    if (Text != NULL)
-        Width = FontCellWidth * StrLen(Text);
+    if (Text != NULL) Width = FontCellWidth * StrLen (Text);
+
     return Width;
 } // UINTN egComputeTextWidth()
 
-VOID egMeasureText(IN CHAR16 *Text, OUT UINTN *Width, OUT UINTN *Height) {
+VOID egMeasureText (
+    IN  CHAR16 *Text,
+    OUT UINTN  *Width,
+    OUT UINTN  *Height
+) {
     egPrepareFont();
 
-    if (Width != NULL)
-        *Width = StrLen(Text) * FontCellWidth;
-    if (Height != NULL)
-        *Height = BaseFontImage->Height;
+    if (Width != NULL)  *Width  = StrLen (Text) * FontCellWidth;
+    if (Height != NULL) *Height = BaseFontImage->Height;
 }
 
 VOID egRenderText (
@@ -127,9 +130,7 @@ VOID egRenderText (
     UINTN            i, c;
 
     // Nothing to do if nothing was passed
-    if (!Text) {
-        return;
-    }
+    if (!Text) return;
 
     egPrepareFont();
 
@@ -143,9 +144,7 @@ VOID egRenderText (
     if (BGBrightness < 128) {
         if (LightFontImage == NULL) {
             LightFontImage = egCopyImage(BaseFontImage);
-            if (LightFontImage == NULL) {
-                return;
-            }
+            if (LightFontImage == NULL) return;
 
             LEAKABLEONEIMAGE (LightFontImage, "LightFontImage");
 
@@ -154,8 +153,7 @@ VOID egRenderText (
                 LightFontImage->PixelData[i].g = 255 - LightFontImage->PixelData[i].g;
                 LightFontImage->PixelData[i].b = 255 - LightFontImage->PixelData[i].b;
             } // for
-
-        } // if
+        }
         FontImage = LightFontImage;
     }
     else {
@@ -168,7 +166,7 @@ VOID egRenderText (
             LEAKABLEONEIMAGE (DarkFontImage, "DarkFontImage");
         }
         FontImage = DarkFontImage;
-    } // if/else
+    }
 
     // render it
     BufferPtr         = CompImage->PixelData;
@@ -186,7 +184,7 @@ VOID egRenderText (
             c -= 32;
         }
 
-        egRawCompose(
+        egRawCompose (
             BufferPtr, FontPixelData + c * FontCellWidth,
             FontCellWidth, FontImage->Height,
             BufferLineOffset, FontLineOffset
@@ -196,16 +194,15 @@ VOID egRenderText (
 }
 
 // Load a font bitmap from the specified file
-VOID egLoadFont(IN CHAR16 *Filename) {
-    if (BaseFontImage)
-        egFreeImage(BaseFontImage);
-
+VOID egLoadFont (
+    IN CHAR16 *Filename
+) {
+    MY_FREE_IMAGE(BaseFontImage);
     BaseFontImage = egLoadImage(SelfDir, Filename, TRUE);
     LEAKABLEONEIMAGE(BaseFontImage, "BaseFontImage");
 
-    if (BaseFontImage == NULL)
+    if (BaseFontImage == NULL) {
         Print(L"Note: Font image file %s is invalid! Using default font!\n");
+    }
     egPrepareFont();
 } // BOOLEAN egLoadFont()
-
-/* EOF */

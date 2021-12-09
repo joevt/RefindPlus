@@ -346,17 +346,17 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (VOID) {
 
             if (EFI_ERROR(XStatus)) {
                 #if REFIT_DEBUG > 0
-                LOG2(4, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: %r", XStatus);
+                LOG2(3, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: %r", XStatus);
                 #endif
             }
             else if (HandleType == NULL) {
                 #if REFIT_DEBUG > 0
-                LOG2(4, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: Invalid Handle Type");
+                LOG2(3, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: Invalid Handle Type");
                 #endif
             }
             else if (HandleBuffer == NULL) {
                 #if REFIT_DEBUG > 0
-                LOG2(4, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: Invalid Handle Buffer");
+                LOG2(3, LOG_THREE_STAR_MID, L"", L"", L"    - ERROR: Invalid Handle Buffer");
                 #endif
             }
             else {
@@ -376,7 +376,7 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (VOID) {
 
                 if (!Device) {
                     #if REFIT_DEBUG > 0
-                    LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ... Discounted [Other Item]");
+                    LOG2(2, LOG_LINE_NORMAL, L"", L"", L"    ... Discounted [Other Item]");
                     #endif
                 }
                 else {
@@ -591,30 +591,30 @@ EFI_STATUS BdsLibConnectMostlyAllEfi (VOID) {
 
                     if (Parent) {
                         #if REFIT_DEBUG > 0
-                        LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ... Skipped [Parent Device]%s", DeviceData);
+                        LOG2(2, LOG_LINE_NORMAL, L"", L"", L"    ... Skipped [Parent Device]%s", DeviceData);
                         #endif
                     }
                     else if (!EFI_ERROR(XStatus)) {
                         DetectedDevices = TRUE;
 
                         #if REFIT_DEBUG > 0
-                        LOG2(3, LOG_LINE_NORMAL, L"", L"", L"     * %r                %s", XStatus, DeviceData);
+                        LOG2(2, LOG_LINE_NORMAL, L"", L"", L"     * %r                %s", XStatus, DeviceData);
                         #endif
                     }
                     else {
                         #if REFIT_DEBUG > 0
 
                         if (XStatus == EFI_NOT_STARTED) {
-                            LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ... Declined [Empty Device]%s", DeviceData);
+                            LOG2(2, LOG_LINE_NORMAL, L"", L"", L"    ... Declined [Empty Device]%s", DeviceData);
                         }
                         else if (XStatus == EFI_NOT_FOUND) {
-                            LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    ... Bypassed [Not Linkable]%s", DeviceData);
+                            LOG2(2, LOG_LINE_NORMAL, L"", L"", L"    ... Bypassed [Not Linkable]%s", DeviceData);
                         }
                         else if (XStatus == EFI_INVALID_PARAMETER) {
-                            LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    - ERROR: Invalid Param%s", DeviceData);
+                            LOG2(2, LOG_LINE_NORMAL, L"", L"", L"    - ERROR: Invalid Param%s", DeviceData);
                         }
                         else {
-                            LOG2(3, LOG_LINE_NORMAL, L"", L"", L"    - WARN: %r%s", XStatus, DeviceData);
+                            LOG2(2, LOG_LINE_NORMAL, L"", L"", L"    - WARN: %r%s", XStatus, DeviceData);
                         }
 
                         #endif
@@ -697,7 +697,7 @@ EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (VOID) {
             LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Dispatch ... %r", Status);
         }
         else {
-            LOG2(4, LOG_THREE_STAR_MID, L"INFO: ", L"\n\n", L"Additional DXE Drivers Revealed ... Relink Handles");
+            LOG2(3, LOG_THREE_STAR_MID, L"INFO: ", L"\n\n", L"Additional DXE Drivers Revealed ... Relink Handles");
         }
         #endif
 
@@ -705,7 +705,7 @@ EFI_STATUS BdsLibConnectAllDriversToAllControllersEx (VOID) {
     LOGBLOCKEXIT("Connect and Dispatch");
 
     #if REFIT_DEBUG > 0
-    LOG2(2, LOG_THREE_STAR_SEP, L"INFO: ", L"\n", L"Processed %d Handle%s",
+    LOG2(1, LOG_THREE_STAR_SEP, L"INFO: ", L"\n", L"Processed %d Handle%s",
         AllHandleCount, (AllHandleCount == 1) ? L"" : L"s"
     );
     #endif
@@ -731,14 +731,14 @@ EFI_STATUS ApplyGOPFix (VOID) {
     #if REFIT_DEBUG > 0
     LOG(1, LOG_LINE_SEPARATOR, L"Reload OptionROM");
 
-    LOG2(3, LOG_LINE_NORMAL, L"\nINFO: ", L"\n\n", L"Amend System Table ... %r", Status);
+    LOG2(2, LOG_LINE_NORMAL, L"\nINFO: ", L"\n\n", L"Amend System Table ... %r", Status);
     #endif
 
     if (!EFI_ERROR(Status)) {
         Status = AcquireGOP();
 
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"      ", L"\n\n", L"Acquire OptionROM on Volatile Storage ... %r", Status);
+        LOG2(2, LOG_LINE_NORMAL, L"      ", L"\n\n", L"Acquire OptionROM on Volatile Storage ... %r", Status);
         #endif
 
         // connect all devices if no error
@@ -748,7 +748,7 @@ EFI_STATUS ApplyGOPFix (VOID) {
         else {
             MsgLog ("\n\n");
             Status = BdsLibConnectAllDriversToAllControllersEx();
-            LOG2(4, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"BdsLibConnectAllDriversToAllControllersEx ... %r", Status);
+            LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"BdsLibConnectAllDriversToAllControllersEx ... %r", Status);
         }
     }
 

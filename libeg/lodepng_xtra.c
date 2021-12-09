@@ -31,6 +31,7 @@
 
 #include "global.h"
 #include "../BootMaster/screenmgt.h"
+#include "../BootMaster/rp_funcs.h"
 #include "lodepng.h"
 #include "leaks.h"
 
@@ -143,7 +144,7 @@ EG_IMAGE * egDecodePNG(IN UINT8 *FileData, IN UINTN FileDataLength, IN UINTN Ico
    }
    if (NewImage->Width != Width || NewImage->Height != Height) {
        // Should never happen; just being paranoid.
-       egFreeImage(NewImage);
+       MY_FREE_IMAGE(NewImage);
        return NULL;
    }
 

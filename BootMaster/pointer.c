@@ -29,7 +29,7 @@
 #include "global.h"
 #include "screenmgt.h"
 #include "icns.h"
-#include "my_free_pool.h"
+#include "rp_funcs.h"
 #include "../include/refit_call_wrapper.h"
 
 UINTN                           NumAPointerDevices = 0;
@@ -208,8 +208,6 @@ VOID pdCleanup() {
 
     MY_FREE_POOL(SPointerProtocol);
     FreePoolImage (&MouseImage);
-    egFreeImage (Background);
-    Background = NULL;
 
     NumAPointerDevices = 0;
     NumSPointerDevices = 0;
@@ -361,10 +359,7 @@ POINTER_STATE pdGetState() {
 // Draw the mouse at the current coordinates
 ////////////////////////////////////////////////////////////////////////////////
 VOID pdDraw() {
-    if (Background) {
-        egFreeImage (Background);
-        Background = NULL;
-    }
+    MY_FREE_IMAGE(Background);
     if (GetPoolImage (&MouseImage)) {
         UINTN Width = GetPoolImage (&MouseImage)->Width;
         UINTN Height = GetPoolImage (&MouseImage)->Height;
@@ -391,7 +386,6 @@ VOID pdDraw() {
 VOID pdClear() {
     if (Background) {
         egDrawImage (Background, LastXPos, LastYPos);
-        egFreeImage (Background);
-        Background = NULL;
+        MY_FREE_IMAGE(Background);
     }
 }

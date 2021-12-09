@@ -34,7 +34,7 @@
 #include "legacy.h"
 #include "GenericBdsLib.h"
 #include "../BootMaster/global.h"
-#include "../BootMaster/my_free_pool.h"
+#include "../BootMaster/rp_funcs.h"
 #include "../include/refit_call_wrapper.h"
 #include "../BootMaster/leaks.h"
 
@@ -726,7 +726,7 @@ EFI_STATUS BdsAddNonExistingLegacyBootOptions (VOID) {
         ASSERT (BbsIndex == Index);
 
         // Save the BbsIndex
-        LOGPOOL(mBootOptionBbsMapping);
+        if (LOGPOOL(mBootOptionBbsMapping));
         mBootOptionBbsMapping = EfiReallocatePool (
             mBootOptionBbsMapping,
             mBootOptionBbsMappingCount * sizeof (BOOT_OPTION_BBS_MAPPING),

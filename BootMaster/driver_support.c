@@ -753,7 +753,7 @@ BOOLEAN LoadDrivers (VOID) {
     #endif
 
 
-    while (!CurFound && (Directory = FindCommaDelimited (DRIVER_DIRS, i++)) != NULL) {
+    while ((CurFound == 0) && (Directory = FindCommaDelimited (DRIVER_DIRS, i++)) != NULL) {
         CleanUpPathNameSlashes (Directory);
         SelfDirectory = SelfDirPath ? StrDuplicate (SelfDirPath) : NULL;
         CleanUpPathNameSlashes (SelfDirectory);
@@ -761,13 +761,13 @@ BOOLEAN LoadDrivers (VOID) {
 
         CurFound = ScanDriverDir (SelfDirectory);
         if (CurFound > 0) {
-            NumFound = NumFound + CurFound;
             // We only process one default folder
-            // Exit loop if drivers were found
+            // Increment 'NumFound' and exit loop if drivers were found
+            NumFound = NumFound + CurFound;
         }
         else {
             #if REFIT_DEBUG > 0
-            LOG(3, LOG_LINE_NORMAL,
+            LOG(2, LOG_LINE_NORMAL,
                 L"'%s' ... Program Default Driver Folder:- '%s'",
                 MsgNotFound, SelfDirectory
             );
@@ -807,7 +807,7 @@ BOOLEAN LoadDrivers (VOID) {
                 }
                 else {
                     #if REFIT_DEBUG > 0
-                    LOG(3, LOG_LINE_NORMAL,
+                    LOG(2, LOG_LINE_NORMAL,
                         L"'%s' ... User Defined Driver Folder:- '%s'",
                         MsgNotFound, SelfDirectory
                     );
@@ -831,7 +831,7 @@ BOOLEAN LoadDrivers (VOID) {
         L"Processed %d UEFI Driver%s",
         NumFound, (NumFound == 1) ? L"" : L"s"
     );
-    LOG(2, LOG_THREE_STAR_SEP, L"%s", MsgStr);
+    LOG(1, LOG_THREE_STAR_SEP, L"%s", MsgStr);
     MY_FREE_POOL(MsgStr);
     #endif
 

@@ -48,7 +48,7 @@ decline_apfsload      |Disables built in provision of APFS filesystem capability
 decline_apfsmute      |Disables supressesion of verbose APFS text on boot
 decline_apfssync      |Disables feature allowing direct APFS/FileVault boot (Without "PreBoot")
 decline_espfilter     |Allows other ESPs other than the RefindPlus ESP to be scanned for loaders
-decline_nvmeload      |Disables built in NvmExpress Driver
+decline_nvmeload      |Disables the built in NvmExpress Driver
 decline_nvramprotect  |Disables feature that blocks UEFI Windows certificates on Apple NVRAM
 decline_reloadgop     |Disables reinstallation of UEFI 2.x GOP drivers on EFI 1.x units
 decline_tagshelp      |Disables feature that ensures hidden tags can always be unhidden
@@ -63,7 +63,8 @@ normalise_csr         |Removes the `APPLE_INTERNAL` bit, when present, to permit
 prefer_hidden_icons   |Prioritises `.VolumeIcon` image icons when available
 provide_console_gop   |Fixes issues with GOP on some legacy units
 scale_ui              |Provides control of UI element scaling
-set_boot_args         |Allows arbitrary Mac OS boot argument strings
+screen_rgb            |Allows setting arbitrary screen background colours
+set_boot_args         |Allows setting arbitrary Mac OS boot arguments
 text_renderer         |Provides a text renderer that allows text output when otherwise unavailable
 uga_pass_through      |Provides UGA instance on GOP to permit EFIBoot with modern GPUs
 
@@ -84,6 +85,9 @@ Implementation differences with the upstream base version v0.13.2 are:
   * Only active on DEBUG builds. RELEASE builds remain optimised for day to day use.
   * Level 0 does not switch logging off but activates the native summary format.
   * Levels 1 to 4 output logs similar to the detailed upstream format.
+    - Level 4 is only exposed by setting the `REFIT_DEBUG` build flag to `2` when compiling
+    - Unless Level 4 is exposed at compile time, selected levels above `3` will be capped at LogLevel 3
+    - When Level 4 is exposed at compile time, selected levels above `4` will be capped at LogLevel 4
 - **"resolution" Token:** The `max` setting is redundant in RefindPlus which always defaults to the maximum available resolution whenever the resolution is not set or is otherwise not available.
 - **Screenshots:** These are saved in the PNG format with a significantly smaller file size. Additionally, the file naming is slightly different and the files are always saved to the same ESP as the RefindPlus efi file.
 - **UI Scaling:** WQHD monitors are correctly determined not to be HiDPI monitors and UI elements are not scaled up on such monitors when the RefindPlus-Specific `scale_ui` configuration token is set to automatically detect the screen resolution.

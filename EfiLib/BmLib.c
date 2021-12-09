@@ -23,7 +23,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include "gnuefi-helper.h"
 #endif
 
-#include "../BootMaster/my_free_pool.h"
+#include "../BootMaster/rp_funcs.h"
 #include "../include/refit_call_wrapper.h"
 
 #include "../BootMaster/leaks.h"
@@ -167,7 +167,7 @@ EFI_FILE_SYSTEM_INFO * EfiLibFileSystemInfo (
         FileSystemInfo = AllocateZeroPool (Size);
         Status = FHand->GetInfo (FHand, &gEfiFileSystemInfoGuid, &Size, FileSystemInfo);
     }
-    LOGPOOL(FileSystemInfo);
+    if (LOGPOOL(FileSystemInfo));
 
     return EFI_ERROR(Status) ? NULL : FileSystemInfo;
 } // EFI_FILE_SYSTEM_INFO * EfiLibFileSystemInfo()

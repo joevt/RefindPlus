@@ -54,6 +54,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+/*
+ * Modified for RefindPlus
+ * Copyright (c) 2021 Dayo Akanji (sf.net/u/dakanji/profile)
+ * Portions Copyright (c) 2021 Joe van Tunen (joevt@shaw.ca)
+ *
+ * Modifications distributed under the preceding terms.
+ */
 
 #include "libegint.h"
 #include "../BootMaster/global.h"
@@ -100,7 +107,7 @@ EG_IMAGE * egCreateImage (
     NewImage->PixelData = (EG_PIXEL *) AllocatePool (Width * Height * sizeof (EG_PIXEL));
 
     if (NewImage->PixelData == NULL) {
-        egFreeImage (NewImage);
+        MY_FREE_IMAGE(NewImage);
         return NULL;
     }
 
@@ -200,12 +207,12 @@ EG_IMAGE * egScaleImage (
     UINTN      x_ratio, y_ratio;
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, L"Scaling Image to %d x %d", NewWidth, NewHeight);
+    LOG(2, LOG_LINE_NORMAL, L"Scaling Image to %d x %d", NewWidth, NewHeight);
     #endif
 
     if ((Image == NULL) || (Image->Height == 0) || (Image->Width == 0) || (NewWidth == 0) || (NewHeight == 0)) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"In egScaleImage ... Image is NULL or a Size is 0!!");
+        LOG(2, LOG_LINE_NORMAL, L"In egScaleImage ... Image is NULL or a Size is 0!!");
         #endif
 
         return NULL;
@@ -218,7 +225,7 @@ EG_IMAGE * egScaleImage (
     NewImage = egCreateImage (NewWidth, NewHeight, Image->HasAlpha);
     if (NewImage == NULL) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"In egScaleImage ... Could Not Create New Image!!");
+        LOG(2, LOG_LINE_NORMAL, L"In egScaleImage ... Could Not Create New Image!!");
         #endif
 
         return NULL;
@@ -266,12 +273,13 @@ EG_IMAGE * egScaleImage (
     } // for (i...)
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, L"Scaling Image Completed");
+    LOG(2, LOG_LINE_NORMAL, L"Scaling Image Completed");
     #endif
 
     return NewImage;
 } // EG_IMAGE * egScaleImage()
 
+/*
 VOID egFreeImage (
     IN EG_IMAGE *Image
 ) {
@@ -282,6 +290,7 @@ VOID egFreeImage (
     MY_FREE_POOL(Image->PixelData);
     MY_FREE_POOL(Image);
 }
+*/
 
 //
 // Basic file operations
@@ -383,7 +392,8 @@ EFI_STATUS egLoadFile (
 
     if (FileData) {
         *FileData       = Buffer;
-    } else {
+    }
+    else {
         MY_FREE_POOL(Buffer);
     }
     if (FileDataLength) {
@@ -394,12 +404,12 @@ EFI_STATUS egLoadFile (
     LOGPROCEXIT("'%s' loaded", FileName);
     #else
     #if REFIT_DEBUG > 0
-    LOG(4, LOG_THREE_STAR_MID, L"In egLoadFile ... Loaded File:- '%s'", FileName);
+    LOG(3, LOG_THREE_STAR_MID, L"In egLoadFile ... Loaded File:- '%s'", FileName);
     #endif
     #endif
 
     return EFI_SUCCESS;
-}
+} // EFI_STATUS egLoadFile()
 
 EFI_STATUS egFindESP (
     OUT EFI_FILE_HANDLE *RootDir
@@ -421,7 +431,7 @@ EFI_STATUS egFindESP (
     }
 
     return Status;
-}
+} // EFI_STATUS egFindESP()
 
 EFI_STATUS egSaveFile (
     IN EFI_FILE  *BaseDir OPTIONAL,
@@ -469,7 +479,7 @@ EFI_STATUS egSaveFile (
     }
 
     return Status;
-}
+} // EFI_STATUS egSaveFile()
 
 EFI_STATUS egSaveFileNumbered (
     IN EFI_FILE  *BaseDir,
@@ -502,7 +512,7 @@ EFI_STATUS egSaveFileNumbered (
     }
 
     return Status;
-} // egSaveFileNumbered
+} // EFI_STATUS egSaveFileNumbered()
 
 //
 // Loading images from files and embedded data
@@ -523,7 +533,7 @@ EG_IMAGE * egDecodeAny (
     if (!NewImage)      { NewImage = egDecodeBMP  (FileData, FileDataLength, IconSize, WantAlpha   ); if (NewImage) MsgLog("loaded bmp\n"); }
 
     return NewImage;
-}
+} // static EG_IMAGE * egDecodeAny ()
 
 EG_IMAGE * egLoadImage (
     IN EFI_FILE *BaseDir,
@@ -537,7 +547,7 @@ EG_IMAGE * egLoadImage (
 
     if (BaseDir == NULL || FileName == NULL) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"In egLoadImage ... Requirements Not Met!!");
+        LOG(2, LOG_LINE_NORMAL, L"In egLoadImage ... Requirements Not Met!!");
         #endif
 
         return NULL;
@@ -547,7 +557,7 @@ EG_IMAGE * egLoadImage (
     Status = egLoadFile (BaseDir, FileName, &FileData, &FileDataLength);
     if (EFI_ERROR(Status)) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL,
+        LOG(2, LOG_LINE_NORMAL,
             L"In egLoadImage ... '%r' Returned While Attempting to Load File!!",
             Status
         );
@@ -562,7 +572,7 @@ EG_IMAGE * egLoadImage (
     MY_FREE_POOL(FileData);
 
     return NewImage;
-}
+} // EG_IMAGE * egLoadImage()
 
 // Load an icon from (BaseDir)/Path, extracting the icon of size IconSize x IconSize.
 // Returns a pointer to the image data, or NULL if the icon could not be loaded.
@@ -583,7 +593,7 @@ EG_IMAGE * egLoadIcon (
     }
     else if (!AllowGraphicsMode) {
         #if REFIT_DEBUG > 0
-        LOG(4, LOG_THREE_STAR_MID,
+        LOG(3, LOG_THREE_STAR_MID,
             L"In egLoadIcon ... Skipped Loading Icon in Text Screen Mode"
         );
         #endif
@@ -598,7 +608,7 @@ EG_IMAGE * egLoadIcon (
     if (EFI_ERROR(Status)) {
         /*
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL,
+        LOG(2, LOG_LINE_NORMAL,
             L"In egLoadIcon ... '%r' When Trying to Load Icon:- '%s'!!",
             Status, Path
         );
@@ -610,14 +620,14 @@ EG_IMAGE * egLoadIcon (
     }
 
     // decode it
-    LOGPOOL (FileData);
+    if (LOGPOOL (FileData));
     Image = egDecodeAny (FileData, FileDataLength, IconSize, TRUE);
     MY_FREE_POOL(FileData);
 
     // return null if unable to decode
     if (Image == NULL) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL,
+        LOG(2, LOG_LINE_NORMAL,
             L"In egLoadIcon ... Could Not Decode File Data!!"
         );
         #endif
@@ -645,7 +655,7 @@ EG_IMAGE * egLoadIcon (
 
         // use scaled image if available
         if (NewImage) {
-            egFreeImage (Image);
+            MY_FREE_IMAGE(Image);
             Image = NewImage;
         }
         else {
@@ -655,7 +665,7 @@ EG_IMAGE * egLoadIcon (
             );
 
             #if REFIT_DEBUG > 0
-            LOG(3, LOG_LINE_NORMAL, L"In egLoadIcon ... %s", MsgStr);
+            LOG(2, LOG_LINE_NORMAL, L"In egLoadIcon ... %s", MsgStr);
             #endif
 
             Print(MsgStr);
@@ -689,7 +699,7 @@ EG_IMAGE * egLoadIconAnyType (
 
     if (!AllowGraphicsMode) {
         #if REFIT_DEBUG > 0
-        LOG(4, LOG_THREE_STAR_MID,
+        LOG(3, LOG_THREE_STAR_MID,
             L"In egLoadIconAnyType ... Skipped Loading Icon in Text Screen Mode"
         );
         #endif
@@ -699,7 +709,7 @@ EG_IMAGE * egLoadIconAnyType (
     }
 
     #if REFIT_DEBUG > 0
-    LOG(4, LOG_THREE_STAR_MID,
+    LOG(3, LOG_THREE_STAR_MID,
         L"Trying to Load Icon from '%s' with Base Name:- '%s'",
         (StrLen (SubdirName) != 0) ? SubdirName : L"\\",
         BaseName
@@ -715,7 +725,7 @@ EG_IMAGE * egLoadIconAnyType (
     } // while
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL,
+    LOG(2, LOG_LINE_NORMAL,
         L"In egLoadIconAnyType ... %s",
         (Image != NULL) ? L"Loaded Icon" : L"Could Not Load Icon!!"
     );
@@ -755,6 +765,20 @@ EG_IMAGE * egFindIcon (
 
     return Image;
 } // EG_IMAGE * egFindIcon()
+
+VOID egInvertPlane (
+    IN UINT8 *DestPlanePtr,
+    IN UINTN PixelCount
+) {
+    UINTN i;
+
+    if (DestPlanePtr) {
+        for (i = 0; i < PixelCount; i++) {
+            *DestPlanePtr = 255 - *DestPlanePtr;
+            DestPlanePtr += 4;
+        }
+    }
+} // VOID egInvertPlane()
 
 EG_IMAGE * egPrepareEmbeddedImage (
     IN EG_EMBEDDED_IMAGE *EmbeddedImage,
@@ -838,6 +862,7 @@ EG_IMAGE * egPrepareEmbeddedImage (
             EmbeddedImage->PixelMode == EG_EIPIXELMODE_ALPHA_INVERT
         )
     ) {
+        // Alpha is Required and Available
         // Add Alpha Mask if Available and Required
         if (EmbeddedImage->CompressMode == EG_EICOMPMODE_RLE) {
             egDecompressIcnsRLE (&CompData, &CompLen, PLPTR(NewImage, a), PixelCount);
@@ -851,12 +876,14 @@ EG_IMAGE * egPrepareEmbeddedImage (
         }
     }
     else {
-        // Default to 'Opaque' 255 if Alpha is Required, otherwise clear unused bytes to 0
+        // Alpha is Unavailable or Not Required
+        // Default to 'Opaque' if Alpha was Required but Unavailable or to 'Zero' if it was Not Required
+        // NB: 'Zero' clears unused bytes and is not the opposite of opaque in this case
         egSetPlane (PLPTR(NewImage, a), WantAlpha ? 255 : 0, PixelCount);
     }
 
     return NewImage;
-}
+} // EG_IMAGE * egPrepareEmbeddedImage()
 
 //
 // Compositing
@@ -880,7 +907,7 @@ VOID egRestrictImageArea (
             if (*AreaHeight > Image->Height - AreaPosY) *AreaHeight = Image->Height - AreaPosY;
         }
     }
-}
+} // VOID egRestrictImageArea()
 
 VOID egFillImage (
     IN OUT EG_IMAGE  *CompImage,
@@ -901,7 +928,7 @@ VOID egFillImage (
             *PixelPtr = FillColor;
         }
     }
-}
+} // VOID egFillImage()
 
 VOID egFillImageArea (
     IN OUT EG_IMAGE *CompImage,
@@ -935,7 +962,7 @@ VOID egFillImageArea (
             }
         }
     }
-}
+} // VOID egFillImageArea ()
 
 // typedefs and stack functions for egSeedFillImage
 
@@ -1191,7 +1218,7 @@ VOID egRawCopy (
             CompBasePtr += CompLineOffset;
         }
     }
-}
+} // VOID egRawCopy()
 
 VOID egRawCompose (
     IN OUT EG_PIXEL *CompBasePtr,
@@ -1230,7 +1257,7 @@ VOID egRawCompose (
             CompBasePtr += CompLineOffset;
         }
     }
-}
+} // VOID egRawCompose()
 
 VOID egComposeImage (
     IN OUT EG_IMAGE *CompImage,
@@ -1286,21 +1313,7 @@ VOID egInsertPlane (
              DestPlanePtr += 4;
         }
     }
-}
-
-VOID egInvertPlane (
-    IN UINT8 *DestPlanePtr,
-    IN UINTN PixelCount
-) {
-    UINTN i;
-
-    if (DestPlanePtr) {
-        for (i = 0; i < PixelCount; i++) {
-            *DestPlanePtr = 255 - *DestPlanePtr;
-            DestPlanePtr += 4;
-        }
-    }
-}
+} // VOID egInsertPlane()
 
 VOID egSetPlane (
     IN UINT8 *DestPlanePtr,
@@ -1315,7 +1328,7 @@ VOID egSetPlane (
              DestPlanePtr += 4;
         }
     }
-}
+} // VOID egSetPlane()
 
 VOID egCopyPlane (
     IN UINT8 *SrcPlanePtr,
@@ -1330,7 +1343,7 @@ VOID egCopyPlane (
              DestPlanePtr += 4, SrcPlanePtr += 4;
         }
     }
-}
+} // VOID egCopyPlane()
 
 VOID
 LEAKABLEIMAGE (

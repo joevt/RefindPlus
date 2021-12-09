@@ -35,6 +35,7 @@
  */
 
 #include "libegint.h"
+#include "../BootMaster/rp_funcs.h"
 
 static UINTN IconSizes[] = { 1024, 512, 256, 128, 64, 48, 36, 32, 24, 18, 16, 12, 8 };
 #define MAX_ICNS_SIZES (sizeof(IconSizes)/sizeof(IconSizes[0]))
@@ -402,7 +403,7 @@ EG_IMAGE * egDecodeICNS (
                     if (CompLen > 0) {
                         MsgLog ("egLoadICNSIcon: %d bytes of compressed data left\n", CompLen);
                         MsgLog ("Ignoring this icon\n");
-                        egFreeImage (NewImage);
+                        MY_FREE_IMAGE (NewImage);
                         NewImage = NULL;
                     }
                 }
@@ -474,24 +475,29 @@ EG_IMAGE * egDecodeICNS (
 
             if (NewImage) {
                 if (WantAlpha) {
+                    // Alpha is Required
                     if (!AddedAlpha) {
-                        // There is no Alpha in the icon.
+                        // Alpha is Required but Unavailable
                         if (MakeAlpha) {
+                            // Make an Alpha by doing the following:
                             egSetPlane (PLPTR(NewImage, a), 0xff, PixelCount); // set all pixels to opaque
                             EG_PIXEL TestColor = { 0xff, 0xff, 0xff, 0 }; // search for white pixels
                             EG_PIXEL TestMask  = { 0xff, 0xff, 0xff, 0 }; // regardless of alpha
                             EG_PIXEL FillColor = { 0x00, 0x00, 0x00, 0 }; // set alpha of white pixels to transparent
                             EG_PIXEL FillMask  = { 0x00, 0x00, 0x00, 255 }; // without affecting the color
-                            egSeedFillImage (NewImage, -1, -1, &FillColor, &FillMask, &TestColor, &TestMask, FALSE, TRUE); // add extra pixel in case the icon stretches from one edge to the other
+                            egSeedFillImage (NewImage, -1, -1, &FillColor, &FillMask, &TestColor, &TestMask, FALSE, TRUE); // add an extra pixel in case the icon extends from one edge to the other so the seed fill can continue all the way around the icon in the image.
                         }
                         else {
-                            // If we want an image with Alpha, then set Alpha to Opaque (255)
+                            // Alpha is Required but Unavailable
+                            // Default to 'Opaque'
                             egSetPlane (PLPTR(NewImage, a), 255, PixelCount);
                         }
                     }
                 }
                 else {
-                    // Set the unused bytes to zero.
+                    // Alpha is Not Required
+                    // Default to 'Zero'
+                    // NB: 'Zero' clears unused bytes and is not the opposite of opaque in this case
                     egSetPlane (PLPTR(NewImage, a), 0, PixelCount);
                 }
             }

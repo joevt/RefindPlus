@@ -19,7 +19,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
 #include "Platform.h"
-#include "../BootMaster/my_free_pool.h"
+#include "../BootMaster/rp_funcs.h"
 #include "../BootMaster/leaks.h"
 
 /**
@@ -60,7 +60,7 @@ CHAR16 * EFIAPI MyCatPrint (
         StringSize = StrSize (AppendStr);
         StringSize += (StrSize (Str->Str) - sizeof (UINT16));
 
-        LOGPOOL(Str->Str);
+        if (LOGPOOL(Str->Str));
         Str->Str = EfiReallocatePool (
             Str->Str,
             StrSize (Str->Str),
@@ -1285,7 +1285,7 @@ CHAR16 * EFIAPI DevicePathToStr (
 
 Done:
   NewSize = (Str.Len + 1) * sizeof (CHAR16);
-  LOGPOOL(Str.Str);
+  if (LOGPOOL(Str.Str));
   Str.Str = EfiReallocatePool (Str.Str, NewSize, NewSize);
 
   ASSERT (Str.Str != NULL);

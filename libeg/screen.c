@@ -290,7 +290,7 @@ EFI_STATUS egDumpGOPVideoModes (VOID) {
     MaxMode = GOPDraw->Mode->MaxMode;
     if (MaxMode > 0) {
         #if REFIT_DEBUG > 0
-        LOG2(4, LOG_THREE_STAR_MID, L"", L":\n",
+        LOG2(3, LOG_THREE_STAR_MID, L"", L":\n",
             L"Analyse GOP Modes on Handle[%d] - %02d Mode%s ... 0x%lx-0x%lx Framebuffer",
             SelectedGOP, MaxMode,
             (MaxMode != 1) ? L"s" : L"",
@@ -352,7 +352,7 @@ EFI_STATUS egDumpGOPVideoModes (VOID) {
             }
             else {
                 #if REFIT_DEBUG > 0
-                LOG(4, LOG_THREE_STAR_MID, L"Mode[%d]: %r", Mode, Status);
+                LOG(3, LOG_THREE_STAR_MID, L"Mode[%d]: %r", Mode, Status);
                 MsgLog (" ... %r", Status);
                 #endif
             } // if Status == EFI_SUCCESS
@@ -362,7 +362,7 @@ EFI_STATUS egDumpGOPVideoModes (VOID) {
 
     if (!OurValidGOP) {
         #if REFIT_DEBUG > 0
-        LOG3(4, LOG_STAR_SEPARATOR, L"INFO: ", L"\n\n", L"!!", L"Could Not Find Usable GOP");
+        LOG3(1, LOG_STAR_SEPARATOR, L"INFO: ", L"\n\n", L"!!", L"Could Not Find Usable GOP");
         #endif
 
         return EFI_UNSUPPORTED;
@@ -393,7 +393,7 @@ EFI_STATUS GopSetModeAndReconnectTextOut (
     LEAKABLEEXTERNALSTOP ();
 
     #if REFIT_DEBUG > 0
-    LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Switch to GOP Mode[%d] ... %r", ModeNumber, Status);
+    LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Switch to GOP Mode[%d] ... %r", ModeNumber, Status);
     #endif
 
     return Status;
@@ -415,7 +415,7 @@ EFI_STATUS egSetGOPMode (
     #endif
 
     if (GOPDraw == NULL) {
-        LOG3(3, LOG_LINE_NORMAL, L"\n\n** WARN: ", L"\n\n", L"!!", L"Could Not Set GOP Mode");
+        LOG3(2, LOG_LINE_NORMAL, L"\n\n** WARN: ", L"\n\n", L"!!", L"Could Not Set GOP Mode");
         return EFI_UNSUPPORTED;
     }
 
@@ -425,7 +425,7 @@ EFI_STATUS egSetGOPMode (
 
     if (MaxMode < 1) {
         Status = EFI_UNSUPPORTED;
-        LOG3(3, LOG_LINE_NORMAL, L"\n\n** WARN: ", L"\n\n", L"!!", L"Incompatible GPU");
+        LOG3(2, LOG_LINE_NORMAL, L"\n\n** WARN: ", L"\n\n", L"!!", L"Incompatible GPU");
     }
     else {
         while (EFI_ERROR(Status) && i <= MaxMode) {
@@ -521,7 +521,7 @@ EFI_STATUS egSetMaxResolution (VOID) {
     }
 
     #if REFIT_DEBUG > 0
-    LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n", L"BestMode: Mode[%d] on Handle[%d] @ %d x %d",
+    LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n", L"BestMode: Mode[%d] on Handle[%d] @ %d x %d",
         BestMode, SelectedGOP,
         Width, Height
     );
@@ -532,7 +532,7 @@ EFI_STATUS egSetMaxResolution (VOID) {
         Status = EFI_SUCCESS;
 
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"", L"\n\n", L"Screen Resolution Already Set");
+        LOG2(2, LOG_LINE_NORMAL, L"", L"\n\n", L"Screen Resolution Already Set");
         #endif
 
         egScreenWidth  = GOPDraw->Mode->Info->HorizontalResolution;
@@ -551,7 +551,7 @@ EFI_STATUS egSetMaxResolution (VOID) {
             Status = egSetGOPMode (1);
 
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"** WARN: ", L"\n\n", L"Could Not Set BestMode ... Try First Useable Mode");
+            LOG2(2, LOG_LINE_NORMAL, L"** WARN: ", L"\n\n", L"Could Not Set BestMode ... Try First Useable Mode");
             #endif
         }
     }
@@ -693,12 +693,12 @@ VOID egInitScreen (VOID) {
         DetectedDevices  = FALSE;
 
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Console Control ... NOT OK!!");
+        LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Console Control ... NOT OK!!");
         #endif
     }
     else {
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Console Control ... ok");
+        LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Console Control ... ok");
         #endif
     }
 
@@ -799,16 +799,9 @@ VOID egInitScreen (VOID) {
         } // if !EFI_ERROR(Status)
     } // if EFI_ERROR(Status
 
-    if (EFI_ERROR(Status)) {
-        #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Universal Graphics Adapter ... NOT OK!!");
-        #endif
-    }
-    else {
-        #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Universal Graphics Adapter ... ok");
-        #endif
-    }
+    #if REFIT_DEBUG > 0
+    LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Universal Graphics Adapter ... %s", EFI_ERROR(Status) ? L"NOT OK!!" : L"ok");
+    #endif
 
     // Get GOPDraw Protocol
     GOPDraw = NULL;
@@ -926,7 +919,7 @@ VOID egInitScreen (VOID) {
 
         // Not Found
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ... NOT FOUND!!");
+        LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ... NOT FOUND!!");
         #endif
     }
 
@@ -935,7 +928,7 @@ VOID egInitScreen (VOID) {
 
         // Not Found
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ... ERROR!!");
+        LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ... ERROR!!");
         #endif
     }
     else if (!EFI_ERROR(Status) && XFlag != EFI_ALREADY_STARTED) {
@@ -947,14 +940,14 @@ VOID egInitScreen (VOID) {
             GOPDraw = OldGOP;
 
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ... ok");
+            LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ... ok");
             #endif
         }
         else {
             XFlag = EFI_UNSUPPORTED;
 
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ... NOT OK!!");
+            LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Assess Graphics Output Protocol ... NOT OK!!");
             #endif
 
             #ifdef __MAKEWITH_TIANO
@@ -963,7 +956,14 @@ VOID egInitScreen (VOID) {
                 Status = daCheckAltGop();
 
                 if (!EFI_ERROR(Status)) {
+                    // Stash 'gBS->HandleProtocol' as may be changed by OpenCore
+                    EFI_HANDLE_PROTOCOL OurHandleProtocol = gBS->HandleProtocol;
+
+                    // Run OpenCore Function
                     Status = OcProvideConsoleGop (TRUE);
+
+                    // Restore 'gBS->HandleProtocol'
+                    gBS->HandleProtocol = OurHandleProtocol;
 
                     if (!EFI_ERROR(Status)) {
                         Status = gBS->HandleProtocol (
@@ -982,7 +982,7 @@ VOID egInitScreen (VOID) {
     if (XFlag != EFI_NOT_FOUND && XFlag != EFI_UNSUPPORTED && GlobalConfig.UseDirectGop) {
         if (GOPDraw == NULL) {
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Cannot Implement Direct GOP Renderer");
+            LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Cannot Implement Direct GOP Renderer");
             #endif
         }
         else {
@@ -1017,19 +1017,19 @@ VOID egInitScreen (VOID) {
             }
 
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Implement Direct GOP Renderer ... %r", Status);
+            LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Implement Direct GOP Renderer ... %r", Status);
             #endif
         }
     }
 
     if (XFlag == EFI_NOT_FOUND || XFlag == EFI_LOAD_ERROR) {
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Graphics Output Protocol ... %r", XFlag);
+        LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Graphics Output Protocol ... %r", XFlag);
         #endif
     }
     else if (XFlag == EFI_UNSUPPORTED) {
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Provide GOP on ConsoleOut Handle ... %r", Status);
+        LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Provide GOP on ConsoleOut Handle ... %r", Status);
         #endif
 
         if (!EFI_ERROR(Status)) {
@@ -1044,7 +1044,7 @@ VOID egInitScreen (VOID) {
 
         if (EFI_ERROR(Status)) {
             #if REFIT_DEBUG > 0
-            LOG4(3, LOG_LINE_NORMAL, L"** WARN: ", L"\n\n", L"WARNING: ", L"!!", L"Invalid GOP Instance");
+            LOG4(2, LOG_LINE_NORMAL, L"** WARN: ", L"\n\n", L"WARNING: ", L"!!", L"Invalid GOP Instance");
             #endif
 
             GOPDraw = NULL;
@@ -1066,7 +1066,7 @@ VOID egInitScreen (VOID) {
             #if REFIT_DEBUG > 0
             // Only log this if GOPFix or Direct Renderer attempted
             if (XFlag == EFI_UNSUPPORTED || XFlag == EFI_ALREADY_STARTED) {
-                LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Implement Graphics Output Protocol ... %r", Status);
+                LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Implement Graphics Output Protocol ... %r", Status);
             }
             #endif
         }
@@ -1080,7 +1080,7 @@ VOID egInitScreen (VOID) {
             Status = OcProvideUgaPassThrough();
 
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Implement UGA Pass Through ... %r", Status);
+            LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Implement UGA Pass Through ... %r", Status);
             if ((GOPDraw != NULL) &&
                 (GlobalConfig.TextRenderer || GlobalConfig.TextOnly)
             ) {
@@ -1104,7 +1104,7 @@ VOID egInitScreen (VOID) {
 
             if (!EFI_ERROR(Status)) {
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n", L"GOP Not Available ... Fall Back on UGA");
+                LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n", L"GOP Not Available ... Fall Back on UGA");
                 #endif
 
                 egHasGraphics  = TRUE;
@@ -1117,7 +1117,7 @@ VOID egInitScreen (VOID) {
                 GlobalConfig.TextOnly = TRUE;
 
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Graphics Not Available ... Fall Back on Text Mode");
+                LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Graphics Not Available ... Fall Back on Text Mode");
                 #endif
             }
         }
@@ -1141,7 +1141,7 @@ VOID egInitScreen (VOID) {
             Status = OcUseBuiltinTextOutput (ScreenMode);
 
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, PrevFlag ? L"      " : L"INFO: ", L"\n", L"Implement Text Renderer ... %r", Status);
+            LOG2(2, LOG_LINE_NORMAL, PrevFlag ? L"      " : L"INFO: ", L"\n", L"Implement Text Renderer ... %r", Status);
             PrevFlag = TRUE;
             #endif
         #endif
@@ -1228,7 +1228,7 @@ BOOLEAN egSetScreenSize (
 
     if ((ScreenWidth == NULL) || (ScreenHeight == NULL)) {
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"WARN: ScreenWidth or ScreenHeight is NULL in egSetScreenSize!!");
+        LOG2(2, LOG_LINE_NORMAL, L"", L"\n", L"WARN: ScreenWidth or ScreenHeight is NULL in egSetScreenSize!!");
         #endif
 
         return FALSE;
@@ -1239,7 +1239,7 @@ BOOLEAN egSetScreenSize (
         CurrentModeNum = GOPDraw->Mode->Mode;
 
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n", L"GOPDraw Object Found ... Current Mode = %d", CurrentModeNum);
+        LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n", L"GOPDraw Object Found ... Current Mode = %d", CurrentModeNum);
         #endif
 
         if (*ScreenHeight == 0) {
@@ -1247,7 +1247,7 @@ BOOLEAN egSetScreenSize (
             ModeNum = (UINT32) *ScreenWidth;
             if (ModeNum != CurrentModeNum) {
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"GOP Mode Set from Configured ScreenWidth %d", ModeNum);
+                LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"GOP Mode Set from Configured ScreenWidth %d", ModeNum);
                 #endif
 
                 ModeSet = TRUE;
@@ -1260,14 +1260,14 @@ BOOLEAN egSetScreenSize (
                 ) == EFI_SUCCESS)
             ) {
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Setting GOP mode to %d", ModeNum);
+                LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Setting GOP mode to %d", ModeNum);
                 #endif
 
                 ModeSet = TRUE;
             }
             else {
                 #if REFIT_DEBUG > 0
-                LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Could Not Set GOP Mode");
+                LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Could Not Set GOP Mode");
                 #endif
             }
         }
@@ -1296,7 +1296,7 @@ BOOLEAN egSetScreenSize (
                     ) == EFI_SUCCESS))
                 ) {
                     #if REFIT_DEBUG > 0
-                    LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Setting GOP mode to %d", ModeNum);
+                    LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"Setting GOP mode to %d", ModeNum);
                     #endif
 
                     ModeSet = TRUE;
@@ -1305,7 +1305,7 @@ BOOLEAN egSetScreenSize (
                     MsgStr = L"Could Not Set GOPDraw Mode";
 
                     #if REFIT_DEBUG > 0
-                    LOG2(3, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"%s", MsgStr);
+                    LOG2(2, LOG_LINE_NORMAL, L"  - ", L"\n\n", L"%s", MsgStr);
                     #endif
 
                     PrintUglyText (MsgStr, NEXTLINE);
@@ -1322,7 +1322,7 @@ BOOLEAN egSetScreenSize (
         else {
             MsgStr = L"Invalid Resolution Setting Provided ... Trying Default Mode";
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"", L":\n", L"%s", MsgStr);
+            LOG2(2, LOG_LINE_NORMAL, L"", L":\n", L"%s", MsgStr);
             #endif
 
             PrintUglyText (MsgStr, NEXTLINE);
@@ -1344,7 +1344,7 @@ BOOLEAN egSetScreenSize (
 
                 if (!EFI_ERROR(Status) && (Info != NULL)) {
                     #if REFIT_DEBUG > 0
-                    LOG2(3, LOG_LINE_NORMAL, L"  - ", L"", L"Available Mode: Mode[%02d][%d x %d]",
+                    LOG2(2, LOG_LINE_NORMAL, L"  - ", L"", L"Available Mode: Mode[%02d][%d x %d]",
                         ModeNum,
                         Info->HorizontalResolution,
                         Info->VerticalResolution
@@ -1360,7 +1360,7 @@ BOOLEAN egSetScreenSize (
                     MsgStr = L"Error : Could Not Query GOPDraw Mode";
 
                     #if REFIT_DEBUG > 0
-                    LOG2(3, LOG_LINE_NORMAL, L"  - ", L"", L"%s", MsgStr);
+                    LOG2(2, LOG_LINE_NORMAL, L"  - ", L"", L"%s", MsgStr);
                     #endif
 
                     PrintUglyText (MsgStr, NEXTLINE);
@@ -1383,7 +1383,7 @@ BOOLEAN egSetScreenSize (
         );
 
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"Setting UGA Draw mode to %d x %d", *ScreenWidth, *ScreenHeight);
+        LOG(2, LOG_LINE_NORMAL, L"Setting UGA Draw mode to %d x %d", *ScreenWidth, *ScreenHeight);
         #endif
 
         Status = REFIT_CALL_5_WRAPPER(
@@ -1412,7 +1412,7 @@ BOOLEAN egSetScreenSize (
             PrintUglyText (MsgStr, NEXTLINE);
 
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"%s", MsgStr);
+            LOG2(2, LOG_LINE_NORMAL, L"", L"\n", L"%s", MsgStr);
 
             #endif
 
@@ -1441,7 +1441,7 @@ BOOLEAN egSetTextMode (
         (RequestedMode != gST->ConOut->Mode->Mode)
     ) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"Setting Text Mode to %d", RequestedMode);
+        LOG(2, LOG_LINE_NORMAL, L"Setting Text Mode to %d", RequestedMode);
         #endif
 
         Status = REFIT_CALL_2_WRAPPER(
@@ -1466,7 +1466,7 @@ BOOLEAN egSetTextMode (
             PrintUglyText (MsgStr, NEXTLINE);
 
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"", L"\n",
+            LOG2(2, LOG_LINE_NORMAL, L"", L"\n",
                 L"Error Setting Text Mode %d ... Available Modes Are:",
                 RequestedMode
             );
@@ -1486,7 +1486,7 @@ BOOLEAN egSetTextMode (
                     PrintUglyText (MsgStr, NEXTLINE);
 
                     #if REFIT_DEBUG > 0
-                    LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"%s", MsgStr);
+                    LOG2(2, LOG_LINE_NORMAL, L"", L"\n", L"%s", MsgStr);
                     #endif
 
                     MY_FREE_POOL(MsgStr);
@@ -1497,7 +1497,7 @@ BOOLEAN egSetTextMode (
             PrintUglyText (MsgStr, NEXTLINE);
 
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"", L"\n", L"%s", MsgStr);
+            LOG2(2, LOG_LINE_NORMAL, L"", L"\n", L"%s", MsgStr);
             #endif
 
             PauseForKey();
@@ -1718,7 +1718,7 @@ VOID egDrawImage (
         );
     }
     if (newImage) {
-        egFreeImage (CompImage);
+        MY_FREE_IMAGE(CompImage);
     }
 } // VOID egDrawImage()
 
@@ -1747,7 +1747,7 @@ VOID egDrawImageWithTransparency (
             Image, BadgeImage,
             XPos, YPos
         );
-        egFreeImage (Background);
+        MY_FREE_IMAGE(Background);
     }
 } // VOID DrawImageWithTransparency()
 
@@ -1837,7 +1837,7 @@ VOID egDisplayMessage (
       if ((PositionCode == CENTER) || (Position >= egScreenHeight - (BoxHeight * 5))) {
           Position = 1;
       }
-      egFreeImage (Box);
+      MY_FREE_IMAGE (Box);
    } // if non-NULL inputs
 } // VOID egDisplayMessage()
 
@@ -1918,7 +1918,7 @@ VOID egScreenShot (VOID) {
         REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
 
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"%s", MsgStr);
+        LOG2(2, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"%s", MsgStr);
         #endif
 
         PauseForKey();
@@ -1945,7 +1945,7 @@ VOID egScreenShot (VOID) {
         &FileDataSize
     );
 
-    egFreeImage (Image);
+    MY_FREE_IMAGE(Image);
     if (EFI_ERROR(Status)) {
         MsgStr = L"WARN: Could Not Encode PNG";
         goto error_exit;
@@ -2015,7 +2015,7 @@ error_exit:
     REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute, gST->ConOut, ATTR_ERROR);
     PrintUglyText (MsgStr, NEXTLINE);
     REFIT_CALL_2_WRAPPER(gST->ConOut->SetAttribute, gST->ConOut, ATTR_BASIC);
-    MsgLog ("%s\n\n", MsgStr);
+    LOG2(2, LOG_LINE_NORMAL, L"    * ", L"\n\n", L"%s", MsgStr);
     PauseSeconds (3);
     SwitchToGraphics();
     return;

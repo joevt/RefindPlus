@@ -507,7 +507,7 @@ EFI_STATUS StartLegacyImageList (
 
     // close open file handles
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, L"Launching 'Mac-Style' Legacy (BIOS) Loader");
+    LOG(2, LOG_LINE_NORMAL, L"Launching 'Mac-Style' Legacy (BIOS) Loader");
     #endif
 
     UninitRefitLib();
@@ -523,7 +523,7 @@ EFI_STATUS StartLegacyImageList (
     // control returns here when the child image calls Exit()
     if (CheckError (Status, L"Returned From 'Mac-Style' Legacy (BIOS) Loader")) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"Returned From 'Mac-Style' Legacy (BIOS) Loader");
+        LOG(2, LOG_LINE_NORMAL, L"Returned From 'Mac-Style' Legacy (BIOS) Loader");
         #endif
 
         if (ErrorInStep != NULL) {
@@ -561,7 +561,7 @@ VOID StartLegacy (
     IsBoot = TRUE;
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL,
+    LOG(2, LOG_LINE_NORMAL,
         L"Starting 'Mac-style' Legacy (BIOS) OS:- '%s'",
         SelectionName
     );
@@ -661,7 +661,7 @@ VOID StartLegacyUEFI (
     CHAR16 *MsgStrC = PoolPrint (L"Failure %s", MsgStrB);
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL,
+    LOG(2, LOG_LINE_NORMAL,
         L"Launching %s:- '%s'",
         MsgStrA, SelectionName
     );
@@ -687,7 +687,7 @@ VOID StartLegacyUEFI (
     BootLogResume();
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStrC);
+    LOG(2, LOG_LINE_NORMAL, L"%s", MsgStrC);
     #endif
 
     Print(L"%s", MsgStrC);
@@ -740,7 +740,7 @@ VOID AddLegacyEntry (
     }
 
     #if REFIT_DEBUG > 0
-    LOG(2, FirstLegacyScan ? LOG_THREE_STAR_MID : LOG_THREE_STAR_SEP,
+    LOG(1, FirstLegacyScan ? LOG_THREE_STAR_MID : LOG_THREE_STAR_SEP,
         L"Adding Legacy Boot Entry for '%s'",
         LegacyTitle
     );
@@ -846,8 +846,8 @@ VOID AddLegacyEntryUEFI (
     ));
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_BLANK_LINE_SEP, L"X");
-    LOG(4, LOG_THREE_STAR_MID,
+    LOG(2, LOG_BLANK_LINE_SEP, L"X");
+    LOG(3, LOG_THREE_STAR_MID,
         L"Adding 'UEFI-Style' Legacy Entry for '%s'",
         GetPoolStr (&Entry->me.Title)
     );
@@ -922,7 +922,7 @@ VOID ScanLegacyUEFI (
     EFI_LEGACY_BIOS_PROTOCOL  *LegacyBios;
 
     #if REFIT_DEBUG > 0
-    LOG(3, FirstLegacyScan ? LOG_THREE_STAR_MID : LOG_THREE_STAR_SEP, L"Scanning for 'UEFI-Style' Legacy Boot Options");
+    LOG(2, FirstLegacyScan ? LOG_THREE_STAR_MID : LOG_THREE_STAR_SEP, L"Scanning for 'UEFI-Style' Legacy Boot Options");
     #endif
 
     FirstLegacyScan = FALSE;
@@ -1204,7 +1204,7 @@ VOID WarnIfLegacyProblems (VOID) {
 
         if (found) {
             #if REFIT_DEBUG > 0
-            LOG(3, LOG_LINE_NORMAL,
+            LOG(2, LOG_LINE_NORMAL,
                 L"Legacy (BIOS) Support Enabled in RefindPlus but Unavailable in EFI!!"
             );
             #endif

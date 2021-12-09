@@ -15,37 +15,47 @@
 #define LOG_STAR_HEAD_SEP    11
 #define LOG_LINE_FORENSIC    12
 
-VOID
-DebugLog (
+VOID DebugLog (
     IN        INTN  DebugMode,
     IN  const CHAR8 *FormatString, ...
 );
 
 #if REFIT_DEBUG == 0
     #define DONTMSG(DebugMode, Msg) TRUE
-    #define MsgLog(...)
-//  #define MsgLog(f,...) AsciiPrint(f, ##__VA_ARGS__)
 #else
-    #define DONTMSG(DebugMode, Msg) (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < 0 || (/* !UseMsgLog && !NativeLogger && */ GlobalConfig.LogLevel > 0))
-    #define MsgLog(...)  DebugLog(REFIT_DEBUG, __VA_ARGS__)
+    #define DONTMSG(DebugMode, Msg)    (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < 0 /* || (!UseMsgLog && !NativeLogger && GlobalConfig.LogLevel > 0) */)
 #endif
+#define DONTLOG(DebugMode, level, Msg) (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < level || GlobalConfig.LogLevel < 1 /* || NativeLogger */ || MuteLogger)
 
-VOID
-DeepLoggger (
+VOID DeepLoggger (
   IN  INTN     DebugMode,
   IN  INTN     level,
   IN  INTN     type,
   IN  CHAR16 **Msg
 );
 
-#define DONTLOG(DebugMode, level, Msg) (DebugMode < 1 || GlobalConfig.LogLevel < level || GlobalConfig.LogLevel < 1 /* || NativeLogger */ || MuteLogger || !(Msg))
-// NB: logTemp is freed in DeepLoggger
-#define LOG(level, type, ...) \
-    do { \
-        CHAR16 *logTemp = PoolPrint(__VA_ARGS__); \
-        DeepLoggger(REFIT_DEBUG, level, type, &logTemp); \
-    } while(0)
+#if REFIT_DEBUG < 1
+#   define LOG(...)
+#   define MsgLog(...)
+#else
+#   define MsgLog(...)  DebugLog(REFIT_DEBUG, __VA_ARGS__)
+
+    // NB: '_logTemp' is handled in 'DeepLoggger'
+#   define LOG(level, type, ...)                              \
+        do {                                                  \
+            CHAR16 *_logTemp = PoolPrint(__VA_ARGS__);        \
+            DeepLoggger(REFIT_DEBUG, level, type, &_logTemp); \
+        } while (FALSE)
+
+// #define MsgLog(f,...) AsciiPrint(f, ##__VA_ARGS__)
 // #define LOG(level, type, f, ...) Print(f L"\n", ##__VA_ARGS__)
+#endif
+
+#if REFIT_DEBUG < 1
+
+#define LOG4(_v, _l, _p, _x, _p2, _x2, ...)
+
+#else
 
 #define LOG4(_v, _l, _p, _x, _p2, _x2, ...) \
     do { \
@@ -61,15 +71,20 @@ DeepLoggger (
         MY_FREE_POOL(_MsgStr); \
     } while(0)
 
+#endif // #if REFIT_DEBUG > 0
+
 #define LOG3(_v, _l, _p, _x, _p2, ...) \
     LOG4(_v, _l, _p, _x, _p2, L"", __VA_ARGS__)
 
 #define LOG2(_v, _l, _p, _x, ...) \
     LOG4(_v, _l, _p, _x, L"", L"", __VA_ARGS__)
 
-#define LOGWHERE(format, ...)
-#define LOGPOOL(object)
-#define LOGPOOLALWAYS(object)
+#define LOGWHERE(format, ...) \
+    MsgLog("%a:%d " format "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define LOGPOOL(object) \
+    LogPoolProc((VOID *)object, (VOID **)&object, #object, NULL, NULL, NULL, __FILE__, __LINE__, FALSE, TRUE)
+#define LOGPOOLALWAYS(object) \
+    LogPoolProc((VOID *)object, (VOID **)&object, #object, NULL, NULL, NULL, __FILE__, __LINE__, TRUE, TRUE)
 
 //==================================
 // Log indenting functions

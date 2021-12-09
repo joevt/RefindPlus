@@ -216,19 +216,19 @@ VOID RotateCsrValue (VOID) {
         #if REFIT_DEBUG > 0
         if (TargetCsr == 0) {
             // Set target CSR value to NULL
-            LOG(3, LOG_LINE_NORMAL,
+            LOG(2, LOG_LINE_NORMAL,
                 L"Clearing CSR to 'NULL' from '0x%04x'",
                 CurrentValue
             );
         }
         else if (CurrentValue == 0) {
-            LOG(3, LOG_LINE_NORMAL,
+            LOG(2, LOG_LINE_NORMAL,
                 L"Setting CSR to '0x%04x' from 'NULL'",
                 TargetCsr
             );
         }
         else {
-            LOG(3, LOG_LINE_NORMAL,
+            LOG(2, LOG_LINE_NORMAL,
                 L"Setting CSR to '0x%04x' from '0x%04x'",
                 CurrentValue, TargetCsr
             );
@@ -252,7 +252,7 @@ VOID RotateCsrValue (VOID) {
             RecordgCsrStatus (TargetCsr, TRUE);
 
             #if REFIT_DEBUG > 0
-            LOG(3, LOG_LINE_NORMAL,
+            LOG(2, LOG_LINE_NORMAL,
                 L"Successfully Set SIP/SSV:- '0x%04x'",
                 TargetCsr
             );
@@ -263,7 +263,7 @@ VOID RotateCsrValue (VOID) {
             LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
 
             #if REFIT_DEBUG > 0
-            LOG(3, LOG_LINE_NORMAL, L"%s", GetPoolStr (&gCsrStatus));
+            LOG(2, LOG_LINE_NORMAL, L"%s", GetPoolStr (&gCsrStatus));
             #endif
 
             EG_PIXEL BGColor = COLOR_LIGHTBLUE;
@@ -280,7 +280,7 @@ VOID RotateCsrValue (VOID) {
         LEAKABLEONEPOOLSTR (&gCsrStatus, "gCsrStatus");
 
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"%s", GetPoolStr (&gCsrStatus));
+        LOG(2, LOG_LINE_NORMAL, L"%s", GetPoolStr (&gCsrStatus));
         #endif
 
         EG_PIXEL BGColor = COLOR_LIGHTBLUE;
@@ -367,7 +367,7 @@ EFI_STATUS SetAppleOSInfo (
     // If not a Mac, ignore the call.
     if ((Status != EFI_SUCCESS) || (!SetOs)) {
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL,
+        LOG(2, LOG_LINE_NORMAL,
             L"Not a Mac ... Do Not Set Mac OS Information"
         );
         #endif
@@ -386,7 +386,7 @@ EFI_STATUS SetAppleOSInfo (
 
             if (MacVersionStr) {
                 #if REFIT_DEBUG > 0
-                LOG(3, LOG_LINE_NORMAL,
+                LOG(2, LOG_LINE_NORMAL,
                     L"Setting Mac OS Information to '%s'",
                     AppleVersionOS
                 );
@@ -686,6 +686,10 @@ EFI_STATUS RP_GetApfsVolumeInfo (
     APPLE_APFS_CONTAINER_INFO       *ApfsContainerInfo;
     APPLE_APFS_VOLUME_INFO          *ApfsVolumeInfo;
 
+    if (ContainerGuid == NULL && VolumeGuid == NULL && VolumeRole == NULL) {
+        return EFI_INVALID_PARAMETER;
+    }
+
     Root = NULL;
 
     Status = gBS->HandleProtocol (
@@ -711,22 +715,30 @@ EFI_STATUS RP_GetApfsVolumeInfo (
         return EFI_NOT_FOUND;
     }
 
-    CopyGuid (
-        VolumeGuid,
-        &ApfsVolumeInfo->Uuid
-    );
+    if (VolumeGuid) {
+        CopyGuid (
+            VolumeGuid,
+            &ApfsVolumeInfo->Uuid
+        );
+    }
 
-    if (VolumeRole) *VolumeRole = ApfsVolumeInfo->Role;
+    if (VolumeRole) {
+        *VolumeRole = ApfsVolumeInfo->Role;
+    }
 
-    if (ContainerGuid) CopyGuid (
-        ContainerGuid,
-        &ApfsContainerInfo->Uuid
-    );
+    if (ContainerGuid) {
+        CopyGuid (
+            ContainerGuid,
+            &ApfsContainerInfo->Uuid
+        );
+    }
 
-    if (VolumeGroup) CopyGuid (
-        VolumeGroup,
-        &ApfsVolumeInfo->VolumeGroup
-    );
+    if (VolumeGroup) {
+        CopyGuid (
+            VolumeGroup,
+            &ApfsVolumeInfo->VolumeGroup
+        );
+    }
 
     MY_FREE_POOL(ApfsVolumeInfo);
     MY_FREE_POOL(ApfsContainerInfo);

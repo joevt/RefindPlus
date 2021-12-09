@@ -151,12 +151,6 @@ BOOLEAN IsValidLoader (
 ) {
     BOOLEAN IsValid;
 
-    if (!FileExists (RootDir, FileName)) {
-        // Early return if file does not exist
-        return FALSE;
-    }
-
-
 #if defined (EFIX64) | defined (EFI32) | defined (EFIAARCH64)
     EFI_STATUS      Status;
     EFI_FILE_HANDLE FileHandle;
@@ -168,14 +162,25 @@ BOOLEAN IsValidLoader (
         // when launching from a Firewire drive. This should be handled better, but
         // fix would have to be in StartEFIImage() and/or in FindVolumeAndFilename().
         #if REFIT_DEBUG > 0
-        LOG(4, LOG_THREE_STAR_MID,
+        LOG(3, LOG_THREE_STAR_MID,
             L"EFI File is *ASSUMED* to be Valid:- '%s'",
             FileName ? FileName : L"NULL"
         );
         #endif
 
         return TRUE;
-    } // if
+    }
+    else if (!FileExists (RootDir, FileName)) {
+        #if REFIT_DEBUG > 0
+        LOG(3, LOG_THREE_STAR_MID,
+            L"EFI File *NOT* Found:- '%s'",
+            FileName ? FileName : L"NULL"
+        );
+        #endif
+
+        // Early return if file does not exist
+        return FALSE;
+    }
 
     LEAKABLEEXTERNALSTART ("IsValidLoader Open");
     Status = REFIT_CALL_5_WRAPPER(
@@ -187,7 +192,7 @@ BOOLEAN IsValidLoader (
 
     if (EFI_ERROR(Status)) {
         #if REFIT_DEBUG > 0
-        LOG(4, LOG_THREE_STAR_MID,
+        LOG(3, LOG_THREE_STAR_MID,
             L"EFI File is *NOT* Valid:- '%s'",
             FileName ? FileName : L"NULL"
         );
@@ -209,7 +214,7 @@ BOOLEAN IsValidLoader (
               (*(UINT32 *) &Header == FAT_ARCH));
 
     #if REFIT_DEBUG > 0
-    LOG(4, LOG_THREE_STAR_MID,
+    LOG(3, LOG_THREE_STAR_MID,
         L"EFI File is %s:- '%s'",
         IsValid  ? L"Valid" : L"*NOT* Valid",
         FileName ? FileName : L"NULL"
@@ -274,7 +279,7 @@ EFI_STATUS StartEFIImage (
     );
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, MsgStr);
+    LOG(2, LOG_LINE_NORMAL, MsgStr);
     #endif
 
     if (Verbose) {
@@ -347,7 +352,7 @@ EFI_STATUS StartEFIImage (
             // conceivably do weird things if, say, RefindPlus were on a USB drive that the
             // user pulls before launching a program.
             #if REFIT_DEBUG > 0
-            LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Employing Shim 'LoadImage' Hack");
+            LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n", L"Employing Shim 'LoadImage' Hack");
             #endif
 
             REFIT_CALL_6_WRAPPER(
@@ -411,7 +416,7 @@ EFI_STATUS StartEFIImage (
         EspGUID = GuidAsString (&(SelfVolume->PartGuid));
 
         #if REFIT_DEBUG > 0
-        LOG2(3, LOG_LINE_NORMAL, L"INFO: ", L"\n\n",
+        LOG2(2, LOG_LINE_NORMAL, L"INFO: ", L"\n\n",
             L"Systemd LoaderDevicePartUUID:- '%s'",
             EspGUID
         );
@@ -447,15 +452,20 @@ EFI_STATUS StartEFIImage (
     if (!IsDriver) {
         #if REFIT_DEBUG > 0
         ConstMsgStr = L"Running Child Image";
-        LOG(3, LOG_LINE_NORMAL, L"%s via Loader:- '%s'", ConstMsgStr , ImageTitle);
+        LOG(2, LOG_LINE_NORMAL, L"%s via Loader:- '%s'", ConstMsgStr , ImageTitle);
         #endif
 
         // DA-TAG: SyncAPFS infrastrcture is typically no longer required
         //         "Typically" as users may place UEFI Shell etc in the first row (loaders)
         //         These may return to the RefindPlus screen but any issues will be trivial
         if ((GlobalConfig.SyncAPFS) &&
-            (PreBootVolumes || SystemVolumes || DataVolumes)
+            (RecoveryVolumes || PreBootVolumes || SystemVolumes || DataVolumes)
         ) {
+            FreeVolumes (
+                &RecoveryVolumes,
+                &RecoveryVolumesCount
+            );
+
             FreeVolumes (
                 &PreBootVolumes,
                 &PreBootVolumesCount
@@ -486,14 +496,14 @@ EFI_STATUS StartEFIImage (
 
     // control returns here when the child image calls Exit()
     #if REFIT_DEBUG > 0
-    LOG(4, LOG_THREE_STAR_MID, L"'%r' When %s", ReturnStatus, ConstMsgStr);
+    LOG(3, LOG_THREE_STAR_MID, L"'%r' When %s", ReturnStatus, ConstMsgStr);
     #endif
 
     MsgStr = L"Returned from Child Image";
 
     #if REFIT_DEBUG > 0
     if (!IsDriver) {
-        LOG(2, LOG_THREE_STAR_SEP, L"%s", MsgStr);
+        LOG(1, LOG_THREE_STAR_SEP, L"%s", MsgStr);
 
         if (Verbose) {
             MsgLog ("User Input Received:\n");
@@ -598,7 +608,7 @@ EFI_STATUS RebootIntoFirmware (VOID) {
     PauseForKey();
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+    LOG(2, LOG_LINE_NORMAL, L"%s", MsgStr);
     #endif
 
     MY_FREE_POOL(MsgStr);
@@ -639,7 +649,7 @@ VOID RebootIntoLoader (
         );
 
         #if REFIT_DEBUG > 0
-        LOG(3, LOG_LINE_NORMAL, L"%s!!", MsgStr);
+        LOG(2, LOG_LINE_NORMAL, L"%s!!", MsgStr);
         #endif
 
         Print(L"%s\n", MsgStr);
@@ -659,7 +669,7 @@ VOID RebootIntoLoader (
     MsgStr = PoolPrint (L"Call ResetSystem ... %r", Status);
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+    LOG(2, LOG_LINE_NORMAL, L"%s", MsgStr);
     #endif
 
     Print(MsgStr);
@@ -682,7 +692,7 @@ VOID DoEnableAndLockVMX(VOID) {
     UINT32 high_bits = 0;
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, L"Attempting to Enable and Lock VMX");
+    LOG(2, LOG_LINE_NORMAL, L"Attempting to Enable and Lock VMX");
     #endif
 
     // is VMX active ?
@@ -711,7 +721,7 @@ VOID StartLoader (
     MsgStr        = PoolPrint (L"Launching Loader:- '%s'", SelectionName);
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+    LOG(2, LOG_LINE_NORMAL, L"%s", MsgStr);
     #endif
 
     MsgLog ("IsBoot = TRUE\n");
@@ -747,7 +757,7 @@ VOID StartTool (
     MsgStr        = PoolPrint (L"Launching Tool:- '%s'", GetPoolStr (&Entry->me.Title));
 
     #if REFIT_DEBUG > 0
-    LOG(3, LOG_LINE_NORMAL, L"%s", MsgStr);
+    LOG(2, LOG_LINE_NORMAL, L"%s", MsgStr);
 
     if (AllowGraphicsMode && !Entry->UseGraphicsMode) {
         MsgLog ("INFO: Running Graphics Mode Switch\n");

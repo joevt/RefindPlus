@@ -15,121 +15,47 @@
 #define LOG_STAR_HEAD_SEP    11
 #define LOG_LINE_FORENSIC    12
 
-VOID
-DebugLog (
+VOID DebugLog (
     IN        INTN  DebugMode,
     IN  const CHAR8 *FormatString, ...
 );
 
-#if 0
-__attribute__ ((format (printf, 2, 3)))
-// need a custom version of the compiler to properly verify edk2 printf format and arguments (for CHAR8 and CHAR16 variants also)
-
-UINTN
-UnicodeSPrint (
-      CHAR16 *StartOfBuffer,
-      UINTN BufferSize,
-      const CHAR16 *FormatString,
-  ...
-  ) __attribute__ ((format (printf, 3, 4)));
-
-UINTN
-UnicodeSPrintAsciiFormat (
-      CHAR16 *StartOfBuffer,
-      UINTN BufferSize,
-      const CHAR8 *FormatString,
-  ...
-  ) __attribute__ ((format (printf, 3, 4)));
-
-UINTN
-AsciiSPrint (
-      CHAR8 *StartOfBuffer,
-      UINTN BufferSize,
-      const CHAR8 *FormatString,
-  ...
-  ) __attribute__ ((format (printf, 3, 4)));
-
-UINTN
-AsciiSPrintUnicodeFormat (
-      CHAR8 *StartOfBuffer,
-      UINTN BufferSize,
-      const CHAR16 *FormatString,
-  ...
-  ) __attribute__ ((format (printf, 3, 4)));
-
-UINTN
-Print (
-     const CHAR16 *Format,
-  ...
-  ) __attribute__ ((format (printf, 1, 2)));
-
-UINTN
-ErrorPrint (
-     const CHAR16 *Format,
-  ...
-  ) __attribute__ ((format (printf, 1, 2)));
-
-UINTN
-AsciiPrint (
-     const CHAR8 *Format,
-  ...
-  ) __attribute__ ((format (printf, 1, 2)));
-
-UINTN
-AsciiErrorPrint (
-     const CHAR8 *Format,
-  ...
-  ) __attribute__ ((format (printf, 1, 2)));
-
-UINTN
-PrintXY (
-     UINTN PointX,
-     UINTN PointY,
-     EFI_GRAPHICS_OUTPUT_BLT_PIXEL *ForeGround,
-     EFI_GRAPHICS_OUTPUT_BLT_PIXEL *BackGround,
-     const CHAR16 *Format,
-  ...
-  ) __attribute__ ((format (printf, 5, 6)));
-
-UINTN
-AsciiPrintXY (
-     UINTN PointX,
-     UINTN PointY,
-     EFI_GRAPHICS_OUTPUT_BLT_PIXEL *ForeGround,
-     EFI_GRAPHICS_OUTPUT_BLT_PIXEL *BackGround,
-     const CHAR8 *Format,
-  ...
-  ) __attribute__ ((format (printf, 5, 6)));
-
-CHAR16 *
-CatSPrint (
-      CHAR16 *String,
-      const CHAR16 *FormatString,
-  ...
-  ) __attribute__ ((format (printf, 2, 3)));
-
+#if REFIT_DEBUG == 0
+    #define DONTMSG(DebugMode, Msg) TRUE
+#else
+    #define DONTMSG(DebugMode, Msg)    (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < 0 /* || (!UseMsgLog && !NativeLogger && GlobalConfig.LogLevel > 0) */)
 #endif
+#define DONTLOG(DebugMode, level, Msg) (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < level || GlobalConfig.LogLevel < 1 /* || NativeLogger */ || MuteLogger)
 
-extern BOOLEAN UseMsgLog;
-
-#define DONTMSG(DebugMode, Msg) (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < 0 /* || (!UseMsgLog && !NativeLogger && GlobalConfig.LogLevel > 0) */)
-#define MsgLog(...)  DebugLog(REFIT_DEBUG, __VA_ARGS__)
-
-VOID
-DeepLoggger (
+VOID DeepLoggger (
   IN  INTN     DebugMode,
   IN  INTN     level,
   IN  INTN     type,
   IN  CHAR16 **Msg
 );
 
-#define DONTLOG(DebugMode, level, Msg) (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < level || GlobalConfig.LogLevel < 1 /* || NativeLogger */ || MuteLogger)
-// NB: logTemp is freed in DeepLoggger
-#define LOG(level, type, ...) \
-    do { \
-        CHAR16 *logTemp = PoolPrint(__VA_ARGS__); \
-        DeepLoggger(REFIT_DEBUG, level, type, &logTemp); \
-    } while(0)
+#if REFIT_DEBUG < 1
+#   define LOG(...)
+#   define MsgLog(...)
+#else
+#   define MsgLog(...)  DebugLog(REFIT_DEBUG, __VA_ARGS__)
+
+    // NB: '_logTemp' is handled in 'DeepLoggger'
+#   define LOG(level, type, ...)                              \
+        do {                                                  \
+            CHAR16 *_logTemp = PoolPrint(__VA_ARGS__);        \
+            DeepLoggger(REFIT_DEBUG, level, type, &_logTemp); \
+        } while (FALSE)
+
+// #define MsgLog(f,...) AsciiPrint(f, ##__VA_ARGS__)
+// #define LOG(level, type, f, ...) Print(f L"\n", ##__VA_ARGS__)
+#endif
+
+#if REFIT_DEBUG < 1
+
+#define LOG4(_v, _l, _p, _x, _p2, _x2, ...)
+
+#else
 
 #define LOG4(_v, _l, _p, _x, _p2, _x2, ...) \
     do { \
@@ -144,6 +70,8 @@ DeepLoggger (
         if (_dl) MsgLog ("%s%s%s", _p, _MsgStr, _x); \
         MY_FREE_POOL(_MsgStr); \
     } while(0)
+
+#endif // #if REFIT_DEBUG > 0
 
 #define LOG3(_v, _l, _p, _x, _p2, ...) \
     LOG4(_v, _l, _p, _x, _p2, L"", __VA_ARGS__)

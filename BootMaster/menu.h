@@ -117,7 +117,10 @@ typedef VOID (*MENU_STYLE_FUNC) (
     IN CHAR16 *ParamText
 );
 
+VOID FreeMenuScreen (IN OUT REFIT_MENU_SCREEN **Screen);
+VOID FreeLegacyEntry (IN OUT LEGACY_ENTRY **Entry);
 VOID FreeLoaderEntry (IN OUT LOADER_ENTRY **Entry);
+VOID FreeMenuEntry (IN OUT REFIT_MENU_ENTRY **Entry);
 VOID FreeBdsOption (BDS_COMMON_OPTION **BdsOption);
 
 VOID AddMenuInfoLine(IN REFIT_MENU_SCREEN *Screen, IN CHAR16 *InfoLine, IN BOOLEAN Cached);
@@ -172,9 +175,6 @@ REFIT_MENU_SCREEN * CopyMenuScreen (REFIT_MENU_SCREEN *Entry);
 REFIT_MENU_ENTRY * CopyMenuEntry (REFIT_MENU_ENTRY *Entry);
 REFIT_MENU_ENTRY * CopyMenuEntryShallow (REFIT_MENU_ENTRY *Entry);
 ENTRY_TYPE GetMenuEntryType (REFIT_MENU_ENTRY *Entry);
-
-VOID FreeMenuEntry (REFIT_MENU_ENTRY **Entry);
-VOID FreeMenuScreen (REFIT_MENU_SCREEN **Menu);
 
 #if REFIT_DEBUG > 0
 VOID LEAKABLEBDSOPTION (BDS_COMMON_OPTION *BdsOption);

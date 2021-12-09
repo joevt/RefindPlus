@@ -3,6 +3,20 @@
 - Adds "SupplyNVME" Feature
   * A built in NvmExpress driver is loaded by default to provide NVMe support if required
   * This functionality can be disabled by setting the 'decline_nvmeload' token
+- Adds "ScreenRGB" Feature
+  * Allows overriding the default background colour selection process
+  * Users can now specify RGB values to be used instead
+- Fixes Display of Mac Recovery Tool Name in RELEASE builds
+  * The variable holding the Mac Recovery tool name was wrapped in "Debug" tags
+  * Hence the tool name was not displayed in RELEASE builds
+- Initial fixes on Mac Recovery For Mac OS 11 (Big Sur) and Later
+  * The Mac Recovery implementation inherited by RefindPlus was designed for the HFS+ filesystem
+  * Hence, it does not recognise recovery volumes of Mac OS versions with full APFS implementation
+    - Mac OS 10.13 (High Sierra) to Mac OS 10.15 (Catalina) have partial/transitional APFS implementations
+    - Mac OS 11 (Big Sur) and newer have full APFS implementations
+  * ADDITIONAL NOTES:
+    - This implementation does not support setups with more than one APFS instance in a single container
+    - This implementation is still a work in progress
 - Fixes Compilation Issue on Recent GNU-EFI Versions
   * Synced with upstream update as well as an existing issue with 'REFIT_CALL_X_WRAPPER'
   * GNU-EFI compilation of RefindPlus is likely broken overall
@@ -15,8 +29,13 @@
 - Fixes Memory Management
   * The 'MyFreePool' function implementation did not actually free items passed
   * Similarly, the 'ReleasePtr' function that called this was non operational
+  * This affected the operation of various elements across the board
   * Both functions have now been consolidated into a new 'MY_FREE_POOL' macro
   * This bug was introduced in v0.13.2.AD (Commit 65e5083)
+- Fix BTRFS Filesystem Driver Build
+  * The BTRFS filesystem driver had been excluded from RefindPlus builds from the start of the project
+  * This was due to long standing issues with EDK2 builds of the driver on EDK2 inherited from upstream
+  * The build issues were resolved by GitHub User "joevt" and have been incorporated into RefindPlus
 - Improves Time Bound Primed Buffer Mitigation
   * Prevents RefindPlus from spontaneously running default item
   * Intervention is now based on a minumum 0.50 second interval
@@ -26,7 +45,7 @@
   * This ensures the filtering is not on if UEFI Windows boot fails
   * Only has cosmetic relevance but best practice
 - Improves 'Manage Firmware Boot Order' Implementation
-    * Now confirms selected action before execution to minimise the chances of making unwanted changes
+  * Now confirms selected action before execution to minimise the chances of making unwanted changes
 - Amends 'ScaleUI' Implementation
   * Now checks the resolution of the longest and shortest sides for automatic scaling
   * Previously only checked the vertical resolution
@@ -35,6 +54,15 @@
   * This is because EDID information is not used at this time
   * However, the more common WQHD monitors are correctly identified as not being HiDPI monitors
   * Laptops with 'Retina' screens should be correctly identified as having HiDPI monitors
+- Amends Log Levels
+  * The previous upstream based four (4) log levels have been compressed to three (3) levels
+  * LogLevel 5, which was not exposed by default, is now LogLevel 4, which is not exposed by default.
+  * LogLevel 4 is exposed when the "REFIT_DEBUG" build flag is set to two (2) at compilation time.
+    - Set this in "BootMaster/globalExtra-DBG.txt" if using the RefindPlusUDK build script
+  * Unless LogLevel 4 is exposed when compiling, selected levels above three (3) will be capped at LogLevel 3
+  * When LogLevel 4 is exposed, selected levels above four (4) will be capped at LogLevel 4
+- Amends Time Bound Primed Buffer Mitigation
+  * Intervention treshold incrreased to a minumum 0.75 second interval
 
 
 0.13.2.AJ (06 Oct 2021):
