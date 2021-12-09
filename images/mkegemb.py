@@ -112,7 +112,6 @@ for filename in sys.argv[1:]:
             planes[1].append(pixeldata[0])
             planes[2].append(pixeldata[0])
             planes[3].append(pixeldata[1])
-
     else:
         print (" Error: Mode '%s' is not supported!!" % mode)
         continue

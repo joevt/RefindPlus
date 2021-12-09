@@ -654,7 +654,7 @@ VOID SetLoaderDefaults (
             if (!GetPoolImage (&Entry->me.Image)) {
                 #if REFIT_DEBUG > 0
                 if (!GlobalConfig.IgnoreHiddenIcons && GlobalConfig.PreferHiddenIcons) {
-                    LOG(2, LOG_LINE_NORMAL, L"No '.VolumeIcon' Image!!");
+                    LOG(2, LOG_LINE_NORMAL, L"Could Not Find '.VolumeIcon' Image");
                 }
                 #endif
 

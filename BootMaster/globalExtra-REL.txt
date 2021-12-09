@@ -28,10 +28,10 @@ VOID DebugLog (
 #define DONTLOG(DebugMode, level, Msg) (DebugMode < 1 || !Msg || GlobalConfig.LogLevel < level || GlobalConfig.LogLevel < 1 /* || NativeLogger */ || MuteLogger)
 
 VOID DeepLoggger (
-  IN  INTN     DebugMode,
-  IN  INTN     level,
-  IN  INTN     type,
-  IN  CHAR16 **Msg
+    IN  INTN     DebugMode,
+    IN  INTN     level,
+    IN  INTN     type,
+    IN  CHAR16 **Msg
 );
 
 #if REFIT_DEBUG < 1

@@ -67,7 +67,6 @@ CHAR16 *BlankLine = NULL;
 
 UINTN   ScreenW        = 0;
 UINTN   ScreenH        = 0;
-UINTN      ScreenAveLum           = 0;
 UINTN   ScreenLongest  = 0;
 UINTN   ScreenShortest = 0;
 
