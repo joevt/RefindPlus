@@ -322,7 +322,7 @@ EFI_CONNECT_CONTROLLER OrigConnectController = NULL;
 #define LEAKS_SHOW_PATHS 0
 #define LEAKS_DO_CLEANUP 1
 #define LEAKS_LOG_FREEING 0
-#define LEAKS_LOG_UNALLOCATED 0 // the object is allocated but we didn't keep trak of it.
+#define LEAKS_LOG_UNALLOCATED 0 // the object is allocated but we didn't keep track of it.
 
 VOID
 CheckStackPointer () {
@@ -1511,7 +1511,7 @@ FreePoolEx (
                 }
             #endif
             if (tailbefore.Signature != POOL_TAIL_SIGNATURE) {
-                MsgLog ("Allocation Error: tail mismatch %p (pool:%d allocated:%d type:%d head:%08X %08X %016lX %016lX tail:%08X %08X %016lX)\n",
+                MsgLog ("Allocation Error: tail mismatch before free %p (pool:%d allocated:%d type:%d head:%08X %08X %016lX %016lX tail:%08X %08X %016lX)\n",
                     Buffer, size, a->Size, Type,
                     headbefore.Signature, headbefore.Reserved, headbefore.Type, headbefore.Size,
                     tailbefore.Signature, tailbefore.Reserved, tailbefore.Size
@@ -1554,7 +1554,7 @@ FreePoolEx (
         if (head) headafter = *head;
         if (tail) tailafter = *tail;
         if (tailafter.Signature != POOL_TAIL_SIGNATURE) {
-            MsgLog ("Allocation Error: tail mismatch %p (pool:%d allocated:%d type:%d head:%08X %08X %016lX %016lX tail:%08X %08X %016lX)\n",
+            MsgLog ("Allocation Error: tail mismatch after free %p (pool:%d allocated:%d type:%d head:%08X %08X %016lX %016lX tail:%08X %08X %016lX)\n",
                 Buffer, size, a ? a->Size : -1, Type,
                 headafter.Signature, headafter.Reserved, headafter.Type, headafter.Size,
                 tailafter.Signature, tailafter.Reserved, tailafter.Size
@@ -1587,9 +1587,20 @@ FreePoolEx (
     }
 
     if (DoDumpCStack) {
+        if (a && a->What) {
+            MsgLog ("Freed: %p (%d) %a ", a->Where, a->Size, a->What);
+            DumpLeakablePath (a->Path);
+            MsgLog ("\n");
+        }
         DumpCallStack (NULL, FALSE);
         if (a) {
-            DumpCallStack (a->Stack, FALSE);
+            if (a->Stack) {
+                MsgLog ("Stack when allocation %p (%d) was created:\n", a->Where, a->Size);
+                DumpCallStack (a->Stack, FALSE);
+            }
+            else {
+                MsgLog ("No stack recorded when allocation %p (%d) was created.\n", a->Where, a->Size);
+            }
         }
     }
 
