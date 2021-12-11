@@ -3196,7 +3196,7 @@ VOID ScanForTools (VOID) {
                             if (OtherFind) {
                                 MsgLog ("\n%s", Spacer);
                             }
-                            MsgLog ("%s", ToolStr);
+                            MsgLog ("%s\n", ToolStr);
                             MY_FREE_POOL(ToolStr);
                             #endif
 
