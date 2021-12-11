@@ -2347,6 +2347,11 @@ VOID ScanVolumes (VOID) {
         );
 
         FreeVolumes (
+            &RecoveryVolumes,
+            &RecoveryVolumesCount
+        );
+
+        FreeVolumes (
             &PreBootVolumes,
             &PreBootVolumesCount
         );
@@ -2555,7 +2560,7 @@ VOID ScanVolumes (VOID) {
 
                     if (VolumeRole == APPLE_APFS_VOLUME_ROLE_RECOVERY) {
                         // Create or add to a list of APFS Recovery Volumes
-                        AddToVolumeList (& RecoveryVolumes, & RecoveryVolumesCount, Volume);
+                        AddToVolumeList (&RecoveryVolumes, &RecoveryVolumesCount, Volume);
                     }
                     else if (VolumeRole == APPLE_APFS_VOLUME_ROLE_PREBOOT) {
                         // Create or add to a list of APFS PreBoot Volumes
@@ -3813,6 +3818,11 @@ LEAKABLEVOLUMES (
     }
 
     // The volumes in these lists should already exist in Volumes
+    if (RecoveryVolumes) {
+        LEAKABLEPATHINIT (kLeakableRecoveryVolumes);
+            LEAKABLEWITHPATH (RecoveryVolumes, "RecoveryVolumes");
+        LEAKABLEPATHDONE ();
+    }
     if (PreBootVolumes) {
         LEAKABLEPATHINIT (kLeakablePreBootVolumes);
             LEAKABLEWITHPATH (PreBootVolumes, "PreBootVolumes");

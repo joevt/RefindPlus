@@ -505,6 +505,7 @@ VOID GenerateSubScreen (
                 LOG(4, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 8");
                 MY_FREE_POOL(KernelVersion);
                 MY_FREE_POOL(InitrdName);
+                MY_FREE_POOL(File->Buffer);
                 MY_FREE_POOL(File);
 
                 LOG(4, LOG_LINE_FORENSIC, L"In GenerateSubScreen OSType L ... 2a 9");
@@ -3139,10 +3140,9 @@ VOID ScanForTools (VOID) {
                         } // for k = 0
 
                         if (!PrevGUID) {
-                            FileName = PoolPrint (
-                                L"%s\\boot.efi",
-                                GuidAsString (&(RecoveryVolumes[j]->VolUuid))
-                            );
+                            TmpStr = GuidAsString (&(RecoveryVolumes[j]->VolUuid));
+                            FileName = PoolPrint (L"%s\\boot.efi", TmpStr);
+                            MY_FREE_POOL(TmpStr);
 
                             // Get a meaningful tag for the recovery volume if available
                             // DA-TAG: Limit to TianoCore
