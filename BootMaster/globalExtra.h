@@ -1,6 +1,3 @@
-#undef REFIT_DEBUG
-#define REFIT_DEBUG (0)
-
 #define LOG_BLANK_LINE_SEP   0
 #define LOG_LINE_SPECIAL     1
 #define LOG_LINE_SAME        2

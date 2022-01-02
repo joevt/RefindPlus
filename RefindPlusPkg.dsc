@@ -4,7 +4,7 @@
   PLATFORM_VERSION               = 4.5.0
   DSC_SPECIFICATION              = 0x00010006
   SUPPORTED_ARCHITECTURES        = IA32|IPF|X64|EBC|ARM|AARCH64
-  BUILD_TARGETS                  = RELEASE
+  BUILD_TARGETS                  = RELEASE|DEBUG
   SKUID_IDENTIFIER               = DEFAULT
 
 [LibraryClasses]
@@ -57,6 +57,12 @@
   # Misc
   #
   DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+  #DebugLib|MdePkg/Library/UefiDebugLibDebugPortProtocol/UefiDebugLibDebugPortProtocol.inf
+  #DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
+  #DebugLib|MdePkg/Library/UefiDebugLibConOut/UefiDebugLibConOut.inf
+  #DebugLib|MdePkg/Library/UefiDebugLibStdErr/UefiDebugLibStdErr.inf
+  #DebugLib|OvmfPkg/Library/PlatformDebugLibIoPort/PlatformDebugLibIoPort.inf
+  
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
   ReportStatusCodeLib|MdePkg/Library/BaseReportStatusCodeLibNull/BaseReportStatusCodeLibNull.inf
   PeCoffExtraActionLib|MdePkg/Library/BasePeCoffExtraActionLibNull/BasePeCoffExtraActionLibNull.inf
@@ -113,6 +119,14 @@
   RefindPlusPkg/filesystems/reiserfs.inf
   RefindPlusPkg/gptsync/gptsync.inf
 
+[PcdsFixedAtBuild]
+!if $(TARGET) == DEBUG
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x1D
+  gEfiMdePkgTokenSpaceGuid.PcdDebugClearMemoryValue|0x00
+!endif
+
 [BuildOptions.X64]
-  XCODE:*_*_*_CC_FLAGS = -save-temps -DREFIT_DEBUG=0
-  GCC:*_*_*_CC_FLAGS   = -save-temps -DREFIT_DEBUG=0
+  GCC:DEBUG_*_*_CC_FLAGS     = -save-temps -DREFIT_DEBUG=1
+  GCC:RELEASE_*_*_CC_FLAGS   = -save-temps -DREFIT_DEBUG=0
+  XCODE:DEBUG_*_*_CC_FLAGS   = -save-temps -DREFIT_DEBUG=1
+  XCODE:RELEASE_*_*_CC_FLAGS = -save-temps -DREFIT_DEBUG=0
